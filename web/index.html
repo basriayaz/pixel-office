@@ -15,6 +15,7 @@
       <span class="brand-name" data-i18n="ui.brand">OFFICE</span>
     </div>
     <nav class="offices" id="offices" hidden></nav>
+    <button class="icon-btn small" id="btnOffices" data-i18n-title="ui.offices.manage">⚙</button>
     <div class="legend">
       <span class="legend-item"><i class="dot idle"></i><span data-i18n="ui.legend.idle">Idle</span></span>
       <span class="legend-item"><i class="dot working"></i><span data-i18n="ui.legend.working">Working</span></span>
@@ -54,6 +55,20 @@
     </form>
     <div class="chat-hint" data-i18n="ui.chat.hint"></div>
   </aside>
+
+  <div class="modal" id="officesModal" hidden>
+    <div class="modal-card">
+      <div class="modal-head"><h2 data-i18n="ui.offices.manage"></h2><button class="icon-btn" id="officesClose" data-i18n-title="ui.offices.close">×</button></div>
+      <div class="office-list" id="officeList"></div>
+      <h3 data-i18n="ui.offices.add"></h3>
+      <form id="officeAdd" class="office-add">
+        <label class="field"><span data-i18n="ui.offices.name"></span><input id="oName" required maxlength="60" data-i18n-ph="ui.offices.namePh" /></label>
+        <label class="field"><span data-i18n="ui.offices.cwd"></span><input id="oCwd" maxlength="500" data-i18n-ph="ui.offices.cwdPh" /><small data-i18n="ui.offices.cwdHint"></small></label>
+        <div class="field"><span data-i18n="ui.themes.label"></span><div class="segment" id="oTheme"></div></div>
+        <div class="actions"><button class="btn primary" type="submit" data-i18n="ui.offices.add"></button></div>
+      </form>
+    </div>
+  </div>
 
   <div class="toast" id="toast"></div>
 

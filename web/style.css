@@ -109,6 +109,21 @@ body.offline .offline-banner { display: block; }
 .roster-chip .rs { color: var(--muted); font-size: 11px; }
 .roster-chip .badge, .row .badge { background: var(--error); color: #fff; font-size: 10px; font-weight: 600; min-width: 16px; height: 16px; border-radius: 8px; display: grid; place-items: center; padding: 0 4px; }
 
+.icon-btn.small { width: 26px; height: 26px; line-height: 24px; font-size: 13px; }
+.modal[hidden] { display: none; }
+.modal { position: fixed; inset: 0; background: rgba(0,0,0,.55); display: grid; place-items: center; z-index: 40; }
+.modal-card { width: min(720px, 94vw); max-height: 88vh; overflow: auto; background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 18px 20px; }
+.modal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.modal-head h2 { margin: 0; font-size: 14px; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); }
+.modal-card h3 { font-size: 12px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; margin: 18px 0 10px; }
+.office-list { display: flex; flex-direction: column; gap: 8px; }
+.office-row { display: grid; grid-template-columns: 1fr 1.3fr auto auto auto; gap: 8px; align-items: center; background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; }
+.office-row select { background: var(--bg-2); color: var(--text); border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; font: inherit; font-size: 12px; }
+.office-row input { background: var(--bg-2); color: var(--text); border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; font: inherit; font-size: 12px; width: 100%; }
+.office-row .count { color: var(--muted); font-size: 11px; white-space: nowrap; }
+.office-add .field input { width: 100%; }
+@media (max-width: 700px) { .office-row { grid-template-columns: 1fr; } }
+
 /* ---------- chat panel ---------- */
 .chat {
   position: fixed; top: 48px; right: 0; bottom: 0; width: var(--chat-w);

@@ -5,12 +5,16 @@ import { fileURLToPath } from "node:url";
 // Package root (where web/, locales/, templates/ live) — works from src/ (tsx) and dist/ (built).
 export const PKG_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 
+export const THEMES = ["default", "football", "fashion"] as const;
+export type Theme = (typeof THEMES)[number];
+
 export interface OfficeDef {
   id: string;
   name: string;
   employeesDir: string;
   cwd: string;
   extraEmployees: string[];
+  theme: Theme;
 }
 
 export interface OfficeSettings {
@@ -45,25 +49,44 @@ export function configPath(projectDir: string) {
   return path.join(projectDir, CONFIG_DIR, "config.json");
 }
 
-export function loadSettings(projectDir: string): OfficeSettings {
+export type RawConfig = Record<string, unknown> & { offices?: Array<Record<string, unknown>> };
+
+export function readRawConfig(projectDir: string): RawConfig {
   const file = configPath(projectDir);
-  const raw = fs.existsSync(file) ? JSON.parse(fs.readFileSync(file, "utf8")) : {};
-  const merged = { ...DEFAULTS, ...raw };
-  const abs = (p: string) => path.resolve(projectDir, String(p).replace(/^~(?=$|\/)/, process.env.HOME ?? ""));
-  const rootCwd = abs(merged.cwd);
+  return fs.existsSync(file) ? JSON.parse(fs.readFileSync(file, "utf8")) : {};
+}
+
+export function writeRawConfig(projectDir: string, raw: RawConfig) {
+  fs.mkdirSync(path.dirname(configPath(projectDir)), { recursive: true });
+  fs.writeFileSync(configPath(projectDir), JSON.stringify(raw, null, 2) + "\n");
+}
+
+export const absPath = (projectDir: string, p: string) => path.resolve(projectDir, String(p).replace(/^~(?=$|\/)/, process.env.HOME ?? ""));
+export const officeIdOf = (s: string, fallback: string) => slugId(s) || fallback;
+
+// One office definition from its raw config entry.
+export function officeDefFromRaw(projectDir: string, o: Record<string, unknown>, i: number, rootCwd: string): OfficeDef {
+  const abs = (p: string) => absPath(projectDir, p);
+  const id = officeIdOf(String(o.id ?? o.name ?? `office-${i + 1}`), `office-${i + 1}`);
+  return {
+    id,
+    name: String(o.name ?? id),
+    employeesDir: abs(String(o.employeesDir ?? `${CONFIG_DIR}/employees/${id}`)),
+    cwd: o.cwd ? abs(String(o.cwd)) : rootCwd,
+    extraEmployees: Array.isArray(o.employees) ? (o.employees as string[]).map(abs) : [],
+    theme: (THEMES as readonly string[]).includes(String(o.theme)) ? (o.theme as Theme) : "default",
+  };
+}
+
+export function loadSettings(projectDir: string): OfficeSettings {
+  const raw = readRawConfig(projectDir);
+  const merged = { ...DEFAULTS, ...raw } as Record<string, unknown>;
+  const abs = (p: string) => absPath(projectDir, p);
+  const rootCwd = abs(String(merged.cwd));
   const multiOffice = Array.isArray(raw.offices) && raw.offices.length > 0;
   const offices: OfficeDef[] = multiOffice
-    ? (raw.offices as Array<Record<string, unknown>>).map((o, i) => {
-        const id = slugId(String(o.id ?? o.name ?? `office-${i + 1}`)) || `office-${i + 1}`;
-        return {
-          id,
-          name: String(o.name ?? id),
-          employeesDir: abs(String(o.employeesDir ?? `${CONFIG_DIR}/employees/${id}`)),
-          cwd: o.cwd ? abs(String(o.cwd)) : rootCwd,
-          extraEmployees: Array.isArray(o.employees) ? (o.employees as string[]).map(abs) : [],
-        };
-      })
-    : [{ id: "main", name: "", employeesDir: abs(merged.employeesDir), cwd: rootCwd, extraEmployees: [] }];
+    ? (raw.offices as Array<Record<string, unknown>>).map((o, i) => officeDefFromRaw(projectDir, o, i, rootCwd))
+    : [{ id: "main", name: "", employeesDir: abs(String(merged.employeesDir)), cwd: rootCwd, extraEmployees: [], theme: (THEMES as readonly string[]).includes(String(merged.theme)) ? (merged.theme as Theme) : "default" }];
   const ids = new Set<string>();
   for (const o of offices) {
     if (ids.has(o.id)) throw new Error(`config.json: office id "${o.id}" is used twice`);
@@ -73,7 +96,7 @@ export function loadSettings(projectDir: string): OfficeSettings {
     locale: String(merged.locale),
     port: Number(process.env.PORT ?? merged.port),
     host: String(process.env.HOST ?? merged.host),
-    dataDir: abs(merged.dataDir),
+    dataDir: abs(String(merged.dataDir)),
     memoryFile: String(merged.memoryFile),
     syncClaudeAgents: merged.syncClaudeAgents !== false,
     refreshHours: Number(merged.refreshHours),

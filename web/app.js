@@ -55,6 +55,7 @@ function showOffice(officeId, keepChat = false) {
   localStorage.setItem("po.office", officeId);
   if (changed && !keepChat) closeChat();
   const o = cur();
+  office.setTheme(o.info.theme || "default");
   office.setEmployees([...o.employees.values()]);
   for (const e of o.employees.values()) office.setUnread(e.id, e.unread);
   $("hireLink").href = `hire.html?office=${encodeURIComponent(officeId)}`;
@@ -82,10 +83,19 @@ function renderOfficeTabs() {
 
 function handle(m) {
   if (m.type === "init") {
-    for (const o of m.offices) mergeRoster(o.id, o.employees, { id: o.id, name: o.name, cwd: o.cwd });
+    for (const o of m.offices) mergeRoster(o.id, o.employees, { id: o.id, name: o.name, cwd: o.cwd, theme: o.theme });
     showOffice(state.office, true);
     const open = params.get("open");
     if (open && cur().employees.has(open) && !state.selected) { openChat(open); history.replaceState(null, "", `/?office=${encodeURIComponent(state.office)}`); }
+    return;
+  }
+  if (m.type === "offices") {
+    PO.multiOffice = m.multiOffice;
+    const seen = new Set();
+    for (const o of m.offices) { seen.add(o.id); mergeRoster(o.id, o.employees, { id: o.id, name: o.name, cwd: o.cwd, theme: o.theme }); }
+    for (const id of [...state.offices.keys()]) if (!seen.has(id)) state.offices.delete(id);
+    showOffice(state.offices.has(state.office) ? state.office : m.offices[0]?.id, true);
+    if (!$("officesModal").hidden) renderOfficeList();
     return;
   }
   if (m.type === "roster") {
@@ -379,6 +389,44 @@ function renderAsk(e, ask) {
   return card;
 }
 
+// ---- office management modal ----
+function renderOfficeList() {
+  const host = $("officeList");
+  host.innerHTML = "";
+  for (const o of state.offices.values()) {
+    const row = document.createElement("div");
+    row.className = "office-row";
+    const n = o.employees.size;
+    const themeOpts = (PO.themes || ["default"]).map((th) => `<option value="${th}" ${th === (o.info.theme || "default") ? "selected" : ""}>${escapeHtml(t(`ui.themes.${th}`))}</option>`).join("");
+    row.innerHTML = `<input class="o-name" value="${escapeHtml(o.info.name)}" maxlength="60" /><input class="o-cwd" value="${escapeHtml(o.info.cwd === PO.project ? "" : o.info.cwd)}" placeholder="${escapeHtml(t("ui.offices.cwdPh"))}" maxlength="500" /><select class="o-theme">${themeOpts}</select><span class="count">${escapeHtml(t("ui.offices.employees", { n }))}</span><span class="office-actions"><button class="btn small o-save">${t("ui.offices.save")}</button> <button class="btn small danger o-del" ${n ? `disabled title="${escapeHtml(t("ui.offices.cannotDelete"))}"` : ""}>${t("ui.offices.delete")}</button></span>`;
+    row.querySelector(".o-save").onclick = async () => {
+      try { await api("PUT", `/api/offices/${encodeURIComponent(o.info.id)}`, { name: row.querySelector(".o-name").value, cwd: row.querySelector(".o-cwd").value.trim(), theme: row.querySelector(".o-theme").value }); toast(t("ui.offices.saved")); }
+      catch (err) { toast(t("ui.offices.error", { message: err.message })); }
+    };
+    const del = row.querySelector(".o-del");
+    del.onclick = async () => {
+      if (del.dataset.armed !== "1") { del.dataset.armed = "1"; del.textContent = t("ui.offices.sure"); setTimeout(() => { del.dataset.armed = ""; del.textContent = t("ui.offices.delete"); }, 3000); return; }
+      try { await api("DELETE", `/api/offices/${encodeURIComponent(o.info.id)}`); toast(t("ui.offices.deleted")); }
+      catch (err) { toast(t("ui.offices.error", { message: err.message })); }
+    };
+    host.appendChild(row);
+  }
+}
+let newTheme = "default";
+buildSegment($("oTheme"), (PO.themes || ["default"]).map((th) => ({ value: th, name: t(`ui.themes.${th}`) })), newTheme, (v) => { newTheme = v; });
+$("btnOffices").onclick = () => { renderOfficeList(); $("officesModal").hidden = false; $("oName").focus(); };
+$("officesClose").onclick = () => { $("officesModal").hidden = true; };
+$("officesModal").addEventListener("click", (ev) => { if (ev.target === $("officesModal")) $("officesModal").hidden = true; });
+$("officeAdd").onsubmit = async (ev) => {
+  ev.preventDefault();
+  try {
+    const o = await api("POST", "/api/offices", { name: $("oName").value.trim(), cwd: $("oCwd").value.trim(), theme: newTheme });
+    $("oName").value = ""; $("oCwd").value = "";
+    toast(t("ui.offices.added"));
+    showOffice(o.id);
+  } catch (err) { toast(t("ui.offices.error", { message: err.message })); }
+};
+
 office.onClick(openChat);
 $("btnClose").onclick = closeChat;
 $("btnStop").onclick = () => { if (state.selected) send({ type: "interrupt", id: state.selected }); };
@@ -421,6 +469,7 @@ input.addEventListener("keydown", (ev) => {
   }
 });
 document.addEventListener("keydown", (ev) => {
+  if (ev.key === "Escape" && !$("officesModal").hidden) { $("officesModal").hidden = true; return; }
   if (ev.key === "Escape" && state.selected && document.activeElement?.tagName !== "INPUT") closeChat();
 });
 

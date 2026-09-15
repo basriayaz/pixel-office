@@ -7,7 +7,7 @@ import { WebSocketServer, WebSocket } from "ws";
 import { Employee, refreshPrompt, type EmployeeConfig } from "./employee.js";
 import { Store } from "./store.js";
 import { expandHome, loadEmployees, loadEmployee, listSkills, writeAgentFile, createEmployeeDir, archiveEmployeeDir, writeSkill, readSkill, deleteSkill, syncClaudeAgents } from "./agents.js";
-import { loadSettings, configPath, PKG_ROOT, CONFIG_DIR, type OfficeDef } from "./config.js";
+import { loadSettings, configPath, readRawConfig, writeRawConfig, officeDefFromRaw, officeIdOf, absPath, PKG_ROOT, CONFIG_DIR, THEMES, type OfficeDef, type Theme } from "./config.js";
 import { loadLocale, availableLocales, Translator } from "./i18n.js";
 import { initRuntime, t } from "./runtime.js";
 
@@ -23,18 +23,33 @@ interface OfficeRt {
   employees: Map<string, Employee>;
 }
 const offices = new Map<string, OfficeRt>();
-for (const def of settings.offices) {
+
+// Store folder per office. A single-office setup that later became multi-office keeps its data by moving it under dataDir/<id>.
+function storeFor(def: OfficeDef): Store {
+  if (!settings.multiOffice) return new Store(settings.dataDir);
+  const dir = path.join(settings.dataDir, def.id);
+  if (!fs.existsSync(dir) && fs.existsSync(path.join(settings.dataDir, "history"))) {
+    fs.mkdirSync(dir, { recursive: true });
+    for (const f of ["history", "state.json"]) { const src = path.join(settings.dataDir, f); if (fs.existsSync(src)) fs.renameSync(src, path.join(dir, f)); }
+  }
+  return new Store(dir);
+}
+
+function openOffice(def: OfficeDef): OfficeRt {
   if (!def.name) def.name = t("ui.offices.default");
-  const store = new Store(settings.multiOffice ? path.join(settings.dataDir, def.id) : settings.dataDir);
+  const store = storeFor(def);
   const employees = new Map<string, Employee>();
   for (const cfg of loadEmployees(def)) {
     if (employees.has(cfg.id)) throw new Error(t("server.duplicateId", { id: cfg.id }));
     employees.set(cfg.id, new Employee(cfg, store));
   }
-  offices.set(def.id, { def, store, employees });
+  const o: OfficeRt = { def, store, employees };
+  offices.set(def.id, o);
   for (const e of employees.values()) e.setColleagues({ list: () => [...employees.values()] });
+  return o;
 }
-const defaultOfficeId = settings.offices[0].id;
+for (const def of settings.offices) openOffice(def);
+const defaultOfficeId = () => settings.offices[0].id;
 
 const app = express();
 app.use(express.json({ limit: "1mb" }));
@@ -52,7 +67,7 @@ const PERMS = ["default", "acceptEdits", "plan", "dontAsk", "bypassPermissions"]
 const clean = (v: unknown, max = 200) => (typeof v === "string" ? v.trim().slice(0, max) : "");
 const pick = <T extends string>(v: unknown, list: readonly T[]): T | undefined => (list as readonly string[]).includes(v as string) ? (v as T) : undefined;
 
-const officeInfo = (o: OfficeRt) => ({ id: o.def.id, name: o.def.name, cwd: o.def.cwd, employeesDir: o.def.employeesDir });
+const officeInfo = (o: OfficeRt) => ({ id: o.def.id, name: o.def.name, cwd: o.def.cwd, employeesDir: o.def.employeesDir, theme: o.def.theme });
 const roster = (o: OfficeRt) => [...o.employees.values()].map(publicInfo);
 const syncAgents = (o: OfficeRt) => syncClaudeAgents(o.def, [...o.employees.values()].map((e) => e.cfg));
 
@@ -61,18 +76,88 @@ const clientConfig = () => ({
   locale: locale.code,
   locales: availableLocales(),
   strings: { ui: locale.data.ui, rooms: locale.data.rooms, status: locale.data.status },
-  models: MODELS, efforts: EFFORTS, permissions: PERMS,
-  project: PROJECT, memoryFile: settings.memoryFile, multiOffice: settings.multiOffice, defaultOffice: defaultOfficeId,
+  models: MODELS, efforts: EFFORTS, permissions: PERMS, themes: THEMES,
+  project: PROJECT, memoryFile: settings.memoryFile, multiOffice: settings.multiOffice, defaultOffice: defaultOfficeId(),
   offices: [...offices.values()].map(officeInfo),
 });
 app.get("/i18n.js", (_req, res) => { res.type("application/javascript").send(`window.PO = ${JSON.stringify(clientConfig())};`); });
 app.get("/api/options", (_req, res) => res.json(clientConfig()));
 app.get("/api/offices", (_req, res) => res.json([...offices.values()].map((o) => ({ ...officeInfo(o), employees: roster(o) }))));
 
+// ---- office management (persisted to config.json, applied live) ----
+const officesPayload = () => ({ type: "offices", multiOffice: settings.multiOffice, offices: [...offices.values()].map((o) => ({ ...officeInfo(o), employees: roster(o) })) });
+function persistOffices() {
+  const raw = readRawConfig(PROJECT);
+  const rel = (p: string) => { const r = path.relative(PROJECT, p); return r && !r.startsWith("..") ? r : p; };
+  raw.offices = settings.offices.map((d) => {
+    const prev = (raw.offices ?? []).find((x) => officeIdOf(String(x.id ?? x.name ?? ""), "") === d.id) ?? {};
+    return { ...prev, id: d.id, name: d.name, employeesDir: rel(d.employeesDir), cwd: prev.cwd && absPath(PROJECT, String(prev.cwd)) === d.cwd ? prev.cwd : rel(d.cwd), theme: d.theme, ...(d.extraEmployees.length ? { employees: d.extraEmployees.map(rel) } : {}) };
+  });
+  writeRawConfig(PROJECT, raw);
+}
+
+app.post("/api/offices", (req, res) => {
+  const name = clean(req.body?.name, 60);
+  if (!name) return res.status(400).json({ error: t("server.nameRoleRequired") });
+  const base = path.dirname(settings.offices[0].employeesDir);
+  let id = officeIdOf(name, "office");
+  for (let n = 2; offices.has(id); n++) id = `${officeIdOf(name, "office")}-${n}`;
+  const cwdRaw = clean(req.body?.cwd, 500);
+  if (!settings.multiOffice) {
+    // Convert the single office into a named first office so both live side by side.
+    settings.multiOffice = true;
+    const first = settings.offices[0];
+    const rt = offices.get(first.id)!;
+    const dir = path.join(settings.dataDir, first.id);
+    if (!fs.existsSync(dir)) { fs.mkdirSync(dir, { recursive: true }); for (const f of ["history", "state.json"]) { const src = path.join(settings.dataDir, f); if (fs.existsSync(src)) fs.renameSync(src, path.join(dir, f)); } }
+    rt.store = new Store(dir);
+  }
+  const def = officeDefFromRaw(PROJECT, { id, name, employeesDir: path.join(base, id), theme: pick(req.body?.theme, THEMES) ?? "default", ...(cwdRaw ? { cwd: cwdRaw } : {}) }, settings.offices.length, settings.offices[0].cwd);
+  settings.offices.push(def);
+  const o = openOffice(def);
+  for (const e of o.employees.values()) wire(e);
+  syncAgents(o);
+  persistOffices();
+  broadcast(officesPayload());
+  res.json(officeInfo(o));
+});
+
+app.put("/api/offices/:id", async (req, res) => {
+  const o = offices.get(req.params.id);
+  if (!o) return res.status(404).json({ error: t("server.notFound") });
+  const name = clean(req.body?.name, 60);
+  if (name) o.def.name = name;
+  const theme = pick(req.body?.theme, THEMES) as Theme | undefined;
+  if (theme) o.def.theme = theme;
+  if (req.body?.cwd !== undefined) {
+    const raw = clean(req.body.cwd, 500);
+    const next = raw ? absPath(PROJECT, raw) : PROJECT;
+    const prevCwd = o.def.cwd;
+    o.def.cwd = next;
+    for (const e of o.employees.values()) if (e.cfg.cwd === prevCwd) { await e.applyConfig({ ...e.cfg, cwd: next }); }
+  }
+  syncAgents(o);
+  persistOffices();
+  broadcast(officesPayload());
+  res.json(officeInfo(o));
+});
+
+app.delete("/api/offices/:id", async (req, res) => {
+  const o = offices.get(req.params.id);
+  if (!o) return res.status(404).json({ error: t("server.notFound") });
+  if (o.employees.size) return res.status(409).json({ error: t("server.officeNotEmpty") });
+  if (offices.size <= 1) return res.status(409).json({ error: t("server.lastOffice") });
+  offices.delete(o.def.id);
+  settings.offices = settings.offices.filter((d) => d.id !== o.def.id);
+  persistOffices();
+  broadcast(officesPayload());
+  res.json({ ok: true });
+});
+
 // Office-scoped routes; also mounted at /api for the default office.
 const r = express.Router({ mergeParams: true });
 type OReq = Request<{ office?: string; id?: string; skill?: string }>;
-const officeOf = (req: OReq) => offices.get(req.params.office ?? defaultOfficeId);
+const officeOf = (req: OReq) => offices.get(req.params.office ?? defaultOfficeId());
 const empOf = (req: OReq) => officeOf(req)?.employees.get(req.params.id ?? "");
 
 r.get("/employees", (req: OReq, res) => {
@@ -253,7 +338,7 @@ wss.on("connection", (ws) => {
   ws.on("message", async (raw) => {
     let msg: { type: string; office?: string; id?: string; text?: string; requestId?: string; allow?: boolean; always?: boolean; answers?: Record<string, unknown> };
     try { msg = JSON.parse(raw.toString()); } catch { return; }
-    const o = offices.get(msg.office ?? defaultOfficeId);
+    const o = offices.get(msg.office ?? defaultOfficeId());
     const e = o && msg.id ? o.employees.get(msg.id) : undefined;
     if (!o || !e) return;
     switch (msg.type) {

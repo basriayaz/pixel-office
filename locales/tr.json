@@ -70,14 +70,30 @@
       "replied": "{name} cevap verdi:\n{text}",
       "noReply": "(süre içinde cevap gelmedi)",
       "prompt": "## Ofis arkadaşların\n{list}\n\nmessage_colleague aracıyla onlara iş devredebilir ya da soru sorabilirsin (list_colleagues kimin boşta olduğunu gösterir). Bir talep bir meslektaşının rolüne giriyorsa kendin yapmak yerine tüm ayrıntılarıyla ona ilet; kullanıcıya kime ilettiğini söyle."
-    }
+    },
+    "officeNotEmpty": "Önce çalışanlarını taşı ya da işten çıkar",
+    "lastOffice": "Son ofis silinemez"
   },
   "rooms": {
     "kitchen": "MUTFAK",
     "office": "AÇIK OFİS",
     "meeting": "TOPLANTI",
     "lounge": "LOUNGE",
-    "archive": "ARŞİV"
+    "archive": "ARŞİV",
+    "football": {
+      "kitchen": "KANTİN",
+      "office": "SAHA",
+      "meeting": "TAKTİK ODASI",
+      "lounge": "TRİBÜN",
+      "archive": "KUPA ODASI"
+    },
+    "fashion": {
+      "kitchen": "MUTFAK",
+      "office": "ATÖLYE",
+      "meeting": "TASARIM ODASI",
+      "lounge": "PROVA ODASI",
+      "archive": "DEPO"
+    }
   },
   "status": {
     "idle": "boşta",
@@ -420,7 +436,30 @@
     ],
     "offices": {
       "default": "Ofis",
-      "label": "Ofisler"
+      "label": "Ofisler",
+      "manage": "Ofisleri yönet",
+      "add": "Ofis ekle",
+      "name": "Şirket / ofis adı",
+      "namePh": "örn. Zaya Sound",
+      "cwd": "Çalışma klasörü (isteğe bağlı)",
+      "cwdPh": "örn. ~/Projects/zaya — boş = bu proje",
+      "cwdHint": "Bu ofiste işe alınan çalışanlar varsayılan olarak bu klasörde çalışır.",
+      "employees": "{n} çalışan",
+      "delete": "Sil",
+      "cannotDelete": "Çalışanı var",
+      "save": "Kaydet",
+      "close": "Kapat",
+      "added": "Ofis eklendi",
+      "deleted": "Ofis silindi",
+      "saved": "Ofis kaydedildi",
+      "error": "Hata: {message}",
+      "sure": "Emin misin?"
+    },
+    "themes": {
+      "label": "Ofis tasarımı",
+      "default": "Klasik ofis",
+      "football": "Futbol kulübü",
+      "fashion": "Moda atölyesi"
     }
   }
 }

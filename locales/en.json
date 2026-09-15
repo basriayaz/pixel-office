@@ -70,14 +70,30 @@
       "replied": "{name} replied:\n{text}",
       "noReply": "(no reply within the time limit)",
       "prompt": "## Colleagues in your office\n{list}\n\nYou can hand work to them or ask them something with the message_colleague tool (list_colleagues shows who is free). When a request belongs to a colleague's role, forward it with all the details instead of doing it yourself; tell the user who you forwarded it to."
-    }
+    },
+    "officeNotEmpty": "Move or fire its employees first",
+    "lastOffice": "The last office can't be deleted"
   },
   "rooms": {
     "kitchen": "KITCHEN",
     "office": "OPEN OFFICE",
     "meeting": "MEETING",
     "lounge": "LOUNGE",
-    "archive": "ARCHIVE"
+    "archive": "ARCHIVE",
+    "football": {
+      "kitchen": "CANTEEN",
+      "office": "PITCH",
+      "meeting": "TACTICS ROOM",
+      "lounge": "STANDS",
+      "archive": "TROPHY ROOM"
+    },
+    "fashion": {
+      "kitchen": "KITCHEN",
+      "office": "STUDIO",
+      "meeting": "DESIGN ROOM",
+      "lounge": "FITTING ROOM",
+      "archive": "STOCKROOM"
+    }
   },
   "status": {
     "idle": "idle",
@@ -420,7 +436,30 @@
     ],
     "offices": {
       "default": "Office",
-      "label": "Offices"
+      "label": "Offices",
+      "manage": "Manage offices",
+      "add": "Add office",
+      "name": "Company / office name",
+      "namePh": "e.g. Acme Shop",
+      "cwd": "Working directory (optional)",
+      "cwdPh": "e.g. ~/Projects/acme — empty = this project",
+      "cwdHint": "Employees hired into this office work in this folder by default.",
+      "employees": "{n} employees",
+      "delete": "Delete",
+      "cannotDelete": "Has employees",
+      "save": "Save",
+      "close": "Close",
+      "added": "Office added",
+      "deleted": "Office deleted",
+      "saved": "Office saved",
+      "error": "Error: {message}",
+      "sure": "Sure?"
+    },
+    "themes": {
+      "label": "Office design",
+      "default": "Classic office",
+      "football": "Football club",
+      "fashion": "Fashion atelier"
     }
   }
 }

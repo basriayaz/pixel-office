@@ -1042,9 +1042,9 @@ function drawWallDecorFootball(b, t) {
   outlineRect(b, 13 * TILE + 2, 12, 36, 36, "#3a3f4a"); b.fillStyle = "#f4f4f4"; b.fillRect(13 * TILE + 8, 20, 24, 22); b.fillRect(13 * TILE + 4, 22, 5, 8); b.fillRect(13 * TILE + 31, 22, 5, 8); b.fillStyle = "#d9534f"; b.fillRect(13 * TILE + 8, 20, 24, 3);
   b.fillStyle = "#1c1a20"; b.fillRect(13 * TILE + 14, 28, 2, 10); b.fillRect(13 * TILE + 19, 28, 2, 10); b.fillRect(13 * TILE + 21, 28, 5, 2); b.fillRect(13 * TILE + 21, 36, 5, 2); b.fillRect(13 * TILE + 25, 28, 2, 10);
   // trophy shelf + clock
-  b.fillStyle = "#5c3d22"; b.fillRect(19 * TILE + 8, 40, 60, 4);
-  for (let i = 0; i < 3; i++) { const tx = 19 * TILE + 14 + i * 20; b.fillStyle = i === 1 ? "#ffd166" : "#c0c0c0"; b.fillRect(tx, 14 + (i === 1 ? -4 : 0), 10, 10); b.fillRect(tx + 3, 24, 4, 8); b.fillRect(tx + 1, 32, 8, 4); b.fillStyle = "#fff3b0"; b.fillRect(tx + 2, 16 + (i === 1 ? -4 : 0), 2, 3); }
-  drawClock(b, 16 * TILE + 16, 28);
+  b.fillStyle = "#5c3d22"; b.fillRect(20 * TILE + 10, 40, 52, 4);
+  for (let i = 0; i < 3; i++) { const tx = 20 * TILE + 14 + i * 17; b.fillStyle = i === 1 ? "#ffd166" : "#c0c0c0"; b.fillRect(tx, 14 + (i === 1 ? -4 : 0), 10, 10); b.fillRect(tx + 3, 24, 4, 8); b.fillRect(tx + 1, 32, 8, 4); b.fillStyle = "#fff3b0"; b.fillRect(tx + 2, 16 + (i === 1 ? -4 : 0), 2, 3); }
+  drawClock(b, 15 * TILE + 16, 28);
   // kitchen wall: GOL banner
   outlineRect(b, 16, 10, 150, 30, "#d9534f"); b.fillStyle = "#f4f4f4"; for (const [gx, gw] of [[40, 18], [70, 18], [100, 18]]) b.fillRect(gx, 16, gw, 18); b.fillStyle = "#d9534f"; b.fillRect(45, 21, 8, 8); b.fillRect(75, 21, 8, 8); b.fillRect(105, 16, 13, 12); b.fillRect(100, 21, 6, 8);
   // meeting whiteboard: pitch diagram
@@ -1134,9 +1134,9 @@ function drawWallDecorFashion(b, t) {
   outlineRect(b, 16, 10, 150, 28, "#f7efe7"); b.fillStyle = "#c95c86"; for (let i = 0; i < 7; i++) b.fillRect(28 + i * 18, 17, 12, 14); b.fillStyle = "#f7efe7"; for (let i = 0; i < 7; i++) b.fillRect(32 + i * 18, 21, 4, 6);
   // mirror wall (meeting)
   b.fillStyle = "#c9a781"; b.fillRect(24 * TILE + 8, 6, 112, 46); b.fillStyle = "#cfe6f2"; b.fillRect(24 * TILE + 12, 10, 104, 38); b.fillStyle = "rgba(255,255,255,.6)"; b.fillRect(24 * TILE + 20, 14, 3, 30); b.fillRect(24 * TILE + 26, 12, 1, 14);
-  drawClock(b, 16 * TILE + 16, 28);
+  drawClock(b, 15 * TILE + 16, 28);
   // hat shelf
-  b.fillStyle = "#c9a781"; b.fillRect(19 * TILE + 8, 40, 60, 4); ["#d9534f", "#2b2b2b", "#ffd166"].forEach((c, i) => { const hx = 19 * TILE + 12 + i * 20; b.fillStyle = OUTLINE; b.fillRect(hx - 1, 33, 18, 3); b.fillRect(hx + 3, 26, 10, 8); b.fillStyle = c; b.fillRect(hx, 34, 16, 1); b.fillRect(hx + 4, 27, 8, 7); });
+  b.fillStyle = "#c9a781"; b.fillRect(20 * TILE + 10, 40, 52, 4); ["#d9534f", "#2b2b2b", "#ffd166"].forEach((c, i) => { const hx = 20 * TILE + 12 + i * 17; b.fillStyle = OUTLINE; b.fillRect(hx - 1, 33, 18, 3); b.fillRect(hx + 3, 26, 10, 8); b.fillStyle = c; b.fillRect(hx, 34, 16, 1); b.fillRect(hx + 4, 27, 8, 7); });
 }
 
 function drawClock(b, ccx, ccy) {

@@ -123,7 +123,7 @@ $("skillForm").onsubmit = async (ev) => {
 function renderRecent() {
   const host = $("recent");
   host.innerHTML = detail.recent.length ? "" : `<div class="muted">${t("ui.profile.noHistory")}</div>`;
-  const who = { user: t("ui.profile.you"), assistant: detail.name, activity: t("ui.profile.action"), system: t("ui.profile.system"), auto: t("ui.profile.auto") };
+  const who = { user: t("ui.profile.you"), assistant: detail.name, activity: t("ui.profile.action"), system: t("ui.profile.system"), auto: t("ui.profile.auto"), colleague: t("ui.profile.colleague") };
   for (const m of [...detail.recent].reverse()) {
     const row = document.createElement("div");
     row.className = "recent-row " + m.role;

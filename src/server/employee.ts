@@ -12,6 +12,7 @@ import {
 } from "@anthropic-ai/claude-agent-sdk";
 import type { Store } from "./store.js";
 import { t } from "./runtime.js";
+import { officeServer, OFFICE_TOOLS, type Colleagues } from "./office-tools.js";
 
 export type Status = "idle" | "working" | "waiting" | "error";
 
@@ -38,9 +39,10 @@ export interface EmployeeConfig {
 }
 
 export interface ChatMessage {
-  role: "user" | "assistant" | "activity" | "system" | "auto";
+  role: "user" | "assistant" | "activity" | "system" | "auto" | "colleague";
   text: string;
   ts: number;
+  from?: string;
 }
 
 export const refreshPrompt = () => t("server.refreshPrompt");
@@ -90,6 +92,8 @@ export class Employee extends EventEmitter {
   private unanswered: string[] = [];
   private recovered = false;
   private interrupting = false;
+  private colleagues?: Colleagues;
+  private turnTexts: string[] = [];
 
   constructor(public cfg: EmployeeConfig, private store: Store) {
     super();
@@ -108,6 +112,31 @@ export class Employee extends EventEmitter {
     this.unanswered.push(text);
     this.enqueue(userMsg(text));
     if (!this.q) this.start();
+  }
+
+  setColleagues(c: Colleagues) {
+    this.colleagues = c;
+  }
+
+  // Activity line in this employee's chat (e.g. "forwarded to X").
+  note(text: string) {
+    this.push({ role: "activity", text, ts: Date.now() });
+  }
+
+  // A message from another employee; resolves with this employee's next reply when `wait` is set.
+  sendFromColleague(from: Employee, text: string, wait: boolean): Promise<string> {
+    this.push({ role: "colleague", text, ts: Date.now(), from: from.cfg.name });
+    this.setStatus("working");
+    const prompt = t("server.colleagueMsg", { name: from.cfg.name, role: from.cfg.role, text });
+    this.unanswered.push(prompt);
+    this.enqueue(userMsg(prompt));
+    if (!this.q) this.start();
+    if (!wait) return Promise.resolve("");
+    return new Promise<string>((resolve) => {
+      const timer = setTimeout(() => { this.off("turn", onTurn); resolve(t("server.office.noReply")); }, 10 * 60e3);
+      const onTurn = (reply: string) => { clearTimeout(timer); resolve(reply || t("server.office.noReply")); };
+      this.once("turn", onTurn);
+    });
   }
 
   async interrupt() {
@@ -211,6 +240,8 @@ export class Employee extends EventEmitter {
 
   private buildPrompt(): string {
     const parts = [this.cfg.systemPrompt];
+    const others = this.colleagues?.list().filter((e) => e !== this) ?? [];
+    if (others.length) parts.push(t("server.office.prompt", { list: others.map((e) => `- ${e.cfg.name} — ${e.cfg.role}`).join("\n") }));
     if (this.cfg.memoryFile) {
       const rel = path.relative(this.cfg.cwd, this.cfg.memoryFile);
       let memory = "";
@@ -232,7 +263,8 @@ export class Employee extends EventEmitter {
         title: `${this.cfg.name} — ${this.cfg.role}`,
         includePartialMessages: true,
         permissionMode: this.cfg.permissionMode ?? "default",
-        allowedTools: this.cfg.allowedTools?.length ? this.cfg.allowedTools : undefined,
+        allowedTools: [...(this.cfg.allowedTools ?? []), ...OFFICE_TOOLS],
+        mcpServers: this.colleagues ? { office: officeServer(this, this.colleagues) } : undefined,
         model: this.cfg.model,
         effort: this.cfg.effort,
         settingSources: this.cfg.settingSources ?? ["project"],
@@ -296,6 +328,9 @@ export class Employee extends EventEmitter {
       }
       case "result": {
         this.flushStream();
+        const turn = this.turnTexts.join("\n\n");
+        this.turnTexts = [];
+        this.emit("turn", turn);
         const wasInterrupted = this.interrupting;
         this.interrupting = false;
         if (m.subtype === "success") {
@@ -374,7 +409,8 @@ export class Employee extends EventEmitter {
 
   private push(msg: ChatMessage) {
     this.history.push(msg);
-    if (msg.role === "user" || msg.role === "assistant") this.lastActivity = msg.ts;
+    if (msg.role === "assistant") this.turnTexts.push(msg.text);
+    if (msg.role === "user" || msg.role === "assistant" || msg.role === "colleague") this.lastActivity = msg.ts;
     this.store.saveHistory(this.cfg.id, this.history);
     this.emit("message", msg);
   }
@@ -393,6 +429,8 @@ function describeTool(name: string, input: Record<string, unknown>): string {
     Glob: s(input.pattern), Grep: s(input.pattern), WebSearch: s(input.query), WebFetch: s(input.url), Agent: s(input.description),
   };
   if (name === "AskUserQuestion") return t("server.askingYou");
+  if (name === "mcp__office__message_colleague") return t("server.tool.message_colleague", { v: `${s(input.to)}: ${s(input.message).slice(0, 120)}` });
+  if (name === "mcp__office__list_colleagues") return t("server.tool.list_colleagues");
   if (name in arg || name === "TodoWrite") return t(`server.tool.${name}`, { v: arg[name] ?? "" });
   return `${name}${Object.keys(input).length ? ": " + s(input).slice(0, 100) : ""}`;
 }

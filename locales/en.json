@@ -41,7 +41,9 @@
       "WebSearch": "Searching the web: {v}",
       "WebFetch": "Opening page: {v}",
       "Agent": "Delegating: {v}",
-      "TodoWrite": "Updating the task list"
+      "TodoWrite": "Updating the task list",
+      "message_colleague": "Messaging colleague {v}",
+      "list_colleagues": "Checking who is in the office"
     },
     "refreshPrompt": "Time for a knowledge refresh. Do the following and give a short summary:\n1. Read your memory file; fix, merge or remove outdated, contradictory or duplicate entries.\n2. Scan the project documents relevant to your role (start from the top-level README / index if there is one); add important facts that contradict or are missing from your memory.\n3. Add durable lessons from your recent tasks (rules, preferences, sources, recurring mistakes).\nKeep the memory file short, sectioned and tidy. Tell the user only what changed, in 3-5 bullets.",
     "memoryPrompt": "## Your persistent memory\nYour personal memory file: `{file}`. Whenever the user teaches you a fact, rule, preference or workflow, add it to this file IMMEDIATELY (with Edit/Write, as short tidy bullets). This file is given to you at the start of every session; anything you don't write here is forgotten.\n\nLearn on your own: at the end of every task ask yourself — \"did this produce a durable lesson (a rule I'll reuse, a source, a file path, a user preference, a mistake I made)?\" If so, add a short bullet to your memory even if the user didn't ask; don't add one-off details. If you notice something in your memory is no longer true, fix it.",
@@ -52,6 +54,22 @@
       "description": "{name} — {role}. Pixel Office employee; delegate {roleLower} work to them.",
       "memory": "## Persistent memory\nBefore starting, read `{file}`. Add durable facts, rules and preferences the user teaches you there right away.",
       "skills": "## Skills\nThe SKILL.md files under `{dir}/` are your skills; read and follow them for related work."
+    },
+    "colleagueMsg": "[Message from your colleague {name} ({role})]\n{text}\n\nHandle it as part of your job. If they need an answer, reply with the message_colleague tool (to: \"{name}\"); if it's for the user, just do the work and summarize.",
+    "forwarded": "Forwarded to {name}: {text}",
+    "office": {
+      "instructions": "Office tools: see who works with you and hand work or questions to a colleague. Use them whenever a request belongs to someone else's role (e.g. an order cancellation goes to whoever handles orders).",
+      "listDesc": "List your colleagues in this office with their role and current status.",
+      "sendDesc": "Send a message to a colleague (a task, a hand-off, a question). Their reply comes back if wait_for_reply is true.",
+      "toDesc": "Colleague's name or id",
+      "messageDesc": "What to tell them — include every detail they need (customer, order number, deadline, what you already did).",
+      "waitDesc": "true to wait for their reply and get it back (default false: just deliver)",
+      "none": "No colleagues in this office yet.",
+      "notFound": "No colleague named \"{name}\". Available: {list}",
+      "delivered": "Delivered to {name}. They will handle it in their own chat.",
+      "replied": "{name} replied:\n{text}",
+      "noReply": "(no reply within the time limit)",
+      "prompt": "## Colleagues in your office\n{list}\n\nYou can hand work to them or ask them something with the message_colleague tool (list_colleagues shows who is free). When a request belongs to a colleague's role, forward it with all the details instead of doing it yourself; tell the user who you forwarded it to."
     }
   },
   "rooms": {
@@ -97,7 +115,8 @@
       "allow": "Allow",
       "always": "Always allow",
       "alwaysTitle": "Don't ask again for this action in this session",
-      "deny": "Deny"
+      "deny": "Deny",
+      "fromColleague": "From {name}"
     },
     "toast": {
       "disconnected": "Lost the server connection, retrying…",
@@ -272,7 +291,8 @@
       "memorySaved": "Memory saved (loaded next session)",
       "refreshing": "{name} is refreshing their knowledge — watch the chat",
       "loadError": "Could not load: {message}",
-      "error": "Error: {message}"
+      "error": "Error: {message}",
+      "colleague": "Colleague"
     },
     "models": {
       "claude-opus-5": {

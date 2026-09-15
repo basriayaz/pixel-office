@@ -118,7 +118,7 @@ function handle(m) {
         appendMessage(e, m.message);
         updateTyping(e);
         scrollDown();
-      } else if (m.message.role === "assistant") {
+      } else if (m.message.role === "assistant" || m.message.role === "colleague") {
         e.unread++;
         if (current) { office.setUnread(e.id, e.unread); renderRoster(); }
         renderOfficeTabs();
@@ -307,6 +307,8 @@ function buildRow(e, msg) {
     row.innerHTML = `<img class="row-avatar" src="${office.portrait(e.id)}" alt="" /><div class="row-main"><div class="row-meta">${escapeHtml(e.name)} · ${timeStr(msg.ts)}</div><div class="bubble">${md(msg.text)}</div></div>`;
   } else if (msg.role === "user") {
     row.innerHTML = `<div class="row-main"><div class="bubble">${escapeHtml(msg.text)}</div><div class="row-meta">${timeStr(msg.ts)}</div></div>`;
+  } else if (msg.role === "colleague") {
+    row.innerHTML = `<div class="row-main"><div class="row-meta">💬 ${escapeHtml(t("ui.chat.fromColleague", { name: msg.from || "" }))} · ${timeStr(msg.ts)}</div><div class="bubble">${md(msg.text)}</div></div>`;
   } else if (msg.role === "auto") {
     row.innerHTML = `<details class="auto-card"><summary>${t("ui.chat.autoRefresh")} · ${timeStr(msg.ts)}</summary><div class="auto-text">${escapeHtml(msg.text)}</div></details>`;
   } else {

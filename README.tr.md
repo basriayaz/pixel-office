@@ -112,6 +112,7 @@ Tek sunucu birden fazla ofis barındırabilir (örn. şirket ya da ekip başına
 - **Sohbet** — çalışana (ya da roster çipine) tıkla. Markdown cevaplar, katlanmış araç işlemleri, izin kartları (İzin ver / Hep izin ver / Reddet) ve çalışanın sana sorduğu seçenekli sorular.
 - **Profil** (sohbet başlığında ☰) — kaç gündür bizimle, istatistikler, görünüm editörü, görev tanımı, hafıza düzenleme, yetenekler (ekle/düzenle/sil), geçmiş, model/effort/izin ayarları, **Bilgilerini tazele** ve **İşten çıkar** (klasör `employees/_archive/` altına taşınır).
 - **Kendi kendine öğrenme** — her çalışan, her görev sonunda kalıcı dersleri hafızasına eklemesi için yönlendirilir; boştayken ve son tazelemeden `refreshHours` geçtiyse hafızasını ve ilgili proje dokümanlarını yeniden okuyup toparlar. Profilden istediğin zaman tetikleyebilirsin.
+- **Meslektaşlar** — aynı ofisteki çalışanlar birbiriyle konuşabilir. Her birinin `list_colleagues` ve `message_colleague` araçları var: destek çalışanı bir sipariş iptalini siparişlerden sorumlu kişiye devreder, istersen cevabını bekleyip sana rapor eder. Mesaj meslektaşın sohbetinde (gönderenin adıyla) ve gönderenin sohbetinde işlem satırı olarak görünür.
 - **Terminal** — projeye `cd` yapıp `claude` çalıştır; çalışanlar subagent olarak (`.claude/agents/<id>.md`) görünür, aynı hafıza dosyalarını paylaşır.
 
 ## Geliştirme

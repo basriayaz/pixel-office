@@ -32,6 +32,7 @@ for (const def of settings.offices) {
     employees.set(cfg.id, new Employee(cfg, store));
   }
   offices.set(def.id, { def, store, employees });
+  for (const e of employees.values()) e.setColleagues({ list: () => [...employees.values()] });
 }
 const defaultOfficeId = settings.offices[0].id;
 
@@ -152,6 +153,7 @@ r.post("/employees", (req: OReq, res) => {
     cwd: clean(b.cwd, 500) || undefined,
   });
   const e = new Employee(loadEmployee(dir, o.employees.size, o.def), o.store);
+  e.setColleagues({ list: () => [...o.employees.values()] });
   o.employees.set(e.cfg.id, e);
   wire(e);
   syncAgents(o);

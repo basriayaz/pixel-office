@@ -41,7 +41,9 @@
       "WebSearch": "Web'de arıyor: {v}",
       "WebFetch": "Sayfa açıyor: {v}",
       "Agent": "Yardımcı görevlendiriyor: {v}",
-      "TodoWrite": "Görev listesini güncelliyor"
+      "TodoWrite": "Görev listesini güncelliyor",
+      "message_colleague": "Meslektaşına iletiyor {v}",
+      "list_colleagues": "Ofiste kim var bakıyor"
     },
     "refreshPrompt": "Bilgi tazeleme zamanı. Şunları yap ve kısa bir özet ver:\n1. Kalıcı hafıza dosyanı oku; güncelliğini yitirmiş, çelişen veya tekrar eden maddeleri düzelt/birleştir.\n2. Rolünle ilgili proje dokümanlarını tara (varsa üst düzey README / index'ten başla); hafızanla çelişen ya da hafızanda olmayan önemli bilgileri hafızana işle.\n3. Son görevlerinden çıkardığın kalıcı dersleri (kural, tercih, kaynak, sık yapılan hata) hafızana ekle.\nHafıza dosyasını kısa, başlıklı ve düzenli tut. Kullanıcıya sadece ne değiştiğini 3-5 maddeyle söyle.",
     "memoryPrompt": "## Kalıcı hafızan\nKişisel hafıza dosyan: `{file}`. Kullanıcı sana yeni bir bilgi, kural, tercih veya iş akışı öğrettiğinde bunu HEMEN bu dosyaya ekle (Edit/Write ile, kısa ve düzenli maddeler halinde). Bu dosya her oturum başında sana verilir; buraya yazmadığın şeyler unutulur.\n\nKendi kendine öğren: her görevin sonunda kendine sor — \"bu işten kalıcı bir ders çıktı mı (tekrar kullanacağım bir kural, kaynak, dosya yolu, kullanıcının tercihi, yaptığım bir hata)?\" Çıktıysa kullanıcı istemese de hafızana kısa bir madde ekle; tek seferlik ayrıntıları ekleme. Hafızandaki bir bilginin artık doğru olmadığını fark edersen düzelt.",
@@ -52,6 +54,22 @@
       "description": "{name} — {role}. Ofis çalışanı; {roleLower} ile ilgili işleri ona devret.",
       "memory": "## Kalıcı hafıza\nİşe başlamadan önce `{file}` dosyasını oku. Kullanıcının öğrettiği kalıcı bilgi, kural ve tercihleri hemen oraya ekle.",
       "skills": "## Özel yetenekler\n`{dir}/` altındaki SKILL.md dosyaları senin yeteneklerin; ilgili işte önce onları oku ve uygula."
+    },
+    "colleagueMsg": "[Meslektaşın {name} ({role}) mesaj gönderdi]\n{text}\n\nBunu kendi işinin parçası olarak ele al. Cevap bekliyorsa message_colleague aracıyla ona yaz (to: \"{name}\"); kullanıcıya yönelikse işi yap ve özetle.",
+    "forwarded": "{name}'a iletildi: {text}",
+    "office": {
+      "instructions": "Ofis araçları: seninle çalışanları gör, bir işi ya da soruyu meslektaşına devret. Bir talep başkasının rolüne giriyorsa (örn. sipariş iptali siparişlerden sorumlu kişiye) bunları kullan.",
+      "listDesc": "Bu ofisteki meslektaşlarını rolleri ve anlık durumlarıyla listeler.",
+      "sendDesc": "Bir meslektaşına mesaj gönderir (görev, devir, soru). wait_for_reply true ise cevabı geri gelir.",
+      "toDesc": "Meslektaşın adı ya da kimliği",
+      "messageDesc": "Ona ne söyleyeceğin — ihtiyacı olan her ayrıntıyı ekle (müşteri, sipariş no, tarih, senin yaptıkların).",
+      "waitDesc": "Cevabını bekleyip geri almak için true (varsayılan false: sadece ilet)",
+      "none": "Bu ofiste henüz meslektaş yok.",
+      "notFound": "\"{name}\" adında meslektaş yok. Mevcutlar: {list}",
+      "delivered": "{name}'a iletildi. Kendi sohbetinde ele alacak.",
+      "replied": "{name} cevap verdi:\n{text}",
+      "noReply": "(süre içinde cevap gelmedi)",
+      "prompt": "## Ofis arkadaşların\n{list}\n\nmessage_colleague aracıyla onlara iş devredebilir ya da soru sorabilirsin (list_colleagues kimin boşta olduğunu gösterir). Bir talep bir meslektaşının rolüne giriyorsa kendin yapmak yerine tüm ayrıntılarıyla ona ilet; kullanıcıya kime ilettiğini söyle."
     }
   },
   "rooms": {
@@ -97,7 +115,8 @@
       "allow": "İzin ver",
       "always": "Hep izin ver",
       "alwaysTitle": "Bu oturumda aynı işlem için bir daha sorma",
-      "deny": "Reddet"
+      "deny": "Reddet",
+      "fromColleague": "{name} gönderdi"
     },
     "toast": {
       "disconnected": "Sunucu bağlantısı koptu, yeniden deneniyor…",
@@ -272,7 +291,8 @@
       "memorySaved": "Hafıza kaydedildi (bir sonraki oturumda yüklenir)",
       "refreshing": "{name} bilgilerini tazeliyor — sohbetten izleyebilirsin",
       "loadError": "Yüklenemedi: {message}",
-      "error": "Hata: {message}"
+      "error": "Hata: {message}",
+      "colleague": "Meslektaş"
     },
     "models": {
       "claude-opus-5": {

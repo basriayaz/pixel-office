@@ -119,6 +119,7 @@ One server can host several offices (e.g. one per company or per team), switchab
 - **Chat** — click an employee (or the roster chip). Markdown replies, collapsed tool activity, permission cards (Allow / Always allow / Deny) and the questions employees ask you (with options).
 - **Profile** (☰ in the chat header) — tenure, stats, appearance editor, job description, memory editor, skills (add/edit/delete), history, model/effort/permission settings, **Refresh knowledge**, and **Fire** (the folder is moved to `employees/_archive/`).
 - **Self-learning** — every employee is instructed to add durable lessons to their memory after each task, and, when idle and `refreshHours` has passed since their last refresh, to re-read their memory and relevant project docs and tidy them up. You can trigger it any time from the profile.
+- **Colleagues** — employees in the same office can talk to each other. Each one has `list_colleagues` and `message_colleague` tools: a support agent can hand an order cancellation to whoever owns orders, optionally wait for their answer and report back to you. The message shows up in the colleague's chat (with the sender's name) and as an activity line in the sender's chat.
 - **Terminal** — `cd` into the project and run `claude`; the employees appear as subagents (`.claude/agents/<id>.md`), sharing the same memory files.
 
 ## Development

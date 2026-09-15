@@ -143,6 +143,10 @@ body.chat-open .chat { transform: none; }
 .row.assistant { align-self: flex-start; }
 .row.user { align-self: flex-end; max-width: 88%; }
 .row.system, .row.auto { align-self: center; max-width: 100%; }
+.row.colleague { align-self: flex-start; max-width: 92%; }
+.row.colleague .bubble { background: #1a2a2a; border: 1px solid #2f5a5a; border-top-left-radius: 4px; }
+.row.colleague .row-meta { color: #7fd8d0; }
+.recent-row.colleague { border-left: 3px solid #7fd8d0; }
 .row-avatar { width: 32px; height: 24px; image-rendering: pixelated; flex: none; margin-top: 16px; }
 .row-main { min-width: 0; display: flex; flex-direction: column; gap: 3px; }
 .row.user .row-main { align-items: flex-end; }

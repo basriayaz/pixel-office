@@ -1,0 +1,42 @@
+import fs from "node:fs";
+import path from "node:path";
+import { PKG_ROOT } from "./config.js";
+
+export type Locale = Record<string, unknown>;
+
+export function loadLocale(code: string): { code: string; data: Locale } {
+  const dir = path.join(PKG_ROOT, "locales");
+  const file = path.join(dir, `${code}.json`);
+  const fallback = path.join(dir, "en.json");
+  const base = JSON.parse(fs.readFileSync(fallback, "utf8")) as Locale;
+  if (code === "en" || !fs.existsSync(file)) return { code: "en", data: base };
+  return { code, data: deepMerge(base, JSON.parse(fs.readFileSync(file, "utf8")) as Locale) };
+}
+
+export function availableLocales(): string[] {
+  return fs.readdirSync(path.join(PKG_ROOT, "locales")).filter((f) => f.endsWith(".json")).map((f) => f.slice(0, -5));
+}
+
+function deepMerge(a: Locale, b: Locale): Locale {
+  const out: Locale = { ...a };
+  for (const [k, v] of Object.entries(b)) {
+    if (v && typeof v === "object" && !Array.isArray(v) && typeof out[k] === "object" && !Array.isArray(out[k])) out[k] = deepMerge(out[k] as Locale, v as Locale);
+    else out[k] = v;
+  }
+  return out;
+}
+
+export class Translator {
+  constructor(private data: Locale) {}
+
+  get(pathKey: string): unknown {
+    return pathKey.split(".").reduce<unknown>((o, k) => (o && typeof o === "object" ? (o as Locale)[k] : undefined), this.data);
+  }
+
+  // t("server.allowed", { title }) → "Allowed: …"
+  t(key: string, vars: Record<string, string | number> = {}): string {
+    const v = this.get(key);
+    const s = typeof v === "string" ? v : key;
+    return s.replace(/\{(\w+)\}/g, (_, k) => (k in vars ? String(vars[k]) : `{${k}}`));
+  }
+}

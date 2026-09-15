@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Employee — Pixel Office</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Silkscreen&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body class="page">
+  <header class="topbar">
+    <a class="brand" href="/"><span class="brand-dot"></span><span class="brand-name" data-i18n="ui.brand">OFFICE</span></a>
+    <div class="crumb" id="crumb"></div>
+    <a class="btn ghost" id="chatLink" href="/" data-i18n="ui.profile.chatLink">Go to chat →</a>
+  </header>
+
+  <main class="page-body">
+    <section class="card profile-head">
+      <img id="bigPortrait" class="profile-portrait" alt="" />
+      <div class="profile-info">
+        <div class="profile-name"><span id="pName">—</span> <span class="chip" id="pStatus"></span></div>
+        <div class="profile-role" id="pRole">—</div>
+        <div class="profile-meta" id="pMeta"></div>
+        <div class="profile-badges" id="pBadges"></div>
+      </div>
+      <div class="profile-stats" id="pStats"></div>
+    </section>
+
+    <nav class="tabs" id="tabs">
+      <button data-tab="profile" class="on" data-i18n="ui.profile.tabs.profile"></button>
+      <button data-tab="memory" data-i18n="ui.profile.tabs.memory"></button>
+      <button data-tab="skills" data-i18n="ui.profile.tabs.skills"></button>
+      <button data-tab="history" data-i18n="ui.profile.tabs.history"></button>
+      <button data-tab="settings" data-i18n="ui.profile.tabs.settings"></button>
+    </nav>
+
+    <section class="tab card" data-tab="profile">
+      <h2 data-i18n="ui.profile.appearance"></h2>
+      <div id="editor"></div>
+      <h2 data-i18n="ui.profile.identity"></h2>
+      <div class="grid2">
+        <label class="field"><span data-i18n="ui.profile.name"></span><input id="fName" maxlength="40" /></label>
+        <label class="field"><span data-i18n="ui.profile.role"></span><input id="fRole" maxlength="60" /></label>
+      </div>
+      <label class="field"><span data-i18n="ui.profile.prompt"></span><textarea id="fPrompt" rows="10"></textarea></label>
+      <div class="actions"><button class="btn primary" id="saveProfile" data-i18n="ui.profile.save"></button><span class="muted" data-i18n="ui.profile.saveHint"></span></div>
+    </section>
+
+    <section class="tab card" data-tab="memory" hidden>
+      <h2 data-i18n="ui.profile.memoryTitle"></h2>
+      <p class="muted"><span data-i18n="ui.profile.memoryHint"></span> <code id="memPath"></code></p>
+      <textarea id="memory" rows="18" spellcheck="false"></textarea>
+      <div class="actions">
+        <button class="btn primary" id="saveMemory" data-i18n="ui.profile.save"></button>
+        <button class="btn" id="refreshBtn" data-i18n="ui.profile.refresh" data-i18n-title="ui.profile.refreshTitle"></button>
+        <span class="muted" id="refreshInfo"></span>
+      </div>
+    </section>
+
+    <section class="tab card" data-tab="skills" hidden>
+      <h2 data-i18n="ui.profile.skillsTitle"></h2>
+      <p class="muted"><span data-i18n="ui.profile.skillsHint"></span> <code id="skillsPath"></code></p>
+      <div id="skillList" class="skill-list"></div>
+      <h3 id="skillFormTitle"></h3>
+      <form id="skillForm">
+        <div class="grid2">
+          <label class="field"><span data-i18n="ui.profile.skillName"></span><input id="sName" required maxlength="40" data-i18n-ph="ui.profile.skillNamePh" /></label>
+          <label class="field"><span data-i18n="ui.profile.skillDesc"></span><input id="sDesc" required maxlength="300" data-i18n-ph="ui.profile.skillDescPh" /></label>
+        </div>
+        <label class="field"><span data-i18n="ui.profile.skillBody"></span><textarea id="sBody" rows="10"></textarea></label>
+        <div class="actions">
+          <button type="submit" class="btn primary" id="skillSave"></button>
+          <button type="button" class="btn ghost" id="skillCancel" hidden data-i18n="ui.profile.cancel"></button>
+        </div>
+      </form>
+    </section>
+
+    <section class="tab card" data-tab="history" hidden>
+      <h2 data-i18n="ui.profile.historyTitle"></h2>
+      <div id="recent" class="recent"></div>
+    </section>
+
+    <section class="tab card" data-tab="settings" hidden>
+      <h2 data-i18n="ui.profile.settingsTitle"></h2>
+      <div class="field"><span data-i18n="ui.hire.model"></span><div class="choice-cards" id="fModel"></div></div>
+      <div class="field"><span data-i18n="ui.hire.effort"></span><div class="segment" id="fEffort"></div><div class="hint" id="effortHint"></div></div>
+      <div class="field"><span data-i18n="ui.hire.perm"></span><div class="choice-cards" id="fPerm"></div></div>
+      <label class="field"><span data-i18n="ui.profile.refreshHours"></span><input id="fRefresh" type="number" min="0" max="720" /></label>
+      <div class="actions"><button class="btn primary" id="saveSettings" data-i18n="ui.profile.save"></button></div>
+
+      <h2 class="danger-title" data-i18n="ui.profile.danger"></h2>
+      <p class="muted" id="fireHint"></p>
+      <div class="actions">
+        <input id="fireConfirm" data-i18n-ph="ui.profile.fireConfirmPh" />
+        <button class="btn danger" id="fireBtn" disabled data-i18n="ui.profile.fire"></button>
+      </div>
+    </section>
+  </main>
+
+  <div class="toast" id="toast"></div>
+  <script src="/i18n.js"></script>
+  <script src="office.js"></script>
+  <script src="chareditor.js"></script>
+  <script src="shared.js"></script>
+  <script src="employee.js"></script>
+</body>
+</html>

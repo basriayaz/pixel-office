@@ -1,0 +1,29 @@
+{
+  "name": "pixel-office",
+  "version": "0.1.0",
+  "description": "A pixel-art virtual office for your Claude agents: hire AI employees, give them tasks, watch them work, teach them things they never forget.",
+  "license": "MIT",
+  "type": "module",
+  "bin": { "pixel-office": "bin/pixel-office.js" },
+  "files": ["bin", "dist", "web", "locales", "templates", "README.md", "README.tr.md", "LICENSE"],
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "prepare": "npm run build",
+    "start": "node bin/pixel-office.js",
+    "dev": "tsx src/server/index.ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@anthropic-ai/claude-agent-sdk": "^0.3.272",
+    "express": "^5.1.0",
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.0",
+    "@types/node": "^24.0.0",
+    "@types/ws": "^8.5.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0"
+  }
+}

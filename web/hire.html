@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Hire — Pixel Office</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Silkscreen&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body class="page hire-page">
+  <header class="topbar">
+    <a class="brand" href="/"><span class="brand-dot"></span><span class="brand-name" data-i18n="ui.brand">OFFICE</span></a>
+    <div class="crumb" data-i18n="ui.hire.crumb">Hire</div>
+    <a class="btn ghost" href="/" data-i18n="ui.hire.back">← Back to office</a>
+  </header>
+
+  <main class="page-body hire-layout">
+    <aside class="hire-side">
+      <div class="card idcard">
+        <div class="idcard-top" data-i18n="ui.hire.cardTitle">NEW EMPLOYEE CARD</div>
+        <div id="preview"></div>
+        <div class="idcard-name" id="pvName"></div>
+        <div class="idcard-role" id="pvRole"></div>
+        <div class="idcard-badges" id="pvBadges"></div>
+        <div class="idcard-foot"><span data-i18n="ui.hire.hiredOn">Hired:</span> <b id="pvDate"></b></div>
+      </div>
+    </aside>
+
+    <form id="hireForm" class="hire-main">
+      <section class="card step">
+        <div class="step-head"><span class="step-no">1</span><div><h2 data-i18n="ui.hire.step1"></h2><p data-i18n="ui.hire.step1Desc"></p></div></div>
+        <div id="editor"></div>
+      </section>
+
+      <section class="card step">
+        <div class="step-head"><span class="step-no">2</span><div><h2 data-i18n="ui.hire.step2"></h2><p data-i18n="ui.hire.step2Desc"></p></div></div>
+        <div class="grid2">
+          <label class="field"><span data-i18n="ui.hire.name"></span><input id="name" required maxlength="40" data-i18n-ph="ui.hire.namePh" autocomplete="off" /></label>
+          <label class="field"><span data-i18n="ui.hire.role"></span><input id="role" required maxlength="60" data-i18n-ph="ui.hire.rolePh" autocomplete="off" /></label>
+        </div>
+        <div class="field">
+          <span><span data-i18n="ui.hire.presets"></span> <small data-i18n="ui.hire.presetsHint"></small></span>
+          <div class="preset-row" id="presets"></div>
+        </div>
+        <label class="field">
+          <span><span data-i18n="ui.hire.prompt"></span> <small id="promptCount"></small></span>
+          <textarea id="prompt" rows="9" data-i18n-ph="ui.hire.promptPh"></textarea>
+          <small data-i18n="ui.hire.promptHint"></small>
+        </label>
+      </section>
+
+      <section class="card step">
+        <div class="step-head"><span class="step-no">3</span><div><h2 data-i18n="ui.hire.step3"></h2><p data-i18n="ui.hire.step3Desc"></p></div></div>
+        <div class="field"><span data-i18n="ui.hire.model"></span><div class="choice-cards" id="modelCards"></div></div>
+        <div class="field"><span data-i18n="ui.hire.effort"></span><div class="segment" id="effortSeg"></div><div class="hint" id="effortHint"></div></div>
+        <div class="field"><span data-i18n="ui.hire.perm"></span><div class="choice-cards" id="permCards"></div></div>
+      </section>
+    </form>
+  </main>
+
+  <div class="hire-bar">
+    <div class="hire-summary" id="summary"></div>
+    <button type="submit" form="hireForm" class="btn primary big" id="hireBtn" data-i18n="ui.hire.submit">Hire</button>
+    <span class="muted" id="hireMsg"></span>
+  </div>
+
+  <div class="toast" id="toast"></div>
+  <script src="/i18n.js"></script>
+  <script src="office.js"></script>
+  <script src="chareditor.js"></script>
+  <script src="shared.js"></script>
+  <script src="hire.js"></script>
+</body>
+</html>

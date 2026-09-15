@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <title>Sprite kontrol</title>
+  <style>
+    body { background: #cfae7f; margin: 0; padding: 16px; font-family: monospace; }
+    canvas { image-rendering: pixelated; display: block; }
+  </style>
+</head>
+<body>
+  <canvas id="c"></canvas>
+  <script src="/i18n.js"></script>
+  <script src="office.js"></script>
+  <script>
+    const S = 4, CW = 40, CH = 56;
+    const anims = ["stand", "walk0", "walk1", "walk2", "walk3", "sit", "type", "wave", "drink", "think", "slump", "sitfree", "read"];
+    const dirs = ["down", "up", "right", "left"];
+    fetch("/api/employees").then((r) => r.json()).then((emps) => {
+      const c = document.getElementById("c");
+      c.width = (anims.length * CW) * S;
+      c.height = (emps.length * dirs.length * CH) * S;
+      const g = c.getContext("2d");
+      g.imageSmoothingEnabled = false;
+      const buf = document.createElement("canvas");
+      buf.width = c.width / S; buf.height = c.height / S;
+      const b = buf.getContext("2d");
+      let row = 0;
+      for (const e of emps) for (const dir of dirs) {
+        anims.forEach((a, i) => {
+          const anim = a.startsWith("walk") ? "walk" : a;
+          const frame = a.startsWith("walk") ? Number(a[4]) : 0;
+          drawPerson(b, i * CW + 4, row * CH + 3, e, { dir, anim, frame, t: 5000, seed: 0 });
+        });
+        row++;
+      }
+      g.drawImage(buf, 0, 0, c.width, c.height);
+    });
+  </script>
+</body>
+</html>

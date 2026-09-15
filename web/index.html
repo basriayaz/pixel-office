@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Pixel Office</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Silkscreen&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-dot"></span>
+      <span class="brand-name" data-i18n="ui.brand">OFFICE</span>
+    </div>
+    <div class="legend">
+      <span class="legend-item"><i class="dot idle"></i><span data-i18n="ui.legend.idle">Idle</span></span>
+      <span class="legend-item"><i class="dot working"></i><span data-i18n="ui.legend.working">Working</span></span>
+      <span class="legend-item"><i class="dot waiting"></i><span data-i18n="ui.legend.waiting">Waiting for you</span></span>
+      <span class="legend-item"><i class="dot error"></i><span data-i18n="ui.legend.error">Error</span></span>
+    </div>
+    <a class="btn primary small" href="hire.html" data-i18n="ui.hireButton">+ Hire</a>
+    <div class="clock" id="clock">--:--</div>
+  </header>
+
+  <main class="stage">
+    <div class="offline-banner" data-i18n="ui.offlineBanner"></div>
+    <div class="office-wrap" id="officeWrap">
+      <canvas id="office"></canvas>
+      <div class="labels" id="labels"></div>
+    </div>
+    <div class="roster" id="roster"></div>
+  </main>
+
+  <aside class="chat" id="chat">
+    <div class="chat-head">
+      <a class="chat-avatar" id="chatAvatar" href="#" data-i18n-title="ui.chat.profile"></a>
+      <div class="chat-title">
+        <div class="chat-name"><span id="chatName">—</span><span class="model-badge" id="chatModel"></span></div>
+        <div class="chat-role" id="chatRole">—</div>
+      </div>
+      <span class="chip" id="chatStatus"></span>
+      <a class="icon-btn" id="btnProfile" href="#" data-i18n-title="ui.chat.profile">☰</a>
+      <button class="icon-btn" id="btnStop" data-i18n-title="ui.chat.stop">■</button>
+      <button class="icon-btn" id="btnReset" data-i18n-title="ui.chat.reset">⟲</button>
+      <button class="icon-btn" id="btnClose" data-i18n-title="ui.chat.close">×</button>
+    </div>
+    <div class="chat-body" id="chatBody"></div>
+    <form class="chat-foot" id="chatForm">
+      <textarea id="chatInput" rows="1" data-i18n-ph="ui.chat.placeholder"></textarea>
+      <button type="submit" id="btnSend" title="Enter">➤</button>
+    </form>
+    <div class="chat-hint" data-i18n="ui.chat.hint"></div>
+  </aside>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="/i18n.js"></script>
+  <script src="office.js"></script>
+  <script src="shared.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

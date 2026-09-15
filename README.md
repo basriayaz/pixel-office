@@ -112,7 +112,7 @@ One server can host several offices (e.g. one per company or per team), switchab
 }
 ```
 
-Each office also has a **theme** (`"theme": "default" | "football" | "fashion"`) — same floor plan, different walls, floors, furniture and room names (e.g. a football club with a scoreboard, tactics room and stands; a fashion atelier with a cutting table, mannequins, clothes racks and a fitting room). Offices are managed from the ⚙ button next to the tabs: add (name, working directory, theme), rename, change theme or folder, delete (only when empty); changes are written to `config.json` and applied live.
+Each office also has a **theme** (`"theme": "default" | "football" | "fashion" | "gothic"`, picked visually from rendered previews) — same floor plan, different walls, floors, furniture and room names (e.g. a football club with a scoreboard, tactics room and stands; a fashion atelier with a cutting table, mannequins, clothes racks and a fitting room; a gothic manor with stained glass, torches, a cauldron, a suit of armour and a crypt). Offices are managed from the ⚙ button next to the tabs: add (name, working directory, theme), rename, change theme or folder, delete (only when empty); changes are written to `config.json` and applied live.
 
 `employees` lists extra employee folders to show in that office too — the same person (same memory and skills) working in two offices, each with its own chat and session. Chat data is stored per office under `dataDir/<office id>/`. Employee pages are office-scoped: `/?office=shop`, `hire.html?office=shop`, `/api/offices/shop/employees`.
 

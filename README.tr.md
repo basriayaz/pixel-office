@@ -105,7 +105,7 @@ Tek sunucu birden fazla ofis barındırabilir (örn. şirket ya da ekip başına
 }
 ```
 
-Her ofisin bir de **teması** var (`"theme": "default" | "football" | "fashion"`) — aynı oda planı, farklı duvar/zemin/eşya/oda adları (örn. skorbordlu, taktik odalı, tribünlü bir futbol kulübü; kesim masalı, mankenli, askılıklı, prova odalı bir moda atölyesi). Ofisler sekmelerin yanındaki ⚙ düğmesinden yönetilir: ekle (ad, çalışma klasörü, tema), yeniden adlandır, tema/klasör değiştir, sil (yalnızca boşken); değişiklikler `config.json`'a yazılır ve anında uygulanır.
+Her ofisin bir de **teması** var (`"theme": "default" | "football" | "fashion" | "gothic"`, çizilmiş önizlemelerden görsel olarak seçilir) — aynı oda planı, farklı duvar/zemin/eşya/oda adları (örn. skorbordlu, taktik odalı, tribünlü bir futbol kulübü; kesim masalı, mankenli, askılıklı, prova odalı bir moda atölyesi; vitraylı, meşaleli, kazanlı, zırhlı, mahzenli bir gotik malikâne). Ofisler sekmelerin yanındaki ⚙ düğmesinden yönetilir: ekle (ad, çalışma klasörü, tema), yeniden adlandır, tema/klasör değiştir, sil (yalnızca boşken); değişiklikler `config.json`'a yazılır ve anında uygulanır.
 
 `employees` o ofiste ek olarak gösterilecek çalışan klasörlerini listeler — aynı kişi (aynı hafıza ve yetenekler) iki ofiste çalışır, her ofiste ayrı sohbet ve oturumla. Sohbet verileri `dataDir/<ofis id>/` altında ofis başına tutulur. Sayfalar ofise bağlıdır: `/?office=carpe`, `hire.html?office=carpe`, `/api/offices/carpe/employees`.
 

@@ -93,6 +93,13 @@
       "meeting": "DESIGN ROOM",
       "lounge": "FITTING ROOM",
       "archive": "STOCKROOM"
+    },
+    "gothic": {
+      "kitchen": "KITCHEN",
+      "office": "GREAT HALL",
+      "meeting": "LIBRARY",
+      "lounge": "FIRESIDE",
+      "archive": "CRYPT"
     }
   },
   "status": {
@@ -459,7 +466,8 @@
       "label": "Office design",
       "default": "Classic office",
       "football": "Football club",
-      "fashion": "Fashion atelier"
+      "fashion": "Fashion atelier",
+      "gothic": "Gothic manor"
     }
   }
 }

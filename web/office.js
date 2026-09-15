@@ -48,6 +48,64 @@ function deskLayout(n) {
   return { cols, rows };
 }
 
+function buildStaticFor(theme) {
+    const blocked = new Set(), doors = new Set(), decor = [];
+    const block = (x, y) => blocked.add(key(x, y));
+    const add = (x, y, draw) => decor.push({ y: (y + 1) * TILE, draw });
+    const P = (name) => prop(theme, name);
+
+    for (let x = 0; x < COLS; x++) { block(x, 0); block(x, 1); }
+    // interior walls with doors
+    const doorTiles = [[7, 5], [7, 6], [22, 5], [22, 6], [3, 9], [4, 9], [25, 9], [26, 9], [7, 12], [7, 13], [22, 12], [22, 13]];
+    for (const [x, y] of doorTiles) doors.add(key(x, y));
+    for (let y = 2; y < ROWS; y++) { if (!doors.has(key(7, y))) block(7, y); if (!doors.has(key(22, y))) block(22, y); }
+    for (let x = 0; x <= 6; x++) if (!doors.has(key(x, 9))) block(x, 9);
+    for (let x = 23; x < COLS; x++) if (!doors.has(key(x, 9))) block(x, 9);
+
+    // kitchen
+    for (let x = 0; x <= 4; x++) block(x, 2);
+    add(2, 2, (b, t) => P("kitchenCounter")(b, 0, 2 * TILE, t));
+    block(5, 2); add(5, 2, (b) => P("fridge")(b, 5 * TILE, 2 * TILE));
+    block(2, 6); block(3, 6); add(2, 6, (b) => P("roundTable")(b, 2 * TILE, 6 * TILE));
+    add(1, 6, (b) => P("stool")(b, 1 * TILE, 6 * TILE)); add(4, 6, (b) => P("stool")(b, 4 * TILE, 6 * TILE));
+    block(0, 8); add(0, 8, (b) => P("bin")(b, 0, 8 * TILE));
+    block(6, 8); add(6, 8, (b) => P("plant")(b, 6 * TILE, 8 * TILE, 1));
+
+    // meeting room
+    for (let x = 24; x <= 27; x++) for (let y = 4; y <= 5; y++) block(x, y);
+    add(25, 5, (b) => P("meetingTable")(b, 24 * TILE, 4 * TILE));
+    for (const [x, y, dir] of [[24, 3, "down"], [26, 3, "down"], [24, 6, "up"], [26, 6, "up"]]) {
+      add(x, y, (b) => P("meetingChair")(b, x * TILE, y * TILE, dir, "back"));
+      decor.push({ y: (y + 1) * TILE + 8, draw: (b) => P("meetingChair")(b, x * TILE, y * TILE, dir, "front") });
+    }
+    block(29, 2); add(29, 2, (b) => P("plant")(b, 29 * TILE, 2 * TILE, 2));
+    block(23, 8); add(23, 8, (b) => P("plant")(b, 23 * TILE, 8 * TILE, 1));
+
+    // lounge
+    for (let x = 1; x <= 3; x++) block(x, 12);
+    add(2, 12, (b) => P("sofa")(b, 1 * TILE, 12 * TILE));
+    for (let x = 1; x <= 3; x++) block(x, 14);
+    add(2, 14, (b) => P("coffeeTable")(b, 1 * TILE, 14 * TILE));
+    block(5, 11); add(5, 11, (b) => P("bookshelf")(b, 5 * TILE, 11 * TILE));
+    block(0, 10); add(0, 10, (b, t) => P("lamp")(b, 0, 10 * TILE, t));
+    block(6, 16); add(6, 16, (b) => P("plant")(b, 6 * TILE, 16 * TILE, 2));
+    block(0, 16); add(0, 16, (b) => P("plant")(b, 0, 16 * TILE, 1));
+
+    // archive
+    for (let x = 23; x <= 25; x++) block(x, 10);
+    add(24, 10, (b) => P("cabinets")(b, 23 * TILE, 10 * TILE));
+    block(28, 10); block(29, 10); add(28, 10, (b) => P("boxes")(b, 28 * TILE, 10 * TILE));
+    block(27, 13); block(28, 13); add(27, 13, (b, t) => P("printer")(b, 27 * TILE, 13 * TILE, t));
+    block(23, 14); add(23, 14, (b) => P("cooler")(b, 23 * TILE, 14 * TILE));
+    block(29, 16); add(29, 16, (b) => P("plant")(b, 29 * TILE, 16 * TILE, 2));
+
+    // open office extras
+    block(8, 16); add(8, 16, (b) => P("plant")(b, 8 * TILE, 16 * TILE, 2));
+    block(21, 16); add(21, 16, (b) => P("plant")(b, 21 * TILE, 16 * TILE, 2));
+    block(8, 2); add(8, 2, (b, t) => P("coffeeStation")(b, 8 * TILE, 2 * TILE, t));
+      return { blocked, doors, decor };
+}
+
 class Office {
   constructor(canvas, labelsEl) {
     this.canvas = canvas;
@@ -90,66 +148,15 @@ class Office {
     this.buildStatic();
     for (const e of this.emps) for (let dx = -1; dx <= 1; dx++) this.blocked.add(key(e.seat.tx + dx, e.seat.ty + 1));
     for (const { r, el } of this.roomEls) el.textContent = roomName(this.theme, r.key);
+    this.labelsEl.classList.toggle("dark", this.theme === "gothic");
   }
 
   // ---------- layout ----------
   buildStatic() {
-    this.blocked.clear();
-    this.doors.clear();
-    this.decor = [];
-    const block = (x, y) => this.blocked.add(key(x, y));
-    const add = (x, y, draw) => this.decor.push({ y: (y + 1) * TILE, draw });
-    const P = (name) => prop(this.theme, name);
-
-    for (let x = 0; x < COLS; x++) { block(x, 0); block(x, 1); }
-    // interior walls with doors
-    const doorTiles = [[7, 5], [7, 6], [22, 5], [22, 6], [3, 9], [4, 9], [25, 9], [26, 9], [7, 12], [7, 13], [22, 12], [22, 13]];
-    for (const [x, y] of doorTiles) this.doors.add(key(x, y));
-    for (let y = 2; y < ROWS; y++) { if (!this.doors.has(key(7, y))) block(7, y); if (!this.doors.has(key(22, y))) block(22, y); }
-    for (let x = 0; x <= 6; x++) if (!this.doors.has(key(x, 9))) block(x, 9);
-    for (let x = 23; x < COLS; x++) if (!this.doors.has(key(x, 9))) block(x, 9);
-
-    // kitchen
-    for (let x = 0; x <= 4; x++) block(x, 2);
-    add(2, 2, (b, t) => P("kitchenCounter")(b, 0, 2 * TILE, t));
-    block(5, 2); add(5, 2, (b) => P("fridge")(b, 5 * TILE, 2 * TILE));
-    block(2, 6); block(3, 6); add(2, 6, (b) => P("roundTable")(b, 2 * TILE, 6 * TILE));
-    add(1, 6, (b) => P("stool")(b, 1 * TILE, 6 * TILE)); add(4, 6, (b) => P("stool")(b, 4 * TILE, 6 * TILE));
-    block(0, 8); add(0, 8, (b) => P("bin")(b, 0, 8 * TILE));
-    block(6, 8); add(6, 8, (b) => P("plant")(b, 6 * TILE, 8 * TILE, 1));
-
-    // meeting room
-    for (let x = 24; x <= 27; x++) for (let y = 4; y <= 5; y++) block(x, y);
-    add(25, 5, (b) => P("meetingTable")(b, 24 * TILE, 4 * TILE));
-    for (const [x, y, dir] of [[24, 3, "down"], [26, 3, "down"], [24, 6, "up"], [26, 6, "up"]]) {
-      add(x, y, (b) => P("meetingChair")(b, x * TILE, y * TILE, dir, "back"));
-      this.decor.push({ y: (y + 1) * TILE + 8, draw: (b) => P("meetingChair")(b, x * TILE, y * TILE, dir, "front") });
-    }
-    block(29, 2); add(29, 2, (b) => P("plant")(b, 29 * TILE, 2 * TILE, 2));
-    block(23, 8); add(23, 8, (b) => P("plant")(b, 23 * TILE, 8 * TILE, 1));
-
-    // lounge
-    for (let x = 1; x <= 3; x++) block(x, 12);
-    add(2, 12, (b) => P("sofa")(b, 1 * TILE, 12 * TILE));
-    for (let x = 1; x <= 3; x++) block(x, 14);
-    add(2, 14, (b) => P("coffeeTable")(b, 1 * TILE, 14 * TILE));
-    block(5, 11); add(5, 11, (b) => P("bookshelf")(b, 5 * TILE, 11 * TILE));
-    block(0, 10); add(0, 10, (b, t) => P("lamp")(b, 0, 10 * TILE, t));
-    block(6, 16); add(6, 16, (b) => P("plant")(b, 6 * TILE, 16 * TILE, 2));
-    block(0, 16); add(0, 16, (b) => P("plant")(b, 0, 16 * TILE, 1));
-
-    // archive
-    for (let x = 23; x <= 25; x++) block(x, 10);
-    add(24, 10, (b) => P("cabinets")(b, 23 * TILE, 10 * TILE));
-    block(28, 10); block(29, 10); add(28, 10, (b) => P("boxes")(b, 28 * TILE, 10 * TILE));
-    block(27, 13); block(28, 13); add(27, 13, (b, t) => P("printer")(b, 27 * TILE, 13 * TILE, t));
-    block(23, 14); add(23, 14, (b) => P("cooler")(b, 23 * TILE, 14 * TILE));
-    block(29, 16); add(29, 16, (b) => P("plant")(b, 29 * TILE, 16 * TILE, 2));
-
-    // open office extras
-    block(8, 16); add(8, 16, (b) => P("plant")(b, 8 * TILE, 16 * TILE, 2));
-    block(21, 16); add(21, 16, (b) => P("plant")(b, 21 * TILE, 16 * TILE, 2));
-    block(8, 2); add(8, 2, (b, t) => P("coffeeStation")(b, 8 * TILE, 2 * TILE, t));
+    const st = buildStaticFor(this.theme);
+    this.blocked = st.blocked;
+    this.doors = st.doors;
+    this.decor = st.decor;
   }
 
   setEmployees(list) {
@@ -443,6 +450,10 @@ function drawFloors(b, theme = "default") {
     else if (floor === "turf") drawTurf(b, x, y, w, h);
     else if (floor === "carpetLight") drawCarpetLight(b, x, y, w, h);
     else if (floor === "marble") drawMarble(b, x, y, w, h);
+    else if (floor === "stone") drawStone(b, x, y, w, h);
+    else if (floor === "darkwood") drawDarkWood(b, x, y, w, h);
+    else if (floor === "redcarpet") drawRedCarpet(b, x, y, w, h);
+    else if (floor === "cobble") drawCobble(b, x, y, w, h);
     else drawConcrete(b, x, y, w, h);
   }
   // door thresholds
@@ -460,6 +471,11 @@ function drawFloors(b, theme = "default") {
     b.fillRect(px + 40, py, 64, 2); b.fillRect(px + 40, py, 2, 24); b.fillRect(px + 102, py, 2, 24); b.fillRect(px + 40, py + 24, 64, 2);
     b.fillRect(px + 40, py + ph - 26, 64, 2); b.fillRect(px + 40, py + ph - 26, 2, 26); b.fillRect(px + 102, py + ph - 26, 2, 26);
     for (let a = 0; a < 24; a++) b.fillRect(Math.round(px + pw / 2 + Math.cos(a / 24 * Math.PI * 2) * 16) - 1, Math.round(py + ph / 2 + Math.sin(a / 24 * Math.PI * 2) * 16) - 1, 2, 2);
+  } else if (T.rug === "gothic") {
+    b.fillStyle = "#3a1f28"; b.fillRect(8, 11 * TILE + 8, 144, 144);
+    b.fillStyle = "#5a1d24"; b.fillRect(14, 11 * TILE + 14, 132, 132);
+    b.fillStyle = "#ffd166"; for (let i = 0; i < 12; i++) { b.fillRect(16 + i * 11, 11 * TILE + 16, 5, 2); b.fillRect(16 + i * 11, 11 * TILE + 138, 5, 2); b.fillRect(16, 11 * TILE + 18 + i * 11, 2, 5); b.fillRect(140, 11 * TILE + 18 + i * 11, 2, 5); }
+    b.fillStyle = "#3a1f28"; b.fillRect(60, 11 * TILE + 60, 40, 40); b.fillStyle = "#ffd166"; b.fillRect(78, 11 * TILE + 66, 4, 28); b.fillRect(66, 11 * TILE + 78, 28, 4);
   } else if (T.rug === "round") {
     b.fillStyle = "#e9c4d3"; b.fillRect(30, 11 * TILE + 30, 100, 100); b.fillRect(20, 11 * TILE + 46, 120, 68); b.fillRect(46, 11 * TILE + 20, 68, 120);
     b.fillStyle = "#f4dbe5"; b.fillRect(40, 11 * TILE + 40, 80, 80); b.fillRect(32, 11 * TILE + 52, 96, 56); b.fillRect(52, 11 * TILE + 32, 56, 96);
@@ -1159,6 +1175,190 @@ const PROPS = {
 };
 const PROP_ALIAS = { kitchenCounter: "counter" };
 const prop = (theme, name) => { const n = PROP_ALIAS[name] || name; return (PROPS[theme] && PROPS[theme][n]) || PROPS.default[n]; };
+
+// --- gothic theme ---
+THEMES.gothic = { wall: { face: "#3b3547", top: "#4a4358", base: "#2c2735", base2: "#1f1b28", edge: "#15121b", inner: "#4c4459", innerLight: "#5e5670", innerDark: "#221e2b" }, floors: { kitchen: "stone", office: "stone", meeting: "darkwood", lounge: "redcarpet", archive: "cobble" }, rug: "gothic" };
+
+function drawStone(b, x, y, w, h) {
+  for (let py = y; py < y + h; py += 24) for (let px = x - ((py / 24) % 2) * 24; px < x + w; px += 48) {
+    const cx = Math.max(px, x), cw = Math.min(px + 48, x + w) - cx;
+    if (cw <= 0) continue;
+    b.fillStyle = ((px + py) / 24) % 3 === 0 ? "#6a6474" : "#5f596a"; b.fillRect(cx, py, cw, 24);
+    b.fillStyle = "#3e3947"; b.fillRect(cx, py + 23, cw, 1); if (px >= x) b.fillRect(px, py, 1, 24);
+    b.fillStyle = "rgba(255,255,255,.05)"; b.fillRect(cx + 4, py + 4, Math.max(0, cw - 10), 1);
+  }
+}
+function drawDarkWood(b, x, y, w, h) {
+  b.fillStyle = "#4a3324"; b.fillRect(x, y, w, h);
+  for (let py = y; py < y + h; py += 16) { b.fillStyle = ((py - y) / 16) % 2 ? "#44301f" : "#4f3727"; b.fillRect(x, py, w, 16); b.fillStyle = "#2e1f14"; b.fillRect(x, py + 15, w, 1); const off = ((py / 16) % 3) * 40; for (let px = x + 30 - off; px < x + w; px += 120) if (px >= x) b.fillRect(px, py, 1, 16); }
+}
+function drawRedCarpet(b, x, y, w, h) {
+  b.fillStyle = "#5a1d24"; b.fillRect(x, y, w, h);
+  b.fillStyle = "#6b2430"; for (let py = y + 4; py < y + h; py += 8) for (let px = x + ((py / 8) % 2) * 4; px < x + w; px += 8) b.fillRect(px, py, 2, 2);
+}
+function drawCobble(b, x, y, w, h) {
+  b.fillStyle = "#4b4650"; b.fillRect(x, y, w, h);
+  for (let py = y; py < y + h; py += 12) for (let px = x - ((py / 12) % 2) * 6; px < x + w; px += 12) { const cx = Math.max(px, x); if (cx + 10 > x + w) continue; b.fillStyle = ((px + py) / 12) % 2 ? "#5d5763" : "#565060"; b.fillRect(cx + 1, py + 1, 10, 10); b.fillStyle = "rgba(255,255,255,.06)"; b.fillRect(cx + 2, py + 2, 5, 1); }
+}
+function drawCandleFlame(b, x, y, t, seed = 0) {
+  const f = Math.floor((t + seed * 137) / 180) % 3;
+  b.fillStyle = "#ffb347"; b.fillRect(x, y - 4 + (f === 1 ? 1 : 0), 2, 4);
+  b.fillStyle = "#fff0a0"; b.fillRect(x, y - 2 + (f === 2 ? 1 : 0), 2, 2);
+  b.fillStyle = "rgba(255,180,80,.10)"; b.fillRect(x - 6, y - 10, 14, 14);
+}
+function drawCandelabra(b, x, y, t) {
+  b.fillStyle = OUTLINE; b.fillRect(x + 11, y - 14, 10, 2); b.fillRect(x + 15, y - 12, 2, 20); b.fillRect(x + 9, y + 6, 14, 3);
+  b.fillStyle = "#6c6c74"; b.fillRect(x + 12, y - 13, 8, 1); b.fillRect(x + 16, y - 11, 1, 18);
+  for (const cx of [x + 11, x + 15, x + 19]) { b.fillStyle = "#f4ecd8"; b.fillRect(cx, y - 22, 2, 8); drawCandleFlame(b, cx, y - 22, t, cx); }
+}
+function drawGothicCounter(b, x, y, t) {
+  outlineRect(b, x, y + 6, 160, 26, "#5f596a"); b.fillStyle = "#726b7d"; b.fillRect(x, y + 6, 160, 4); b.fillStyle = "#3e3947"; b.fillRect(x, y + 30, 160, 2);
+  for (let i = 0; i < 5; i++) { b.fillStyle = "#4b4650"; b.fillRect(x + i * 32 + 2, y + 14, 28, 16); }
+  // cauldron
+  outlineRect(b, x + 54, y - 12, 34, 22, "#2b2b30"); b.fillStyle = "#3a3a40"; b.fillRect(x + 56, y - 10, 30, 4); b.fillStyle = "#1c1c20"; b.fillRect(x + 50, y - 14, 42, 4);
+  b.fillStyle = "#4ade80"; b.fillRect(x + 58, y - 11, 26, 3); const bub = Math.floor(t / 400) % 3; b.fillStyle = "#a3ffb0"; b.fillRect(x + 62 + bub * 6, y - 13, 2, 2);
+  b.fillStyle = "rgba(74,222,128,.15)"; b.fillRect(x + 54, y - 26, 34, 14);
+  // candles + potion bottles
+  drawCandelabra(b, x + 4, y + 2, t);
+  for (let i = 0; i < 3; i++) { const c = ["#c678dd", "#61afef", "#d9534f"][i]; outlineRect(b, x + 104 + i * 14, y - 6, 8, 12, c); b.fillStyle = "#2b2b30"; b.fillRect(x + 106 + i * 14, y - 10, 4, 4); }
+}
+function drawArmor(b, x, y) {
+  outlineRect(b, x + 8, y + 22, 16, 4, "#3e3947");
+  b.fillStyle = OUTLINE; b.fillRect(x + 11, y - 26, 10, 10); b.fillStyle = "#9aa0ad"; b.fillRect(x + 12, y - 25, 8, 8); b.fillStyle = "#1c1c20"; b.fillRect(x + 13, y - 21, 6, 2);
+  b.fillStyle = "#d9534f"; b.fillRect(x + 15, y - 30, 2, 4);
+  outlineRect(b, x + 9, y - 16, 14, 18, "#8a909c"); b.fillStyle = "#b8bec9"; b.fillRect(x + 10, y - 15, 3, 8); b.fillStyle = "#6c727e"; b.fillRect(x + 15, y - 12, 2, 12);
+  outlineRect(b, x + 4, y - 15, 5, 14, "#8a909c"); outlineRect(b, x + 23, y - 15, 5, 14, "#8a909c");
+  outlineRect(b, x + 10, y + 2, 5, 20, "#8a909c"); outlineRect(b, x + 17, y + 2, 5, 20, "#8a909c");
+  b.fillStyle = OUTLINE; b.fillRect(x + 27, y - 24, 2, 34); b.fillStyle = "#c0c0c0"; b.fillRect(x + 27, y - 26, 2, 12);
+}
+function drawGothicTable(b, x, y, t) {
+  b.fillStyle = OUTLINE; b.fillRect(x + 6, y + 2, 52, 26); b.fillRect(x + 2, y + 6, 60, 18);
+  b.fillStyle = "#4a3324"; b.fillRect(x + 7, y + 3, 50, 24); b.fillRect(x + 3, y + 7, 58, 16);
+  b.fillStyle = "#5f4330"; b.fillRect(x + 7, y + 3, 50, 4); b.fillStyle = "#2e1f14"; b.fillRect(x + 7, y + 23, 50, 4);
+  b.fillStyle = "#2e1f14"; b.fillRect(x + 28, y + 26, 8, 6);
+  drawCandelabra(b, x + 16, y + 14, t);
+  b.fillStyle = "#c9a781"; b.fillRect(x + 40, y + 9, 12, 9); b.fillStyle = "#6b4a2b"; b.fillRect(x + 41, y + 10, 10, 1);
+}
+function drawGothicMeeting(b, x, y, t) {
+  outlineRect(b, x + 4, y + 4, 120, 48, "#4a3324"); b.fillStyle = "#5f4330"; b.fillRect(x + 4, y + 4, 120, 5); b.fillStyle = "#2e1f14"; b.fillRect(x + 4, y + 44, 120, 8);
+  b.fillStyle = "#3a281c"; for (let i = 0; i < 6; i++) b.fillRect(x + 10 + i * 19, y + 12, 1, 30);
+  for (const [px, py, c] of [[14, 14, "#7a1f2b"], [80, 12, "#1f3a5a"], [50, 28, "#3a5a1f"]]) { outlineRect(b, x + px, y + py, 18, 12, c); b.fillStyle = "#c9a781"; b.fillRect(x + px + 2, y + py + 2, 14, 1); b.fillRect(x + px + 2, y + py + 9, 14, 1); }
+  drawCandelabra(b, x + 92, y + 30, t); drawCandelabra(b, x + 24, y + 34, t);
+  b.fillStyle = "#f4ecd8"; b.fillRect(x + 100, y + 14, 6, 6); b.fillStyle = "#1c1c20"; b.fillRect(x + 101, y + 16, 1, 1); b.fillRect(x + 104, y + 16, 1, 1);
+}
+function drawThrone(b, x, y) {
+  outlineRect(b, x + 2, y - 16, 92, 24, "#3a1f28"); b.fillStyle = "#5a1d24"; b.fillRect(x + 6, y - 12, 84, 16);
+  b.fillStyle = "#ffd166"; b.fillRect(x + 2, y - 22, 6, 6); b.fillRect(x + 88, y - 22, 6, 6); b.fillRect(x + 44, y - 24, 8, 8); b.fillStyle = "#3a1f28"; b.fillRect(x + 46, y - 22, 4, 4);
+  outlineRect(b, x, y + 6, 96, 22, "#6b2430"); b.fillStyle = "#8a2f3d"; b.fillRect(x + 6, y + 8, 26, 12); b.fillRect(x + 35, y + 8, 26, 12); b.fillRect(x + 64, y + 8, 26, 12);
+  b.fillStyle = "#3a1f28"; b.fillRect(x, y + 22, 96, 6); outlineRect(b, x - 2, y + 2, 8, 24, "#3a1f28"); outlineRect(b, x + 90, y + 2, 8, 24, "#3a1f28");
+  b.fillStyle = "#ffd166"; b.fillRect(x + 4, y + 28, 4, 3); b.fillRect(x + 88, y + 28, 4, 3);
+}
+function drawChest(b, x, y) {
+  outlineRect(b, x + 12, y + 4, 72, 22, "#4a3324"); b.fillStyle = "#5f4330"; b.fillRect(x + 12, y + 4, 72, 6);
+  b.fillStyle = "#8a909c"; b.fillRect(x + 12, y + 10, 72, 2); b.fillRect(x + 24, y + 4, 3, 22); b.fillRect(x + 69, y + 4, 3, 22);
+  b.fillStyle = "#ffd166"; b.fillRect(x + 45, y + 12, 6, 7); b.fillStyle = OUTLINE; b.fillRect(x + 47, y + 15, 2, 2);
+  b.fillStyle = "#f4ecd8"; b.fillRect(x + 30, y - 4, 8, 7); b.fillStyle = "#1c1c20"; b.fillRect(x + 32, y - 2, 1, 2); b.fillRect(x + 35, y - 2, 1, 2); b.fillRect(x + 32, y + 1, 4, 1);
+}
+function drawTomeShelf(b, x, y) {
+  outlineRect(b, x + 2, y - 30, 28, 60, "#2e1f14"); b.fillStyle = "#4a3324"; b.fillRect(x + 4, y - 28, 24, 56);
+  const cols = ["#7a1f2b", "#1f3a5a", "#3a5a1f", "#5a3a1f", "#4a2a5a", "#6b4a2b"];
+  for (let s = 0; s < 3; s++) { b.fillStyle = "#2e1f14"; b.fillRect(x + 4, y - 12 + s * 18 - 2, 24, 2); for (let i = 0; i < 5; i++) { b.fillStyle = cols[(s * 5 + i) % cols.length]; b.fillRect(x + 6 + i * 4, y - 26 + s * 18 + (i % 2), 3, 12 - (i % 2)); b.fillStyle = "#c9a781"; b.fillRect(x + 7 + i * 4, y - 22 + s * 18, 1, 1); } }
+  b.fillStyle = "rgba(255,255,255,.35)"; b.fillRect(x + 4, y - 28, 8, 1); b.fillRect(x + 4, y - 28, 1, 8); b.fillRect(x + 5, y - 27, 1, 1); b.fillRect(x + 6, y - 26, 1, 1); b.fillRect(x + 7, y - 25, 1, 1);
+}
+function drawCandleStand(b, x, y, t) {
+  b.fillStyle = OUTLINE; b.fillRect(x + 14, y - 30, 4, 56); b.fillStyle = "#6c6c74"; b.fillRect(x + 15, y - 29, 2, 54);
+  outlineRect(b, x + 8, y + 24, 16, 5, "#3e3947");
+  b.fillStyle = OUTLINE; b.fillRect(x + 4, y - 32, 24, 3); b.fillStyle = "#6c6c74"; b.fillRect(x + 5, y - 31, 22, 1);
+  for (const cx of [x + 6, x + 15, x + 24]) { b.fillStyle = "#f4ecd8"; b.fillRect(cx, y - 42, 2, 10); drawCandleFlame(b, cx, y - 42, t, cx); }
+  b.fillStyle = `rgba(255,180,80,${0.08 + (Math.floor(t / 300) % 2) * 0.03})`; b.fillRect(x - 10, y - 46, 52, 60);
+}
+function drawBarrels(b, x, y) {
+  for (let i = 0; i < 3; i++) { const cx = x + i * 32; outlineRect(b, cx + 4, y - 18, 24, 46, "#5f4330"); b.fillStyle = "#4a3324"; b.fillRect(cx + 4, y - 18, 24, 3); b.fillRect(cx + 4, y + 25, 24, 3); b.fillStyle = "#8a909c"; b.fillRect(cx + 4, y - 10, 24, 2); b.fillRect(cx + 4, y + 16, 24, 2); b.fillStyle = "#2e1f14"; for (let v = 0; v < 4; v++) b.fillRect(cx + 8 + v * 6, y - 15, 1, 40); b.fillStyle = "#1c1c20"; b.fillRect(cx + 14, y + 4, 4, 4); }
+}
+function drawBones(b, x, y) {
+  b.fillStyle = OUTLINE; b.fillRect(x + 4, y + 8, 56, 20);
+  b.fillStyle = "#2b2730"; b.fillRect(x + 5, y + 9, 54, 18);
+  const skull = (sx, sy) => { b.fillStyle = OUTLINE; b.fillRect(sx - 1, sy - 1, 12, 11); b.fillStyle = "#f4ecd8"; b.fillRect(sx, sy, 10, 7); b.fillRect(sx + 2, sy + 7, 6, 2); b.fillStyle = "#1c1c20"; b.fillRect(sx + 2, sy + 2, 2, 2); b.fillRect(sx + 6, sy + 2, 2, 2); b.fillRect(sx + 3, sy + 7, 1, 1); b.fillRect(sx + 6, sy + 7, 1, 1); };
+  skull(x + 10, y + 10); skull(x + 40, y + 12);
+  b.fillStyle = "#f4ecd8"; b.fillRect(x + 22, y + 22, 18, 2); b.fillRect(x + 20, y + 20, 3, 5); b.fillRect(x + 39, y + 20, 3, 5); b.fillRect(x + 8, y + 24, 12, 2);
+  b.fillStyle = "#4ade80"; b.fillRect(x + 28, y + 12, 4, 6); b.fillStyle = "#1c1c20"; b.fillRect(x + 29, y + 9, 2, 3);
+}
+function drawLectern(b, x, y, t) {
+  outlineRect(b, x + 22, y + 22, 20, 6, "#2e1f14"); b.fillStyle = OUTLINE; b.fillRect(x + 30, y - 2, 4, 24); b.fillStyle = "#4a3324"; b.fillRect(x + 31, y - 1, 2, 22);
+  outlineRect(b, x + 16, y - 12, 32, 12, "#4a3324"); b.fillStyle = "#5f4330"; b.fillRect(x + 16, y - 12, 32, 2);
+  outlineRect(b, x + 19, y - 18, 26, 10, "#f4ecd8"); b.fillStyle = "#6b4a2b"; b.fillRect(x + 22, y - 15, 8, 1); b.fillRect(x + 22, y - 12, 6, 1); b.fillRect(x + 34, y - 15, 8, 1); b.fillRect(x + 34, y - 12, 7, 1);
+  b.fillStyle = "#c678dd"; b.fillRect(x + 31, y - 16, 2, 6); if (Math.floor(t / 500) % 2) { b.fillStyle = "rgba(198,120,221,.3)"; b.fillRect(x + 26, y - 22, 12, 10); }
+  b.fillStyle = "#f4ecd8"; b.fillRect(x + 50, y - 8, 2, 8); drawCandleFlame(b, x + 50, y - 8, t, 5);
+}
+function drawGargoyle(b, x, y) {
+  outlineRect(b, x + 6, y + 18, 20, 10, "#5f596a"); b.fillStyle = "#726b7d"; b.fillRect(x + 6, y + 18, 20, 2);
+  b.fillStyle = OUTLINE; b.fillRect(x + 9, y - 6, 14, 24); b.fillStyle = "#6a6474"; b.fillRect(x + 10, y - 5, 12, 22);
+  b.fillStyle = OUTLINE; b.fillRect(x + 4, y - 14, 6, 12); b.fillRect(x + 22, y - 14, 6, 12); b.fillStyle = "#6a6474"; b.fillRect(x + 5, y - 13, 4, 10); b.fillRect(x + 23, y - 13, 4, 10);
+  b.fillStyle = OUTLINE; b.fillRect(x + 11, y - 12, 10, 8); b.fillStyle = "#6a6474"; b.fillRect(x + 12, y - 11, 8, 6); b.fillStyle = "#ffb347"; b.fillRect(x + 13, y - 9, 2, 2); b.fillRect(x + 17, y - 9, 2, 2);
+  b.fillStyle = OUTLINE; b.fillRect(x + 12, y - 15, 2, 3); b.fillRect(x + 18, y - 15, 2, 3);
+}
+function drawCauldronSmall(b, x, y, t) {
+  outlineRect(b, x + 6, y + 4, 22, 18, "#2b2b30"); b.fillStyle = "#1c1c20"; b.fillRect(x + 3, y + 2, 28, 4); b.fillStyle = "#c678dd"; b.fillRect(x + 8, y + 5, 18, 3);
+  const bub = Math.floor(t / 350) % 3; b.fillStyle = "#e9b5ff"; b.fillRect(x + 10 + bub * 5, y + 3, 2, 2); b.fillStyle = "rgba(198,120,221,.15)"; b.fillRect(x + 4, y - 10, 26, 14);
+  b.fillStyle = OUTLINE; b.fillRect(x + 8, y + 22, 4, 6); b.fillRect(x + 22, y + 22, 4, 6);
+}
+function drawWallDecorGothic(b, t) {
+  // stained glass over the two windows (arched)
+  for (const wx of [9 * TILE, 17 * TILE]) {
+    b.fillStyle = "#2c2735"; b.fillRect(wx - 4, 4, 104, 48);
+    b.fillStyle = "#1f1b28"; b.fillRect(wx, 8, 96, 40);
+    const cols = ["#7a1f2b", "#1f3a5a", "#3a5a1f", "#5a3a8a", "#8a6a1f"];
+    for (let i = 0; i < 6; i++) for (let j = 0; j < 4; j++) { b.fillStyle = cols[(i + j) % cols.length]; b.fillRect(wx + 2 + i * 16, 10 + j * 10, 14, 8); }
+    b.fillStyle = "#15121b"; b.fillRect(wx + 47, 8, 2, 40); b.fillRect(wx, 27, 96, 2); for (let i = 1; i < 6; i++) b.fillRect(wx + i * 16, 8, 1, 40);
+    b.fillStyle = "#2c2735"; b.fillRect(wx, 8, 8, 6); b.fillRect(wx + 88, 8, 8, 6); b.fillRect(wx, 8, 4, 10); b.fillRect(wx + 92, 8, 4, 10);
+    b.fillStyle = `rgba(255,230,180,${0.06 + (Math.floor(t / 900) % 2) * 0.02})`; b.fillRect(wx, 48, 96, 8);
+  }
+  // chandelier (center)
+  const cx = 14 * TILE + 16;
+  b.fillStyle = "#3a3a40"; b.fillRect(cx - 1, 0, 2, 14); b.fillRect(cx - 22, 14, 44, 3); b.fillRect(cx - 24, 17, 4, 8); b.fillRect(cx + 20, 17, 4, 8); b.fillRect(cx - 2, 17, 4, 8);
+  for (const px of [cx - 22, cx, cx + 22]) { b.fillStyle = "#f4ecd8"; b.fillRect(px - 1, 20, 2, 6); drawCandleFlame(b, px - 1, 20, t, px); }
+  // torches on kitchen and meeting walls
+  for (const px of [30, 120, 26 * TILE, 28 * TILE + 20]) { b.fillStyle = OUTLINE; b.fillRect(px, 22, 4, 22); b.fillStyle = "#6b4a2b"; b.fillRect(px + 1, 24, 2, 18); b.fillStyle = "#ffb347"; b.fillRect(px - 2, 12 + (Math.floor((t + px) / 150) % 2), 8, 10); b.fillStyle = "#fff0a0"; b.fillRect(px, 15, 4, 5); b.fillStyle = "rgba(255,180,80,.12)"; b.fillRect(px - 10, 6, 24, 40); }
+  // portrait with watching eyes
+  outlineRect(b, 13 * TILE + 2, 8, 30, 40, "#8a6a1f"); b.fillStyle = "#2b2730"; b.fillRect(13 * TILE + 6, 12, 22, 32);
+  b.fillStyle = "#c9a781"; b.fillRect(13 * TILE + 12, 16, 10, 10); b.fillRect(13 * TILE + 9, 26, 16, 14); b.fillStyle = "#1c1c20"; b.fillRect(13 * TILE + 10, 14, 14, 4);
+  const look = Math.floor(t / 1500) % 3; b.fillStyle = "#1c1c20"; b.fillRect(13 * TILE + 13 + look, 20, 2, 2); b.fillRect(13 * TILE + 18 + look, 20, 2, 2);
+  // cobwebs in the corners
+  b.fillStyle = "rgba(255,255,255,.35)"; for (let i = 0; i < 8; i++) { b.fillRect(0, i * 3, 24 - i * 3, 1); b.fillRect(i * 3, 0, 1, 24 - i * 3); b.fillRect(LW - 24 + i * 3, i * 3, 1, 1); b.fillRect(LW - 1 - i * 3, 0, 1, 24 - i * 3); }
+  // moon in the sky above the meeting wall
+  b.fillStyle = "#f4ecd8"; b.fillRect(20 * TILE + 10, 10, 12, 12); b.fillStyle = THEMES.gothic.wall.face; b.fillRect(20 * TILE + 15, 8, 10, 10);
+  // clock
+  drawClock(b, 15 * TILE + 16, 28);
+}
+PROPS.gothic = { counter: drawGothicCounter, fridge: drawArmor, roundTable: drawGothicTable, meetingTable: drawGothicMeeting, sofa: drawThrone, coffeeTable: drawChest, bookshelf: drawTomeShelf, lamp: drawCandleStand, cabinets: drawBarrels, boxes: drawBones, printer: drawLectern, cooler: drawGargoyle, coffeeStation: drawCauldronSmall, wallDecor: drawWallDecorGothic };
+THEME_NAMES.push("gothic");
+
+// ---------- theme previews (for the office picker) ----------
+function renderThemePreview(theme, width = 240) {
+  const buf = document.createElement("canvas");
+  buf.width = LW; buf.height = LH;
+  const b = buf.getContext("2d");
+  const st = buildStaticFor(theme);
+  drawFloors(b, theme);
+  drawWalls(b, st.blocked, st.doors, 5000, theme);
+  const items = st.decor.map((d) => ({ y: d.y, draw: () => d.draw(b, 5000) }));
+  // a couple of desks so the preview reads as an office
+  for (const seat of [{ tx: 11, ty: 5 }, { tx: 17, ty: 5 }, { tx: 11, ty: 11 }, { tx: 17, ty: 11 }]) {
+    const feet = (seat.ty + 1) * TILE;
+    items.push({ y: feet - 24, draw: () => drawChair(b, seat.tx * TILE, feet) });
+    items.push({ y: feet + TILE + 6, draw: () => drawDesk(b, { seat, tx: -1, ty: -1, path: [], status: "idle", color: "#61afef", look: {}, seed: 0 }, 5000) });
+  }
+  items.sort((a, c) => a.y - c.y);
+  for (const it of items) it.draw();
+  const out = document.createElement("canvas");
+  out.width = width; out.height = Math.round(width * LH / LW);
+  const g = out.getContext("2d");
+  g.imageSmoothingEnabled = true;
+  g.drawImage(buf, 0, 0, out.width, out.height);
+  return out.toDataURL();
+}
+window.renderThemePreview = renderThemePreview;
+window.THEME_NAMES = THEME_NAMES;
 
 // ---------- characters (32x48 box, feet at oy+48, slim ~3.5 heads tall) ----------
 function drawPerson(b, ox, oy, e, o) {

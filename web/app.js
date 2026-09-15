@@ -397,10 +397,11 @@ function renderOfficeList() {
     const row = document.createElement("div");
     row.className = "office-row";
     const n = o.employees.size;
-    const themeOpts = (PO.themes || ["default"]).map((th) => `<option value="${th}" ${th === (o.info.theme || "default") ? "selected" : ""}>${escapeHtml(t(`ui.themes.${th}`))}</option>`).join("");
-    row.innerHTML = `<input class="o-name" value="${escapeHtml(o.info.name)}" maxlength="60" /><input class="o-cwd" value="${escapeHtml(o.info.cwd === PO.project ? "" : o.info.cwd)}" placeholder="${escapeHtml(t("ui.offices.cwdPh"))}" maxlength="500" /><select class="o-theme">${themeOpts}</select><span class="count">${escapeHtml(t("ui.offices.employees", { n }))}</span><span class="office-actions"><button class="btn small o-save">${t("ui.offices.save")}</button> <button class="btn small danger o-del" ${n ? `disabled title="${escapeHtml(t("ui.offices.cannotDelete"))}"` : ""}>${t("ui.offices.delete")}</button></span>`;
+    let rowTheme = o.info.theme || "default";
+    row.innerHTML = `<div class="o-head"><input class="o-name" value="${escapeHtml(o.info.name)}" maxlength="60" /><input class="o-cwd" value="${escapeHtml(o.info.cwd === PO.project ? "" : o.info.cwd)}" placeholder="${escapeHtml(t("ui.offices.cwdPh"))}" maxlength="500" /><span class="count">${escapeHtml(t("ui.offices.employees", { n }))}</span><span class="office-actions"><button class="btn small o-save">${t("ui.offices.save")}</button> <button class="btn small danger o-del" ${n ? `disabled title="${escapeHtml(t("ui.offices.cannotDelete"))}"` : ""}>${t("ui.offices.delete")}</button></span></div><div class="theme-cards small"></div>`;
+    buildThemeCards(row.querySelector(".theme-cards"), rowTheme, (v) => { rowTheme = v; });
     row.querySelector(".o-save").onclick = async () => {
-      try { await api("PUT", `/api/offices/${encodeURIComponent(o.info.id)}`, { name: row.querySelector(".o-name").value, cwd: row.querySelector(".o-cwd").value.trim(), theme: row.querySelector(".o-theme").value }); toast(t("ui.offices.saved")); }
+      try { await api("PUT", `/api/offices/${encodeURIComponent(o.info.id)}`, { name: row.querySelector(".o-name").value, cwd: row.querySelector(".o-cwd").value.trim(), theme: rowTheme }); toast(t("ui.offices.saved")); }
       catch (err) { toast(t("ui.offices.error", { message: err.message })); }
     };
     const del = row.querySelector(".o-del");
@@ -412,8 +413,22 @@ function renderOfficeList() {
     host.appendChild(row);
   }
 }
+// Theme picker: rendered office previews, like choosing a map in a game.
+const themePreviews = {};
+const themePreview = (th) => (themePreviews[th] ??= renderThemePreview(th, 320));
+function buildThemeCards(host, current, onChange) {
+  host.innerHTML = "";
+  const cards = [];
+  for (const th of PO.themes || ["default"]) {
+    const c = document.createElement("button");
+    c.type = "button"; c.className = "theme-card" + (th === current ? " on" : ""); c.dataset.value = th;
+    c.innerHTML = `<img src="${themePreview(th)}" alt="" /><span>${escapeHtml(t(`ui.themes.${th}`))}</span>`;
+    c.onclick = () => { cards.forEach((x) => x.classList.toggle("on", x === c)); onChange(th); };
+    host.appendChild(c); cards.push(c);
+  }
+}
 let newTheme = "default";
-buildSegment($("oTheme"), (PO.themes || ["default"]).map((th) => ({ value: th, name: t(`ui.themes.${th}`) })), newTheme, (v) => { newTheme = v; });
+buildThemeCards($("oTheme"), newTheme, (v) => { newTheme = v; });
 $("btnOffices").onclick = () => { renderOfficeList(); $("officesModal").hidden = false; $("oName").focus(); };
 $("officesClose").onclick = () => { $("officesModal").hidden = true; };
 $("officesModal").addEventListener("click", (ev) => { if (ev.target === $("officesModal")) $("officesModal").hidden = true; });

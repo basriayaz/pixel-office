@@ -96,6 +96,7 @@ body.offline .offline-banner { display: block; }
 .labels.compact .label small { display: none; }
 .room-label { position: absolute; transform: translate(-50%, 0); font-family: "Silkscreen", monospace; font-size: 9px; letter-spacing: 2px; color: rgba(40, 30, 20, .45); white-space: nowrap; }
 .labels.compact .room-label { display: none; }
+.labels.dark .room-label { color: rgba(255, 240, 220, .45); }
 
 .roster { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 14px; }
 .roster-chip {
@@ -117,12 +118,21 @@ body.offline .offline-banner { display: block; }
 .modal-head h2 { margin: 0; font-size: 14px; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); }
 .modal-card h3 { font-size: 12px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; margin: 18px 0 10px; }
 .office-list { display: flex; flex-direction: column; gap: 8px; }
-.office-row { display: grid; grid-template-columns: 1fr 1.3fr auto auto auto; gap: 8px; align-items: center; background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; }
+.office-row { display: flex; flex-direction: column; gap: 8px; background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; }
+.o-head { display: grid; grid-template-columns: 1fr 1.3fr auto auto; gap: 8px; align-items: center; }
+.theme-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+.theme-cards.small { grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 6px; }
+.theme-card { background: var(--bg-2); border: 2px solid var(--line); border-radius: 10px; padding: 5px; cursor: pointer; font: inherit; color: var(--muted); display: flex; flex-direction: column; gap: 5px; align-items: stretch; }
+.theme-card img { width: 100%; border-radius: 6px; image-rendering: auto; display: block; }
+.theme-card span { font-size: 11px; text-align: center; }
+.theme-card:hover { border-color: #4a4e63; color: var(--text); }
+.theme-card.on { border-color: var(--accent); color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+.theme-cards.small .theme-card span { font-size: 10px; }
 .office-row select { background: var(--bg-2); color: var(--text); border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; font: inherit; font-size: 12px; }
 .office-row input { background: var(--bg-2); color: var(--text); border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; font: inherit; font-size: 12px; width: 100%; }
 .office-row .count { color: var(--muted); font-size: 11px; white-space: nowrap; }
 .office-add .field input { width: 100%; }
-@media (max-width: 700px) { .office-row { grid-template-columns: 1fr; } }
+@media (max-width: 700px) { .o-head { grid-template-columns: 1fr; } }
 
 /* ---------- chat panel ---------- */
 .chat {

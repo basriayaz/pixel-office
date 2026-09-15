@@ -93,6 +93,13 @@
       "meeting": "TASARIM ODASI",
       "lounge": "PROVA ODASI",
       "archive": "DEPO"
+    },
+    "gothic": {
+      "kitchen": "MUTFAK",
+      "office": "BÜYÜK SALON",
+      "meeting": "KÜTÜPHANE",
+      "lounge": "ŞÖMİNE",
+      "archive": "MAHZEN"
     }
   },
   "status": {
@@ -459,7 +466,8 @@
       "label": "Ofis tasarımı",
       "default": "Klasik ofis",
       "football": "Futbol kulübü",
-      "fashion": "Moda atölyesi"
+      "fashion": "Moda atölyesi",
+      "gothic": "Gotik malikâne"
     }
   }
 }

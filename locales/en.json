@@ -397,6 +397,10 @@
         "role": "Content & Social Media",
         "prompt": "You are {name}, responsible for content and social media. You prepare content calendars, post copy, story ideas and visual briefs for Instagram/TikTok/LinkedIn. You stay true to the brand voice; every piece has a purpose and a call to action."
       }
-    ]
+    ],
+    "offices": {
+      "default": "Office",
+      "label": "Offices"
+    }
   }
 }

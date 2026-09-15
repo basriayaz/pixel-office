@@ -1,4 +1,7 @@
-const id = new URLSearchParams(location.search).get("id");
+const qs = new URLSearchParams(location.search);
+const id = qs.get("id");
+const officeId = qs.get("office") || PO.defaultOffice;
+const API = `/api/offices/${encodeURIComponent(officeId)}`;
 if (!id) location.href = "/";
 let detail = null;
 let editor = null;
@@ -14,11 +17,11 @@ for (const b of document.querySelectorAll("#tabs button")) {
   };
 }
 if (location.hash) document.querySelector(`#tabs button[data-tab="${location.hash.slice(1)}"]`)?.click();
-$("fireHint").innerHTML = t("ui.profile.fireHint", { archive: escapeHtml(PO.archiveDir || "_archive") });
+$("fireHint").innerHTML = t("ui.profile.fireHint", { archive: "_archive" });
 resetSkillForm();
 
 async function load() {
-  detail = await api("GET", `/api/employees/${encodeURIComponent(id)}/detail`);
+  detail = await api("GET", `${API}/employees/${encodeURIComponent(id)}/detail`);
   renderHead();
   if (!editor) {
     editor = new CharEditor($("editor"), detail.look, (l) => { look = l; });
@@ -33,7 +36,7 @@ async function load() {
     $("effortHint").textContent = EFFORT_INFO[settings.effort]?.desc || "";
     buildChoiceCards($("fPerm"), permItems(), settings.perm, (v) => { settings.perm = v; });
     $("fRefresh").value = detail.refreshHours;
-    $("fCwd").value = detail.cwd === PO.project ? "" : detail.cwd;
+    $("fCwd").value = detail.cwd === detail.officeCwd ? "" : detail.cwd;
   }
   $("memory").value = detail.memory;
   $("memPath").textContent = detail.memoryFile || "";
@@ -45,8 +48,8 @@ async function load() {
 
 function renderHead() {
   document.title = `${detail.name} — ${t("ui.title")}`;
-  $("crumb").textContent = detail.name;
-  $("chatLink").href = `/?open=${encodeURIComponent(id)}`;
+  $("crumb").textContent = PO.multiOffice ? `${detail.officeName} · ${detail.name}` : detail.name;
+  $("chatLink").href = `/?office=${encodeURIComponent(officeId)}&open=${encodeURIComponent(id)}`;
   $("bigPortrait").src = portraitOf(detail, 5, true);
   $("pName").textContent = detail.name;
   $("pRole").textContent = detail.role;
@@ -81,7 +84,7 @@ function renderSkills() {
     row.innerHTML = `<div><b>${escapeHtml(s.name)}</b><div class="muted">${escapeHtml(s.description)}</div></div>
       <div class="skill-actions"><button class="btn small" data-act="edit">${t("ui.profile.edit")}</button><button class="btn small danger" data-act="del">${t("ui.profile.delete")}</button></div>`;
     row.querySelector('[data-act="edit"]').onclick = async () => {
-      const full = await api("GET", `/api/employees/${encodeURIComponent(id)}/skills/${encodeURIComponent(s.name)}`);
+      const full = await api("GET", `${API}/employees/${encodeURIComponent(id)}/skills/${encodeURIComponent(s.name)}`);
       editingSkill = s.name;
       $("skillFormTitle").textContent = t("ui.profile.editSkill", { name: s.name });
       $("sName").value = full.name; $("sName").disabled = true;
@@ -92,7 +95,7 @@ function renderSkills() {
     row.querySelector('[data-act="del"]').onclick = async () => {
       const btn = row.querySelector('[data-act="del"]');
       if (row.dataset.armed !== "1") { row.dataset.armed = "1"; btn.textContent = t("ui.profile.sure"); setTimeout(() => { row.dataset.armed = ""; btn.textContent = t("ui.profile.delete"); }, 3000); return; }
-      await api("DELETE", `/api/employees/${encodeURIComponent(id)}/skills/${encodeURIComponent(s.name)}`);
+      await api("DELETE", `${API}/employees/${encodeURIComponent(id)}/skills/${encodeURIComponent(s.name)}`);
       toast(t("ui.profile.skillDeleted"));
       load();
     };
@@ -110,7 +113,7 @@ $("skillCancel").onclick = resetSkillForm;
 $("skillForm").onsubmit = async (ev) => {
   ev.preventDefault();
   try {
-    await api("POST", `/api/employees/${encodeURIComponent(id)}/skills`, { name: editingSkill || $("sName").value, description: $("sDesc").value, body: $("sBody").value });
+    await api("POST", `${API}/employees/${encodeURIComponent(id)}/skills`, { name: editingSkill || $("sName").value, description: $("sDesc").value, body: $("sBody").value });
     toast(editingSkill ? t("ui.profile.skillSaved") : t("ui.profile.skillAdded"));
     resetSkillForm();
     load();
@@ -131,7 +134,7 @@ function renderRecent() {
 
 $("saveProfile").onclick = async () => {
   try {
-    await api("PUT", `/api/employees/${encodeURIComponent(id)}`, { name: $("fName").value, role: $("fRole").value, prompt: $("fPrompt").value, look, color: look?.top });
+    await api("PUT", `${API}/employees/${encodeURIComponent(id)}`, { name: $("fName").value, role: $("fRole").value, prompt: $("fPrompt").value, look, color: look?.top });
     toast(t("ui.profile.profileSaved"));
     load();
   } catch (err) { toast(t("ui.profile.error", { message: err.message })); }
@@ -139,7 +142,7 @@ $("saveProfile").onclick = async () => {
 
 $("saveSettings").onclick = async () => {
   try {
-    await api("PUT", `/api/employees/${encodeURIComponent(id)}`, { model: settings.model, effort: settings.effort, permissionMode: settings.perm, refreshHours: Number($("fRefresh").value), cwd: $("fCwd").value.trim() });
+    await api("PUT", `${API}/employees/${encodeURIComponent(id)}`, { model: settings.model, effort: settings.effort, permissionMode: settings.perm, refreshHours: Number($("fRefresh").value), cwd: $("fCwd").value.trim() });
     toast(t("ui.profile.settingsSaved"));
     load();
   } catch (err) { toast(t("ui.profile.error", { message: err.message })); }
@@ -147,14 +150,14 @@ $("saveSettings").onclick = async () => {
 
 $("saveMemory").onclick = async () => {
   try {
-    await api("PUT", `/api/employees/${encodeURIComponent(id)}/memory`, { text: $("memory").value });
+    await api("PUT", `${API}/employees/${encodeURIComponent(id)}/memory`, { text: $("memory").value });
     toast(t("ui.profile.memorySaved"));
   } catch (err) { toast(t("ui.profile.error", { message: err.message })); }
 };
 
 $("refreshBtn").onclick = async () => {
   try {
-    await api("POST", `/api/employees/${encodeURIComponent(id)}/refresh`);
+    await api("POST", `${API}/employees/${encodeURIComponent(id)}/refresh`);
     toast(t("ui.profile.refreshing", { name: detail.name }));
     setTimeout(load, 1500);
   } catch (err) { toast(t("ui.profile.error", { message: err.message })); }
@@ -163,10 +166,10 @@ $("refreshBtn").onclick = async () => {
 $("fireConfirm").oninput = () => { $("fireBtn").disabled = $("fireConfirm").value.trim().toLowerCase() !== detail?.name.toLowerCase(); };
 $("fireBtn").onclick = async () => {
   try {
-    await api("DELETE", `/api/employees/${encodeURIComponent(id)}`);
-    location.href = "/";
+    await api("DELETE", `${API}/employees/${encodeURIComponent(id)}`);
+    location.href = `/?office=${encodeURIComponent(officeId)}`;
   } catch (err) { toast(t("ui.profile.error", { message: err.message })); }
 };
 
 load().catch((err) => { toast(t("ui.profile.loadError", { message: err.message })); });
-setInterval(() => { if (document.visibilityState === "visible") api("GET", `/api/employees/${encodeURIComponent(id)}/detail`).then((d) => { detail = d; renderHead(); }).catch(() => {}); }, 8000);
+setInterval(() => { if (document.visibilityState === "visible") api("GET", `${API}/employees/${encodeURIComponent(id)}/detail`).then((d) => { detail = d; renderHead(); }).catch(() => {}); }, 8000);

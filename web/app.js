@@ -2,10 +2,18 @@ const office = new Office($("office"), $("labels"));
 office.start();
 document.title = t("ui.title");
 
-const state = { employees: new Map(), selected: null, ws: null, online: false };
+const params = new URLSearchParams(location.search);
+const state = {
+  offices: new Map(),          // id -> { info, employees: Map }
+  office: params.get("office") || localStorage.getItem("po.office") || PO.defaultOffice,
+  selected: null, ws: null, online: false,
+};
 const chatBody = $("chatBody");
 let streamEl = null;
 let typingEl = null;
+
+const cur = () => state.offices.get(state.office);
+const employeesOf = (officeId) => state.offices.get(officeId)?.employees;
 
 function connect() {
   const ws = new WebSocket(`${location.protocol === "https:" ? "wss" : "ws"}://${location.host}`);
@@ -26,63 +34,98 @@ function connect() {
 }
 
 function send(payload) {
-  if (state.ws?.readyState === WebSocket.OPEN) state.ws.send(JSON.stringify(payload));
+  if (state.ws?.readyState === WebSocket.OPEN) state.ws.send(JSON.stringify({ office: state.office, ...payload }));
   else toast(t("ui.toast.noConnection"));
 }
 
+function mergeRoster(officeId, list, info) {
+  const prev = state.offices.get(officeId);
+  const employees = new Map();
+  for (const e of list) {
+    const old = prev?.employees.get(e.id);
+    employees.set(e.id, { ...e, messages: old?.messages ?? [], pending: old?.pending ?? [], loaded: old?.loaded ?? false, unread: old?.unread ?? 0 });
+  }
+  state.offices.set(officeId, { info: info ?? prev?.info ?? { id: officeId, name: officeId }, employees });
+}
+
+function showOffice(officeId, keepChat = false) {
+  if (!state.offices.has(officeId)) officeId = state.offices.keys().next().value;
+  const changed = officeId !== state.office;
+  state.office = officeId;
+  localStorage.setItem("po.office", officeId);
+  if (changed && !keepChat) closeChat();
+  const o = cur();
+  office.setEmployees([...o.employees.values()]);
+  for (const e of o.employees.values()) office.setUnread(e.id, e.unread);
+  $("hireLink").href = `hire.html?office=${encodeURIComponent(officeId)}`;
+  renderOfficeTabs();
+  renderRoster();
+  if (state.selected && o.employees.has(state.selected)) { renderHead(o.employees.get(state.selected)); send({ type: "open", id: state.selected }); }
+  else if (state.selected) closeChat();
+}
+
+function renderOfficeTabs() {
+  const host = $("offices");
+  host.innerHTML = "";
+  if (!PO.multiOffice) { host.hidden = true; return; }
+  host.hidden = false;
+  for (const o of state.offices.values()) {
+    const b = document.createElement("button");
+    b.className = "office-tab" + (o.info.id === state.office ? " on" : "");
+    const unread = [...o.employees.values()].reduce((n, e) => n + (e.unread || 0), 0);
+    const busy = [...o.employees.values()].some((e) => e.status === "working" || e.status === "waiting");
+    b.innerHTML = `${busy ? '<i class="dot working"></i>' : ""}<span>${escapeHtml(o.info.name)}</span>${unread ? `<span class="badge">${unread}</span>` : ""}`;
+    b.onclick = () => { showOffice(o.info.id); history.replaceState(null, "", `/?office=${encodeURIComponent(o.info.id)}`); };
+    host.appendChild(b);
+  }
+}
+
 function handle(m) {
-  const e = m.id ? state.employees.get(m.id) : null;
+  if (m.type === "init") {
+    for (const o of m.offices) mergeRoster(o.id, o.employees, { id: o.id, name: o.name, cwd: o.cwd });
+    showOffice(state.office, true);
+    const open = params.get("open");
+    if (open && cur().employees.has(open) && !state.selected) { openChat(open); history.replaceState(null, "", `/?office=${encodeURIComponent(state.office)}`); }
+    return;
+  }
+  if (m.type === "roster") {
+    mergeRoster(m.office, m.employees);
+    if (m.office === state.office) showOffice(m.office, true);
+    else renderOfficeTabs();
+    return;
+  }
+  const e = employeesOf(m.office)?.get(m.id);
+  if (!e) return;
+  const current = m.office === state.office;
+  const selected = current && m.id === state.selected;
   switch (m.type) {
-    case "init": {
-      const prev = state.employees;
-      state.employees = new Map();
-      for (const info of m.employees) {
-        const old = prev.get(info.id);
-        state.employees.set(info.id, { ...info, messages: old?.messages ?? [], pending: old?.pending ?? [], loaded: old?.loaded ?? false, unread: old?.unread ?? 0 });
-      }
-      office.setEmployees(m.employees);
-      for (const emp of state.employees.values()) office.setUnread(emp.id, emp.unread);
-      renderRoster();
-      if (state.selected) {
-        const sel = state.employees.get(state.selected);
-        if (sel) { renderHead(sel); send({ type: "open", id: state.selected }); }
-        else closeChat();
-      } else {
-        const open = new URLSearchParams(location.search).get("open");
-        if (open && state.employees.has(open)) { openChat(open); history.replaceState(null, "", "/"); }
-      }
-      break;
-    }
     case "status":
-      if (!e) return;
       e.status = m.status;
-      office.setStatus(m.id, m.status, m.reason);
-      renderRoster();
-      if (m.id === state.selected) { renderHead(e); updateTyping(e); }
+      if (current) { office.setStatus(m.id, m.status, m.reason); renderRoster(); }
+      renderOfficeTabs();
+      if (selected) { renderHead(e); updateTyping(e); }
       break;
     case "history":
-      if (!e) return;
       e.messages = m.messages;
       e.pending = m.pending;
       e.loaded = true;
-      if (m.id === state.selected) renderChat(e);
+      if (selected) renderChat(e);
       break;
     case "message":
-      if (!e) return;
       e.messages.push(m.message);
-      if (m.id === state.selected) {
+      if (selected) {
         endStream();
         appendMessage(e, m.message);
         updateTyping(e);
         scrollDown();
       } else if (m.message.role === "assistant") {
         e.unread++;
-        office.setUnread(e.id, e.unread);
-        renderRoster();
+        if (current) { office.setUnread(e.id, e.unread); renderRoster(); }
+        renderOfficeTabs();
       }
       break;
     case "chunk":
-      if (m.id === state.selected) {
+      if (selected) {
         removeTyping();
         if (!streamEl) {
           streamEl = buildRow(e, { role: "assistant", text: "", ts: Date.now() });
@@ -96,26 +139,23 @@ function handle(m) {
       }
       break;
     case "chunk_end":
-      if (m.id === state.selected) { endStream(); updateTyping(e); }
+      if (selected) { endStream(); updateTyping(e); }
       break;
     case "ask":
-      if (!e) return;
       e.pending.push(m.request);
-      if (m.id === state.selected) { removeTyping(); chatBody.appendChild(renderAsk(e, m.request)); scrollDown(); }
+      if (selected) { removeTyping(); chatBody.appendChild(renderAsk(e, m.request)); scrollDown(); }
       else toast(t("ui.toast.waiting", { name: e.name }));
       break;
     case "ask_done":
-      if (!e) return;
       e.pending = e.pending.filter((p) => p.requestId !== m.requestId);
-      document.querySelector(`[data-ask="${m.requestId}"]`)?.remove();
+      if (selected) document.querySelector(`[data-ask="${m.requestId}"]`)?.remove();
       break;
     case "result":
-      if (!e) return;
       e.cost = m.cost;
       if (m.model) e.model = m.model;
-      if (m.id === state.selected) renderHead(e);
+      if (selected) renderHead(e);
       else if (m.durationMs > 0) toast(t("ui.toast.done", { name: e.name }));
-      renderRoster();
+      if (current) renderRoster();
       break;
   }
 }
@@ -145,7 +185,7 @@ function scrollDown() {
 }
 
 function openChat(id) {
-  const e = state.employees.get(id);
+  const e = cur()?.employees.get(id);
   if (!e) return;
   state.selected = id;
   e.unread = 0;
@@ -154,6 +194,7 @@ function openChat(id) {
   document.body.classList.add("chat-open");
   renderHead(e);
   renderRoster();
+  renderOfficeTabs();
   if (e.loaded) renderChat(e);
   else { chatBody.innerHTML = ""; send({ type: "open", id }); }
   setTimeout(() => { office.fit(); $("chatInput").focus(); }, 260);
@@ -163,15 +204,19 @@ function closeChat() {
   state.selected = null;
   office.setSelected(null);
   document.body.classList.remove("chat-open");
+  endStream();
+  removeTyping();
   renderRoster();
   setTimeout(() => office.fit(), 260);
 }
 
+const profileUrl = (id) => `employee.html?office=${encodeURIComponent(state.office)}&id=${encodeURIComponent(id)}`;
+
 function renderHead(e) {
   $("chatAvatar").style.backgroundImage = `url(${office.portrait(e.id)})`;
   $("chatAvatar").style.backgroundColor = e.color;
-  $("chatAvatar").href = `employee.html?id=${encodeURIComponent(e.id)}`;
-  $("btnProfile").href = `employee.html?id=${encodeURIComponent(e.id)}`;
+  $("chatAvatar").href = profileUrl(e.id);
+  $("btnProfile").href = profileUrl(e.id);
   $("chatName").textContent = e.name;
   $("chatModel").textContent = e.model ? e.model.replace("claude-", "") : "";
   $("chatRole").textContent = e.role;
@@ -184,7 +229,9 @@ function renderHead(e) {
 function renderRoster() {
   const el = $("roster");
   el.innerHTML = "";
-  for (const e of state.employees.values()) {
+  const o = cur();
+  if (!o) return;
+  for (const e of o.employees.values()) {
     const chip = document.createElement("button");
     chip.className = "roster-chip" + (e.id === state.selected ? " selected" : "");
     chip.innerHTML = `<img src="${office.portrait(e.id)}" alt="" /><i class="dot ${e.status}"></i><span class="rn">${escapeHtml(e.name)}</span><span class="rs">${STATUS_T[e.status] || e.status}</span>${e.unread ? `<span class="badge">${e.unread}</span>` : ""}`;

@@ -95,6 +95,25 @@ or set `"locale": "tr"` in `.pixel-office/config.json`. Contributions of other l
 
 Paths are relative to the project folder; `~` is expanded.
 
+### Multiple offices
+
+One server can host several offices (e.g. one per company or per team), switchable from tabs in the top bar. Each office has its own employee folder, default working directory and chat history:
+
+```json
+{
+  "locale": "en",
+  "dataDir": ".pixel-office/data",
+  "offices": [
+    { "id": "core",  "name": "Core",        "employeesDir": ".pixel-office/employees/core",  "cwd": "." },
+    { "id": "shop",  "name": "Web Shop",    "employeesDir": ".pixel-office/employees/shop",  "cwd": "~/Projects/shop" },
+    { "id": "app",   "name": "Mobile App",  "employeesDir": ".pixel-office/employees/app",   "cwd": "~/Projects/app",
+      "employees": [".pixel-office/employees/core/alex"] }
+  ]
+}
+```
+
+`employees` lists extra employee folders to show in that office too — the same person (same memory and skills) working in two offices, each with its own chat and session. Chat data is stored per office under `dataDir/<office id>/`. Employee pages are office-scoped: `/?office=shop`, `hire.html?office=shop`, `/api/offices/shop/employees`.
+
 ## How the pieces fit
 
 - **Chat** — click an employee (or the roster chip). Markdown replies, collapsed tool activity, permission cards (Allow / Always allow / Deny) and the questions employees ask you (with options).

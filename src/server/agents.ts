@@ -1,7 +1,8 @@
 import fs from "node:fs";
 import path from "node:path";
 import type { EmployeeConfig } from "./employee.js";
-import { getSettings, t } from "./runtime.js";
+import { getSettings, getOffice, t } from "./runtime.js";
+import type { OfficeDef } from "./config.js";
 
 export const expandHome = (p: string) => path.resolve(p.replace(/^~(?=$|\/)/, process.env.HOME ?? ""));
 
@@ -61,7 +62,7 @@ function findMemoryFile(dir: string): string {
 }
 
 // Builds an employee config from its folder (agent.md + memory + skills/).
-export function loadEmployee(dir: string, index: number): EmployeeConfig {
+export function loadEmployee(dir: string, index: number, office: OfficeDef): EmployeeConfig {
   const agentFile = path.join(dir, "agent.md");
   const { meta, body } = fs.existsSync(agentFile) ? parseAgentFile(agentFile) : { meta: {}, body: "" };
   const id = path.basename(dir);
@@ -69,10 +70,10 @@ export function loadEmployee(dir: string, index: number): EmployeeConfig {
   const role = meta.role ?? meta.description?.split(/[.\n]/)[0].slice(0, 40) ?? t("server.defaultRole");
   const color = meta.color ?? PALETTE[index % PALETTE.length];
   const settings = getSettings();
-  const cwd = meta.cwd ? expandHome(meta.cwd) : settings.cwd;
+  const cwd = meta.cwd ? expandHome(meta.cwd) : office.cwd;
   const tools = meta.tools ? meta.tools.replace(/^\[|\]$/g, "").split(",").map((x) => x.trim()).filter(Boolean) : undefined;
   const cfg: EmployeeConfig = {
-    id, name, role, color, cwd, dir, agentFile,
+    id, name, role, color, cwd, dir, agentFile, officeId: office.id,
     systemPrompt: body || t("server.defaultPrompt", { name, role }),
     memoryFile: findMemoryFile(dir),
     pluginDir: dir,
@@ -99,17 +100,17 @@ function ensureDirs(cfg: EmployeeConfig) {
   }
 }
 
-export function loadEmployees(): EmployeeConfig[] {
-  const { employeesDir } = getSettings();
+export function loadEmployees(office: OfficeDef): EmployeeConfig[] {
+  const { employeesDir } = office;
   fs.mkdirSync(employeesDir, { recursive: true });
-  const out: EmployeeConfig[] = [];
+  const dirs: string[] = [];
   for (const name of fs.readdirSync(employeesDir).sort()) {
     const dir = path.join(employeesDir, name);
     if (name.startsWith("_") || name.startsWith(".") || !fs.statSync(dir).isDirectory()) continue;
-    if (!fs.existsSync(path.join(dir, "agent.md"))) continue;
-    out.push(loadEmployee(dir, out.length));
+    if (fs.existsSync(path.join(dir, "agent.md"))) dirs.push(dir);
   }
-  return out;
+  for (const extra of office.extraEmployees) if (fs.existsSync(path.join(extra, "agent.md")) && !dirs.includes(extra)) dirs.push(extra);
+  return dirs.map((dir, i) => loadEmployee(dir, i, office));
 }
 
 // Serializes an employee back to its agent.md (frontmatter + prompt body).
@@ -122,15 +123,16 @@ export function writeAgentFile(cfg: EmployeeConfig) {
   if (cfg.permissionMode && cfg.permissionMode !== "default") lines.push(`permissionMode: ${cfg.permissionMode}`);
   if (cfg.allowedTools?.length) lines.push(`tools: ${cfg.allowedTools.join(", ")}`);
   if (cfg.refreshHours !== undefined && cfg.refreshHours !== getSettings().refreshHours) lines.push(`refreshHours: ${cfg.refreshHours}`);
-  if (cfg.cwd !== getSettings().cwd) lines.push(`cwd: ${cfg.cwd}`);
+  if (cfg.cwd !== getOffice(cfg.officeId).cwd) lines.push(`cwd: ${cfg.cwd}`);
   lines.push(`look: ${JSON.stringify(cfg.look)}`, "---", cfg.systemPrompt.trim(), "");
   fs.writeFileSync(cfg.agentFile, lines.join("\n"));
 }
 
 // Creates <employeesDir>/<id>/ with agent.md, memory and skills/ for a newly hired employee.
-export function createEmployeeDir(input: { name: string; role: string; prompt: string; color: string; look: Record<string, unknown>; model?: string; effort?: EmployeeConfig["effort"]; permissionMode?: EmployeeConfig["permissionMode"]; cwd?: string }): string {
-  const { employeesDir, memoryFile, refreshHours } = getSettings();
-  const cwd = input.cwd ? expandHome(input.cwd) : getSettings().cwd;
+export function createEmployeeDir(office: OfficeDef, input: { name: string; role: string; prompt: string; color: string; look: Record<string, unknown>; model?: string; effort?: EmployeeConfig["effort"]; permissionMode?: EmployeeConfig["permissionMode"]; cwd?: string }): string {
+  const { memoryFile, refreshHours } = getSettings();
+  const { employeesDir } = office;
+  const cwd = input.cwd ? expandHome(input.cwd) : office.cwd;
   let id = slug(input.name) || "employee";
   let dir = path.join(employeesDir, id);
   for (let n = 2; fs.existsSync(dir); n++) { id = `${slug(input.name) || "employee"}-${n}`; dir = path.join(employeesDir, id); }
@@ -138,7 +140,7 @@ export function createEmployeeDir(input: { name: string; role: string; prompt: s
   fs.writeFileSync(path.join(dir, memoryFile), t("server.memoryHeader", { name: input.name }));
   const cfg: EmployeeConfig = {
     id, name: input.name, role: input.role, color: input.color, look: input.look,
-    systemPrompt: input.prompt, cwd, dir, agentFile: path.join(dir, "agent.md"),
+    systemPrompt: input.prompt, cwd, dir, agentFile: path.join(dir, "agent.md"), officeId: office.id,
     model: input.model, effort: input.effort, permissionMode: input.permissionMode,
     hired: new Date().toISOString().slice(0, 10), refreshHours,
   };
@@ -188,16 +190,23 @@ export function deleteSkill(pluginDir: string, name: string) {
 }
 
 // Mirrors office employees into <cwd>/.claude/agents so a terminal `claude` in the project can delegate to them.
-export function syncClaudeAgents(emps: EmployeeConfig[]) {
-  const { cwd, syncClaudeAgents: enabled } = getSettings();
+export function syncClaudeAgents(office: OfficeDef, emps: EmployeeConfig[]) {
+  const { syncClaudeAgents: enabled, multiOffice } = getSettings();
   if (!enabled) return;
+  const cwd = office.cwd;
   const dir = path.join(cwd, ".claude", "agents");
   fs.mkdirSync(dir, { recursive: true });
-  const markerRe = /<!-- pixel-office:|<!-- ofis:/;
+  const ownMarker = `<!-- pixel-office office=${office.id} -->`;
+  // Files this office generated (or legacy single-office files) that no longer match an employee are removed.
+  const legacyRe = /<!-- pixel-office:|<!-- ofis:/;
   for (const f of fs.readdirSync(dir)) {
     const p = path.join(dir, f);
-    if (f.endsWith(".md") && markerRe.test(fs.readFileSync(p, "utf8")) && !emps.some((e) => `${e.id}.md` === f)) fs.unlinkSync(p);
+    if (!f.endsWith(".md")) continue;
+    const text = fs.readFileSync(p, "utf8");
+    const mine = text.includes(ownMarker) || (legacyRe.test(text) && !/<!-- pixel-office office=/.test(text));
+    if (mine && !emps.some((e) => `${e.id}.md` === f)) fs.unlinkSync(p);
   }
+  const fileName = (e: EmployeeConfig) => (multiOffice && office.id !== "main" ? `${e.id}.md` : `${e.id}.md`);
   for (const e of emps) {
     const rel = (p?: string) => (p ? path.relative(cwd, p) : undefined);
     const mem = rel(e.memoryFile);
@@ -210,11 +219,12 @@ export function syncClaudeAgents(emps: EmployeeConfig[]) {
       e.allowedTools?.length ? `tools: ${e.allowedTools.join(", ")}` : null,
       `---`,
       t("server.agentSync.marker"),
+      ownMarker,
       ``,
       e.systemPrompt,
       mem ? "\n" + t("server.agentSync.memory", { file: mem }) : null,
       skills ? "\n" + t("server.agentSync.skills", { dir: skills }) : null,
     ].filter((l) => l !== null).join("\n");
-    fs.writeFileSync(path.join(dir, `${e.id}.md`), body + "\n");
+    fs.writeFileSync(path.join(dir, fileName(e)), body + "\n");
   }
 }

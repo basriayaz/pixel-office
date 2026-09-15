@@ -5,16 +5,24 @@ import { fileURLToPath } from "node:url";
 // Package root (where web/, locales/, templates/ live) — works from src/ (tsx) and dist/ (built).
 export const PKG_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 
+export interface OfficeDef {
+  id: string;
+  name: string;
+  employeesDir: string;
+  cwd: string;
+  extraEmployees: string[];
+}
+
 export interface OfficeSettings {
   locale: string;
   port: number;
   host: string;
-  employeesDir: string;
   dataDir: string;
   memoryFile: string;
-  cwd: string;
   syncClaudeAgents: boolean;
   refreshHours: number;
+  multiOffice: boolean;
+  offices: OfficeDef[];
 }
 
 export const CONFIG_DIR = ".pixel-office";
@@ -31,30 +39,47 @@ const DEFAULTS = {
   refreshHours: 24,
 };
 
+const slugId = (s: string) => s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+
 export function configPath(projectDir: string) {
   return path.join(projectDir, CONFIG_DIR, "config.json");
 }
 
-export function loadSettings(projectDir: string, overrides: Partial<OfficeSettings> = {}): OfficeSettings {
+export function loadSettings(projectDir: string): OfficeSettings {
   const file = configPath(projectDir);
   const raw = fs.existsSync(file) ? JSON.parse(fs.readFileSync(file, "utf8")) : {};
-  const merged = { ...DEFAULTS, ...raw, ...stripUndefined(overrides) };
-  const abs = (p: string) => path.resolve(projectDir, p.replace(/^~(?=$|\/)/, process.env.HOME ?? ""));
+  const merged = { ...DEFAULTS, ...raw };
+  const abs = (p: string) => path.resolve(projectDir, String(p).replace(/^~(?=$|\/)/, process.env.HOME ?? ""));
+  const rootCwd = abs(merged.cwd);
+  const multiOffice = Array.isArray(raw.offices) && raw.offices.length > 0;
+  const offices: OfficeDef[] = multiOffice
+    ? (raw.offices as Array<Record<string, unknown>>).map((o, i) => {
+        const id = slugId(String(o.id ?? o.name ?? `office-${i + 1}`)) || `office-${i + 1}`;
+        return {
+          id,
+          name: String(o.name ?? id),
+          employeesDir: abs(String(o.employeesDir ?? `${CONFIG_DIR}/employees/${id}`)),
+          cwd: o.cwd ? abs(String(o.cwd)) : rootCwd,
+          extraEmployees: Array.isArray(o.employees) ? (o.employees as string[]).map(abs) : [],
+        };
+      })
+    : [{ id: "main", name: "", employeesDir: abs(merged.employeesDir), cwd: rootCwd, extraEmployees: [] }];
+  const ids = new Set<string>();
+  for (const o of offices) {
+    if (ids.has(o.id)) throw new Error(`config.json: office id "${o.id}" is used twice`);
+    ids.add(o.id);
+  }
   return {
     locale: String(merged.locale),
     port: Number(process.env.PORT ?? merged.port),
     host: String(process.env.HOST ?? merged.host),
-    employeesDir: abs(merged.employeesDir),
     dataDir: abs(merged.dataDir),
     memoryFile: String(merged.memoryFile),
-    cwd: abs(merged.cwd),
     syncClaudeAgents: merged.syncClaudeAgents !== false,
     refreshHours: Number(merged.refreshHours),
+    multiOffice,
+    offices,
   };
-}
-
-function stripUndefined<T extends object>(o: T): Partial<T> {
-  return Object.fromEntries(Object.entries(o).filter(([, v]) => v !== undefined)) as Partial<T>;
 }
 
 // `pixel-office init`: creates .pixel-office/{config.json, employees/_template}, adds data dir to .gitignore.
@@ -71,7 +96,7 @@ export function initProject(projectDir: string, opts: { locale?: string; memoryI
   if (!fs.existsSync(tplDst) && fs.existsSync(tplSrc)) fs.cpSync(tplSrc, tplDst, { recursive: true });
   const gi = path.join(projectDir, ".gitignore");
   const lines = [`${CONFIG_DIR}/data/`];
-  if (opts.memoryInGit === false) lines.push(`${CONFIG_DIR}/employees/*/${DEFAULTS.memoryFile}`);
+  if (opts.memoryInGit === false) lines.push(`${CONFIG_DIR}/employees/**/${DEFAULTS.memoryFile}`);
   const existing = fs.existsSync(gi) ? fs.readFileSync(gi, "utf8") : "";
   const missing = lines.filter((l) => !existing.split(/\r?\n/).includes(l));
   if (missing.length) fs.writeFileSync(gi, existing + (existing && !existing.endsWith("\n") ? "\n" : "") + missing.join("\n") + "\n");

@@ -1,4 +1,4 @@
-import type { OfficeSettings } from "./config.js";
+import type { OfficeDef, OfficeSettings } from "./config.js";
 import type { Translator } from "./i18n.js";
 
 // Process-wide settings + translator, initialized once by index.ts before employees are created.
@@ -13,6 +13,12 @@ export function initRuntime(s: OfficeSettings, tr: Translator) {
 export function getSettings(): OfficeSettings {
   if (!settings) throw new Error("runtime not initialized");
   return settings;
+}
+
+export function getOffice(id: string): OfficeDef {
+  const o = getSettings().offices.find((x) => x.id === id);
+  if (!o) throw new Error(`unknown office: ${id}`);
+  return o;
 }
 
 export function t(key: string, vars: Record<string, string | number> = {}): string {

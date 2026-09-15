@@ -88,6 +88,25 @@ Sonra üst çubuktaki **+ İşe al**: karakteri tasarla, hazır pozisyonlardan b
 
 Yollar proje klasörüne göredir; `~` açılır.
 
+### Birden fazla ofis
+
+Tek sunucu birden fazla ofis barındırabilir (örn. şirket ya da ekip başına); üst bardaki sekmelerden geçilir. Her ofisin kendi çalışan klasörü, varsayılan çalışma dizini ve sohbet geçmişi olur:
+
+```json
+{
+  "locale": "tr",
+  "dataDir": ".pixel-office/data",
+  "offices": [
+    { "id": "genel",   "name": "Genel",          "employeesDir": "calisanlar/genel",   "cwd": "." },
+    { "id": "carpe",   "name": "Carpe",          "employeesDir": "calisanlar/carpe",   "cwd": "~/Projects/carpe" },
+    { "id": "tarsier", "name": "Tarsier Vision", "employeesDir": "calisanlar/tarsier", "cwd": "~/Projects/golsinyali",
+      "employees": ["calisanlar/genel/defne"] }
+  ]
+}
+```
+
+`employees` o ofiste ek olarak gösterilecek çalışan klasörlerini listeler — aynı kişi (aynı hafıza ve yetenekler) iki ofiste çalışır, her ofiste ayrı sohbet ve oturumla. Sohbet verileri `dataDir/<ofis id>/` altında ofis başına tutulur. Sayfalar ofise bağlıdır: `/?office=carpe`, `hire.html?office=carpe`, `/api/offices/carpe/employees`.
+
 ## Parçalar
 
 - **Sohbet** — çalışana (ya da roster çipine) tıkla. Markdown cevaplar, katlanmış araç işlemleri, izin kartları (İzin ver / Hep izin ver / Reddet) ve çalışanın sana sorduğu seçenekli sorular.

@@ -17,6 +17,7 @@ export type Status = "idle" | "working" | "waiting" | "error";
 
 export interface EmployeeConfig {
   id: string;
+  officeId: string;
   name: string;
   role: string;
   color: string;

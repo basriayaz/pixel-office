@@ -1,4 +1,8 @@
+const officeId = new URLSearchParams(location.search).get("office") || PO.defaultOffice;
+const officeInfo = (PO.offices || []).find((o) => o.id === officeId) || { id: officeId, name: officeId };
+const API = `/api/offices/${encodeURIComponent(officeId)}`;
 document.title = `${t("ui.hire.crumb")} — ${t("ui.title")}`;
+if (PO.multiOffice) { document.querySelector(".crumb").textContent = `${t("ui.hire.crumb")} · ${officeInfo.name}`; document.querySelector("a.btn.ghost").href = `/?office=${encodeURIComponent(officeId)}`; }
 let look = null;
 const sel = { model: PO.models[0] || "claude-opus-5", effort: "high", perm: "default" };
 
@@ -47,7 +51,7 @@ buildChoiceCards($("modelCards"), modelItems(), sel.model, (v) => { sel.model = 
 buildSegment($("effortSeg"), effortItems(), sel.effort, (v) => { sel.effort = v; $("effortHint").textContent = EFFORT_INFO[v]?.desc || ""; updateCard(); });
 $("effortHint").textContent = EFFORT_INFO[sel.effort]?.desc || "";
 buildChoiceCards($("permCards"), permItems(), sel.perm, (v) => { sel.perm = v; updateCard(); });
-if (!PO.employeesDir) toast(t("ui.hire.noDir"));
+if (!officeInfo.employeesDir && !PO.offices?.length) toast(t("ui.hire.noDir"));
 updateCard();
 
 $("hireForm").onsubmit = async (ev) => {
@@ -56,7 +60,7 @@ $("hireForm").onsubmit = async (ev) => {
   btn.disabled = true;
   $("hireMsg").textContent = t("ui.hire.working");
   try {
-    const e = await api("POST", "/api/employees", {
+    const e = await api("POST", `${API}/employees`, {
       name: $("name").value.trim(),
       role: $("role").value.trim(),
       prompt: $("prompt").value.trim(),
@@ -65,7 +69,7 @@ $("hireForm").onsubmit = async (ev) => {
       cwd: $("cwd").value.trim() || undefined,
     });
     toast(t("ui.hire.hired", { name: e.name }));
-    location.href = `/employee.html?id=${encodeURIComponent(e.id)}`;
+    location.href = `/employee.html?office=${encodeURIComponent(officeId)}&id=${encodeURIComponent(e.id)}`;
   } catch (err) {
     $("hireMsg").textContent = t("ui.hire.error", { message: err.message });
     btn.disabled = false;

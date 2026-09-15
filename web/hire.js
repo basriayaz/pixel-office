@@ -14,6 +14,7 @@ function updateCard() {
     `<span class="badge">${escapeHtml(MODEL_INFO[sel.model]?.name || sel.model)}</span>`,
     `<span class="badge">effort: ${sel.effort}</span>`,
     `<span class="badge">${escapeHtml(PERM_INFO[sel.perm]?.name || sel.perm)}</span>`,
+    $("cwd").value.trim() ? `<span class="badge">${escapeHtml(t("ui.hire.cwdBadge", { v: $("cwd").value.trim() }))}</span>` : "",
   ].join("");
   $("summary").innerHTML = name && role
     ? `<b>${escapeHtml(name)}</b> · ${escapeHtml(role)} · ${escapeHtml(MODEL_INFO[sel.model]?.name || sel.model)} · ${sel.effort} · ${escapeHtml(PERM_INFO[sel.perm]?.name || sel.perm)}`
@@ -25,6 +26,7 @@ function updateCard() {
 $("name").oninput = updateCard;
 $("role").oninput = updateCard;
 $("prompt").oninput = updateCard;
+$("cwd").oninput = updateCard;
 
 // preset chips fill role + prompt template
 for (const p of PRESETS) {
@@ -60,6 +62,7 @@ $("hireForm").onsubmit = async (ev) => {
       prompt: $("prompt").value.trim(),
       look, color: look.top,
       model: sel.model, effort: sel.effort, permissionMode: sel.perm,
+      cwd: $("cwd").value.trim() || undefined,
     });
     toast(t("ui.hire.hired", { name: e.name }));
     location.href = `/employee.html?id=${encodeURIComponent(e.id)}`;

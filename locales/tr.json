@@ -54,12 +54,28 @@
       "skills": "## Özel yetenekler\n`{dir}/` altındaki SKILL.md dosyaları senin yeteneklerin; ilgili işte önce onları oku ve uygula."
     }
   },
-  "rooms": { "kitchen": "MUTFAK", "office": "AÇIK OFİS", "meeting": "TOPLANTI", "lounge": "LOUNGE", "archive": "ARŞİV" },
-  "status": { "idle": "boşta", "working": "çalışıyor", "waiting": "seni bekliyor", "error": "hata" },
+  "rooms": {
+    "kitchen": "MUTFAK",
+    "office": "AÇIK OFİS",
+    "meeting": "TOPLANTI",
+    "lounge": "LOUNGE",
+    "archive": "ARŞİV"
+  },
+  "status": {
+    "idle": "boşta",
+    "working": "çalışıyor",
+    "waiting": "seni bekliyor",
+    "error": "hata"
+  },
   "ui": {
     "title": "Ofis",
     "brand": "OFİS",
-    "legend": { "idle": "Boşta", "working": "Çalışıyor", "waiting": "Seni bekliyor", "error": "Hata" },
+    "legend": {
+      "idle": "Boşta",
+      "working": "Çalışıyor",
+      "waiting": "Seni bekliyor",
+      "error": "Hata"
+    },
     "hireButton": "+ İşe al",
     "offlineBanner": "Sunucuya bağlanılamıyor — <code>pixel-office</code> ile başlat",
     "chat": {
@@ -92,92 +108,295 @@
       "resetArm": "Sohbeti ve oturumu silmek için tekrar tıkla (hafıza kalır)"
     },
     "editor": {
-      "tabs": { "face": "Yüz & Vücut", "hair": "Saç", "clothes": "Kıyafet" },
+      "tabs": {
+        "face": "Yüz & Vücut",
+        "hair": "Saç",
+        "clothes": "Kıyafet"
+      },
       "random": "🎲 Rastgele",
-      "gender": "Cinsiyet", "male": "Erkek", "female": "Kadın",
-      "body": "Vücut", "slim": "Zayıf", "normal": "Normal", "muscular": "Kaslı", "heavy": "Şişman",
-      "skin": "Ten rengi", "beard": "Sakal", "yes": "Var", "no": "Yok",
-      "glasses": "Gözlük", "square": "Kare", "round": "Yuvarlak", "sun": "Güneş",
-      "headphones": "Kulaklık", "headphonesOpt": "Kulaklık", "headset": "Mikrofonlu",
-      "hairColor": "Saç rengi", "hairStyle": "Saç stili", "short": "Kısa", "long": "Uzun", "bun": "Topuz", "ponytail": "At kuyruğu", "curly": "Kıvırcık",
-      "hat": "Şapka", "cap": "Kep", "beanie": "Bere", "hatColor": "Şapka rengi",
-      "topStyle": "Üst tipi", "tshirt": "Tişört", "hoodie": "Hoodie", "dress": "Elbise", "blazer": "Blazer",
-      "topColor": "Üst rengi", "bottomStyle": "Alt tipi", "pants": "Pantolon", "shorts": "Şort", "skirt": "Etek", "bottomColor": "Alt rengi",
-      "shoes": "Ayakkabı", "dark": "Klasik", "sneakers": "Spor", "boots": "Bot", "heels": "Topuklu",
+      "gender": "Cinsiyet",
+      "male": "Erkek",
+      "female": "Kadın",
+      "body": "Vücut",
+      "slim": "Zayıf",
+      "normal": "Normal",
+      "muscular": "Kaslı",
+      "heavy": "Şişman",
+      "skin": "Ten rengi",
+      "beard": "Sakal",
+      "yes": "Var",
+      "no": "Yok",
+      "glasses": "Gözlük",
+      "square": "Kare",
+      "round": "Yuvarlak",
+      "sun": "Güneş",
+      "headphones": "Kulaklık",
+      "headphonesOpt": "Kulaklık",
+      "headset": "Mikrofonlu",
+      "hairColor": "Saç rengi",
+      "hairStyle": "Saç stili",
+      "short": "Kısa",
+      "long": "Uzun",
+      "bun": "Topuz",
+      "ponytail": "At kuyruğu",
+      "curly": "Kıvırcık",
+      "hat": "Şapka",
+      "cap": "Kep",
+      "beanie": "Bere",
+      "hatColor": "Şapka rengi",
+      "topStyle": "Üst tipi",
+      "tshirt": "Tişört",
+      "hoodie": "Hoodie",
+      "dress": "Elbise",
+      "blazer": "Blazer",
+      "topColor": "Üst rengi",
+      "bottomStyle": "Alt tipi",
+      "pants": "Pantolon",
+      "shorts": "Şort",
+      "skirt": "Etek",
+      "bottomColor": "Alt rengi",
+      "shoes": "Ayakkabı",
+      "dark": "Klasik",
+      "sneakers": "Spor",
+      "boots": "Bot",
+      "heels": "Topuklu",
       "customColor": "Özel renk"
     },
     "hire": {
-      "crumb": "İşe Al", "back": "← Ofise dön",
-      "cardTitle": "YENİ ÇALIŞAN KARTI", "noName": "İsimsiz", "noRole": "Pozisyon seçilmedi", "hiredOn": "İşe giriş:",
-      "step1": "Görünüm", "step1Desc": "Ofiste dolaşacak karakteri tasarla.",
-      "step2": "Kimlik ve görev", "step2Desc": "Kim, ne iş yapıyor, nasıl çalışıyor.",
-      "step3": "Çalışma ayarları", "step3Desc": "Zeka seviyesi, çaba ve yetkiler.",
-      "name": "İsim", "namePh": "örn. Kerem", "role": "Pozisyon", "rolePh": "örn. SEO Uzmanı",
-      "presets": "Hazır pozisyonlar", "presetsHint": "— seçince pozisyon ve görev tanımı dolar, üstünde oynayabilirsin",
-      "prompt": "Görev tanımı (sistem promptu)", "promptPh": "Sen Kerem'sin, SEO uzmanısın. Sitenin teknik SEO'sunu, anahtar kelime stratejisini ve içerik planını yönetirsin. Her öneride ölçülebilir hedef koyarsın. Türkçe konuşursun.",
+      "crumb": "İşe Al",
+      "back": "← Ofise dön",
+      "cardTitle": "YENİ ÇALIŞAN KARTI",
+      "noName": "İsimsiz",
+      "noRole": "Pozisyon seçilmedi",
+      "hiredOn": "İşe giriş:",
+      "step1": "Görünüm",
+      "step1Desc": "Ofiste dolaşacak karakteri tasarla.",
+      "step2": "Kimlik ve görev",
+      "step2Desc": "Kim, ne iş yapıyor, nasıl çalışıyor.",
+      "step3": "Çalışma ayarları",
+      "step3Desc": "Zeka seviyesi, çaba ve yetkiler.",
+      "name": "İsim",
+      "namePh": "örn. Kerem",
+      "role": "Pozisyon",
+      "rolePh": "örn. SEO Uzmanı",
+      "presets": "Hazır pozisyonlar",
+      "presetsHint": "— seçince pozisyon ve görev tanımı dolar, üstünde oynayabilirsin",
+      "prompt": "Görev tanımı (sistem promptu)",
+      "promptPh": "Sen Kerem'sin, SEO uzmanısın. Sitenin teknik SEO'sunu, anahtar kelime stratejisini ve içerik planını yönetirsin. Her öneride ölçülebilir hedef koyarsın. Türkçe konuşursun.",
       "promptHint": "İyi bir görev tanımı: kim olduğu · neyden sorumlu olduğu · nasıl çalıştığı · hangi proje dokümanlarına baktığı · nasıl konuştuğu. Kalıcı hafıza ve yetenekler otomatik eklenir.",
       "chars": "— {n} karakter",
-      "model": "Model", "effort": "Effort — ne kadar düşünsün", "perm": "İzin modu",
-      "needNameRole": "İsim ve pozisyon gerekli", "submit": "İşe al", "working": "İşe alınıyor…", "hired": "{name} işe alındı", "error": "Hata: {message}",
-      "noDir": "employeesDir tanımlı değil; işe alma kapalı"
+      "model": "Model",
+      "effort": "Effort — ne kadar düşünsün",
+      "perm": "İzin modu",
+      "needNameRole": "İsim ve pozisyon gerekli",
+      "submit": "İşe al",
+      "working": "İşe alınıyor…",
+      "hired": "{name} işe alındı",
+      "error": "Hata: {message}",
+      "noDir": "employeesDir tanımlı değil; işe alma kapalı",
+      "cwd": "Çalışma klasörü (isteğe bağlı)",
+      "cwdPh": "örn. ~/Projects/carpe — boş = bu proje",
+      "cwdHint": "Bu çalışanın çalışacağı repo/klasör: oradaki CLAUDE.md'yi okur, dosyalarını düzenler, komutları orada çalıştırır.",
+      "cwdBadge": "klasör: {v}"
     },
     "profile": {
       "chatLink": "Sohbete git →",
-      "tabs": { "profile": "Profil", "memory": "Hafıza", "skills": "Yetenekler", "history": "Geçmiş", "settings": "Ayarlar" },
-      "hiredOn": "İşe giriş: <b>{date}</b>", "startedToday": "bugün başladı", "withUs": "{n} gündür bizimle", "workdir": "Çalışma klasörü:",
-      "defaultModel": "varsayılan model", "effortBadge": "effort: {v}", "skillsBadge": "{n} yetenek",
-      "stats": { "tasks": "görev", "messages": "mesaj", "cost": "oturum maliyeti", "last": "son iş" },
-      "appearance": "Görünüm", "identity": "Kimlik ve görev", "name": "İsim", "role": "Pozisyon", "prompt": "Görev tanımı (sistem promptu)",
-      "save": "Kaydet", "saveHint": "Kaydedince çalışanın süreci yeni ayarlarla yeniden açılır; sohbet geçmişi korunur.",
-      "memoryTitle": "Kalıcı hafıza", "memoryHint": "Bu dosya her oturum başında çalışana verilir. Çalışan öğrendiklerini buraya kendisi yazar; sen de düzenleyebilirsin.",
-      "refresh": "Bilgilerini tazele", "refreshTitle": "Çalışan hafızasını ve ilgili proje dokümanlarını gözden geçirip günceller",
-      "lastRefresh": "Son tazeleme: {date}", "neverRefreshed": "Henüz tazelenmedi.",
-      "skillsTitle": "Yetenekler", "skillsHint": "Sadece bu çalışana yüklenen beceriler (Claude Code skill formatı).",
+      "tabs": {
+        "profile": "Profil",
+        "memory": "Hafıza",
+        "skills": "Yetenekler",
+        "history": "Geçmiş",
+        "settings": "Ayarlar"
+      },
+      "hiredOn": "İşe giriş: <b>{date}</b>",
+      "startedToday": "bugün başladı",
+      "withUs": "{n} gündür bizimle",
+      "workdir": "Çalışma klasörü:",
+      "defaultModel": "varsayılan model",
+      "effortBadge": "effort: {v}",
+      "skillsBadge": "{n} yetenek",
+      "stats": {
+        "tasks": "görev",
+        "messages": "mesaj",
+        "cost": "oturum maliyeti",
+        "last": "son iş"
+      },
+      "appearance": "Görünüm",
+      "identity": "Kimlik ve görev",
+      "name": "İsim",
+      "role": "Pozisyon",
+      "prompt": "Görev tanımı (sistem promptu)",
+      "save": "Kaydet",
+      "saveHint": "Kaydedince çalışanın süreci yeni ayarlarla yeniden açılır; sohbet geçmişi korunur.",
+      "memoryTitle": "Kalıcı hafıza",
+      "memoryHint": "Bu dosya her oturum başında çalışana verilir. Çalışan öğrendiklerini buraya kendisi yazar; sen de düzenleyebilirsin.",
+      "refresh": "Bilgilerini tazele",
+      "refreshTitle": "Çalışan hafızasını ve ilgili proje dokümanlarını gözden geçirip günceller",
+      "lastRefresh": "Son tazeleme: {date}",
+      "neverRefreshed": "Henüz tazelenmedi.",
+      "skillsTitle": "Yetenekler",
+      "skillsHint": "Sadece bu çalışana yüklenen beceriler (Claude Code skill formatı).",
       "noSkills": "Henüz yetenek yok. Aşağıdan ekle ya da <code>skills/&lt;ad&gt;/SKILL.md</code> dosyası oluştur.",
-      "newSkill": "Yeni yetenek", "editSkill": "Yeteneği düzenle: {name}", "skillName": "Ad", "skillNamePh": "örn. haftalik-rapor",
-      "skillDesc": "Ne zaman kullanılır", "skillDescPh": "Kullanıcı haftalık rapor istediğinde kullan.", "skillBody": "İçerik (adımlar, şablonlar, kurallar)",
-      "add": "Ekle", "cancel": "Vazgeç", "edit": "Düzenle", "delete": "Sil", "sure": "Emin misin?", "skillDeleted": "Yetenek silindi", "skillSaved": "Yetenek güncellendi", "skillAdded": "Yetenek eklendi",
-      "historyTitle": "Geçmiş", "noHistory": "Henüz sohbet yok.", "you": "Sen", "action": "İşlem", "system": "Sistem", "auto": "Otomatik",
-      "settingsTitle": "Çalışma ayarları", "modelDefault": "Varsayılan", "modelDefaultDesc": "Claude Code'un genel model ayarı.", "effortDefault": "Varsayılan",
+      "newSkill": "Yeni yetenek",
+      "editSkill": "Yeteneği düzenle: {name}",
+      "skillName": "Ad",
+      "skillNamePh": "örn. haftalik-rapor",
+      "skillDesc": "Ne zaman kullanılır",
+      "skillDescPh": "Kullanıcı haftalık rapor istediğinde kullan.",
+      "skillBody": "İçerik (adımlar, şablonlar, kurallar)",
+      "add": "Ekle",
+      "cancel": "Vazgeç",
+      "edit": "Düzenle",
+      "delete": "Sil",
+      "sure": "Emin misin?",
+      "skillDeleted": "Yetenek silindi",
+      "skillSaved": "Yetenek güncellendi",
+      "skillAdded": "Yetenek eklendi",
+      "historyTitle": "Geçmiş",
+      "noHistory": "Henüz sohbet yok.",
+      "you": "Sen",
+      "action": "İşlem",
+      "system": "Sistem",
+      "auto": "Otomatik",
+      "settingsTitle": "Çalışma ayarları",
+      "modelDefault": "Varsayılan",
+      "modelDefaultDesc": "Claude Code'un genel model ayarı.",
+      "effortDefault": "Varsayılan",
       "refreshHours": "Otomatik bilgi tazeleme sıklığı (saat, 0 = kapalı)",
-      "danger": "Tehlikeli bölge", "fireHint": "İşten çıkarınca çalışan ofisten kaldırılır; klasörü <code>{archive}</code> altına taşınır (hafıza ve yetenekler silinmez, sohbet geçmişi silinir).",
-      "fireConfirmPh": "Onay için ismini yaz", "fire": "İşten çıkar",
-      "profileSaved": "Profil kaydedildi", "settingsSaved": "Ayarlar kaydedildi", "memorySaved": "Hafıza kaydedildi (bir sonraki oturumda yüklenir)", "refreshing": "{name} bilgilerini tazeliyor — sohbetten izleyebilirsin",
-      "loadError": "Yüklenemedi: {message}", "error": "Hata: {message}"
+      "danger": "Tehlikeli bölge",
+      "fireHint": "İşten çıkarınca çalışan ofisten kaldırılır; klasörü <code>{archive}</code> altına taşınır (hafıza ve yetenekler silinmez, sohbet geçmişi silinir).",
+      "fireConfirmPh": "Onay için ismini yaz",
+      "fire": "İşten çıkar",
+      "profileSaved": "Profil kaydedildi",
+      "settingsSaved": "Ayarlar kaydedildi",
+      "memorySaved": "Hafıza kaydedildi (bir sonraki oturumda yüklenir)",
+      "refreshing": "{name} bilgilerini tazeliyor — sohbetten izleyebilirsin",
+      "loadError": "Yüklenemedi: {message}",
+      "error": "Hata: {message}"
     },
     "models": {
-      "claude-opus-5": { "name": "Opus 5", "desc": "Dengeli ve güçlü; çoğu iş için varsayılan.", "tier": "$$" },
-      "claude-sonnet-5": { "name": "Sonnet 5", "desc": "Hızlı ve ekonomik; rutin, tanımlı işler.", "tier": "$" },
-      "claude-haiku-4-5": { "name": "Haiku 4.5", "desc": "En hızlı, en ucuz; basit ve kısa işler.", "tier": "¢" },
-      "claude-fable-5-1": { "name": "Fable 5.1", "desc": "En güçlü model; zor analiz ve uzun görevler.", "tier": "$$$" },
-      "claude-opus-4-8": { "name": "Opus 4.8", "desc": "Önceki nesil güçlü model.", "tier": "$$" },
-      "claude-opus-4-7": { "name": "Opus 4.7", "desc": "Önceki nesil.", "tier": "$$" },
-      "claude-sonnet-4-6": { "name": "Sonnet 4.6", "desc": "Önceki nesil hızlı model.", "tier": "$" }
+      "claude-opus-5": {
+        "name": "Opus 5",
+        "desc": "Dengeli ve güçlü; çoğu iş için varsayılan.",
+        "tier": "$$"
+      },
+      "claude-sonnet-5": {
+        "name": "Sonnet 5",
+        "desc": "Hızlı ve ekonomik; rutin, tanımlı işler.",
+        "tier": "$"
+      },
+      "claude-haiku-4-5": {
+        "name": "Haiku 4.5",
+        "desc": "En hızlı, en ucuz; basit ve kısa işler.",
+        "tier": "¢"
+      },
+      "claude-fable-5-1": {
+        "name": "Fable 5.1",
+        "desc": "En güçlü model; zor analiz ve uzun görevler.",
+        "tier": "$$$"
+      },
+      "claude-opus-4-8": {
+        "name": "Opus 4.8",
+        "desc": "Önceki nesil güçlü model.",
+        "tier": "$$"
+      },
+      "claude-opus-4-7": {
+        "name": "Opus 4.7",
+        "desc": "Önceki nesil.",
+        "tier": "$$"
+      },
+      "claude-sonnet-4-6": {
+        "name": "Sonnet 4.6",
+        "desc": "Önceki nesil hızlı model.",
+        "tier": "$"
+      }
     },
     "efforts": {
-      "low": { "name": "Düşük", "desc": "Az düşünür, hızlı ve kısa cevaplar; basit rutin işler." },
-      "medium": { "name": "Orta", "desc": "Günlük işler için makul denge." },
-      "high": { "name": "Yüksek", "desc": "Varsayılan; kaliteli sonuç, makul maliyet." },
-      "xhigh": { "name": "Çok yüksek", "desc": "Zor analiz, kod ve çok adımlı görevler için." },
-      "max": { "name": "Maks", "desc": "Doğruluk her şeyden önemliyse; en yavaş ve pahalı." }
+      "low": {
+        "name": "Düşük",
+        "desc": "Az düşünür, hızlı ve kısa cevaplar; basit rutin işler."
+      },
+      "medium": {
+        "name": "Orta",
+        "desc": "Günlük işler için makul denge."
+      },
+      "high": {
+        "name": "Yüksek",
+        "desc": "Varsayılan; kaliteli sonuç, makul maliyet."
+      },
+      "xhigh": {
+        "name": "Çok yüksek",
+        "desc": "Zor analiz, kod ve çok adımlı görevler için."
+      },
+      "max": {
+        "name": "Maks",
+        "desc": "Doğruluk her şeyden önemliyse; en yavaş ve pahalı."
+      }
     },
     "perms": {
-      "default": { "name": "Sor", "desc": "Dosya yazma ve komutlarda izin ister. En güvenli.", "tag": "recommended" },
-      "acceptEdits": { "name": "Düzenlemeler serbest", "desc": "Dosya oluşturma/düzenleme sorulmaz; terminal komutları için sorar.", "tag": "" },
-      "plan": { "name": "Sadece plan", "desc": "Yalnızca okur ve plan yapar; hiçbir dosyayı değiştirmez.", "tag": "" },
-      "dontAsk": { "name": "Sorma, reddet", "desc": "İzin gerektiren işlemler sessizce reddedilir.", "tag": "" },
-      "bypassPermissions": { "name": "Hiç sorma", "desc": "Her komutu sorusuz çalıştırır. Yalnızca dar görevli, güvendiğin çalışanlar için.", "tag": "risky" }
+      "default": {
+        "name": "Sor",
+        "desc": "Dosya yazma ve komutlarda izin ister. En güvenli.",
+        "tag": "recommended"
+      },
+      "acceptEdits": {
+        "name": "Düzenlemeler serbest",
+        "desc": "Dosya oluşturma/düzenleme sorulmaz; terminal komutları için sorar.",
+        "tag": ""
+      },
+      "plan": {
+        "name": "Sadece plan",
+        "desc": "Yalnızca okur ve plan yapar; hiçbir dosyayı değiştirmez.",
+        "tag": ""
+      },
+      "dontAsk": {
+        "name": "Sorma, reddet",
+        "desc": "İzin gerektiren işlemler sessizce reddedilir.",
+        "tag": ""
+      },
+      "bypassPermissions": {
+        "name": "Hiç sorma",
+        "desc": "Her komutu sorusuz çalıştırır. Yalnızca dar görevli, güvendiğin çalışanlar için.",
+        "tag": "risky"
+      }
     },
-    "tags": { "recommended": "önerilen", "risky": "riskli" },
+    "tags": {
+      "recommended": "önerilen",
+      "risky": "riskli"
+    },
     "presets": [
-      { "role": "Kişisel Asistan", "prompt": "Sen {name}'sin, kullanıcının kişisel asistanısın. Takvim, hatırlatma, not alma, araştırma, e-posta taslağı ve günlük planlama işlerinde yardım edersin; proje dokümanlarındaki açık işleri takip edersin. Kısa, net ve samimi Türkçe konuşursun; emin olmadığında sorarsın." },
-      { "role": "Muhasebe & Finans", "prompt": "Sen {name}'sin, muhasebe ve finanstan sorumlusun. Fatura takibi, gelir-gider tabloları, KDV/vergi hesapları, nakit akışı, bütçe ve raporlama yaparsın; projenin finans dokümanlarını kaynak alırsın. Sayılarla titizsin, hesabı adım adım gösterirsin, mevzuatta emin olmadığını açıkça söylersin. Türkçe konuşursun." },
-      { "role": "Reklam & Pazarlama", "prompt": "Sen {name}'sin, reklam ve pazarlamadan sorumlusun. Reklam metinleri, kampanya fikirleri, sosyal medya planları, hedef kitle analizi, Meta/Google Ads stratejileri ve landing page copy'si üretirsin. Yaratıcı ama ölçülebilir sonuç odaklısın; her öneride hedef, mesaj ve CTA net olur. Türkçe konuşursun." },
-      { "role": "Müşteri Destek", "prompt": "Sen {name}'sin, müşteri destek ve iletişimden sorumlusun. Müşteri mesajlarına yanıt taslakları, şikayet yönetimi, SSS ve destek süreçleri senin işin; projenin müşteri dokümanlarını okursun. Nazik, sabırlı, çözüm odaklısın; suçlayıcı olmayan net bir dil kullanırsın. Türkçe konuşursun." },
-      { "role": "SEO & İçerik", "prompt": "Sen {name}'sin, SEO ve içerik stratejisinden sorumlusun. Anahtar kelime araştırması, teknik SEO denetimi, içerik planı ve blog/landing metinleri üretirsin. Her öneride ölçülebilir hedef (sıralama, trafik, dönüşüm) koyarsın. Türkçe konuşursun." },
-      { "role": "Yazılım Geliştirme", "prompt": "Sen {name}'sin, yazılım geliştiricisin. Verilen projede önce kodu ve CLAUDE.md'yi incelersin, küçük ve güvenli değişiklikler yaparsın, testleri çalıştırırsın, ne yaptığını kısa özetlersin. Emin olmadığın mimari kararlarda sorarsın. Türkçe konuşursun." },
-      { "role": "Satış", "prompt": "Sen {name}'sin, satıştan sorumlusun. Potansiyel müşteri listesi, teklif taslakları, takip e-postaları, itiraz karşılama ve satış hunisi raporları hazırlarsın; projenin müşteri dokümanlarını kaynak alırsın. Net, ikna edici ve dürüst konuşursun. Türkçe konuşursun." },
-      { "role": "İçerik & Sosyal Medya", "prompt": "Sen {name}'sin, içerik ve sosyal medyadan sorumlusun. Instagram/TikTok/LinkedIn için içerik takvimi, gönderi metinleri, hikâye fikirleri ve görsel brief'leri hazırlarsın. Marka sesine sadık kalırsın; her içerikte amaç ve çağrı belli olur. Türkçe konuşursun." }
+      {
+        "role": "Kişisel Asistan",
+        "prompt": "Sen {name}'sin, kullanıcının kişisel asistanısın. Takvim, hatırlatma, not alma, araştırma, e-posta taslağı ve günlük planlama işlerinde yardım edersin; proje dokümanlarındaki açık işleri takip edersin. Kısa, net ve samimi Türkçe konuşursun; emin olmadığında sorarsın."
+      },
+      {
+        "role": "Muhasebe & Finans",
+        "prompt": "Sen {name}'sin, muhasebe ve finanstan sorumlusun. Fatura takibi, gelir-gider tabloları, KDV/vergi hesapları, nakit akışı, bütçe ve raporlama yaparsın; projenin finans dokümanlarını kaynak alırsın. Sayılarla titizsin, hesabı adım adım gösterirsin, mevzuatta emin olmadığını açıkça söylersin. Türkçe konuşursun."
+      },
+      {
+        "role": "Reklam & Pazarlama",
+        "prompt": "Sen {name}'sin, reklam ve pazarlamadan sorumlusun. Reklam metinleri, kampanya fikirleri, sosyal medya planları, hedef kitle analizi, Meta/Google Ads stratejileri ve landing page copy'si üretirsin. Yaratıcı ama ölçülebilir sonuç odaklısın; her öneride hedef, mesaj ve CTA net olur. Türkçe konuşursun."
+      },
+      {
+        "role": "Müşteri Destek",
+        "prompt": "Sen {name}'sin, müşteri destek ve iletişimden sorumlusun. Müşteri mesajlarına yanıt taslakları, şikayet yönetimi, SSS ve destek süreçleri senin işin; projenin müşteri dokümanlarını okursun. Nazik, sabırlı, çözüm odaklısın; suçlayıcı olmayan net bir dil kullanırsın. Türkçe konuşursun."
+      },
+      {
+        "role": "SEO & İçerik",
+        "prompt": "Sen {name}'sin, SEO ve içerik stratejisinden sorumlusun. Anahtar kelime araştırması, teknik SEO denetimi, içerik planı ve blog/landing metinleri üretirsin. Her öneride ölçülebilir hedef (sıralama, trafik, dönüşüm) koyarsın. Türkçe konuşursun."
+      },
+      {
+        "role": "Yazılım Geliştirme",
+        "prompt": "Sen {name}'sin, yazılım geliştiricisin. Verilen projede önce kodu ve CLAUDE.md'yi incelersin, küçük ve güvenli değişiklikler yaparsın, testleri çalıştırırsın, ne yaptığını kısa özetlersin. Emin olmadığın mimari kararlarda sorarsın. Türkçe konuşursun."
+      },
+      {
+        "role": "Satış",
+        "prompt": "Sen {name}'sin, satıştan sorumlusun. Potansiyel müşteri listesi, teklif taslakları, takip e-postaları, itiraz karşılama ve satış hunisi raporları hazırlarsın; projenin müşteri dokümanlarını kaynak alırsın. Net, ikna edici ve dürüst konuşursun. Türkçe konuşursun."
+      },
+      {
+        "role": "İçerik & Sosyal Medya",
+        "prompt": "Sen {name}'sin, içerik ve sosyal medyadan sorumlusun. Instagram/TikTok/LinkedIn için içerik takvimi, gönderi metinleri, hikâye fikirleri ve görsel brief'leri hazırlarsın. Marka sesine sadık kalırsın; her içerikte amaç ve çağrı belli olur. Türkçe konuşursun."
+      }
     ]
   }
 }

@@ -6,7 +6,7 @@ import express from "express";
 import { WebSocketServer, WebSocket } from "ws";
 import { Employee, refreshPrompt, type EmployeeConfig } from "./employee.js";
 import { Store } from "./store.js";
-import { loadEmployees, loadEmployee, listSkills, writeAgentFile, createEmployeeDir, archiveEmployeeDir, writeSkill, readSkill, deleteSkill, syncClaudeAgents } from "./agents.js";
+import { expandHome, loadEmployees, loadEmployee, listSkills, writeAgentFile, createEmployeeDir, archiveEmployeeDir, writeSkill, readSkill, deleteSkill, syncClaudeAgents } from "./agents.js";
 import { loadSettings, configPath, PKG_ROOT, CONFIG_DIR } from "./config.js";
 import { loadLocale, availableLocales, Translator } from "./i18n.js";
 import { initRuntime, t } from "./runtime.js";
@@ -120,6 +120,7 @@ app.post("/api/employees", (req, res) => {
     name, role, color, prompt: prompt || t("server.defaultPrompt", { name, role }),
     look: look ?? { skin: "#f1c9a5", hair: "#3b2a20", hairStyle: "short", top: color, bottom: "#2f3548", accessory: "none" },
     model: pick(b.model, MODELS), effort: pick(b.effort, EFFORTS), permissionMode: pick(b.permissionMode, PERMS),
+    cwd: clean(b.cwd, 500) || undefined,
   });
   const e = new Employee(loadEmployee(dir, employees.size), store);
   employees.set(e.cfg.id, e);
@@ -143,6 +144,7 @@ app.put("/api/employees/:id", async (req, res) => {
   if (b.effort !== undefined) cfg.effort = pick(b.effort, EFFORTS);
   if (b.permissionMode !== undefined) cfg.permissionMode = pick(b.permissionMode, PERMS) ?? "default";
   if (b.refreshHours !== undefined) cfg.refreshHours = Math.max(0, Number(b.refreshHours) || 0);
+  if (b.cwd !== undefined) { const c = clean(b.cwd, 500); cfg.cwd = c ? expandHome(c) : settings.cwd; }
   writeAgentFile(cfg);
   await e.applyConfig(cfg);
   syncAgents();

@@ -54,12 +54,28 @@
       "skills": "## Skills\nThe SKILL.md files under `{dir}/` are your skills; read and follow them for related work."
     }
   },
-  "rooms": { "kitchen": "KITCHEN", "office": "OPEN OFFICE", "meeting": "MEETING", "lounge": "LOUNGE", "archive": "ARCHIVE" },
-  "status": { "idle": "idle", "working": "working", "waiting": "waiting for you", "error": "error" },
+  "rooms": {
+    "kitchen": "KITCHEN",
+    "office": "OPEN OFFICE",
+    "meeting": "MEETING",
+    "lounge": "LOUNGE",
+    "archive": "ARCHIVE"
+  },
+  "status": {
+    "idle": "idle",
+    "working": "working",
+    "waiting": "waiting for you",
+    "error": "error"
+  },
   "ui": {
     "title": "Pixel Office",
     "brand": "OFFICE",
-    "legend": { "idle": "Idle", "working": "Working", "waiting": "Waiting for you", "error": "Error" },
+    "legend": {
+      "idle": "Idle",
+      "working": "Working",
+      "waiting": "Waiting for you",
+      "error": "Error"
+    },
     "hireButton": "+ Hire",
     "offlineBanner": "Can't reach the server — start it with <code>pixel-office</code>",
     "chat": {
@@ -92,92 +108,295 @@
       "resetArm": "Click again to delete the chat and session (memory stays)"
     },
     "editor": {
-      "tabs": { "face": "Face & Body", "hair": "Hair", "clothes": "Clothes" },
+      "tabs": {
+        "face": "Face & Body",
+        "hair": "Hair",
+        "clothes": "Clothes"
+      },
       "random": "🎲 Random",
-      "gender": "Gender", "male": "Male", "female": "Female",
-      "body": "Body", "slim": "Slim", "normal": "Average", "muscular": "Muscular", "heavy": "Heavy",
-      "skin": "Skin tone", "beard": "Beard", "yes": "Yes", "no": "None",
-      "glasses": "Glasses", "square": "Square", "round": "Round", "sun": "Sunglasses",
-      "headphones": "Headset", "headphonesOpt": "Headphones", "headset": "Mic headset",
-      "hairColor": "Hair color", "hairStyle": "Hair style", "short": "Short", "long": "Long", "bun": "Bun", "ponytail": "Ponytail", "curly": "Curly",
-      "hat": "Hat", "cap": "Cap", "beanie": "Beanie", "hatColor": "Hat color",
-      "topStyle": "Top", "tshirt": "T-shirt", "hoodie": "Hoodie", "dress": "Dress", "blazer": "Blazer",
-      "topColor": "Top color", "bottomStyle": "Bottom", "pants": "Pants", "shorts": "Shorts", "skirt": "Skirt", "bottomColor": "Bottom color",
-      "shoes": "Shoes", "dark": "Classic", "sneakers": "Sneakers", "boots": "Boots", "heels": "Heels",
+      "gender": "Gender",
+      "male": "Male",
+      "female": "Female",
+      "body": "Body",
+      "slim": "Slim",
+      "normal": "Average",
+      "muscular": "Muscular",
+      "heavy": "Heavy",
+      "skin": "Skin tone",
+      "beard": "Beard",
+      "yes": "Yes",
+      "no": "None",
+      "glasses": "Glasses",
+      "square": "Square",
+      "round": "Round",
+      "sun": "Sunglasses",
+      "headphones": "Headset",
+      "headphonesOpt": "Headphones",
+      "headset": "Mic headset",
+      "hairColor": "Hair color",
+      "hairStyle": "Hair style",
+      "short": "Short",
+      "long": "Long",
+      "bun": "Bun",
+      "ponytail": "Ponytail",
+      "curly": "Curly",
+      "hat": "Hat",
+      "cap": "Cap",
+      "beanie": "Beanie",
+      "hatColor": "Hat color",
+      "topStyle": "Top",
+      "tshirt": "T-shirt",
+      "hoodie": "Hoodie",
+      "dress": "Dress",
+      "blazer": "Blazer",
+      "topColor": "Top color",
+      "bottomStyle": "Bottom",
+      "pants": "Pants",
+      "shorts": "Shorts",
+      "skirt": "Skirt",
+      "bottomColor": "Bottom color",
+      "shoes": "Shoes",
+      "dark": "Classic",
+      "sneakers": "Sneakers",
+      "boots": "Boots",
+      "heels": "Heels",
       "customColor": "Custom color"
     },
     "hire": {
-      "crumb": "Hire", "back": "← Back to office",
-      "cardTitle": "NEW EMPLOYEE CARD", "noName": "Unnamed", "noRole": "No position yet", "hiredOn": "Hired:",
-      "step1": "Appearance", "step1Desc": "Design the character that will walk around the office.",
-      "step2": "Identity & job", "step2Desc": "Who they are, what they do, how they work.",
-      "step3": "Work settings", "step3Desc": "Intelligence, effort and permissions.",
-      "name": "Name", "namePh": "e.g. Alex", "role": "Position", "rolePh": "e.g. SEO Specialist",
-      "presets": "Ready-made positions", "presetsHint": "— picking one fills the position and job description; edit freely",
-      "prompt": "Job description (system prompt)", "promptPh": "You are Alex, an SEO specialist. You own technical SEO, keyword strategy and the content plan. Every recommendation comes with a measurable target.",
+      "crumb": "Hire",
+      "back": "← Back to office",
+      "cardTitle": "NEW EMPLOYEE CARD",
+      "noName": "Unnamed",
+      "noRole": "No position yet",
+      "hiredOn": "Hired:",
+      "step1": "Appearance",
+      "step1Desc": "Design the character that will walk around the office.",
+      "step2": "Identity & job",
+      "step2Desc": "Who they are, what they do, how they work.",
+      "step3": "Work settings",
+      "step3Desc": "Intelligence, effort and permissions.",
+      "name": "Name",
+      "namePh": "e.g. Alex",
+      "role": "Position",
+      "rolePh": "e.g. SEO Specialist",
+      "presets": "Ready-made positions",
+      "presetsHint": "— picking one fills the position and job description; edit freely",
+      "prompt": "Job description (system prompt)",
+      "promptPh": "You are Alex, an SEO specialist. You own technical SEO, keyword strategy and the content plan. Every recommendation comes with a measurable target.",
       "promptHint": "A good job description: who they are · what they own · how they work · which project docs they read · how they talk. Persistent memory and skills are added automatically.",
       "chars": "— {n} characters",
-      "model": "Model", "effort": "Effort — how hard to think", "perm": "Permission mode",
-      "needNameRole": "Name and position are required", "submit": "Hire", "working": "Hiring…", "hired": "{name} hired", "error": "Error: {message}",
-      "noDir": "employeesDir is not configured; hiring is disabled"
+      "model": "Model",
+      "effort": "Effort — how hard to think",
+      "perm": "Permission mode",
+      "needNameRole": "Name and position are required",
+      "submit": "Hire",
+      "working": "Hiring…",
+      "hired": "{name} hired",
+      "error": "Error: {message}",
+      "noDir": "employeesDir is not configured; hiring is disabled",
+      "cwd": "Working directory (optional)",
+      "cwdPh": "e.g. ~/Projects/my-app — empty = this project",
+      "cwdHint": "The repo/folder this employee works in: reads its CLAUDE.md, edits its files, runs commands there.",
+      "cwdBadge": "folder: {v}"
     },
     "profile": {
       "chatLink": "Go to chat →",
-      "tabs": { "profile": "Profile", "memory": "Memory", "skills": "Skills", "history": "History", "settings": "Settings" },
-      "hiredOn": "Hired: <b>{date}</b>", "startedToday": "started today", "withUs": "{n} days with us", "workdir": "Working directory:",
-      "defaultModel": "default model", "effortBadge": "effort: {v}", "skillsBadge": "{n} skills",
-      "stats": { "tasks": "tasks", "messages": "messages", "cost": "session cost", "last": "last task" },
-      "appearance": "Appearance", "identity": "Identity & job", "name": "Name", "role": "Position", "prompt": "Job description (system prompt)",
-      "save": "Save", "saveHint": "Saving restarts the employee's process with the new settings; chat history is kept.",
-      "memoryTitle": "Persistent memory", "memoryHint": "This file is given to the employee at the start of every session. They write what they learn here; you can edit it too.",
-      "refresh": "Refresh knowledge", "refreshTitle": "The employee reviews their memory and the relevant project docs and updates them",
-      "lastRefresh": "Last refresh: {date}", "neverRefreshed": "Not refreshed yet.",
-      "skillsTitle": "Skills", "skillsHint": "Skills loaded only for this employee (Claude Code skill format).",
+      "tabs": {
+        "profile": "Profile",
+        "memory": "Memory",
+        "skills": "Skills",
+        "history": "History",
+        "settings": "Settings"
+      },
+      "hiredOn": "Hired: <b>{date}</b>",
+      "startedToday": "started today",
+      "withUs": "{n} days with us",
+      "workdir": "Working directory:",
+      "defaultModel": "default model",
+      "effortBadge": "effort: {v}",
+      "skillsBadge": "{n} skills",
+      "stats": {
+        "tasks": "tasks",
+        "messages": "messages",
+        "cost": "session cost",
+        "last": "last task"
+      },
+      "appearance": "Appearance",
+      "identity": "Identity & job",
+      "name": "Name",
+      "role": "Position",
+      "prompt": "Job description (system prompt)",
+      "save": "Save",
+      "saveHint": "Saving restarts the employee's process with the new settings; chat history is kept.",
+      "memoryTitle": "Persistent memory",
+      "memoryHint": "This file is given to the employee at the start of every session. They write what they learn here; you can edit it too.",
+      "refresh": "Refresh knowledge",
+      "refreshTitle": "The employee reviews their memory and the relevant project docs and updates them",
+      "lastRefresh": "Last refresh: {date}",
+      "neverRefreshed": "Not refreshed yet.",
+      "skillsTitle": "Skills",
+      "skillsHint": "Skills loaded only for this employee (Claude Code skill format).",
       "noSkills": "No skills yet. Add one below or create a <code>skills/&lt;name&gt;/SKILL.md</code> file.",
-      "newSkill": "New skill", "editSkill": "Edit skill: {name}", "skillName": "Name", "skillNamePh": "e.g. weekly-report",
-      "skillDesc": "When to use it", "skillDescPh": "Use when the user asks for a weekly report.", "skillBody": "Content (steps, templates, rules)",
-      "add": "Add", "cancel": "Cancel", "edit": "Edit", "delete": "Delete", "sure": "Sure?", "skillDeleted": "Skill deleted", "skillSaved": "Skill updated", "skillAdded": "Skill added",
-      "historyTitle": "History", "noHistory": "No chat yet.", "you": "You", "action": "Action", "system": "System", "auto": "Automatic",
-      "settingsTitle": "Work settings", "modelDefault": "Default", "modelDefaultDesc": "Claude Code's global model setting.", "effortDefault": "Default",
+      "newSkill": "New skill",
+      "editSkill": "Edit skill: {name}",
+      "skillName": "Name",
+      "skillNamePh": "e.g. weekly-report",
+      "skillDesc": "When to use it",
+      "skillDescPh": "Use when the user asks for a weekly report.",
+      "skillBody": "Content (steps, templates, rules)",
+      "add": "Add",
+      "cancel": "Cancel",
+      "edit": "Edit",
+      "delete": "Delete",
+      "sure": "Sure?",
+      "skillDeleted": "Skill deleted",
+      "skillSaved": "Skill updated",
+      "skillAdded": "Skill added",
+      "historyTitle": "History",
+      "noHistory": "No chat yet.",
+      "you": "You",
+      "action": "Action",
+      "system": "System",
+      "auto": "Automatic",
+      "settingsTitle": "Work settings",
+      "modelDefault": "Default",
+      "modelDefaultDesc": "Claude Code's global model setting.",
+      "effortDefault": "Default",
       "refreshHours": "Automatic knowledge refresh interval (hours, 0 = off)",
-      "danger": "Danger zone", "fireHint": "Firing removes the employee from the office; their folder is moved to <code>{archive}</code> (memory and skills are kept, chat history is deleted).",
-      "fireConfirmPh": "Type their name to confirm", "fire": "Fire",
-      "profileSaved": "Profile saved", "settingsSaved": "Settings saved", "memorySaved": "Memory saved (loaded next session)", "refreshing": "{name} is refreshing their knowledge — watch the chat",
-      "loadError": "Could not load: {message}", "error": "Error: {message}"
+      "danger": "Danger zone",
+      "fireHint": "Firing removes the employee from the office; their folder is moved to <code>{archive}</code> (memory and skills are kept, chat history is deleted).",
+      "fireConfirmPh": "Type their name to confirm",
+      "fire": "Fire",
+      "profileSaved": "Profile saved",
+      "settingsSaved": "Settings saved",
+      "memorySaved": "Memory saved (loaded next session)",
+      "refreshing": "{name} is refreshing their knowledge — watch the chat",
+      "loadError": "Could not load: {message}",
+      "error": "Error: {message}"
     },
     "models": {
-      "claude-opus-5": { "name": "Opus 5", "desc": "Balanced and strong; the default for most work.", "tier": "$$" },
-      "claude-sonnet-5": { "name": "Sonnet 5", "desc": "Fast and economical; routine, well-defined work.", "tier": "$" },
-      "claude-haiku-4-5": { "name": "Haiku 4.5", "desc": "Fastest and cheapest; simple short tasks.", "tier": "¢" },
-      "claude-fable-5-1": { "name": "Fable 5.1", "desc": "The most capable model; hard analysis and long tasks.", "tier": "$$$" },
-      "claude-opus-4-8": { "name": "Opus 4.8", "desc": "Previous-generation strong model.", "tier": "$$" },
-      "claude-opus-4-7": { "name": "Opus 4.7", "desc": "Previous generation.", "tier": "$$" },
-      "claude-sonnet-4-6": { "name": "Sonnet 4.6", "desc": "Previous-generation fast model.", "tier": "$" }
+      "claude-opus-5": {
+        "name": "Opus 5",
+        "desc": "Balanced and strong; the default for most work.",
+        "tier": "$$"
+      },
+      "claude-sonnet-5": {
+        "name": "Sonnet 5",
+        "desc": "Fast and economical; routine, well-defined work.",
+        "tier": "$"
+      },
+      "claude-haiku-4-5": {
+        "name": "Haiku 4.5",
+        "desc": "Fastest and cheapest; simple short tasks.",
+        "tier": "¢"
+      },
+      "claude-fable-5-1": {
+        "name": "Fable 5.1",
+        "desc": "The most capable model; hard analysis and long tasks.",
+        "tier": "$$$"
+      },
+      "claude-opus-4-8": {
+        "name": "Opus 4.8",
+        "desc": "Previous-generation strong model.",
+        "tier": "$$"
+      },
+      "claude-opus-4-7": {
+        "name": "Opus 4.7",
+        "desc": "Previous generation.",
+        "tier": "$$"
+      },
+      "claude-sonnet-4-6": {
+        "name": "Sonnet 4.6",
+        "desc": "Previous-generation fast model.",
+        "tier": "$"
+      }
     },
     "efforts": {
-      "low": { "name": "Low", "desc": "Thinks little; fast, short answers for simple routine work." },
-      "medium": { "name": "Medium", "desc": "A sensible balance for everyday work." },
-      "high": { "name": "High", "desc": "Default; quality results at reasonable cost." },
-      "xhigh": { "name": "Very high", "desc": "Hard analysis, code and multi-step tasks." },
-      "max": { "name": "Max", "desc": "When correctness matters more than anything; slowest and priciest." }
+      "low": {
+        "name": "Low",
+        "desc": "Thinks little; fast, short answers for simple routine work."
+      },
+      "medium": {
+        "name": "Medium",
+        "desc": "A sensible balance for everyday work."
+      },
+      "high": {
+        "name": "High",
+        "desc": "Default; quality results at reasonable cost."
+      },
+      "xhigh": {
+        "name": "Very high",
+        "desc": "Hard analysis, code and multi-step tasks."
+      },
+      "max": {
+        "name": "Max",
+        "desc": "When correctness matters more than anything; slowest and priciest."
+      }
     },
     "perms": {
-      "default": { "name": "Ask", "desc": "Asks before writing files or running commands. Safest.", "tag": "recommended" },
-      "acceptEdits": { "name": "Edits allowed", "desc": "File creation/editing is not asked; still asks for terminal commands.", "tag": "" },
-      "plan": { "name": "Plan only", "desc": "Only reads and plans; never changes a file.", "tag": "" },
-      "dontAsk": { "name": "Don't ask, deny", "desc": "Anything that needs permission is silently denied.", "tag": "" },
-      "bypassPermissions": { "name": "Never ask", "desc": "Runs every command without asking. Only for narrowly scoped employees you trust.", "tag": "risky" }
+      "default": {
+        "name": "Ask",
+        "desc": "Asks before writing files or running commands. Safest.",
+        "tag": "recommended"
+      },
+      "acceptEdits": {
+        "name": "Edits allowed",
+        "desc": "File creation/editing is not asked; still asks for terminal commands.",
+        "tag": ""
+      },
+      "plan": {
+        "name": "Plan only",
+        "desc": "Only reads and plans; never changes a file.",
+        "tag": ""
+      },
+      "dontAsk": {
+        "name": "Don't ask, deny",
+        "desc": "Anything that needs permission is silently denied.",
+        "tag": ""
+      },
+      "bypassPermissions": {
+        "name": "Never ask",
+        "desc": "Runs every command without asking. Only for narrowly scoped employees you trust.",
+        "tag": "risky"
+      }
     },
-    "tags": { "recommended": "recommended", "risky": "risky" },
+    "tags": {
+      "recommended": "recommended",
+      "risky": "risky"
+    },
     "presets": [
-      { "role": "Personal Assistant", "prompt": "You are {name}, the user's personal assistant. You help with calendar, reminders, notes, research, email drafts and daily planning, and you keep track of open tasks in the project docs. You speak briefly, clearly and warmly; when unsure, you ask." },
-      { "role": "Accounting & Finance", "prompt": "You are {name}, responsible for accounting and finance. Invoice tracking, income/expense sheets, tax calculations, cash flow, budgets and reports are your job; you use the project's finance documents as your source. You are meticulous with numbers, show calculations step by step, and say clearly when you're unsure about regulations." },
-      { "role": "Marketing & Ads", "prompt": "You are {name}, responsible for marketing and advertising. You produce ad copy, campaign ideas, social media plans, audience analysis, Meta/Google Ads strategies and landing page copy. Creative but results-driven: every proposal has a clear goal, message and CTA." },
-      { "role": "Customer Support", "prompt": "You are {name}, responsible for customer support and communication. Reply drafts, complaint handling, FAQs and support processes are your job; you read the project's customer documents. You are polite, patient and solution-oriented, never blaming the customer." },
-      { "role": "SEO & Content", "prompt": "You are {name}, responsible for SEO and content strategy. You do keyword research, technical SEO audits, content plans and blog/landing copy. Every recommendation comes with a measurable target (rankings, traffic, conversions)." },
-      { "role": "Software Developer", "prompt": "You are {name}, a software developer. In the given project you first read the code and CLAUDE.md, make small safe changes, run the tests and summarize what you did briefly. You ask before making uncertain architectural decisions." },
-      { "role": "Sales", "prompt": "You are {name}, responsible for sales. You prepare lead lists, proposal drafts, follow-up emails, objection handling and pipeline reports using the project's customer documents. You are clear, persuasive and honest." },
-      { "role": "Content & Social Media", "prompt": "You are {name}, responsible for content and social media. You prepare content calendars, post copy, story ideas and visual briefs for Instagram/TikTok/LinkedIn. You stay true to the brand voice; every piece has a purpose and a call to action." }
+      {
+        "role": "Personal Assistant",
+        "prompt": "You are {name}, the user's personal assistant. You help with calendar, reminders, notes, research, email drafts and daily planning, and you keep track of open tasks in the project docs. You speak briefly, clearly and warmly; when unsure, you ask."
+      },
+      {
+        "role": "Accounting & Finance",
+        "prompt": "You are {name}, responsible for accounting and finance. Invoice tracking, income/expense sheets, tax calculations, cash flow, budgets and reports are your job; you use the project's finance documents as your source. You are meticulous with numbers, show calculations step by step, and say clearly when you're unsure about regulations."
+      },
+      {
+        "role": "Marketing & Ads",
+        "prompt": "You are {name}, responsible for marketing and advertising. You produce ad copy, campaign ideas, social media plans, audience analysis, Meta/Google Ads strategies and landing page copy. Creative but results-driven: every proposal has a clear goal, message and CTA."
+      },
+      {
+        "role": "Customer Support",
+        "prompt": "You are {name}, responsible for customer support and communication. Reply drafts, complaint handling, FAQs and support processes are your job; you read the project's customer documents. You are polite, patient and solution-oriented, never blaming the customer."
+      },
+      {
+        "role": "SEO & Content",
+        "prompt": "You are {name}, responsible for SEO and content strategy. You do keyword research, technical SEO audits, content plans and blog/landing copy. Every recommendation comes with a measurable target (rankings, traffic, conversions)."
+      },
+      {
+        "role": "Software Developer",
+        "prompt": "You are {name}, a software developer. In the given project you first read the code and CLAUDE.md, make small safe changes, run the tests and summarize what you did briefly. You ask before making uncertain architectural decisions."
+      },
+      {
+        "role": "Sales",
+        "prompt": "You are {name}, responsible for sales. You prepare lead lists, proposal drafts, follow-up emails, objection handling and pipeline reports using the project's customer documents. You are clear, persuasive and honest."
+      },
+      {
+        "role": "Content & Social Media",
+        "prompt": "You are {name}, responsible for content and social media. You prepare content calendars, post copy, story ideas and visual briefs for Instagram/TikTok/LinkedIn. You stay true to the brand voice; every piece has a purpose and a call to action."
+      }
     ]
   }
 }

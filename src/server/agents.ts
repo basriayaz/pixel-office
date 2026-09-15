@@ -128,8 +128,9 @@ export function writeAgentFile(cfg: EmployeeConfig) {
 }
 
 // Creates <employeesDir>/<id>/ with agent.md, memory and skills/ for a newly hired employee.
-export function createEmployeeDir(input: { name: string; role: string; prompt: string; color: string; look: Record<string, unknown>; model?: string; effort?: EmployeeConfig["effort"]; permissionMode?: EmployeeConfig["permissionMode"] }): string {
-  const { employeesDir, memoryFile, refreshHours, cwd } = getSettings();
+export function createEmployeeDir(input: { name: string; role: string; prompt: string; color: string; look: Record<string, unknown>; model?: string; effort?: EmployeeConfig["effort"]; permissionMode?: EmployeeConfig["permissionMode"]; cwd?: string }): string {
+  const { employeesDir, memoryFile, refreshHours } = getSettings();
+  const cwd = input.cwd ? expandHome(input.cwd) : getSettings().cwd;
   let id = slug(input.name) || "employee";
   let dir = path.join(employeesDir, id);
   for (let n = 2; fs.existsSync(dir); n++) { id = `${slug(input.name) || "employee"}-${n}`; dir = path.join(employeesDir, id); }

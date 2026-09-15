@@ -33,6 +33,7 @@ async function load() {
     $("effortHint").textContent = EFFORT_INFO[settings.effort]?.desc || "";
     buildChoiceCards($("fPerm"), permItems(), settings.perm, (v) => { settings.perm = v; });
     $("fRefresh").value = detail.refreshHours;
+    $("fCwd").value = detail.cwd === PO.project ? "" : detail.cwd;
   }
   $("memory").value = detail.memory;
   $("memPath").textContent = detail.memoryFile || "";
@@ -138,7 +139,7 @@ $("saveProfile").onclick = async () => {
 
 $("saveSettings").onclick = async () => {
   try {
-    await api("PUT", `/api/employees/${encodeURIComponent(id)}`, { model: settings.model, effort: settings.effort, permissionMode: settings.perm, refreshHours: Number($("fRefresh").value) });
+    await api("PUT", `/api/employees/${encodeURIComponent(id)}`, { model: settings.model, effort: settings.effort, permissionMode: settings.perm, refreshHours: Number($("fRefresh").value), cwd: $("fCwd").value.trim() });
     toast(t("ui.profile.settingsSaved"));
     load();
   } catch (err) { toast(t("ui.profile.error", { message: err.message })); }

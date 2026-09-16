@@ -33,7 +33,7 @@ a { color: var(--accent); }
 /* ---------- top bar ---------- */
 .topbar {
   display: flex; align-items: center; gap: 14px; padding: 0 16px; height: 48px; min-height: 48px;
-  border-bottom: 1px solid var(--line); background: var(--bg-2); white-space: nowrap; overflow: hidden;
+  border-bottom: 1px solid var(--line); background: var(--bg-2); white-space: nowrap; position: relative; z-index: 20;
 }
 .topbar > * { flex: none; }
 .tools { display: flex; align-items: center; gap: 6px; }

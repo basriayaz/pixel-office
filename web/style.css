@@ -47,8 +47,10 @@ a { color: var(--accent); }
 .office-tab:hover { border-color: var(--line); color: var(--text); }
 .office-tab.on { border-color: var(--accent); color: var(--accent); background: rgba(255,209,102,.08); }
 .office-tab .badge { background: var(--error); color: #fff; font-size: 10px; font-weight: 600; min-width: 16px; height: 16px; border-radius: 8px; display: grid; place-items: center; padding: 0 4px; }
-.legend { display: flex; gap: 14px; color: var(--muted); font-size: 11px; margin-left: auto; }
-.legend-item { display: flex; align-items: center; gap: 6px; }
+/* status legend: just the four dots in a pill, labels on hover */
+.legend { display: flex; gap: 7px; align-items: center; margin-left: auto; padding: 0 9px; height: 24px; border: 1px solid var(--line); border-radius: 999px; background: var(--bg); }
+.legend-item { display: flex; align-items: center; cursor: help; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 .dot { width: 8px; height: 8px; display: inline-block; border-radius: 2px; }
 .dot.idle { background: var(--idle); }
 .dot.working { background: var(--working); box-shadow: 0 0 8px var(--working); }
@@ -365,8 +367,7 @@ body.chat-open .chat { transform: none; }
 .recent-text { white-space: pre-wrap; word-break: break-word; font-size: 12px; }
 
 /* ---------- responsive ---------- */
-@media (max-width: 1500px) { .legend-item span { display: none; } .legend { gap: 8px; } }
-@media (max-width: 1150px) { .legend { display: none; } .tools { margin-left: auto; } }
+@media (max-width: 900px) { .legend { display: none; } .tools { margin-left: auto; } }
 @media (max-width: 760px) { .clock { display: none; } .brand-name { display: none; } .topbar { gap: 8px; padding: 0 10px; } .stage { padding: 8px; } .roster { gap: 6px; margin-top: 8px; } .roster-chip .rs { display: none; } }
 @media (max-height: 640px) { .roster { display: none; } }
 @media (max-width: 900px) {

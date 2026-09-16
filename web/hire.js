@@ -31,6 +31,7 @@ $("name").oninput = updateCard;
 $("role").oninput = updateCard;
 $("prompt").oninput = updateCard;
 $("cwd").oninput = updateCard;
+attachFolderPicker($("cwd"));
 
 // preset chips fill role + prompt template
 for (const p of PRESETS) {

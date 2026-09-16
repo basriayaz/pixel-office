@@ -73,7 +73,8 @@
     },
     "officeNotEmpty": "Move or fire its employees first",
     "lastOffice": "The last office can't be deleted",
-    "shutdown": "Shutting down (requested from the UI/CLI)…"
+    "shutdown": "Shutting down (requested from the UI/CLI)…",
+    "pickBusy": "a folder dialog is already open"
   },
   "rooms": {
     "kitchen": "KITCHEN",
@@ -486,6 +487,13 @@
       "cancel": "Cancel",
       "confirm": "Close",
       "done": "Office closed"
+    },
+    "pick": {
+      "btn": "Choose…",
+      "title": "Choose folder",
+      "prompt": "Choose the working folder",
+      "cancelled": "No folder chosen",
+      "error": "Could not open the folder dialog: {message}"
     }
   }
 }

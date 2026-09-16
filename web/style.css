@@ -247,6 +247,10 @@ body.chat-open .chat { transform: none; }
 .card h3 { font-size: 13px; margin-bottom: 10px; }
 .hire { display: grid; grid-template-columns: 1.1fr 1fr; gap: 18px; align-items: start; }
 .field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
+.pick-row { display: flex; gap: 6px; align-items: stretch; }
+.pick-row input { flex: 1; min-width: 0; }
+.pick-btn { white-space: nowrap; }
+.o-head .pick-row { min-width: 0; }
 .field span { font-size: 11px; color: var(--muted); letter-spacing: .5px; }
 .field small { color: var(--muted); font-size: 11px; }
 .field input, .field select, .field textarea, #fireConfirm {

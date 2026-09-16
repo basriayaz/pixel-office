@@ -37,6 +37,7 @@ async function load() {
     buildChoiceCards($("fPerm"), permItems(), settings.perm, (v) => { settings.perm = v; });
     $("fRefresh").value = detail.refreshHours;
     $("fCwd").value = detail.cwd === detail.officeCwd ? "" : detail.cwd;
+    attachFolderPicker($("fCwd"));
   }
   $("memory").value = detail.memory;
   $("memPath").textContent = detail.memoryFile || "";

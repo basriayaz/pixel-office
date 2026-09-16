@@ -83,6 +83,42 @@ const clientConfig = () => ({
 app.get("/i18n.js", (_req, res) => { res.type("application/javascript").send(`window.PO = ${JSON.stringify(clientConfig())};`); });
 app.get("/api/options", (_req, res) => res.json(clientConfig()));
 
+// Native "choose folder" dialog on the machine the server runs on (macOS Finder, Windows, zenity/kdialog on Linux).
+let picking = false;
+app.post("/api/pick-folder", (req, res) => {
+  if (picking) return res.status(409).json({ error: t("server.pickBusy") });
+  const start = absPath(PROJECT, String(req.body?.start || "."));
+  const prompt = String(req.body?.prompt || "").slice(0, 120);
+  let cmd: string, args: string[];
+  if (process.platform === "darwin") {
+    const esc = (v: string) => v.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+    cmd = "osascript";
+    args = ["-e", 'tell application "System Events"', "-e", "activate",
+      "-e", `set f to choose folder with prompt "${esc(prompt)}" default location (POSIX file "${esc(start)}")`,
+      "-e", "POSIX path of f", "-e", "end tell"];
+  } else if (process.platform === "win32") {
+    cmd = "powershell";
+    args = ["-NoProfile", "-STA", "-Command", `Add-Type -AssemblyName System.Windows.Forms; $d = New-Object System.Windows.Forms.FolderBrowserDialog; $d.Description = '${prompt.replace(/'/g, "''")}'; $d.SelectedPath = '${start.replace(/'/g, "''")}'; if ($d.ShowDialog() -eq 'OK') { Write-Output $d.SelectedPath } else { exit 1 }`];
+  } else {
+    cmd = "sh";
+    args = ["-c", `if command -v zenity >/dev/null; then zenity --file-selection --directory --title="$1" --filename="$2/"; elif command -v kdialog >/dev/null; then kdialog --getexistingdirectory "$2" --title "$1"; else echo "no dialog tool (install zenity)" >&2; exit 2; fi`, "pick", prompt, start];
+  }
+  picking = true;
+  let out = "", err = "";
+  const child = spawn(cmd, args, { stdio: ["ignore", "pipe", "pipe"] });
+  child.stdout.on("data", (d) => { out += d; });
+  child.stderr.on("data", (d) => { err += d; });
+  child.on("error", (e) => { picking = false; res.status(500).json({ error: e.message }); });
+  child.on("close", (code) => {
+    picking = false;
+    if (res.headersSent) return;
+    const chosen = out.trim().replace(/[\\/]+$/, "");
+    if (code !== 0 || !chosen) return res.json({ cancelled: true, error: code === 2 ? err.trim() : undefined });
+    const home = process.env.HOME ?? process.env.USERPROFILE ?? "";
+    res.json({ path: chosen, display: home && chosen.startsWith(home) ? "~" + chosen.slice(home.length) : chosen, relative: chosen === PROJECT ? "." : path.relative(PROJECT, chosen).startsWith("..") ? null : path.relative(PROJECT, chosen) });
+  });
+});
+
 // Shut the server down from the UI / CLI (localhost only, so no auth): interrupts running turns, tells clients, exits.
 app.post("/api/shutdown", (_req, res) => {
   res.json({ ok: true });

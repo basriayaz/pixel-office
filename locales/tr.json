@@ -73,7 +73,8 @@
     },
     "officeNotEmpty": "Önce çalışanlarını taşı ya da işten çıkar",
     "lastOffice": "Son ofis silinemez",
-    "shutdown": "Kapatılıyor (arayüz/CLI'den istendi)…"
+    "shutdown": "Kapatılıyor (arayüz/CLI'den istendi)…",
+    "pickBusy": "zaten açık bir klasör penceresi var"
   },
   "rooms": {
     "kitchen": "MUTFAK",
@@ -486,6 +487,13 @@
       "cancel": "Vazgeç",
       "confirm": "Kapat",
       "done": "Ofis kapatıldı"
+    },
+    "pick": {
+      "btn": "Seç…",
+      "title": "Klasör seç",
+      "prompt": "Çalışma klasörünü seç",
+      "cancelled": "Klasör seçilmedi",
+      "error": "Klasör penceresi açılamadı: {message}"
     }
   }
 }

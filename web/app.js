@@ -399,7 +399,8 @@ function renderOfficeList() {
     row.className = "office-row";
     const n = o.employees.size;
     let rowTheme = o.info.theme || "default";
-    row.innerHTML = `<div class="o-head"><input class="o-name" value="${escapeHtml(o.info.name)}" maxlength="60" /><input class="o-cwd" value="${escapeHtml(o.info.cwd === PO.project ? "" : o.info.cwd)}" placeholder="${escapeHtml(t("ui.offices.cwdPh"))}" maxlength="500" /><span class="count">${escapeHtml(t("ui.offices.employees", { n }))}</span><span class="office-actions"><button class="btn small o-save">${t("ui.offices.save")}</button> <button class="btn small danger o-del" ${n ? `disabled title="${escapeHtml(t("ui.offices.cannotDelete"))}"` : ""}>${t("ui.offices.delete")}</button></span></div><div class="theme-cards small"></div>`;
+    row.innerHTML = `<div class="o-head"><input class="o-name" value="${escapeHtml(o.info.name)}" maxlength="60" /><input class="o-cwd" value="${escapeHtml(o.info.cwd === PO.project ? "" : o.info.cwd)}" placeholder="${escapeHtml(t("ui.offices.cwdPh"))}" maxlength="500" title="${escapeHtml(o.info.cwd)}" /><span class="count">${escapeHtml(t("ui.offices.employees", { n }))}</span><span class="office-actions"><button class="btn small o-save">${t("ui.offices.save")}</button> <button class="btn small danger o-del" ${n ? `disabled title="${escapeHtml(t("ui.offices.cannotDelete"))}"` : ""}>${t("ui.offices.delete")}</button></span></div><div class="theme-cards small"></div>`;
+    attachFolderPicker(row.querySelector(".o-cwd"));
     buildThemeCards(row.querySelector(".theme-cards"), rowTheme, (v) => { rowTheme = v; });
     row.querySelector(".o-save").onclick = async () => {
       try { await api("PUT", `/api/offices/${encodeURIComponent(o.info.id)}`, { name: row.querySelector(".o-name").value, cwd: row.querySelector(".o-cwd").value.trim(), theme: rowTheme }); toast(t("ui.offices.saved")); }
@@ -431,6 +432,7 @@ function buildThemeCards(host, current, onChange) {
 let newTheme = "default";
 buildThemeCards($("oTheme"), newTheme, (v) => { newTheme = v; });
 $("btnOffices").onclick = () => { renderOfficeList(); $("officesModal").hidden = false; $("oName").focus(); };
+attachFolderPicker($("oCwd"));
 
 // ---- shutdown (⏻) ----
 $("btnShutdown").onclick = () => { $("shutdownModal").hidden = false; $("shutdownConfirm").focus(); };

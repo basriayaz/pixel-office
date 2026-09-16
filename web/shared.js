@@ -40,6 +40,28 @@ async function api(method, url, body) {
   return data;
 }
 
+// Adds a "Choose…" button next to a folder input; opens the native folder dialog on the server's machine.
+function attachFolderPicker(input) {
+  if (!input || input.dataset.picker) return;
+  input.dataset.picker = "1";
+  const row = document.createElement("div");
+  row.className = "pick-row";
+  input.parentNode.insertBefore(row, input);
+  row.appendChild(input);
+  const btn = document.createElement("button");
+  btn.type = "button"; btn.className = "btn small pick-btn"; btn.textContent = "📁 " + t("ui.pick.btn"); btn.title = t("ui.pick.title");
+  btn.onclick = async () => {
+    btn.disabled = true;
+    try {
+      const r = await api("POST", "/api/pick-folder", { start: input.value.trim() || ".", prompt: t("ui.pick.prompt") });
+      if (r.cancelled) { if (r.error) toast(t("ui.pick.error", { message: r.error })); else toast(t("ui.pick.cancelled")); }
+      else { input.value = r.relative === "." ? "" : r.display; input.dispatchEvent(new Event("input", { bubbles: true })); input.focus(); }
+    } catch (e) { toast(t("ui.pick.error", { message: e.message })); }
+    btn.disabled = false;
+  };
+  row.appendChild(btn);
+}
+
 // Radio-style choice cards: items = [{value, name, desc, tag}]
 function buildChoiceCards(host, items, current, onChange) {
   host.innerHTML = "";

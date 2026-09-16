@@ -1,10 +1,11 @@
 import fs from "node:fs";
 import path from "node:path";
+import { expandHome as expandHomeRaw } from "./config.js";
 import type { EmployeeConfig } from "./employee.js";
 import { getSettings, getOffice, t } from "./runtime.js";
 import type { OfficeDef } from "./config.js";
 
-export const expandHome = (p: string) => path.resolve(p.replace(/^~(?=$|\/)/, process.env.HOME ?? ""));
+export const expandHome = (p: string) => path.resolve(expandHomeRaw(p));
 
 interface AgentFile {
   meta: Record<string, string>;

@@ -163,7 +163,8 @@
       "waiting": "{name} is waiting for you",
       "done": "{name} finished the task",
       "reset": "Chat reset; persistent memory kept",
-      "resetArm": "Click again to delete the chat and session (memory stays)"
+      "resetArm": "Click again to delete the chat and session (memory stays)",
+      "hired": "{name} joined the team 🎉"
     },
     "editor": {
       "tabs": {
@@ -253,7 +254,7 @@
       "error": "Error: {message}",
       "noDir": "employeesDir is not configured; hiring is disabled",
       "cwd": "Working directory (optional)",
-      "cwdPh": "e.g. ~/Projects/my-app — empty = this project",
+      "cwdPh": "e.g. ~/Projects/my-app — empty = {project}",
       "cwdHint": "The repo/folder this employee works in: reads its CLAUDE.md, edits its files, runs commands there.",
       "cwdBadge": "folder: {v}"
     },
@@ -465,7 +466,7 @@
       "name": "Company / office name",
       "namePh": "e.g. Acme Shop",
       "cwd": "Working directory (optional)",
-      "cwdPh": "e.g. ~/Projects/acme — empty = this project",
+      "cwdPh": "e.g. ~/Projects/my-app — empty = {project}",
       "cwdHint": "Employees hired into this office work in this folder by default.",
       "employees": "{n} employees",
       "delete": "Delete",
@@ -502,6 +503,36 @@
       "prompt": "Choose the working folder",
       "cancelled": "No folder chosen",
       "error": "Could not open the folder dialog: {message}"
+    },
+    "samples": [
+      {
+        "name": "Alex",
+        "preset": 0
+      },
+      {
+        "name": "Mia",
+        "preset": 5
+      },
+      {
+        "name": "Sam",
+        "preset": 2
+      }
+    ],
+    "welcome": {
+      "title": "Welcome to your office",
+      "intro": "Three sample employees are already at their desks. Here is how it works:",
+      "s1": "<b>Click an employee</b> to open a chat. They work in your folder: read and edit files, run commands (they ask first).",
+      "s2": "<b>Teach them.</b> Say “remember that…” and it goes into their memory file, which is loaded every session. Edit it any time from the profile (☰).",
+      "s3": "<b>Hire your own</b> with <b>+ Hire</b>: design the character, pick a position, choose the model. Fire the samples whenever you like.",
+      "cta": "Let's go"
+    },
+    "notify": {
+      "on": "Notifications on",
+      "off": "Notifications off",
+      "title": "Desktop notifications when an employee replies or needs you",
+      "denied": "Notifications are blocked in the browser settings",
+      "waiting": "{name} needs you",
+      "replied": "{name} replied"
     }
   }
 }

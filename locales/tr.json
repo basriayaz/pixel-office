@@ -163,7 +163,8 @@
       "waiting": "{name} senden bir şey bekliyor",
       "done": "{name} işi bitirdi",
       "reset": "Sohbet sıfırlandı; kalıcı hafıza duruyor",
-      "resetArm": "Sohbeti ve oturumu silmek için tekrar tıkla (hafıza kalır)"
+      "resetArm": "Sohbeti ve oturumu silmek için tekrar tıkla (hafıza kalır)",
+      "hired": "{name} aramıza katıldı 🎉"
     },
     "editor": {
       "tabs": {
@@ -253,7 +254,7 @@
       "error": "Hata: {message}",
       "noDir": "employeesDir tanımlı değil; işe alma kapalı",
       "cwd": "Çalışma klasörü (isteğe bağlı)",
-      "cwdPh": "örn. ~/Projects/carpe — boş = bu proje",
+      "cwdPh": "örn. ~/Projects/uygulama — boş = {project}",
       "cwdHint": "Bu çalışanın çalışacağı repo/klasör: oradaki CLAUDE.md'yi okur, dosyalarını düzenler, komutları orada çalıştırır.",
       "cwdBadge": "klasör: {v}"
     },
@@ -465,7 +466,7 @@
       "name": "Şirket / ofis adı",
       "namePh": "örn. Zaya Sound",
       "cwd": "Çalışma klasörü (isteğe bağlı)",
-      "cwdPh": "örn. ~/Projects/zaya — boş = bu proje",
+      "cwdPh": "örn. ~/Projects/uygulama — boş = {project}",
       "cwdHint": "Bu ofiste işe alınan çalışanlar varsayılan olarak bu klasörde çalışır.",
       "employees": "{n} çalışan",
       "delete": "Sil",
@@ -502,6 +503,36 @@
       "prompt": "Çalışma klasörünü seç",
       "cancelled": "Klasör seçilmedi",
       "error": "Klasör penceresi açılamadı: {message}"
+    },
+    "samples": [
+      {
+        "name": "Defne",
+        "preset": 0
+      },
+      {
+        "name": "Kerem",
+        "preset": 5
+      },
+      {
+        "name": "Elif",
+        "preset": 2
+      }
+    ],
+    "welcome": {
+      "title": "Ofisine hoş geldin",
+      "intro": "Üç örnek çalışan masalarında hazır. Şöyle çalışır:",
+      "s1": "<b>Bir çalışana tıkla</b>, sohbet açılır. Senin klasöründe çalışırlar: dosya okur, düzenler, komut çalıştırır (önce sorarlar).",
+      "s2": "<b>Öğret.</b> “Şunu aklında tut…” dediğin şey hafıza dosyasına yazılır ve her oturumda yüklenir. Profilden (☰) istediğin zaman düzenlersin.",
+      "s3": "<b>Kendi çalışanını al</b>: <b>+ İşe al</b> ile karakteri tasarla, pozisyon seç, modeli belirle. Örnekleri istediğin zaman işten çıkar.",
+      "cta": "Başlayalım"
+    },
+    "notify": {
+      "on": "Bildirimler açık",
+      "off": "Bildirimler kapalı",
+      "title": "Çalışan cevap verince ya da seni beklerken masaüstü bildirimi",
+      "denied": "Bildirimler tarayıcı ayarlarında engelli",
+      "waiting": "{name} seni bekliyor",
+      "replied": "{name} cevap verdi"
     }
   }
 }

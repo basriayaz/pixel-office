@@ -56,7 +56,8 @@ function showOffice(officeId, keepChat = false) {
   if (changed && !keepChat) closeChat();
   const o = cur();
   office.setTheme(o.info.theme || "default");
-  office.setEmployees([...o.employees.values()]);
+  office.setEmployees([...o.employees.values()], state.entering);
+  if (state.entering) { for (const id of state.entering) { const e = o.employees.get(id); if (e) toast(t("ui.toast.hired", { name: e.name })); } state.entering = null; }
   for (const e of o.employees.values()) office.setUnread(e.id, e.unread);
   $("hireLink").href = `hire.html?office=${encodeURIComponent(officeId)}`;
   renderOfficeTabs();
@@ -85,6 +86,9 @@ function handle(m) {
   if (m.type === "shutdown") { markClosed(); return; }
   if (m.type === "init") {
     for (const o of m.offices) mergeRoster(o.id, o.employees, { id: o.id, name: o.name, cwd: o.cwd, theme: o.theme });
+    const hired = params.get("hired");
+    if (hired && !state.inited) { state.entering = new Set([hired]); history.replaceState(null, "", `/?office=${encodeURIComponent(state.office)}`); }
+    state.inited = true;
     showOffice(state.office, true);
     const open = params.get("open");
     if (open && cur().employees.has(open) && !state.selected) { openChat(open); history.replaceState(null, "", `/?office=${encodeURIComponent(state.office)}`); }
@@ -100,8 +104,9 @@ function handle(m) {
     return;
   }
   if (m.type === "roster") {
+    const before = new Set(employeesOf(m.office)?.keys() ?? []);
     mergeRoster(m.office, m.employees);
-    if (m.office === state.office) showOffice(m.office, true);
+    if (m.office === state.office) { state.entering = new Set(m.employees.map((e) => e.id).filter((id) => !before.has(id))); if (!state.entering.size) state.entering = null; showOffice(m.office, true); }
     else renderOfficeTabs();
     return;
   }
@@ -134,6 +139,7 @@ function handle(m) {
         if (current) { office.setUnread(e.id, e.unread); renderRoster(); }
         renderOfficeTabs();
       }
+      if ((m.message.role === "assistant" || m.message.role === "colleague") && (!selected || document.hidden)) notify(e, m.office, t("ui.notify.replied", { name: e.name }), m.message.text);
       break;
     case "chunk":
       if (selected) {
@@ -156,6 +162,7 @@ function handle(m) {
       e.pending.push(m.request);
       if (selected) { removeTyping(); chatBody.appendChild(renderAsk(e, m.request)); scrollDown(); }
       else toast(t("ui.toast.waiting", { name: e.name }));
+      if (!selected || document.hidden) notify(e, m.office, t("ui.notify.waiting", { name: e.name }), m.request.question || m.request.title || "");
       break;
     case "ask_done":
       e.pending = e.pending.filter((p) => p.requestId !== m.requestId);
@@ -433,6 +440,35 @@ let newTheme = "default";
 buildThemeCards($("oTheme"), newTheme, (v) => { newTheme = v; });
 $("btnOffices").onclick = () => { renderOfficeList(); $("officesModal").hidden = false; $("oName").focus(); };
 attachFolderPicker($("oCwd"));
+
+// ---- desktop notifications (🔔) ----
+const notifyPref = () => { try { return localStorage.getItem("po.notify") === "1"; } catch { return false; } };
+function renderNotifyBtn() {
+  const on = notifyPref() && "Notification" in window && Notification.permission === "granted";
+  $("btnNotify").classList.toggle("off", !on);
+  $("btnNotify").title = `${t("ui.notify.title")} — ${on ? t("ui.notify.on") : t("ui.notify.off")}`;
+}
+$("btnNotify").onclick = async () => {
+  if (!("Notification" in window)) return;
+  if (notifyPref()) { try { localStorage.setItem("po.notify", "0"); } catch {} toast(t("ui.notify.off")); renderNotifyBtn(); return; }
+  const perm = Notification.permission === "granted" ? "granted" : await Notification.requestPermission();
+  if (perm !== "granted") { toast(t("ui.notify.denied")); return; }
+  try { localStorage.setItem("po.notify", "1"); } catch {}
+  toast(t("ui.notify.on")); renderNotifyBtn();
+};
+function notify(e, officeId, title, body) {
+  if (!notifyPref() || !("Notification" in window) || Notification.permission !== "granted") return;
+  try {
+    const n = new Notification(title, { body: String(body || "").replace(/[*_`#>]/g, "").slice(0, 140), icon: office.portrait(e.id), tag: `${officeId}:${e.id}` });
+    n.onclick = () => { window.focus(); if (officeId !== state.office) showOffice(officeId); openChat(e.id); n.close(); };
+  } catch {}
+}
+renderNotifyBtn();
+
+// ---- welcome card (first run only) ----
+const welcomed = () => { try { return localStorage.getItem("po.welcomed") === "1"; } catch { return false; } };
+if (PO.firstRun && !welcomed()) $("welcomeModal").hidden = false;
+$("welcomeGo").onclick = () => { $("welcomeModal").hidden = true; try { localStorage.setItem("po.welcomed", "1"); } catch {} };
 
 // ---- shutdown (⏻) ----
 $("btnShutdown").onclick = () => { $("shutdownModal").hidden = false; $("shutdownConfirm").focus(); };

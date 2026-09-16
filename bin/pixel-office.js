@@ -10,35 +10,38 @@ const args = process.argv.slice(2);
 const cmd = args[0] && !args[0].startsWith("-") ? args.shift() : "start";
 const flag = (name, def) => { const i = args.indexOf(name); return i >= 0 ? args[i + 1] ?? def : def; };
 const has = (name) => args.includes(name);
-const projectDir = path.resolve(flag("--dir", process.cwd()));
+const dist = path.join(pkgRoot, "dist", "server");
+const useDist = existsSync(path.join(dist, "index.js"));
+const cfgMod = useDist ? await import(path.join(dist, "config.js")) : await import(path.join(pkgRoot, "src", "server", "config.ts")).catch(() => null);
+if (!cfgMod) { console.error("Build first: npm run build"); process.exit(1); }
+// Where files live: --dir <project> or an `init`ed current folder → project mode; otherwise ~/.pixel-office (global).
+const R = cfgMod.resolveRoot({ dir: flag("--dir"), global: has("--global") || cmd === "start" && has("-g") });
 
 if (cmd === "help" || has("--help") || has("-h")) {
   console.log(`pixel-office — a pixel-art office for your Claude agents
 
-  pixel-office init [--locale en|tr] [--no-memory-git]   set up .pixel-office/ in this project
-  pixel-office [start] [--port 4747] [--dir .] [--no-open]  start the office and open the browser
-  pixel-office stop [--dir .]                             stop the office running for this project
-  pixel-office help`);
+  pixel-office                      start your office (~/.pixel-office) and open the browser
+  pixel-office stop                 stop it
+  pixel-office init [--locale tr]   keep employees inside THIS project instead (.pixel-office/), shared via git
+  pixel-office --dir <project>      start the office of a specific project
+
+  options: --port 4747  --no-open  --global (ignore the current project)  --no-memory-git (with init)
+  files:   ~/.pixel-office/  or  <project>/.pixel-office/  (config.json, employees/, data/)`);
   process.exit(0);
 }
 
-const dist = path.join(pkgRoot, "dist", "server");
-const useDist = existsSync(path.join(dist, "index.js"));
-
 if (cmd === "init") {
-  const mod = useDist ? await import(path.join(dist, "config.js")) : await import(path.join(pkgRoot, "src", "server", "config.ts")).catch(() => null);
-  if (!mod) { console.error("Build first: npm run build"); process.exit(1); }
-  const res = mod.initProject(projectDir, { locale: flag("--locale", "en"), memoryInGit: !has("--no-memory-git") });
-  console.log(`Created ${path.relative(projectDir, res.configFile) || res.configFile}`);
-  console.log(`Employees live in ${path.relative(projectDir, res.employeesDir)}/ — copy _template to hire by hand, or use the "+ Hire" button in the office.`);
-  console.log(`Start with: pixel-office`);
+  // `init` without --global always targets the current (or --dir) project.
+  const target = has("--global") ? cfgMod.globalRoot() : cfgMod.projectRoot(flag("--dir", process.cwd()));
+  const res = cfgMod.initRoot(target, { locale: flag("--locale", "en"), memoryInGit: !has("--no-memory-git") });
+  console.log(`Created ${res.configFile}`);
+  console.log(`Employees live in ${res.employeesDir}/ — use the "+ Hire" button in the office, or copy _template by hand.`);
+  console.log(`Start with: pixel-office${target.mode === "project" ? "" : " --global"}`);
   process.exit(0);
 }
 
 if (cmd === "stop") {
-  const mod = useDist ? await import(path.join(dist, "config.js")) : await import(path.join(pkgRoot, "src", "server", "config.ts")).catch(() => null);
-  if (!mod) { console.error("Build first: npm run build"); process.exit(1); }
-  const settings = mod.loadSettings(projectDir);
+  const settings = cfgMod.loadSettings(R);
   const port = flag("--port", settings.port);
   const pidFile = path.join(settings.dataDir, "server.pid");
   try {
@@ -56,7 +59,7 @@ if (cmd === "stop") {
 
 if (cmd !== "start") { console.error(`Unknown command: ${cmd}`); process.exit(1); }
 
-const env = { ...process.env, PIXEL_OFFICE_PROJECT: projectDir };
+const env = { ...process.env, ...cfgMod.rootToEnv(R) };
 if (flag("--port")) env.PORT = flag("--port");
 if (!has("--no-open")) env.PIXEL_OFFICE_OPEN = "1";
 const entry = useDist ? path.join(dist, "index.js") : null;

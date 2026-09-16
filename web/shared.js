@@ -5,10 +5,11 @@ const $ = (id) => document.getElementById(id);
 function tget(key) {
   return key.split(".").reduce((o, k) => (o && typeof o === "object" ? o[k] : undefined), PO.strings);
 }
+const GLOBAL_VARS = { project: PO.projectDisplay || "." };
 function t(key, vars = {}) {
   const v = tget(key);
   const s = typeof v === "string" ? v : key;
-  return s.replace(/\{(\w+)\}/g, (_, k) => (k in vars ? String(vars[k]) : `{${k}}`));
+  return s.replace(/\{(\w+)\}/g, (_, k) => (k in vars ? String(vars[k]) : k in GLOBAL_VARS ? GLOBAL_VARS[k] : `{${k}}`));
 }
 function applyI18n(root = document) {
   root.querySelectorAll("[data-i18n]").forEach((el) => { el.innerHTML = t(el.dataset.i18n); });

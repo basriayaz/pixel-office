@@ -7,15 +7,20 @@ import { WebSocketServer, WebSocket } from "ws";
 import { Employee, refreshPrompt, type EmployeeConfig } from "./employee.js";
 import { Store } from "./store.js";
 import { expandHome, loadEmployees, loadEmployee, listSkills, writeAgentFile, createEmployeeDir, archiveEmployeeDir, writeSkill, readSkill, deleteSkill, syncClaudeAgents } from "./agents.js";
-import { loadSettings, configPath, readRawConfig, writeRawConfig, officeDefFromRaw, officeIdOf, absPath, PKG_ROOT, CONFIG_DIR, THEMES, type OfficeDef, type Theme } from "./config.js";
+import { loadSettings, configPath, readRawConfig, writeRawConfig, officeDefFromRaw, officeIdOf, absPath, displayPath, rootFromEnv, initRoot, PKG_ROOT, THEMES, type OfficeDef, type Theme } from "./config.js";
 import { loadLocale, availableLocales, Translator } from "./i18n.js";
 import { initRuntime, t } from "./runtime.js";
 
-const PROJECT = path.resolve(process.env.PIXEL_OFFICE_PROJECT ?? process.cwd());
-const settings = loadSettings(PROJECT);
+const R = rootFromEnv();
+// Global mode sets itself up on first run; project mode expects `pixel-office init`.
+let firstRun = false;
+if (!fs.existsSync(configPath(R))) {
+  if (R.mode === "global") { initRoot(R, { locale: process.env.PIXEL_OFFICE_LOCALE }); console.log(`Created ${configPath(R)}`); firstRun = true; }
+  else console.log(`No ${configPath(R)} — using defaults (run "pixel-office init" to create one).`);
+}
+const settings = loadSettings(R);
 const locale = loadLocale(settings.locale);
 initRuntime(settings, new Translator(locale.data));
-if (!fs.existsSync(configPath(PROJECT))) console.log(`No ${CONFIG_DIR}/config.json in ${PROJECT} — using defaults (run "pixel-office init" to create one).`);
 
 interface OfficeRt {
   def: OfficeDef;
@@ -48,6 +53,23 @@ function openOffice(def: OfficeDef): OfficeRt {
   for (const e of employees.values()) e.setColleagues({ list: () => [...employees.values()] });
   return o;
 }
+// A brand-new office gets three sample employees so the first screen isn't empty (PIXEL_OFFICE_SAMPLES=0 disables).
+const SAMPLE_LOOKS: Array<{ color: string; look: Record<string, unknown> }> = [
+  { color: "#61afef", look: { body: "slim", skin: "#f1c9a5", hair: "#3b2a1a", hairStyle: "short", top: "#61afef", bottom: "#2f3548", glasses: "round", shoes: "sneakers" } },
+  { color: "#c678dd", look: { body: "slim", fem: true, skin: "#e9bd9a", hair: "#8a3b1f", hairStyle: "long", top: "#c678dd", bottom: "#2f3548", shoes: "heels" } },
+  { color: "#e5c07b", look: { body: "normal", skin: "#c68642", hair: "#1c1a20", hairStyle: "curly", top: "#e5c07b", bottom: "#3f3a4a", topStyle: "hoodie", shoes: "dark" } },
+];
+function seedSamples(def: OfficeDef) {
+  if (process.env.PIXEL_OFFICE_SAMPLES === "0") return;
+  const samples = (locale.data.ui as { samples?: Array<{ name: string; preset: number }> }).samples ?? [];
+  const presets = (locale.data.ui as { presets?: Array<{ role: string; prompt: string }> }).presets ?? [];
+  samples.forEach((sm, i) => {
+    const pr = presets[sm.preset]; if (!pr) return;
+    const L = SAMPLE_LOOKS[i % SAMPLE_LOOKS.length];
+    createEmployeeDir(def, { name: sm.name, role: pr.role, prompt: pr.prompt.replace(/\{name\}/g, sm.name), color: L.color, look: L.look });
+  });
+}
+if (firstRun) seedSamples(settings.offices[0]);
 for (const def of settings.offices) openOffice(def);
 const defaultOfficeId = () => settings.offices[0].id;
 
@@ -77,7 +99,7 @@ const clientConfig = () => ({
   locales: availableLocales(),
   strings: { ui: locale.data.ui, rooms: locale.data.rooms, status: locale.data.status },
   models: MODELS, efforts: EFFORTS, permissions: PERMS, themes: THEMES,
-  project: PROJECT, memoryFile: settings.memoryFile, multiOffice: settings.multiOffice, defaultOffice: defaultOfficeId(),
+  project: R.defaultCwd, projectDisplay: displayPath(R.defaultCwd), mode: R.mode, root: R.root, firstRun, memoryFile: settings.memoryFile, multiOffice: settings.multiOffice, defaultOffice: defaultOfficeId(),
   offices: [...offices.values()].map(officeInfo),
 });
 app.get("/i18n.js", (_req, res) => { res.type("application/javascript").send(`window.PO = ${JSON.stringify(clientConfig())};`); });
@@ -87,7 +109,7 @@ app.get("/api/options", (_req, res) => res.json(clientConfig()));
 let picking = false;
 app.post("/api/pick-folder", (req, res) => {
   if (picking) return res.status(409).json({ error: t("server.pickBusy") });
-  const start = absPath(PROJECT, String(req.body?.start || "."));
+  const start = absPath(R.base, String(req.body?.start || ".")) ;
   const prompt = String(req.body?.prompt || "").slice(0, 120);
   let cmd: string, args: string[];
   if (process.platform === "darwin") {
@@ -114,8 +136,7 @@ app.post("/api/pick-folder", (req, res) => {
     if (res.headersSent) return;
     const chosen = out.trim().replace(/[\\/]+$/, "");
     if (code !== 0 || !chosen) return res.json({ cancelled: true, error: code === 2 ? err.trim() : undefined });
-    const home = process.env.HOME ?? process.env.USERPROFILE ?? "";
-    res.json({ path: chosen, display: home && chosen.startsWith(home) ? "~" + chosen.slice(home.length) : chosen, relative: chosen === PROJECT ? "." : path.relative(PROJECT, chosen).startsWith("..") ? null : path.relative(PROJECT, chosen) });
+    res.json({ path: chosen, display: displayPath(chosen), relative: chosen === R.defaultCwd ? "." : R.mode === "project" && !path.relative(R.base, chosen).startsWith("..") ? path.relative(R.base, chosen) : null });
   });
 });
 
@@ -131,13 +152,14 @@ app.get("/api/offices", (_req, res) => res.json([...offices.values()].map((o) =>
 // ---- office management (persisted to config.json, applied live) ----
 const officesPayload = () => ({ type: "offices", multiOffice: settings.multiOffice, offices: [...offices.values()].map((o) => ({ ...officeInfo(o), employees: roster(o) })) });
 function persistOffices() {
-  const raw = readRawConfig(PROJECT);
-  const rel = (p: string) => { const r = path.relative(PROJECT, p); return r && !r.startsWith("..") ? r : p; };
+  const raw = readRawConfig(R);
+  // Inside the base folder → relative; elsewhere → absolute with ~ for the home folder.
+  const rel = (p: string) => { const r = path.relative(R.base, p); return r && !r.startsWith("..") && !path.isAbsolute(r) ? r : displayPath(p); };
   raw.offices = settings.offices.map((d) => {
     const prev = (raw.offices ?? []).find((x) => officeIdOf(String(x.id ?? x.name ?? ""), "") === d.id) ?? {};
-    return { ...prev, id: d.id, name: d.name, employeesDir: rel(d.employeesDir), cwd: prev.cwd && absPath(PROJECT, String(prev.cwd)) === d.cwd ? prev.cwd : rel(d.cwd), theme: d.theme, ...(d.extraEmployees.length ? { employees: d.extraEmployees.map(rel) } : {}) };
+    return { ...prev, id: d.id, name: d.name, employeesDir: rel(d.employeesDir), cwd: prev.cwd && absPath(R.base, String(prev.cwd)) === d.cwd ? prev.cwd : d.cwd === R.defaultCwd ? undefined : rel(d.cwd), theme: d.theme, ...(d.extraEmployees.length ? { employees: d.extraEmployees.map(rel) } : {}) };
   });
-  writeRawConfig(PROJECT, raw);
+  writeRawConfig(R, raw);
 }
 
 app.post("/api/offices", (req, res) => {
@@ -156,7 +178,7 @@ app.post("/api/offices", (req, res) => {
     if (!fs.existsSync(dir)) { fs.mkdirSync(dir, { recursive: true }); for (const f of ["history", "state.json"]) { const src = path.join(settings.dataDir, f); if (fs.existsSync(src)) fs.renameSync(src, path.join(dir, f)); } }
     rt.store = new Store(dir);
   }
-  const def = officeDefFromRaw(PROJECT, { id, name, employeesDir: path.join(base, id), theme: pick(req.body?.theme, THEMES) ?? "default", ...(cwdRaw ? { cwd: cwdRaw } : {}) }, settings.offices.length, settings.offices[0].cwd);
+  const def = officeDefFromRaw(R, { id, name, employeesDir: path.join(base, id), theme: pick(req.body?.theme, THEMES) ?? "default", ...(cwdRaw ? { cwd: cwdRaw } : {}) }, settings.offices.length, settings.offices[0].cwd);
   settings.offices.push(def);
   const o = openOffice(def);
   for (const e of o.employees.values()) wire(e);
@@ -175,7 +197,7 @@ app.put("/api/offices/:id", async (req, res) => {
   if (theme) o.def.theme = theme;
   if (req.body?.cwd !== undefined) {
     const raw = clean(req.body.cwd, 500);
-    const next = raw ? absPath(PROJECT, raw) : PROJECT;
+    const next = raw ? absPath(R.base, raw) : R.defaultCwd;
     const prevCwd = o.def.cwd;
     o.def.cwd = next;
     for (const e of o.employees.values()) if (e.cfg.cwd === prevCwd) { await e.applyConfig({ ...e.cfg, cwd: next }); }
@@ -418,7 +440,7 @@ server.listen(settings.port, settings.host, () => {
   try { fs.mkdirSync(path.dirname(PID_FILE), { recursive: true }); fs.writeFileSync(PID_FILE, `${process.pid}\n${settings.port}\n`); } catch {}
   console.log(t("server.open", { port: settings.port }));
   if (settings.host !== "127.0.0.1") console.log(t("server.hostWarning", { host: settings.host }));
-  console.log(`  project: ${PROJECT}`);
+  console.log(`  ${R.mode === "global" ? "home" : "project"}: ${R.mode === "global" ? R.root : R.base}`);
   for (const o of offices.values()) {
     console.log(`  [${o.def.name}] ${o.def.employeesDir} → ${o.def.cwd}`);
     for (const e of o.employees.values()) console.log(`    - ${e.cfg.name} (${e.cfg.role})`);

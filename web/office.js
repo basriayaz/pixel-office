@@ -5,6 +5,8 @@ const ROWS = 17;
 const LW = COLS * TILE;
 const LH = ROWS * TILE;
 const WALK_SPEED = 88;
+const ENTRANCE = { tx: 14, ty: 16 }; // doormat at the bottom edge of the open office; new hires walk in from below
+const CONFETTI = ["#ff3b3b", "#ffd166", "#4ade80", "#61afef", "#c678dd", "#ff8c42", "#f4f4f4"];
 const OUTLINE = "#1d1a1f";
 
 const rand = (a, b) => a + Math.random() * (b - a);
@@ -103,6 +105,8 @@ function buildStaticFor(theme) {
     block(8, 16); add(8, 16, (b) => P("plant")(b, 8 * TILE, 16 * TILE, 2));
     block(21, 16); add(21, 16, (b) => P("plant")(b, 21 * TILE, 16 * TILE, 2));
     block(8, 2); add(8, 2, (b, t) => P("coffeeStation")(b, 8 * TILE, 2 * TILE, t));
+    // entrance doormat (walkable)
+    decor.push({ y: ENTRANCE.ty * TILE + 2, draw: (b) => { const x = ENTRANCE.tx * TILE + 2, y = ENTRANCE.ty * TILE + 14; outlineRect(b, x, y, 28, 16, "#6b4a2b"); b.fillStyle = "#8a6a3b"; for (let i = 0; i < 6; i++) b.fillRect(x + 2, y + 2 + i * 2.5, 24, 1); b.fillStyle = "#c9a781"; b.fillRect(x + 8, y + 6, 12, 4); } });
       return { blocked, doors, decor };
 }
 
@@ -125,6 +129,7 @@ class Office {
     this.doors = new Set();
     this.decor = [];
     this.theme = "default";
+    this.particles = [];
     this.last = performance.now();
     this.labelEls = new Map();
     this.roomEls = [];
@@ -159,7 +164,7 @@ class Office {
     this.decor = st.decor;
   }
 
-  setEmployees(list) {
+  setEmployees(list, entering = null) {
     const n = Math.min(list.length, 12);
     const { cols, rows } = deskLayout(n);
     this.buildStatic();
@@ -173,18 +178,23 @@ class Office {
         Object.assign(old, { name: e.name, role: e.role, color: e.color, look, status: e.status || old.status });
         return old;
       }
-      return {
+      // A brand-new colleague (hired while the office is open) walks in through the entrance.
+      const enters = !old && !!entering?.has(e.id);
+      const ne = {
         ...e,
         look,
         status: e.status || "idle",
         seat,
-        tx: seat.tx, ty: seat.ty,
-        x: seat.tx * TILE, y: seat.ty * TILE,
-        dir: "down", anim: "sit", path: [], walkDist: 0, spot: null,
+        tx: enters ? ENTRANCE.tx : seat.tx, ty: enters ? ROWS : seat.ty,
+        x: (enters ? ENTRANCE.tx : seat.tx) * TILE, y: (enters ? ROWS : seat.ty) * TILE,
+        dir: enters ? "up" : "down", anim: enters ? "walk" : "sit", path: [], walkDist: 0, spot: null,
         restUntil: performance.now() + rand(5000, 16000),
-        bubble: null, unread: 0, seed: i * 977 + 13,
+        bubble: null, unread: 0, seed: i * 977 + 13, sipAt: performance.now() + rand(6000, 20000),
       };
+      if (enters) { ne.entering = true; ne.restUntil = 0; }
+      return ne;
     });
+    for (const e of this.emps) if (e.entering && !e.path.length && !this.atSeat(e)) { this.goTo(e, e.seat.tx, e.seat.ty); this.burst(ENTRANCE.tx * TILE + 16, ENTRANCE.ty * TILE + 16, 40); }
     this.labelsEl.innerHTML = "";
     this.labelEls.clear();
     this.roomEls = ROOMS.map((r) => {
@@ -312,6 +322,10 @@ class Office {
   }
 
   update(dt, now) {
+    if (this.particles.length) {
+      for (const p of this.particles) { p.vy += 260 * dt; p.x += p.vx * dt; p.y += p.vy * dt; p.vx *= 0.98; p.life -= dt; p.rot += p.vr * dt; }
+      this.particles = this.particles.filter((p) => p.life > 0 && p.y < LH + 8);
+    }
     for (const e of this.emps) {
       if (e.bubble && now > e.bubble.until) e.bubble = null;
       if (e.path.length) {
@@ -336,6 +350,12 @@ class Office {
       if (this.atSeat(e)) {
         e.dir = "down";
         e.anim = e.status === "working" ? "type" : e.status === "waiting" ? "wave" : e.status === "error" ? "slump" : "sit";
+        // idle at the desk: now and then pick up the mug and take a sip
+        if (e.anim === "sit") {
+          if (e.sipping && now - e.sipping < 2600) e.anim = "sip";
+          else if (e.sipping) { e.sipping = 0; e.sipAt = now + rand(12000, 32000); }
+          else if (now > (e.sipAt ?? 0)) { e.sipping = now; e.anim = "sip"; }
+        } else e.sipping = 0;
       } else if (e.spot) {
         e.dir = e.spot.dir;
         e.anim = e.spot.anim;
@@ -349,8 +369,18 @@ class Office {
 
   arrived(e, now) {
     if (this.atSeat(e)) { e.dir = "down"; e.spot = null; }
+    if (e.entering && this.atSeat(e)) { e.entering = false; this.burst(e.x + 16, e.y + 8, 60); e.bubble = { kind: "party", until: now + 4000 }; }
     e.restUntil = now + rand(8000, 20000);
   }
+
+  // Confetti burst at a logical point.
+  burst(x, y, n = 40) {
+    for (let i = 0; i < n; i++) {
+      const a = -Math.PI / 2 + (Math.random() - 0.5) * 2.4, sp = 90 + Math.random() * 170;
+      this.particles.push({ x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 40, life: 1.6 + Math.random() * 1.2, col: CONFETTI[i % CONFETTI.length], w: 2 + Math.floor(Math.random() * 3), h: 2 + Math.floor(Math.random() * 3), rot: Math.random() * 6, vr: (Math.random() - 0.5) * 12 });
+    }
+  }
+  celebrate(id) { const e = this.emps.find((x) => x.id === id); if (e) this.burst(e.x + 16, e.y + 8, 60); }
 
   decideIdle(e, now) {
     const goSpot = this.atSeat(e) ? Math.random() < 0.6 : Math.random() < 0.45;
@@ -410,7 +440,7 @@ class Office {
       items.push({ y: seatFeet - 24, draw: () => drawChair(b, e.seat.tx * TILE, seatFeet) });
       items.push({ y: seatFeet + TILE + 6, draw: () => drawDesk(b, e, t) });
       const frame = Math.floor(e.walkDist / 9) % 4;
-      const seated = e.anim === "sit" || e.anim === "type" || e.anim === "wave" || e.anim === "slump";
+      const seated = e.anim === "sit" || e.anim === "type" || e.anim === "wave" || e.anim === "slump" || e.anim === "sip";
       const sitFree = e.anim === "sitfree";
       const oy = e.y - 16 + (seated ? 14 : sitFree ? 6 : 0);
       items.push({
@@ -418,7 +448,7 @@ class Office {
         draw: () => {
           const sel = e.id === this.selected, hov = e.id === this.hovered;
           if (sel || hov) drawRing(b, e.x + 16, e.y + TILE - 2, sel);
-          drawPerson(b, e.x, oy, e, { dir: e.dir, anim: e.anim, frame, t, seed: e.seed });
+          drawPerson(b, e.x, oy, e, { dir: e.dir, anim: e.anim, frame, t, seed: e.seed, sipT: e.sipping ? performance.now() - e.sipping : 0 });
         },
       });
     }
@@ -426,6 +456,7 @@ class Office {
     for (const it of items) it.draw();
     const occupied = new Set(this.emps.filter((e) => e.spot && !e.path.length).map((e) => e.spot.key));
     for (const e of this.emps) drawOverhead(b, e, t, occupied);
+    for (const p of this.particles) { b.save(); b.translate(p.x, p.y); b.rotate(p.rot); b.globalAlpha = Math.min(1, p.life); b.fillStyle = p.col; b.fillRect(-p.w / 2, -p.h / 2, p.w, p.h); b.restore(); }
     if (this.offline) { b.fillStyle = "rgba(10,12,20,.55)"; b.fillRect(0, 0, LW, LH); }
     this.ctx.drawImage(this.buf, 0, 0, this.canvas.width, this.canvas.height);
     for (const e of this.emps) {
@@ -890,10 +921,13 @@ function drawDesk(b, e, t) {
     b.fillStyle = "#4a6a9c"; b.fillRect(sx + 20, sy + 12, 4, 4);
   }
   b.fillStyle = "#ffd166"; b.fillRect(mx + 30, my + 2, 5, 5);
-  // mug
-  outlineRect(b, x + 10, y + 3, 10, 11, e.color);
-  b.fillStyle = "rgba(255,255,255,.35)"; b.fillRect(x + 12, y + 5, 2, 6);
-  b.fillStyle = OUTLINE; b.fillRect(x + 20, y + 5, 4, 6); b.fillStyle = e.color; b.fillRect(x + 21, y + 6, 2, 4);
+  // mug (in the employee's hand while sipping)
+  if (!(seated && e.anim === "sip")) {
+    outlineRect(b, x + 10, y + 3, 10, 11, e.color);
+    b.fillStyle = "rgba(255,255,255,.35)"; b.fillRect(x + 12, y + 5, 2, 6);
+    b.fillStyle = OUTLINE; b.fillRect(x + 20, y + 5, 4, 6); b.fillStyle = e.color; b.fillRect(x + 21, y + 6, 2, 4);
+    b.fillStyle = "rgba(255,255,255,.4)"; b.fillRect(x + 13, y - 2 - (Math.floor(t / 400) % 3), 1, 3); b.fillRect(x + 16, y - 1 - (Math.floor((t + 250) / 400) % 3), 1, 2);
+  }
   // notebook + pen
   outlineRect(b, x + 22, y + 9, 8, 7, "#f5f5f5"); b.fillStyle = "#9aa"; b.fillRect(x + 24, y + 11, 4, 1); b.fillRect(x + 24, y + 13, 3, 1);
   b.fillStyle = "#3f7cc9"; b.fillRect(x + 12, y + 15, 8, 1);
@@ -935,6 +969,11 @@ function drawOverhead(b, e, t, occupied) {
     bubble(20, 18, "#f87171");
     b.fillStyle = "#3a0000";
     for (let i = 0; i < 8; i++) { b.fillRect(cx - 4 + i, top - 15 + bob + i, 2, 2); b.fillRect(cx + 3 - i, top - 15 + bob + i, 2, 2); }
+  } else if (e.bubble?.kind === "party") {
+    bubble(24, 18, "#fff");
+    // tiny party popper: cone + sparks
+    b.fillStyle = "#ffd166"; for (let i = 0; i < 6; i++) b.fillRect(cx - 8 + i, top - 6 + bob - i, 2, 2);
+    b.fillStyle = "#ff3b3b"; b.fillRect(cx + 2, top - 15 + bob, 2, 2); b.fillStyle = "#4ade80"; b.fillRect(cx + 6, top - 12 + bob, 2, 2); b.fillStyle = "#61afef"; b.fillRect(cx + 4, top - 8 + bob, 2, 2); b.fillStyle = "#c678dd"; b.fillRect(cx - 1, top - 14 + bob, 2, 2);
   } else if (e.bubble?.kind === "done") {
     bubble(20, 18, "#4ade80");
     b.fillStyle = "#0b3a1e";
@@ -1803,7 +1842,7 @@ function personShapes(b, ox, oy, e, o, mono) {
   const hairLight = shade(hair, 38), hairDark = shade(hair, -28);
   const skinDark = shade(skin, -30), bottomDark = shade(bottom, -26);
   const hatDark = shade(F.hatColor, -35), hatLight = shade(F.hatColor, 30);
-  const sitting = ["sit", "type", "wave", "slump"].includes(o.anim);
+  const sitting = ["sit", "type", "wave", "slump", "sip"].includes(o.anim);
   const sitFree = o.anim === "sitfree";
   const walking = o.anim === "walk";
   const f = walking ? o.frame : 0;
@@ -1933,6 +1972,20 @@ function personShapes(b, ox, oy, e, o, mono) {
         break;
       }
       case "slump": arm(axL, 19 + T, 7, true); arm(axR, 19 + T, 7, true); break;
+      case "sip": {
+        // left arm rests on the desk; right hand lifts the mug to the mouth and back
+        const p = Math.min(1, (o.sipT || 0) / 2600);
+        const k = p < 0.3 ? p / 0.3 : p < 0.75 ? 1 : 1 - (p - 0.75) / 0.25; // 0 = on desk, 1 = at mouth
+        const tilt = p > 0.4 && p < 0.65 ? 1 : 0;
+        arm(axL, 19 + T, 7, true);
+        const handY = Math.round(24 + T - k * 14);
+        C(top); R(axR, 17 + T, aw, Math.max(2, handY - 17 - T - 1));
+        C(skin); R(axR - 1, handY, 4, 3);
+        const mx = axR - 3, my = handY - 6 + tilt;
+        C(OUTLINE); R(mx - 1, my - 1, 9, 10); C(e.color || top); R(mx, my, 7, 8); C("rgba(255,255,255,.35)"); R(mx + 1, my + 1 + tilt, 2, 4); C(OUTLINE); R(mx + 7, my + 2, 3, 5); C(e.color || top); R(mx + 8, my + 3, 1, 3);
+        if (k === 1) { C("rgba(255,255,255,.5)"); R(mx + 2, my - 3 - (Math.floor(o.t / 300) % 2), 1, 2); }
+        break;
+      }
       case "sitfree": arm(axL, 17 + T, 7, true); arm(axR, 17 + T, 7, true); break;
       default: arm(axL, 17 + T + swing, 7, true); arm(axR, 17 + T - swing, 7, true);
     }

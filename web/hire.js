@@ -70,7 +70,7 @@ $("hireForm").onsubmit = async (ev) => {
       cwd: $("cwd").value.trim() || undefined,
     });
     toast(t("ui.hire.hired", { name: e.name }));
-    location.href = `/employee.html?office=${encodeURIComponent(officeId)}&id=${encodeURIComponent(e.id)}`;
+    location.href = `/?office=${encodeURIComponent(officeId)}&hired=${encodeURIComponent(e.id)}`;
   } catch (err) {
     $("hireMsg").textContent = t("ui.hire.error", { message: err.message });
     btn.disabled = false;

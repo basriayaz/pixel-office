@@ -16,6 +16,7 @@
     </div>
     <nav class="offices" id="offices" hidden></nav>
     <button class="icon-btn small" id="btnOffices" data-i18n-title="ui.offices.manage">⚙</button>
+    <button class="icon-btn small" id="btnNotify" data-i18n-title="ui.notify.title">🔔</button>
     <button class="icon-btn small power" id="btnShutdown" data-i18n-title="ui.shutdown.btn">⏻</button>
     <div class="legend">
       <span class="legend-item"><i class="dot idle"></i><span data-i18n="ui.legend.idle">Idle</span></span>
@@ -79,6 +80,19 @@
         <button class="btn ghost" id="shutdownCancel" data-i18n="ui.shutdown.cancel"></button>
         <button class="btn danger" id="shutdownConfirm" data-i18n="ui.shutdown.confirm"></button>
       </div>
+    </div>
+  </div>
+
+  <div class="modal" id="welcomeModal" hidden>
+    <div class="modal-card narrow welcome">
+      <h2 data-i18n="ui.welcome.title"></h2>
+      <p class="muted" data-i18n="ui.welcome.intro"></p>
+      <ol>
+        <li data-i18n="ui.welcome.s1"></li>
+        <li data-i18n="ui.welcome.s2"></li>
+        <li data-i18n="ui.welcome.s3"></li>
+      </ol>
+      <div class="actions right"><button class="btn primary" id="welcomeGo" data-i18n="ui.welcome.cta"></button></div>
     </div>
   </div>
 

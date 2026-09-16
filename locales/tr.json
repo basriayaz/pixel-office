@@ -72,7 +72,8 @@
       "prompt": "## Ofis arkadaşların\n{list}\n\nmessage_colleague aracıyla onlara iş devredebilir ya da soru sorabilirsin (list_colleagues kimin boşta olduğunu gösterir). Bir talep bir meslektaşının rolüne giriyorsa kendin yapmak yerine tüm ayrıntılarıyla ona ilet; kullanıcıya kime ilettiğini söyle."
     },
     "officeNotEmpty": "Önce çalışanlarını taşı ya da işten çıkar",
-    "lastOffice": "Son ofis silinemez"
+    "lastOffice": "Son ofis silinemez",
+    "shutdown": "Kapatılıyor (arayüz/CLI'den istendi)…"
   },
   "rooms": {
     "kitchen": "MUTFAK",
@@ -100,6 +101,13 @@
       "meeting": "KÜTÜPHANE",
       "lounge": "ŞÖMİNE",
       "archive": "MAHZEN"
+    },
+    "music": {
+      "kitchen": "MUTFAK",
+      "office": "STÜDYO",
+      "meeting": "KONTROL ODASI",
+      "lounge": "LOUNGE",
+      "archive": "KAYIT KABİNİ"
     }
   },
   "status": {
@@ -467,7 +475,17 @@
       "default": "Klasik ofis",
       "football": "Futbol kulübü",
       "fashion": "Moda atölyesi",
-      "gothic": "Gotik malikâne"
+      "gothic": "Gotik malikâne",
+      "music": "Müzik stüdyosu"
+    },
+    "closedBanner": "Ofis kapatıldı — tekrar açmak için <code>pixel-office</code> ya da Ofis.command",
+    "shutdown": {
+      "btn": "Ofisi kapat",
+      "title": "Ofis kapatılsın mı?",
+      "body": "Sunucu durur. Devam eden işler kesilir; sohbetler, hafızalar ve yetenekler diskte kalır. Tekrar açmak için <code>pixel-office</code> ya da Masaüstü'ndeki Ofis.command.",
+      "cancel": "Vazgeç",
+      "confirm": "Kapat",
+      "done": "Ofis kapatıldı"
     }
   }
 }

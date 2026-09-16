@@ -24,11 +24,11 @@ function connect() {
     document.body.classList.remove("offline");
   };
   ws.onclose = () => {
-    if (state.online) toast(t("ui.toast.disconnected"));
+    if (state.online && !state.closed) toast(t("ui.toast.disconnected"));
     state.online = false;
     office.setOffline(true);
     document.body.classList.add("offline");
-    setTimeout(connect, 1500);
+    if (!state.closed) setTimeout(connect, 1500); // after a deliberate shutdown, stay closed
   };
   ws.onmessage = (ev) => handle(JSON.parse(ev.data));
 }
@@ -82,6 +82,7 @@ function renderOfficeTabs() {
 }
 
 function handle(m) {
+  if (m.type === "shutdown") { markClosed(); return; }
   if (m.type === "init") {
     for (const o of m.offices) mergeRoster(o.id, o.employees, { id: o.id, name: o.name, cwd: o.cwd, theme: o.theme });
     showOffice(state.office, true);
@@ -430,6 +431,25 @@ function buildThemeCards(host, current, onChange) {
 let newTheme = "default";
 buildThemeCards($("oTheme"), newTheme, (v) => { newTheme = v; });
 $("btnOffices").onclick = () => { renderOfficeList(); $("officesModal").hidden = false; $("oName").focus(); };
+
+// ---- shutdown (⏻) ----
+$("btnShutdown").onclick = () => { $("shutdownModal").hidden = false; $("shutdownConfirm").focus(); };
+for (const id of ["shutdownClose", "shutdownCancel"]) $(id).onclick = () => { $("shutdownModal").hidden = true; };
+$("shutdownModal").addEventListener("click", (ev) => { if (ev.target === $("shutdownModal")) $("shutdownModal").hidden = true; });
+$("shutdownConfirm").onclick = async () => {
+  $("shutdownConfirm").disabled = true;
+  try { await api("POST", "/api/shutdown"); markClosed(); }
+  catch (e) { toast(t("ui.offices.error", { message: e.message })); $("shutdownConfirm").disabled = false; }
+};
+function markClosed() {
+  if (state.closed) return;
+  state.closed = true;
+  $("shutdownModal").hidden = true;
+  document.body.classList.add("closed");
+  document.querySelector(".offline-banner").innerHTML = t("ui.closedBanner");
+  for (const o of state.offices.values()) for (const e of o.employees.values()) e.status = "idle";
+  toast(t("ui.shutdown.done"));
+}
 $("officesClose").onclick = () => { $("officesModal").hidden = true; };
 $("officesModal").addEventListener("click", (ev) => { if (ev.target === $("officesModal")) $("officesModal").hidden = true; });
 $("officeAdd").onsubmit = async (ev) => {

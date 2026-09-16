@@ -53,6 +53,7 @@ npx github:basriayaz/pixel-office
 cd ~/my-project
 pixel-office init            # creates .pixel-office/ (config, employees/_template) and git-ignores the data dir
 pixel-office                 # starts the office on http://localhost:4747 and opens the browser
+pixel-office stop            # stops it again (or use the ⏻ button in the top bar, or Ctrl+C in the terminal)
 ```
 
 Then click **+ Hire** in the top bar: design the character, pick a ready-made position or write your own job description, choose model / effort / permissions, and hire. The employee's folder appears under `.pixel-office/employees/<id>/` immediately — no restart needed.
@@ -112,7 +113,7 @@ One server can host several offices (e.g. one per company or per team), switchab
 }
 ```
 
-Each office also has a **theme** (`"theme": "default" | "football" | "fashion" | "gothic"`, picked visually from rendered previews) — same floor plan, different walls, floors, furniture and room names (e.g. a football club with a scoreboard, tactics room and stands; a fashion atelier with a cutting table, mannequins, clothes racks and a fitting room; a gothic manor with stained glass, torches, a cauldron, a suit of armour and a crypt). Offices are managed from the ⚙ button next to the tabs: add (name, working directory, theme), rename, change theme or folder, delete (only when empty); changes are written to `config.json` and applied live.
+Each office also has a **theme** (`"theme": "default" | "football" | "fashion" | "gothic" | "music"`, picked visually from rendered previews) — same floor plan, different walls, floors, furniture and room names (e.g. a football club with a scoreboard, tactics room and stands; a fashion atelier with a cutting table, mannequins, clothes racks and a fitting room; a gothic manor with stained glass, torches, a cauldron, a suit of armour and a crypt; a music studio for a YouTube channel with a play-button plaque, ON AIR sign, mixing console, drum kit, guitars, camera rig and a vinyl-record rug). Offices are managed from the ⚙ button next to the tabs: add (name, working directory, theme), rename, change theme or folder, delete (only when empty); changes are written to `config.json` and applied live.
 
 `employees` lists extra employee folders to show in that office too — the same person (same memory and skills) working in two offices, each with its own chat and session. Chat data is stored per office under `dataDir/<office id>/`. Employee pages are office-scoped: `/?office=shop`, `hire.html?office=shop`, `/api/offices/shop/employees`.
 
@@ -123,6 +124,7 @@ Each office also has a **theme** (`"theme": "default" | "football" | "fashion" |
 - **Self-learning** — every employee is instructed to add durable lessons to their memory after each task, and, when idle and `refreshHours` has passed since their last refresh, to re-read their memory and relevant project docs and tidy them up. You can trigger it any time from the profile.
 - **Colleagues** — employees in the same office can talk to each other. Each one has `list_colleagues` and `message_colleague` tools: a support agent can hand an order cancellation to whoever owns orders, optionally wait for their answer and report back to you. The message shows up in the colleague's chat (with the sender's name) and as an activity line in the sender's chat.
 - **Terminal** — `cd` into the project and run `claude`; the employees appear as subagents (`.claude/agents/<id>.md`), sharing the same memory files.
+- **Closing the office** — ⏻ in the top bar (asks for confirmation), `pixel-office stop` in the project folder, or Ctrl+C in the terminal that started it. Running tasks are interrupted; chats, memories and skills stay on disk.
 
 ## Development
 

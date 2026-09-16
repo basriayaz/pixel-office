@@ -53,6 +53,7 @@ npx github:basriayaz/pixel-office
 cd ~/projem
 pixel-office init --locale tr   # .pixel-office/ oluşturur (config, employees/_template), data klasörünü gitignore'a ekler
 pixel-office                    # http://localhost:4747 üzerinde ofisi başlatır ve tarayıcıyı açar
+pixel-office stop               # kapatır (ya da üst bardaki ⏻ düğmesi, ya da terminalde Ctrl+C)
 ```
 
 Sonra üst çubuktaki **+ İşe al**: karakteri tasarla, hazır pozisyonlardan birini seç ya da görev tanımını yaz, model / effort / izin modunu seç, işe al. Çalışanın klasörü anında `.pixel-office/employees/<id>/` altında oluşur — yeniden başlatma gerekmez.
@@ -105,7 +106,7 @@ Tek sunucu birden fazla ofis barındırabilir (örn. şirket ya da ekip başına
 }
 ```
 
-Her ofisin bir de **teması** var (`"theme": "default" | "football" | "fashion" | "gothic"`, çizilmiş önizlemelerden görsel olarak seçilir) — aynı oda planı, farklı duvar/zemin/eşya/oda adları (örn. skorbordlu, taktik odalı, tribünlü bir futbol kulübü; kesim masalı, mankenli, askılıklı, prova odalı bir moda atölyesi; vitraylı, meşaleli, kazanlı, zırhlı, mahzenli bir gotik malikâne). Ofisler sekmelerin yanındaki ⚙ düğmesinden yönetilir: ekle (ad, çalışma klasörü, tema), yeniden adlandır, tema/klasör değiştir, sil (yalnızca boşken); değişiklikler `config.json`'a yazılır ve anında uygulanır.
+Her ofisin bir de **teması** var (`"theme": "default" | "football" | "fashion" | "gothic" | "music"`, çizilmiş önizlemelerden görsel olarak seçilir) — aynı oda planı, farklı duvar/zemin/eşya/oda adları (örn. skorbordlu, taktik odalı, tribünlü bir futbol kulübü; kesim masalı, mankenli, askılıklı, prova odalı bir moda atölyesi; vitraylı, meşaleli, kazanlı, zırhlı, mahzenli bir gotik malikâne; YouTube kanalı için play-düğmesi plaketli, ON AIR tabelalı, miks masalı, bateri ve gitarlı, kameralı, plak halılı bir müzik stüdyosu). Ofisler sekmelerin yanındaki ⚙ düğmesinden yönetilir: ekle (ad, çalışma klasörü, tema), yeniden adlandır, tema/klasör değiştir, sil (yalnızca boşken); değişiklikler `config.json`'a yazılır ve anında uygulanır.
 
 `employees` o ofiste ek olarak gösterilecek çalışan klasörlerini listeler — aynı kişi (aynı hafıza ve yetenekler) iki ofiste çalışır, her ofiste ayrı sohbet ve oturumla. Sohbet verileri `dataDir/<ofis id>/` altında ofis başına tutulur. Sayfalar ofise bağlıdır: `/?office=carpe`, `hire.html?office=carpe`, `/api/offices/carpe/employees`.
 
@@ -116,6 +117,7 @@ Her ofisin bir de **teması** var (`"theme": "default" | "football" | "fashion" 
 - **Kendi kendine öğrenme** — her çalışan, her görev sonunda kalıcı dersleri hafızasına eklemesi için yönlendirilir; boştayken ve son tazelemeden `refreshHours` geçtiyse hafızasını ve ilgili proje dokümanlarını yeniden okuyup toparlar. Profilden istediğin zaman tetikleyebilirsin.
 - **Meslektaşlar** — aynı ofisteki çalışanlar birbiriyle konuşabilir. Her birinin `list_colleagues` ve `message_colleague` araçları var: destek çalışanı bir sipariş iptalini siparişlerden sorumlu kişiye devreder, istersen cevabını bekleyip sana rapor eder. Mesaj meslektaşın sohbetinde (gönderenin adıyla) ve gönderenin sohbetinde işlem satırı olarak görünür.
 - **Terminal** — projeye `cd` yapıp `claude` çalıştır; çalışanlar subagent olarak (`.claude/agents/<id>.md`) görünür, aynı hafıza dosyalarını paylaşır.
+- **Ofisi kapatmak** — üst bardaki ⏻ (onay ister), proje klasöründe `pixel-office stop`, ya da başlatan terminalde Ctrl+C. Devam eden işler kesilir; sohbetler, hafızalar ve yetenekler diskte kalır.
 
 ## Geliştirme
 

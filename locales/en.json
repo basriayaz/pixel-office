@@ -72,7 +72,8 @@
       "prompt": "## Colleagues in your office\n{list}\n\nYou can hand work to them or ask them something with the message_colleague tool (list_colleagues shows who is free). When a request belongs to a colleague's role, forward it with all the details instead of doing it yourself; tell the user who you forwarded it to."
     },
     "officeNotEmpty": "Move or fire its employees first",
-    "lastOffice": "The last office can't be deleted"
+    "lastOffice": "The last office can't be deleted",
+    "shutdown": "Shutting down (requested from the UI/CLI)…"
   },
   "rooms": {
     "kitchen": "KITCHEN",
@@ -100,6 +101,13 @@
       "meeting": "LIBRARY",
       "lounge": "FIRESIDE",
       "archive": "CRYPT"
+    },
+    "music": {
+      "kitchen": "KITCHEN",
+      "office": "STUDIO",
+      "meeting": "CONTROL ROOM",
+      "lounge": "LOUNGE",
+      "archive": "VOCAL BOOTH"
     }
   },
   "status": {
@@ -467,7 +475,17 @@
       "default": "Classic office",
       "football": "Football club",
       "fashion": "Fashion atelier",
-      "gothic": "Gothic manor"
+      "gothic": "Gothic manor",
+      "music": "Music studio"
+    },
+    "closedBanner": "Office closed — start it again with <code>pixel-office</code>",
+    "shutdown": {
+      "btn": "Close the office",
+      "title": "Close the office?",
+      "body": "The server stops. Running tasks are interrupted; chats, memories and skills stay on disk. Start it again with <code>pixel-office</code>.",
+      "cancel": "Cancel",
+      "confirm": "Close",
+      "done": "Office closed"
     }
   }
 }

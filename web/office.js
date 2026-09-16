@@ -148,7 +148,7 @@ class Office {
     this.buildStatic();
     for (const e of this.emps) for (let dx = -1; dx <= 1; dx++) this.blocked.add(key(e.seat.tx + dx, e.seat.ty + 1));
     for (const { r, el } of this.roomEls) el.textContent = roomName(this.theme, r.key);
-    this.labelsEl.classList.toggle("dark", this.theme === "gothic");
+    this.labelsEl.classList.toggle("dark", !!(THEMES[this.theme] || {}).dark);
   }
 
   // ---------- layout ----------
@@ -454,6 +454,9 @@ function drawFloors(b, theme = "default") {
     else if (floor === "darkwood") drawDarkWood(b, x, y, w, h);
     else if (floor === "redcarpet") drawRedCarpet(b, x, y, w, h);
     else if (floor === "cobble") drawCobble(b, x, y, w, h);
+    else if (floor === "studioCarpet") drawStudioCarpet(b, x, y, w, h);
+    else if (floor === "darkTiles") drawDarkTiles(b, x, y, w, h);
+    else if (floor === "checker") drawChecker(b, x, y, w, h);
     else drawConcrete(b, x, y, w, h);
   }
   // door thresholds
@@ -476,6 +479,8 @@ function drawFloors(b, theme = "default") {
     b.fillStyle = "#5a1d24"; b.fillRect(14, 11 * TILE + 14, 132, 132);
     b.fillStyle = "#ffd166"; for (let i = 0; i < 12; i++) { b.fillRect(16 + i * 11, 11 * TILE + 16, 5, 2); b.fillRect(16 + i * 11, 11 * TILE + 138, 5, 2); b.fillRect(16, 11 * TILE + 18 + i * 11, 2, 5); b.fillRect(140, 11 * TILE + 18 + i * 11, 2, 5); }
     b.fillStyle = "#3a1f28"; b.fillRect(60, 11 * TILE + 60, 40, 40); b.fillStyle = "#ffd166"; b.fillRect(78, 11 * TILE + 66, 4, 28); b.fillRect(66, 11 * TILE + 78, 28, 4);
+  } else if (T.rug === "vinyl") {
+    drawVinylRug(b, 8, 11 * TILE + 8);
   } else if (T.rug === "round") {
     b.fillStyle = "#e9c4d3"; b.fillRect(30, 11 * TILE + 30, 100, 100); b.fillRect(20, 11 * TILE + 46, 120, 68); b.fillRect(46, 11 * TILE + 20, 68, 120);
     b.fillStyle = "#f4dbe5"; b.fillRect(40, 11 * TILE + 40, 80, 80); b.fillRect(32, 11 * TILE + 52, 96, 56); b.fillRect(52, 11 * TILE + 32, 56, 96);
@@ -1332,6 +1337,213 @@ function drawWallDecorGothic(b, t) {
 }
 PROPS.gothic = { counter: drawGothicCounter, fridge: drawArmor, roundTable: drawGothicTable, meetingTable: drawGothicMeeting, sofa: drawThrone, coffeeTable: drawChest, bookshelf: drawTomeShelf, lamp: drawCandleStand, cabinets: drawBarrels, boxes: drawBones, printer: drawLectern, cooler: drawGargoyle, coffeeStation: drawCauldronSmall, wallDecor: drawWallDecorGothic };
 THEME_NAMES.push("gothic");
+
+// --- music theme (YouTube music channel studio) ---
+THEMES.music = { dark: true, wall: { face: "#2b2b35", top: "#3a3a46", base: "#22222b", base2: "#18181f", edge: "#0f0f14", inner: "#3a3a48", innerLight: "#4c4c5c", innerDark: "#1a1a22" }, floors: { kitchen: "darkTiles", office: "darkwood", meeting: "studioCarpet", lounge: "checker", archive: "studioCarpet" }, rug: "vinyl" };
+THEMES.gothic.dark = true;
+
+function drawDarkTiles(b, x, y, w, h) {
+  for (let py = y; py < y + h; py += 32) for (let px = x; px < x + w; px += 32) { b.fillStyle = ((px + py) / 32) % 2 ? "#3a3a46" : "#34343f"; b.fillRect(px, py, 32, 32); b.fillStyle = "#26262e"; b.fillRect(px, py + 31, 32, 1); b.fillRect(px + 31, py, 1, 32); b.fillStyle = "rgba(255,255,255,.04)"; b.fillRect(px + 2, py + 2, 12, 1); }
+}
+function drawStudioCarpet(b, x, y, w, h) {
+  b.fillStyle = "#33354a"; b.fillRect(x, y, w, h);
+  b.fillStyle = "#3b3d55"; for (let py = y + 4; py < y + h; py += 8) for (let px = x + ((py / 8) % 2) * 4; px < x + w; px += 8) b.fillRect(px, py, 2, 2);
+}
+function drawChecker(b, x, y, w, h) {
+  for (let py = y; py < y + h; py += 16) for (let px = x; px < x + w; px += 16) { b.fillStyle = ((px + py) / 16) % 2 ? "#e8e6e0" : "#26262e"; b.fillRect(px, py, 16, 16); }
+  b.fillStyle = "rgba(0,0,0,.12)"; for (let py = y; py < y + h; py += 16) b.fillRect(x, py, w, 1); for (let px = x; px < x + w; px += 16) b.fillRect(px, y, 1, h);
+}
+// pixel disc: rows of spans
+function disc(b, cx, cy, r, col) {
+  b.fillStyle = col;
+  for (let dy = -r; dy <= r; dy++) { const half = Math.round(Math.sqrt(r * r - dy * dy)); b.fillRect(cx - half, cy + dy, half * 2 + 1, 1); }
+}
+let vinylRug = null;
+function drawVinylRug(b, x, y) {
+  if (!vinylRug) {
+    vinylRug = document.createElement("canvas"); vinylRug.width = 144; vinylRug.height = 144;
+    const g = vinylRug.getContext("2d");
+    disc(g, 72, 72, 71, OUTLINE); disc(g, 72, 72, 70, "#1c1c22");
+    for (let r = 66; r > 26; r -= 4) disc(g, 72, 72, r, r % 8 === 2 ? "#26262e" : "#1c1c22");
+    g.fillStyle = "rgba(255,255,255,.08)"; for (let i = 0; i < 6; i++) g.fillRect(30 + i * 3, 30 + i * 4, 3, 1);
+    disc(g, 72, 72, 24, "#ff0000"); disc(g, 72, 72, 22, "#e3212b");
+    g.fillStyle = "#ffffff"; for (let r = 0; r <= 14; r++) g.fillRect(66, 65 + r, Math.round(7 - Math.abs(r - 7)) + 1, 1);
+    disc(g, 72, 72, 3, OUTLINE); disc(g, 72, 72, 2, "#e8e6e0");
+  }
+  b.drawImage(vinylRug, x, y);
+}
+// YouTube play-button plaque
+function drawYtLogo(b, x, y, w, h, col = "#ff0000") {
+  b.fillStyle = OUTLINE; b.fillRect(x + 1, y - 1, w - 2, h + 2); b.fillRect(x - 1, y + 1, w + 2, h - 2);
+  b.fillStyle = col; b.fillRect(x + 2, y, w - 4, h); b.fillRect(x, y + 2, w, h - 4);
+  b.fillStyle = shade(col, 30); b.fillRect(x + 3, y + 1, w - 6, 1);
+  const th = Math.max(6, Math.round(h * 0.45)), tw = Math.round(th * 0.8), tx = x + Math.round(w / 2 - tw / 2) + 1, ty = y + Math.round(h / 2 - th / 2);
+  b.fillStyle = "#ffffff"; for (let r = 0; r <= th; r++) b.fillRect(tx, ty + r, Math.max(1, Math.round((th / 2 - Math.abs(r - th / 2)) * (tw / (th / 2)))), 1);
+}
+function drawLed(b, x, y, on, col = "#ff3b3b") { b.fillStyle = on ? col : "#3a1a1a"; b.fillRect(x, y, 2, 2); if (on) { b.fillStyle = `${col}33`; b.fillRect(x - 2, y - 2, 6, 6); } }
+function drawVu(b, x, y, n, t, seed = 0) { // bouncing meter bars
+  for (let i = 0; i < n; i++) {
+    const h = 2 + Math.round((Math.sin(t / 130 + i * 1.3 + seed) + 1) * 3 + (Math.sin(t / 47 + i) + 1));
+    for (let s = 0; s < h; s++) { b.fillStyle = s < 5 ? "#4ade80" : s < 7 ? "#ffd166" : "#ff3b3b"; b.fillRect(x + i * 4, y - s * 2, 3, 1); }
+  }
+}
+function drawMusicNote(b, x, y, col) { b.fillStyle = col; b.fillRect(x, y + 4, 4, 3); b.fillRect(x + 3, y - 3, 1, 8); b.fillRect(x + 4, y - 3, 3, 1); b.fillRect(x + 6, y - 2, 1, 2); }
+
+function drawStudioBar(b, x, y, t = 0) { // kitchen counter: coffee bar with turntable + mugs
+  outlineRect(b, x, y + 6, 160, 26, "#3a3a48"); b.fillStyle = "#4c4c5c"; b.fillRect(x, y + 6, 160, 4); b.fillStyle = "#1a1a22"; b.fillRect(x, y + 30, 160, 2);
+  for (let i = 0; i < 5; i++) { b.fillStyle = "#2b2b35"; b.fillRect(x + i * 32 + 2, y + 14, 28, 16); b.fillStyle = "#e3212b"; b.fillRect(x + i * 32 + 13, y + 20, 6, 2); }
+  // turntable
+  outlineRect(b, x + 8, y - 10, 46, 18, "#26262e"); b.fillStyle = "#3a3a48"; b.fillRect(x + 8, y - 10, 46, 2);
+  disc(b, x + 26, y - 1, 7, OUTLINE); disc(b, x + 26, y - 1, 6, "#141418"); disc(b, x + 26, y - 1, 2, "#e3212b");
+  const a = (t / 400) % (Math.PI * 2); b.fillStyle = "#4c4c5c"; b.fillRect(x + 26 + Math.round(Math.cos(a) * 4), y - 1 + Math.round(Math.sin(a) * 4), 1, 1);
+  b.fillStyle = "#c0c0c0"; b.fillRect(x + 44, y - 8, 2, 8); b.fillRect(x + 36, y - 2, 9, 1); drawLed(b, x + 46, y + 3, true, "#4ade80");
+  // coffee machine + mugs
+  outlineRect(b, x + 104, y - 12, 22, 20, "#1c1c22"); b.fillStyle = "#3a3a48"; b.fillRect(x + 104, y - 12, 22, 3); b.fillStyle = "#e3212b"; b.fillRect(x + 108, y - 6, 6, 2); drawLed(b, x + 121, y - 7, Math.floor(t / 700) % 2);
+  for (const [mx, c] of [[66, "#ff0000"], [80, "#f7f7f7"], [136, "#61afef"]]) { outlineRect(b, x + mx, y - 3, 8, 8, c); b.fillStyle = OUTLINE; b.fillRect(x + mx + 9, y - 1, 2, 4); }
+  b.fillStyle = "rgba(255,255,255,.5)"; b.fillRect(x + 108, y - 20 - (Math.floor(t / 300) % 3), 1, 3); b.fillRect(x + 112, y - 18 - (Math.floor((t + 200) / 300) % 3), 1, 3);
+}
+function drawSpeakerStack(b, x, y, t = 0) { // fridge slot: tall PA speaker
+  outlineRect(b, x + 4, y - 30, 24, 56, "#1c1c22"); b.fillStyle = "#26262e"; b.fillRect(x + 5, y - 29, 22, 54);
+  disc(b, x + 16, y - 16, 8, "#0f0f14"); disc(b, x + 16, y - 16, 6, "#3a3a48"); disc(b, x + 16, y - 16, 2, "#4c4c5c");
+  disc(b, x + 16, y + 8, 10, "#0f0f14"); disc(b, x + 16, y + 8, 8, "#3a3a48"); disc(b, x + 16, y + 8, 3 + (Math.floor(t / 120) % 2), "#4c4c5c");
+  b.fillStyle = "#0f0f14"; b.fillRect(x + 13, y - 27, 6, 3); drawLed(b, x + 15, y + 22, true, "#4ade80");
+  b.fillStyle = "#4c4c5c"; b.fillRect(x + 4, y + 26, 24, 2);
+}
+function drawDrumKit(b, x, y) { // roundTable slot (2 tiles wide)
+  // cymbal + hi-hat stands
+  b.fillStyle = "#c0c0c0"; b.fillRect(x + 8, y - 12, 1, 30); b.fillRect(x + 54, y - 10, 1, 28);
+  b.fillStyle = OUTLINE; b.fillRect(x - 1, y - 14, 19, 4); b.fillStyle = "#ffd166"; b.fillRect(x, y - 13, 17, 2); b.fillStyle = "#e0b04e"; b.fillRect(x + 4, y - 13, 9, 1);
+  b.fillStyle = OUTLINE; b.fillRect(x + 46, y - 12, 17, 3); b.fillRect(x + 46, y - 8, 17, 3); b.fillStyle = "#ffd166"; b.fillRect(x + 47, y - 11, 15, 1); b.fillRect(x + 47, y - 7, 15, 1);
+  // toms
+  outlineRect(b, x + 14, y - 4, 14, 10, "#e3212b"); b.fillStyle = "#f4f4f4"; b.fillRect(x + 14, y - 4, 14, 2);
+  outlineRect(b, x + 36, y - 4, 14, 10, "#e3212b"); b.fillStyle = "#f4f4f4"; b.fillRect(x + 36, y - 4, 14, 2);
+  // bass drum
+  disc(b, x + 32, y + 18, 13, OUTLINE); disc(b, x + 32, y + 18, 12, "#f4f4f4"); disc(b, x + 32, y + 18, 10, "#e8e6e0");
+  b.fillStyle = "#e3212b"; b.fillRect(x + 27, y + 12, 10, 12); b.fillRect(x + 25, y + 14, 14, 8); b.fillStyle = "#ffffff"; for (let r = 0; r <= 6; r++) b.fillRect(x + 30, y + 15 + r, Math.max(1, Math.round((3 - Math.abs(r - 3)) * 1.6)), 1);
+  b.fillStyle = "#c0c0c0"; for (let i = 0; i < 8; i++) { const a = i / 8 * Math.PI * 2; b.fillRect(x + 32 + Math.round(Math.cos(a) * 11) - 1, y + 18 + Math.round(Math.sin(a) * 11) - 1, 2, 2); }
+  // snare (left front) + pedal
+  outlineRect(b, x + 4, y + 8, 14, 8, "#c0c0c0"); b.fillStyle = "#f4f4f4"; b.fillRect(x + 4, y + 8, 14, 2); b.fillStyle = OUTLINE; b.fillRect(x + 10, y + 16, 2, 8);
+  b.fillStyle = "#4c4c5c"; b.fillRect(x + 30, y + 31, 6, 2);
+  b.fillStyle = "#c9a781"; b.fillRect(x + 18, y - 2, 1, 8); b.fillRect(x + 20, y - 1, 1, 8);
+}
+function drawMixingConsole(b, x, y, t = 0) { // meeting table slot 128x48
+  outlineRect(b, x + 4, y + 4, 120, 48, "#26262e"); b.fillStyle = "#3a3a48"; b.fillRect(x + 4, y + 4, 120, 4); b.fillStyle = "#1a1a22"; b.fillRect(x + 4, y + 44, 120, 8);
+  // channel strips: knobs + faders
+  for (let i = 0; i < 12; i++) {
+    const cx = x + 10 + i * 9.5;
+    for (let k = 0; k < 3; k++) { b.fillStyle = ["#61afef", "#ffd166", "#4ade80"][k]; b.fillRect(Math.round(cx), y + 11 + k * 5, 3, 3); }
+    b.fillStyle = "#0f0f14"; b.fillRect(Math.round(cx) + 1, y + 27, 1, 14);
+    const fp = Math.round((Math.sin(i * 2.1) + 1) * 5); b.fillStyle = "#e8e6e0"; b.fillRect(Math.round(cx) - 1, y + 28 + fp, 5, 3);
+  }
+  // meter bridge
+  b.fillStyle = "#0f0f14"; b.fillRect(x + 8, y - 8, 112, 12); drawVu(b, x + 12, y + 1, 26, t, 1);
+  // laptop at the right end
+  outlineRect(b, x + 96, y + 14, 22, 14, "#3a3a48"); b.fillStyle = "#1a1a22"; b.fillRect(x + 98, y + 16, 18, 8); b.fillStyle = "#e3212b"; b.fillRect(x + 100, y + 18, 6, 4); b.fillStyle = "#ffffff"; b.fillRect(x + 102, y + 19, 2, 2);
+  b.fillStyle = "#e8e6e0"; b.fillRect(x + 108, y + 18, 6, 1); b.fillRect(x + 108, y + 21, 5, 1);
+}
+function drawStudioCouch(b, x, y) { // sofa slot (96 wide)
+  outlineRect(b, x + 2, y - 14, 92, 22, "#1c1c22"); b.fillStyle = "#26262e"; b.fillRect(x + 6, y - 10, 84, 14);
+  outlineRect(b, x, y + 6, 96, 22, "#1c1c22"); b.fillStyle = "#33333f"; b.fillRect(x + 6, y + 8, 26, 12); b.fillRect(x + 35, y + 8, 26, 12); b.fillRect(x + 64, y + 8, 26, 12);
+  b.fillStyle = "#e3212b"; b.fillRect(x + 10, y - 6, 16, 10); b.fillRect(x + 70, y - 6, 16, 10); b.fillStyle = "#ff4d57"; b.fillRect(x + 12, y - 5, 12, 1); b.fillRect(x + 72, y - 5, 12, 1);
+  b.fillStyle = "#1c1c22"; b.fillRect(x, y + 22, 96, 6); outlineRect(b, x - 2, y + 2, 8, 24, "#1c1c22"); outlineRect(b, x + 90, y + 2, 8, 24, "#1c1c22");
+  b.fillStyle = "#c0c0c0"; b.fillRect(x + 2, y + 28, 3, 3); b.fillRect(x + 91, y + 28, 3, 3);
+}
+function drawSynth(b, x, y) { // coffee table slot: keyboard on a stand
+  b.fillStyle = OUTLINE; b.fillRect(x + 16, y + 20, 3, 12); b.fillRect(x + 77, y + 20, 3, 12); b.fillRect(x + 12, y + 31, 12, 2); b.fillRect(x + 72, y + 31, 12, 2);
+  outlineRect(b, x + 8, y + 2, 80, 20, "#26262e"); b.fillStyle = "#3a3a48"; b.fillRect(x + 8, y + 2, 80, 4);
+  b.fillStyle = "#f4f4f4"; b.fillRect(x + 10, y + 10, 76, 10); b.fillStyle = "#b8b8b8"; for (let i = 0; i < 19; i++) b.fillRect(x + 13 + i * 4, y + 10, 1, 10);
+  b.fillStyle = "#0f0f14"; for (let i = 0; i < 19; i++) if (i % 7 !== 2 && i % 7 !== 6) b.fillRect(x + 12 + i * 4, y + 10, 2, 6);
+  for (let i = 0; i < 8; i++) { b.fillStyle = ["#ff3b3b", "#ffd166", "#4ade80", "#61afef"][i % 4]; b.fillRect(x + 14 + i * 9, y + 6, 3, 2); }
+}
+function drawVinylShelf(b, x, y) { // bookshelf slot: record crate shelf
+  outlineRect(b, x + 2, y - 30, 28, 60, "#1c1c22"); b.fillStyle = "#26262e"; b.fillRect(x + 4, y - 28, 24, 56);
+  const cols = ["#e3212b", "#ffd166", "#61afef", "#4ade80", "#c678dd", "#f4f4f4", "#ff8c42"];
+  for (let s = 0; s < 3; s++) { b.fillStyle = "#1c1c22"; b.fillRect(x + 4, y - 12 + s * 18 - 2, 24, 2); for (let i = 0; i < 6; i++) { b.fillStyle = cols[(s * 6 + i) % cols.length]; b.fillRect(x + 5 + i * 4 - (i % 2), y - 26 + s * 18 + (i % 2), 3, 12 - (i % 2)); } }
+  drawYtLogo(b, x + 7, y + 8, 18, 12);
+  b.fillStyle = "#c0c0c0"; b.fillRect(x + 8, y - 34, 16, 4); disc(b, x + 16, y - 36, 4, OUTLINE); disc(b, x + 16, y - 36, 3, "#141418"); b.fillStyle = "#e3212b"; b.fillRect(x + 16, y - 36, 1, 1);
+}
+function drawMicStand(b, x, y, t = 0) { // lamp slot: studio mic with pop filter
+  outlineRect(b, x + 6, y + 24, 20, 5, "#1c1c22"); b.fillStyle = OUTLINE; b.fillRect(x + 14, y - 24, 4, 48); b.fillStyle = "#c0c0c0"; b.fillRect(x + 15, y - 23, 2, 46);
+  b.fillStyle = OUTLINE; b.fillRect(x + 16, y - 26, 12, 3); b.fillStyle = "#c0c0c0"; b.fillRect(x + 17, y - 25, 10, 1);
+  outlineRect(b, x + 8, y - 44, 12, 22, "#3a3a48"); b.fillStyle = "#4c4c5c"; for (let i = 0; i < 5; i++) b.fillRect(x + 9, y - 42 + i * 4, 10, 1); b.fillStyle = "#ffd166"; b.fillRect(x + 12, y - 36, 4, 4);
+  b.fillStyle = OUTLINE; b.fillRect(x + 22, y - 48, 12, 2); b.fillRect(x + 22, y - 26, 12, 2); b.fillRect(x + 21, y - 47, 2, 22); b.fillRect(x + 33, y - 47, 2, 22); b.fillStyle = "rgba(255,255,255,.18)"; b.fillRect(x + 23, y - 46, 10, 20);
+  drawLed(b, x + 13, y - 20, Math.floor(t / 500) % 2);
+  b.fillStyle = "#1c1c22"; b.fillRect(x + 16, y + 2, 1, 22); b.fillRect(x + 16, y + 24, 14, 1);
+}
+function drawGuitarRack(b, x, y) { // cabinets slot (96 wide): 3 guitars on stands
+  outlineRect(b, x + 2, y + 20, 92, 6, "#1c1c22"); b.fillStyle = "#3a3a48"; b.fillRect(x + 2, y + 20, 92, 2);
+  const guitar = (gx, body, pick, acoustic) => {
+    b.fillStyle = OUTLINE; b.fillRect(gx + 8, y - 30, 4, 34); b.fillStyle = "#6b4a2b"; b.fillRect(gx + 9, y - 29, 2, 32); b.fillStyle = "#c0c0c0"; for (let i = 0; i < 6; i++) b.fillRect(gx + 9, y - 26 + i * 5, 2, 1);
+    outlineRect(b, gx + 7, y - 34, 6, 6, "#1c1c22"); b.fillStyle = "#c0c0c0"; b.fillRect(gx + 6, y - 33, 1, 1); b.fillRect(gx + 13, y - 33, 1, 1); b.fillRect(gx + 6, y - 30, 1, 1); b.fillRect(gx + 13, y - 30, 1, 1);
+    if (acoustic) { disc(b, gx + 10, y + 6, 8, OUTLINE); disc(b, gx + 10, y + 6, 7, body); disc(b, gx + 10, y - 1, 6, OUTLINE); disc(b, gx + 10, y - 1, 5, body); disc(b, gx + 10, y + 4, 3, "#1c1c22"); }
+    else { outlineRect(b, gx + 2, y - 2, 16, 18, body); b.fillStyle = OUTLINE; b.fillRect(gx + 2, y - 4, 5, 4); b.fillRect(gx + 13, y - 4, 5, 4); b.fillStyle = body; b.fillRect(gx + 3, y - 3, 3, 4); b.fillRect(gx + 14, y - 3, 3, 4); b.fillStyle = "#f4f4f4"; b.fillRect(gx + 5, y + 2, 10, 2); b.fillRect(gx + 5, y + 8, 10, 2); b.fillStyle = "#1c1c22"; b.fillRect(gx + 8, y + 12, 5, 1); }
+    b.fillStyle = pick; b.fillRect(gx + 9, y - 2, 2, 12);
+    b.fillStyle = OUTLINE; b.fillRect(gx + 4, y + 16, 12, 2); b.fillRect(gx + 9, y + 18, 2, 3);
+  };
+  guitar(x + 4, "#e3212b", "#f4f4f4", false); guitar(x + 36, "#c9a781", "#1c1c22", true); guitar(x + 68, "#61afef", "#f4f4f4", false);
+}
+function drawAmpStack(b, x, y, t = 0) { // boxes slot (64 wide): guitar amps
+  outlineRect(b, x + 4, y - 20, 56, 26, "#1c1c22"); b.fillStyle = "#26262e"; b.fillRect(x + 6, y - 18, 52, 22); b.fillStyle = "#3a3a48"; for (let i = 0; i < 10; i++) b.fillRect(x + 8, y - 16 + i * 2, 48, 1);
+  outlineRect(b, x + 8, y + 6, 48, 20, "#3a3a48"); b.fillStyle = "#c9a781"; b.fillRect(x + 8, y + 6, 48, 5); b.fillStyle = "#0f0f14"; for (let i = 0; i < 5; i++) b.fillRect(x + 12 + i * 9, y + 7, 3, 3); b.fillStyle = "#c0c0c0"; b.fillRect(x + 12 + (Math.floor(t / 900) % 5) * 9, y + 7, 3, 3);
+  disc(b, x + 32, y + 18, 6, "#0f0f14"); disc(b, x + 32, y + 18, 4, "#26262e"); drawLed(b, x + 50, y + 8, true);
+  b.fillStyle = "#c0c0c0"; b.fillRect(x + 28, y - 24, 8, 4);
+}
+function drawCameraRig(b, x, y, t = 0) { // printer slot (64 wide): camera on tripod, blinking REC
+  b.fillStyle = OUTLINE; b.fillRect(x + 20, y + 2, 3, 26); b.fillRect(x + 40, y + 2, 3, 26); b.fillRect(x + 30, y + 4, 3, 22); b.fillRect(x + 22, y - 2, 20, 4);
+  b.fillStyle = "#4c4c5c"; b.fillRect(x + 21, y + 3, 1, 24); b.fillRect(x + 41, y + 3, 1, 24); b.fillRect(x + 31, y + 5, 1, 20);
+  outlineRect(b, x + 16, y - 22, 30, 20, "#26262e"); b.fillStyle = "#3a3a48"; b.fillRect(x + 16, y - 22, 30, 3);
+  outlineRect(b, x + 46, y - 18, 12, 12, "#1c1c22"); disc(b, x + 52, y - 12, 4, "#0f0f14"); disc(b, x + 52, y - 12, 2, "#4c6c8c"); b.fillStyle = "#ffffff"; b.fillRect(x + 51, y - 14, 1, 1);
+  outlineRect(b, x + 4, y - 20, 12, 16, "#1c1c22"); b.fillStyle = "#26262e"; b.fillRect(x + 5, y - 19, 10, 14); b.fillStyle = "#4c4c5c"; b.fillRect(x + 6, y - 17, 8, 5);
+  b.fillStyle = "#ffffff"; b.fillRect(x + 20, y - 12, 8, 1); b.fillRect(x + 20, y - 9, 6, 1); drawLed(b, x + 40, y - 19, Math.floor(t / 500) % 2);
+  b.fillStyle = "#ff3b3b"; if (Math.floor(t / 500) % 2) { b.fillRect(x + 7, y - 16, 2, 2); }
+}
+function drawRingLight(b, x, y, t = 0) { // cooler slot: ring light on a stand
+  outlineRect(b, x + 6, y + 24, 20, 5, "#1c1c22"); b.fillStyle = OUTLINE; b.fillRect(x + 14, y - 10, 4, 34); b.fillStyle = "#c0c0c0"; b.fillRect(x + 15, y - 9, 2, 32);
+  disc(b, x + 16, y - 20, 14, OUTLINE); disc(b, x + 16, y - 20, 13, "#fff7d6"); disc(b, x + 16, y - 20, 9, OUTLINE); disc(b, x + 16, y - 20, 8, THEMES.music.wall.face);
+  b.fillStyle = `rgba(255,247,214,${0.10 + (Math.floor(t / 800) % 2) * 0.03})`; b.fillRect(x - 6, y - 38, 44, 40);
+  outlineRect(b, x + 12, y - 24, 8, 8, "#26262e"); b.fillStyle = "#4c6c8c"; b.fillRect(x + 14, y - 22, 4, 4);
+}
+function drawHeadphoneStand(b, x, y, t = 0) { // coffeeStation slot: headphones + sheet music
+  outlineRect(b, x + 2, y + 6, 28, 22, "#3a3a48"); b.fillStyle = "#4c4c5c"; b.fillRect(x + 2, y + 6, 28, 3);
+  b.fillStyle = OUTLINE; b.fillRect(x + 14, y - 14, 4, 20); b.fillRect(x + 8, y + 4, 16, 2); b.fillStyle = "#c0c0c0"; b.fillRect(x + 15, y - 13, 2, 18);
+  b.fillStyle = OUTLINE; b.fillRect(x + 6, y - 20, 20, 3); b.fillRect(x + 4, y - 18, 3, 6); b.fillRect(x + 25, y - 18, 3, 6);
+  outlineRect(b, x + 2, y - 12, 7, 10, "#e3212b"); outlineRect(b, x + 23, y - 12, 7, 10, "#e3212b"); b.fillStyle = "#ff4d57"; b.fillRect(x + 3, y - 11, 2, 2); b.fillRect(x + 24, y - 11, 2, 2);
+  b.fillStyle = "#e3212b"; b.fillRect(x + 6, y - 18, 20, 2);
+  drawMusicNote(b, x + 30, y - 8 - (Math.floor(t / 600) % 3), "#ffd166");
+}
+function drawWallDecorMusic(b, t) {
+  // acoustic foam on the kitchen wall
+  for (let i = 0; i < 6; i++) for (let j = 0; j < 2; j++) { const px = 8 + i * 22, py = 8 + j * 18; b.fillStyle = "#1f1f27"; b.fillRect(px, py, 20, 16); b.fillStyle = "#2b2b35"; for (let k = 0; k < 4; k++) b.fillRect(px + 2 + k * 5, py + 2 + (k % 2) * 6, 3, 6); }
+  // wall speakers flanking the windows
+  for (const px of [8 * TILE + 2, 20 * TILE + 10]) { outlineRect(b, px, 10, 20, 34, "#1c1c22"); disc(b, px + 10, 20, 4, "#3a3a48"); disc(b, px + 10, 34, 6, "#3a3a48"); disc(b, px + 10, 34, 2 + (Math.floor(t / 150) % 2), "#4c4c5c"); }
+  // YouTube plaque between the windows + ON AIR sign
+  drawYtLogo(b, 13 * TILE + 2, 12, 40, 28);
+  b.fillStyle = "#ffffff"; b.fillRect(13 * TILE + 4, 44, 36, 1);
+  const on = Math.floor(t / 800) % 2 === 0;
+  outlineRect(b, 15 * TILE + 2, 12, 52, 20, on ? "#5a0f14" : "#26262e"); b.fillStyle = on ? "#ff3b3b" : "#4a2a2a";
+  // "ON AIR" in 3x5 pixel letters
+  const glyph = { O: ["111", "101", "101", "101", "111"], N: ["101", "111", "111", "111", "101"], A: ["010", "101", "111", "101", "101"], I: ["111", "010", "010", "010", "111"], R: ["110", "101", "110", "101", "101"] };
+  let gx = 15 * TILE + 6; for (const ch of "ON AIR") { if (ch !== " ") { const g = glyph[ch]; for (let r = 0; r < 5; r++) for (let c = 0; c < 3; c++) if (g[r][c] === "1") b.fillRect(gx + c * 2, 17 + r * 2, 2, 2); } gx += ch === " " ? 4 : 8; }
+  if (on) { b.fillStyle = "rgba(255,59,59,.10)"; b.fillRect(15 * TILE - 6, 4, 68, 40); }
+  // floating notes rising from the plaque
+  for (let i = 0; i < 3; i++) { const ph = ((t / 900) + i / 3) % 1; drawMusicNote(b, 13 * TILE + 46 + i * 6 + Math.round(Math.sin(ph * 6 + i) * 2), 40 - Math.round(ph * 28), ["#ffd166", "#ff3b3b", "#61afef"][i]); }
+  // creator award plaques (silver, gold, diamond) on the meeting wall
+  for (let i = 0; i < 3; i++) { const px = 23 * TILE + 4 + i * 34; outlineRect(b, px, 10, 28, 36, "#3a3a48"); b.fillStyle = "#1a1a22"; b.fillRect(px + 2, 12, 24, 32); drawYtLogo(b, px + 6, 18, 16, 12, ["#c0c0c0", "#ffd166", "#bfe8ff"][i]); b.fillStyle = "#e8e6e0"; b.fillRect(px + 6, 36, 16, 1); b.fillRect(px + 9, 39, 10, 1); }
+  // subscriber counter
+  const sx = 26 * TILE + 14; outlineRect(b, sx, 12, 108, 30, "#0a0c10"); b.fillStyle = "#ff3b3b"; b.fillRect(sx + 4, 16, 24, 5); b.fillStyle = "#e8e6e0"; b.fillRect(sx + 32, 17, 40, 3);
+  const digits = ["1", ".", "2", "M"]; let dx = sx + 8;
+  const seg7 = { 1: [0, 1, 1, 0, 0, 0, 0], 2: [1, 1, 0, 1, 1, 0, 1] };
+  for (const d of digits) {
+    if (d === ".") { b.fillStyle = "#ff3b3b"; b.fillRect(dx, 36, 2, 2); dx += 6; continue; }
+    if (d === "M") { b.fillStyle = "#ff3b3b"; b.fillRect(dx, 25, 2, 13); b.fillRect(dx + 8, 25, 2, 13); b.fillRect(dx + 2, 27, 2, 3); b.fillRect(dx + 6, 27, 2, 3); b.fillRect(dx + 4, 30, 2, 3); dx += 14; continue; }
+    const s = seg7[d]; b.fillStyle = "#ff3b3b"; if (s[0]) b.fillRect(dx + 1, 24, 6, 2); if (s[1]) b.fillRect(dx + 6, 25, 2, 6); if (s[2]) b.fillRect(dx + 6, 32, 2, 6); if (s[3]) b.fillRect(dx + 1, 37, 6, 2); if (s[4]) b.fillRect(dx, 32, 2, 6); if (s[5]) b.fillRect(dx, 25, 2, 6); if (s[6]) b.fillRect(dx + 1, 31, 6, 2); dx += 12;
+  }
+  drawVu(b, sx + 60, 38, 11, t, 3);
+  // clock on the kitchen wall
+  drawClock(b, 6 * TILE + 6, 28);
+}
+PROPS.music = { counter: drawStudioBar, fridge: drawSpeakerStack, roundTable: drawDrumKit, meetingTable: drawMixingConsole, sofa: drawStudioCouch, coffeeTable: drawSynth, bookshelf: drawVinylShelf, lamp: drawMicStand, cabinets: drawGuitarRack, boxes: drawAmpStack, printer: drawCameraRig, cooler: drawRingLight, coffeeStation: drawHeadphoneStand, wallDecor: drawWallDecorMusic };
+THEME_NAMES.push("music");
 
 // ---------- theme previews (for the office picker) ----------
 function renderThemePreview(theme, width = 240) {

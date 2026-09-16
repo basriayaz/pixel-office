@@ -16,6 +16,7 @@
     </div>
     <nav class="offices" id="offices" hidden></nav>
     <button class="icon-btn small" id="btnOffices" data-i18n-title="ui.offices.manage">⚙</button>
+    <button class="icon-btn small power" id="btnShutdown" data-i18n-title="ui.shutdown.btn">⏻</button>
     <div class="legend">
       <span class="legend-item"><i class="dot idle"></i><span data-i18n="ui.legend.idle">Idle</span></span>
       <span class="legend-item"><i class="dot working"></i><span data-i18n="ui.legend.working">Working</span></span>
@@ -67,6 +68,17 @@
         <div class="field"><span data-i18n="ui.themes.label"></span><div class="theme-cards" id="oTheme"></div></div>
         <div class="actions"><button class="btn primary" type="submit" data-i18n="ui.offices.add"></button></div>
       </form>
+    </div>
+  </div>
+
+  <div class="modal" id="shutdownModal" hidden>
+    <div class="modal-card narrow">
+      <div class="modal-head"><h2 data-i18n="ui.shutdown.title"></h2><button class="icon-btn" id="shutdownClose" data-i18n-title="ui.shutdown.cancel">×</button></div>
+      <p class="muted" data-i18n="ui.shutdown.body"></p>
+      <div class="actions right">
+        <button class="btn ghost" id="shutdownCancel" data-i18n="ui.shutdown.cancel"></button>
+        <button class="btn danger" id="shutdownConfirm" data-i18n="ui.shutdown.confirm"></button>
+      </div>
     </div>
   </div>
 

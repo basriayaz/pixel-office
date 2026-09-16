@@ -1,7 +1,7 @@
 #!/usr/bin/env node
-// pixel-office CLI: `pixel-office init [--locale tr] [--no-memory-git]`, `pixel-office [start] [--port N] [--dir path] [--no-open]`
+// pixel-office CLI: `pixel-office init [--locale tr] [--no-memory-git]`, `pixel-office [start] [--port N] [--dir path] [--no-open]`, `pixel-office stop [--dir path]`
 import { spawn } from "node:child_process";
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -17,6 +17,7 @@ if (cmd === "help" || has("--help") || has("-h")) {
 
   pixel-office init [--locale en|tr] [--no-memory-git]   set up .pixel-office/ in this project
   pixel-office [start] [--port 4747] [--dir .] [--no-open]  start the office and open the browser
+  pixel-office stop [--dir .]                             stop the office running for this project
   pixel-office help`);
   process.exit(0);
 }
@@ -31,6 +32,25 @@ if (cmd === "init") {
   console.log(`Created ${path.relative(projectDir, res.configFile) || res.configFile}`);
   console.log(`Employees live in ${path.relative(projectDir, res.employeesDir)}/ — copy _template to hire by hand, or use the "+ Hire" button in the office.`);
   console.log(`Start with: pixel-office`);
+  process.exit(0);
+}
+
+if (cmd === "stop") {
+  const mod = useDist ? await import(path.join(dist, "config.js")) : await import(path.join(pkgRoot, "src", "server", "config.ts")).catch(() => null);
+  if (!mod) { console.error("Build first: npm run build"); process.exit(1); }
+  const settings = mod.loadSettings(projectDir);
+  const port = flag("--port", settings.port);
+  const pidFile = path.join(settings.dataDir, "server.pid");
+  try {
+    const res = await fetch(`http://127.0.0.1:${port}/api/shutdown`, { method: "POST" });
+    if (res.ok) { console.log(`Stopped the office on port ${port}.`); process.exit(0); }
+  } catch {}
+  // Server not answering HTTP — fall back to the pid file.
+  if (existsSync(pidFile)) {
+    const pid = Number(readFileSync(pidFile, "utf8").split("\n")[0]);
+    try { process.kill(pid, "SIGTERM"); console.log(`Stopped the office (pid ${pid}).`); process.exit(0); } catch {}
+  }
+  console.log(`No office is running on port ${port}.`);
   process.exit(0);
 }
 

@@ -82,6 +82,14 @@ const clientConfig = () => ({
 });
 app.get("/i18n.js", (_req, res) => { res.type("application/javascript").send(`window.PO = ${JSON.stringify(clientConfig())};`); });
 app.get("/api/options", (_req, res) => res.json(clientConfig()));
+
+// Shut the server down from the UI / CLI (localhost only, so no auth): interrupts running turns, tells clients, exits.
+app.post("/api/shutdown", (_req, res) => {
+  res.json({ ok: true });
+  console.log(t("server.shutdown"));
+  broadcast({ type: "shutdown" });
+  setTimeout(() => void shutdown(), 150);
+});
 app.get("/api/offices", (_req, res) => res.json([...offices.values()].map((o) => ({ ...officeInfo(o), employees: roster(o) }))));
 
 // ---- office management (persisted to config.json, applied live) ----
@@ -371,6 +379,7 @@ server.on("error", (err: NodeJS.ErrnoException) => {
 
 server.listen(settings.port, settings.host, () => {
   const url = `http://localhost:${settings.port}`;
+  try { fs.mkdirSync(path.dirname(PID_FILE), { recursive: true }); fs.writeFileSync(PID_FILE, `${process.pid}\n${settings.port}\n`); } catch {}
   console.log(t("server.open", { port: settings.port }));
   if (settings.host !== "127.0.0.1") console.log(t("server.hostWarning", { host: settings.host }));
   console.log(`  project: ${PROJECT}`);
@@ -384,8 +393,13 @@ server.listen(settings.port, settings.host, () => {
   }
 });
 
+const PID_FILE = path.join(settings.dataDir, "server.pid");
+let stopping = false;
 async function shutdown() {
+  if (stopping) return;
+  stopping = true;
   await Promise.all([...offices.values()].flatMap((o) => [...o.employees.values()].map((e) => e.interrupt().catch(() => {}))));
+  try { fs.rmSync(PID_FILE, { force: true }); } catch {}
   process.exit(0);
 }
 process.on("SIGINT", shutdown);

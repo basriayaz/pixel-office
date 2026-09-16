@@ -112,6 +112,10 @@ body.offline .offline-banner { display: block; }
 
 .icon-btn.small { width: 26px; height: 26px; line-height: 24px; font-size: 13px; }
 .modal[hidden] { display: none; }
+.modal-card.narrow { width: min(440px, 94vw); }
+.modal-card .actions.right { justify-content: flex-end; }
+.icon-btn.power:hover { border-color: var(--error); color: var(--error); }
+body.closed .office-wrap { opacity: .45; filter: grayscale(.6); }
 .modal { position: fixed; inset: 0; background: rgba(0,0,0,.55); display: grid; place-items: center; z-index: 40; }
 .modal-card { width: min(720px, 94vw); max-height: 88vh; overflow: auto; background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 18px 20px; }
 .modal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }

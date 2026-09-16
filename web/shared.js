@@ -15,6 +15,7 @@ function applyI18n(root = document) {
   root.querySelectorAll("[data-i18n]").forEach((el) => { el.innerHTML = t(el.dataset.i18n); });
   root.querySelectorAll("[data-i18n-ph]").forEach((el) => { el.placeholder = t(el.dataset.i18nPh); });
   root.querySelectorAll("[data-i18n-title]").forEach((el) => { el.title = t(el.dataset.i18nTitle); });
+  root.querySelectorAll("[data-i18n-tip]").forEach((el) => { el.dataset.tip = t(el.dataset.i18nTip); });
   document.documentElement.lang = PO.locale;
 }
 applyI18n();

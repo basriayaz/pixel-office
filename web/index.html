@@ -41,6 +41,7 @@
   </main>
 
   <aside class="chat" id="chat">
+    <div class="chat-resize" id="chatResize" title="⇔"></div>
     <div class="chat-head">
       <a class="chat-avatar" id="chatAvatar" href="#" data-i18n-title="ui.chat.profile"></a>
       <div class="chat-title">
@@ -54,6 +55,7 @@
       <button class="icon-btn" id="btnClose" data-i18n-title="ui.chat.close">×</button>
     </div>
     <div class="chat-body" id="chatBody"></div>
+    <button class="jump-down" id="jumpDown" hidden data-i18n="ui.chat.newMessages"></button>
     <form class="chat-foot" id="chatForm">
       <textarea id="chatInput" rows="1" data-i18n-ph="ui.chat.placeholder"></textarea>
       <button type="submit" id="btnSend" title="Enter">➤</button>

@@ -135,7 +135,7 @@ function handle(m) {
         endStream();
         appendMessage(e, m.message);
         updateTyping(e);
-        scrollDown();
+        scrollDown(m.message.role === "user");
       } else if (m.message.role === "assistant" || m.message.role === "colleague") {
         e.unread++;
         if (current) { office.setUnread(e.id, e.unread); renderRoster(); }
@@ -200,9 +200,34 @@ function updateTyping(e) {
   } else removeTyping();
 }
 
-function scrollDown() {
-  chatBody.scrollTop = chatBody.scrollHeight;
+// Follow new messages only while the reader is already at the bottom; otherwise offer a "new messages ↓" jump.
+const nearBottom = () => chatBody.scrollHeight - chatBody.scrollTop - chatBody.clientHeight < 80;
+let jumpPending = 0;
+function scrollDown(force = false) {
+  if (force || nearBottom()) { chatBody.scrollTop = chatBody.scrollHeight; jumpPending = 0; $("jumpDown").hidden = true; return; }
+  jumpPending++;
+  $("jumpDown").hidden = false;
 }
+chatBody.addEventListener("scroll", () => { if (nearBottom() && !$("jumpDown").hidden) { jumpPending = 0; $("jumpDown").hidden = true; } });
+$("jumpDown").onclick = () => scrollDown(true);
+
+// ---- resizable chat panel (drag the left edge) ----
+const CHAT_MIN = 320;
+function applyChatW() {
+  let w = 0; try { w = Number(localStorage.getItem("po.chatW")) || 0; } catch {}
+  if (w && window.innerWidth > 900) document.body.style.setProperty("--chat-w", Math.min(w, window.innerWidth - 320) + "px");
+  else document.body.style.removeProperty("--chat-w");
+}
+applyChatW();
+window.addEventListener("resize", applyChatW);
+$("chatResize").addEventListener("pointerdown", (ev) => {
+  if (window.innerWidth <= 900) return;
+  ev.preventDefault();
+  const handle = ev.currentTarget; handle.setPointerCapture(ev.pointerId); document.body.classList.add("resizing");
+  const move = (e) => { const w = Math.max(CHAT_MIN, Math.min(window.innerWidth - 320, window.innerWidth - e.clientX)); document.body.style.setProperty("--chat-w", w + "px"); };
+  const up = () => { handle.removeEventListener("pointermove", move); handle.removeEventListener("pointerup", up); document.body.classList.remove("resizing"); const w = parseInt(getComputedStyle(document.body).getPropertyValue("--chat-w")); if (w) { try { localStorage.setItem("po.chatW", String(w)); } catch {} } office.fit(); };
+  handle.addEventListener("pointermove", move); handle.addEventListener("pointerup", up);
+});
 
 function openChat(id) {
   const e = cur()?.employees.get(id);
@@ -278,7 +303,7 @@ function renderChat(e) {
   }
   for (const ask of e.pending) chatBody.appendChild(renderAsk(e, ask));
   updateTyping(e);
-  scrollDown();
+  scrollDown(true);
 }
 
 function daySep(ts) {

@@ -155,7 +155,8 @@
       "always": "Hep izin ver",
       "alwaysTitle": "Bu oturumda aynı işlem için bir daha sorma",
       "deny": "Reddet",
-      "fromColleague": "{name} gönderdi"
+      "fromColleague": "{name} gönderdi",
+      "newMessages": "Yeni mesaj ↓"
     },
     "toast": {
       "disconnected": "Sunucu bağlantısı koptu, yeniden deneniyor…",

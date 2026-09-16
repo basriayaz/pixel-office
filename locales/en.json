@@ -155,7 +155,8 @@
       "always": "Always allow",
       "alwaysTitle": "Don't ask again for this action in this session",
       "deny": "Deny",
-      "fromColleague": "From {name}"
+      "fromColleague": "From {name}",
+      "newMessages": "New messages ↓"
     },
     "toast": {
       "disconnected": "Lost the server connection, retrying…",

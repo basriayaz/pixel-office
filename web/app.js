@@ -62,6 +62,7 @@ function showOffice(officeId, keepChat = false) {
   $("hireLink").href = `hire.html?office=${encodeURIComponent(officeId)}`;
   renderOfficeTabs();
   renderRoster();
+  office.fit(); // roster height changes with head-count
   if (state.selected && o.employees.has(state.selected)) { renderHead(o.employees.get(state.selected)); send({ type: "open", id: state.selected }); }
   else if (state.selected) closeChat();
 }

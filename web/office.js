@@ -253,9 +253,12 @@ class Office {
     const stage = this.canvas.parentElement.parentElement;
     const cs = getComputedStyle(stage);
     const cw = stage.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
-    const ch = stage.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom) - 60;
+    const roster = stage.querySelector(".roster");
+    const rosterH = roster && getComputedStyle(roster).display !== "none" ? Math.max(roster.offsetHeight, 36) + 14 : 0;
+    const ch = stage.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom) - rosterH;
     const raw = Math.min(cw / LW, ch / LH);
-    this.scale = Math.max(0.4, Math.min(2, Math.floor(raw * 8) / 8));
+    // 1/16 steps keep pixels crisp; cap at 2.5× for 4K screens, floor at 0.3× for phones
+    this.scale = Math.max(0.3, Math.min(2.5, Math.floor(raw * 16) / 16));
     const dpr = window.devicePixelRatio || 1;
     this.canvas.width = Math.round(LW * this.scale * dpr);
     this.canvas.height = Math.round(LH * this.scale * dpr);

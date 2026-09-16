@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Character creator: eye color; beard styles (stubble, mustache, goatee, circle beard, full, long) and beard color; nine new hair styles (buzz cut, side part, spiky, mohawk, afro, bald, balding, bob, braid); six new hats (cowboy, fedora, bucket, beret, bandana, hood); tank top, polo, shirt, sweater and suit (with tie color) tops; cargo pants, joggers, long shorts and long skirt; high-tops, loafers and sandals; shoe color; redrawn heels. Older `beard: true/false` looks still load.
+
 ## 0.1.0 — 2026-09-16
 
 First public release.

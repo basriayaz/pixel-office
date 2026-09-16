@@ -1813,12 +1813,30 @@ function drawPerson(b, ox, oy, e, o) {
   personShapes(b, ox, oy, e, o, null);
 }
 
-// Normalizes look fields (older configs used accessory: "glasses").
+// Normalizes look fields (older configs used accessory: "glasses" and beard: true/false).
+const SHOE_DEFAULT = { dark: "#26222a", sneakers: "#f2f2f2", hightops: "#c0392b", boots: "#5a3a22", loafers: "#5a3a22", sandals: "#c9a074", heels: "#1c1a20" };
+function shoeDefault(style) { return SHOE_DEFAULT[style] || SHOE_DEFAULT.dark; }
+const PANTS_LIKE = ["pants", "cargo", "joggers"];
+const SCALP = ["bald", "balding"];   // no hair on top of the head
+const SHAVED = ["buzz", "mohawk"];   // base hair drawn in a faded tone
 function outfit(L) {
   const glasses = L.glasses && L.glasses !== "none" ? L.glasses : L.accessory === "glasses" ? "square" : "none";
   const topStyle = L.blazer ? "blazer" : L.topStyle || "tshirt";
   const bottomStyle = topStyle === "dress" ? "dress" : L.bottomStyle || "pants";
-  return { glasses, topStyle, bottomStyle, shoes: L.shoes || "dark", hat: L.hat && L.hat !== "none" ? L.hat : "none", hatColor: L.hatColor || "#3f51b5" };
+  const shoes = L.shoes || "dark";
+  const beard = typeof L.beard === "string" ? L.beard : L.beard ? "full" : "none";
+  const hat = L.hat && L.hat !== "none" ? L.hat : "none";
+  let hairStyle = L.hairStyle || "short";
+  if (hat !== "none" && hairStyle === "mohawk") hairStyle = "buzz";
+  if (hat !== "none" && hairStyle === "spiky") hairStyle = "short";
+  return {
+    glasses, topStyle, bottomStyle, shoes, beard, hat, hairStyle,
+    shoeColor: L.shoeColor || shoeDefault(shoes),
+    eyes: L.eyes || (L.fem ? "#4a9de0" : "#3b2412"),
+    hatColor: L.hatColor || "#3f51b5",
+    tie: L.tie || "#8b1e2d",
+    beardColor: L.beardColor || L.hair,
+  };
 }
 
 // Body proportions: torso x/width, arm x (left/right) & width, leg x (left/right) & width, side-view torso x/width.
@@ -1840,11 +1858,21 @@ function personShapes(b, ox, oy, e, o, mono) {
   const dir = flip ? "right" : o.dir;
   const C = (col) => { b.fillStyle = mono || col; };
   const R = (x, y, w, h) => b.fillRect(ox + x, oy + y, w, h);
-  const skin = L.skin, hair = L.hair, top = L.top, bottom = L.bottom || "#2f3548";
-  const topDark = shade(top, -40), topLight = shade(top, 28);
+  const suit = F.topStyle === "suit";
+  const skin = L.skin, hair = L.hair, top = L.top, bottom = suit ? top : L.bottom || "#2f3548";
+  const topDark = shade(top, -40), topLight = shade(top, 28), topMid = shade(top, -18);
   const hairLight = shade(hair, 38), hairDark = shade(hair, -28);
-  const skinDark = shade(skin, -30), bottomDark = shade(bottom, -26);
+  const skinDark = shade(skin, -30), skinLight = shade(skin, 18);
+  const bottomDark = shade(bottom, -26), bottomLight = shade(bottom, 16);
   const hatDark = shade(F.hatColor, -35), hatLight = shade(F.hatColor, 30);
+  const hs = F.hairStyle;
+  const scalp = SCALP.includes(hs);
+  const hairBase = SHAVED.includes(hs) ? mix(skin, hair, 0.55) : hair;
+  const beardC = F.beardColor, beardLight = shade(beardC, 38);
+  const stubble = mix(skin, beardC, 0.35);
+  const sleeveC = F.topStyle === "tank" ? skin : top;
+  const pantsLike = PANTS_LIKE.includes(F.bottomStyle);
+  const legCloth = pantsLike || F.bottomStyle === "bermuda";
   const sitting = ["sit", "type", "wave", "slump", "sip"].includes(o.anim);
   const sitFree = o.anim === "sitfree";
   const walking = o.anim === "walk";
@@ -1858,15 +1886,24 @@ function personShapes(b, ox, oy, e, o, mono) {
   const clothDark = F.bottomStyle === "dress" ? topDark : bottomDark;
   const { tx, tw, axL, axR, aw, lxL, lxR, lw } = P;
   const cx = tx + Math.floor(tw / 2); // torso center
-  const fem = L.fem && F.topStyle !== "blazer" && F.topStyle !== "hoodie" && !P.belly && !P.shoulders;
+  const fem = L.fem && F.topStyle !== "blazer" && F.topStyle !== "hoodie" && !suit && !P.belly && !P.shoulders;
 
-  // ---- shoes (front/back), origin = top-left; width w ----
-  const shoe = (x, y, w = lw + 1) => {
+  // ---- shoes; origin = top-left, width w; `side` = profile view (toe points right) ----
+  const shoe = (x, y, w = lw + 1, side = false) => {
+    const c = F.shoeColor, cD = shade(c, -40), cL = shade(c, 30);
+    const sole = lum(c) > 150 ? "#9a9a9a" : "#e8e8e8";
     switch (F.shoes) {
-      case "sneakers": C("#f2f2f2"); R(x, y, w, 4); C(e.color || top); R(x + 1, y + 1, w - 2, 1); C("#9a9a9a"); R(x, y + 3, w, 1); break;
-      case "boots": C("#5a3a22"); R(x, y - 3, w, 7); C("#2b1d14"); R(x, y + 3, w, 1); C("#8a5a32"); R(x + 2, y - 2, 1, 4); break;
-      case "heels": C("#1c1a20"); R(x + 1, y + 1, w - 1, 3); R(x, y + 2, 1, 2); C("#4a4650"); R(x + 2, y + 1, w - 3, 1); break;
-      default: C("#26222a"); R(x, y, w, 4); C("#4a4650"); R(x + 1, y, w - 2, 1);
+      case "sneakers": C(c); R(x, y, w, 4); C(e.color || top); R(x + 1, y + 1, w - 2, 1); C(sole); R(x, y + 3, w, 1); break;
+      case "hightops": C(c); R(x, y - 2, w, 5); C(cL); R(x + 1, y - 1, w - 2, 1); R(x + 1, y + 1, w - 2, 1); C(sole); R(x, y + 3, w, 1); break;
+      case "boots": C(c); R(x, y - 3, w, 7); C(cD); R(x, y + 3, w, 1); C(cL); R(x + 2, y - 2, 1, 4); break;
+      case "loafers": C(skin); R(x + 1, y, w - 2, 1); C(c); R(x, y + 1, w, 3); C(cD); R(x + 1, y + 1, w - 2, 1); R(x, y + 3, w, 1); C("#e0b030"); R(x + (w >> 1), y + 1, 1, 1); break;
+      case "sandals": C(skin); R(x, y, w, 3); C(c); R(x + 1, y + 1, w - 2, 1); R(x, y + 3, w, 1); C(cD); R(x + (w >> 1), y, 1, 1); break;
+      case "heels":
+        // ankle strap, slim body, stiletto heel at the back and a pointed toe
+        if (side) { C(cD); R(x + 1, y - 1, w - 2, 1); C(c); R(x, y, w, 2); R(x + w - 2, y + 2, 2, 2); C(cD); R(x, y + 2, 1, 2); C(cL); R(x + 2, y, 2, 1); }
+        else { C(cD); R(x + 1, y - 1, w - 1, 1); C(c); R(x + 1, y, w - 1, 3); C(cL); R(x + 2, y, w - 4, 1); C(cD); R(x + 1, y + 3, 1, 1); R(x + 3, y + 3, w - 4, 1); }
+        break;
+      default: C(c); R(x, y, w, 4); C(cL); R(x + 1, y, w - 2, 1);
     }
   };
 
@@ -1879,24 +1916,37 @@ function personShapes(b, ox, oy, e, o, mono) {
     }
     if (sitFree) {
       C(clothColor); R(tx, 29, tw, 5); C(clothDark); R(tx, 33, tw, 1);
-      if (F.bottomStyle === "pants") { C(bottom); R(lxL, 34, lw, 7); R(lxR, 34, lw, 7); C(bottomDark); R(lxL + lw - 2, 34, 2, 7); R(lxR + lw - 2, 34, 2, 7); }
+      if (legCloth) { C(bottom); R(lxL, 34, lw, 7); R(lxR, 34, lw, 7); C(bottomDark); R(lxL + lw - 2, 34, 2, 7); R(lxR + lw - 2, 34, 2, 7); }
       else { C(skin); R(lxL, 34, lw, 7); R(lxR, 34, lw, 7); C(skinDark); R(lxL + lw - 2, 34, 2, 7); R(lxR + lw - 2, 34, 2, 7); }
       shoe(lxL - 1, 41); shoe(lxR, 41);
       return;
     }
     const lift = walking ? [0, 2, 0, -2][f] : 0;
     const lL = Math.max(0, lift), lR = Math.max(0, -lift);
-    if (F.bottomStyle === "pants") {
+    if (pantsLike) {
       C(bottom); R(lxL, 29, lw, 15 - lL); R(lxR, 29, lw, 15 - lR);
       C(bottomDark); R(lxL + lw - 2, 29, 2, 15 - lL); R(lxR + lw - 2, 29, 2, 15 - lR);
-    } else if (F.bottomStyle === "shorts") {
-      C(bottom); R(lxL, 29, lw, 6); R(lxR, 29, lw, 6); C(bottomDark); R(lxL + lw - 2, 29, 2, 6); R(lxR + lw - 2, 29, 2, 6); R(lxL, 34, lxR + lw - lxL, 1);
-      C(skin); R(lxL, 35, lw, 9 - lL); R(lxR, 35, lw, 9 - lR); C(skinDark); R(lxL + lw - 2, 35, 2, 9 - lL); R(lxR + lw - 2, 35, 2, 9 - lR);
+      if (F.bottomStyle === "cargo") {
+        C(bottomLight); R(lxL, 35, lw - 1, 3); R(lxR + 1, 35, lw - 1, 3);
+        C(bottomDark); R(lxL, 34, lw - 1, 1); R(lxR + 1, 34, lw - 1, 1); R(lxL, 38, lw - 1, 1); R(lxR + 1, 38, lw - 1, 1);
+      } else if (F.bottomStyle === "joggers") {
+        C(shade(bottom, 50)); R(lxL, 29, 1, 12 - lL); R(lxR + lw - 1, 29, 1, 12 - lR);
+        C(bottomDark); R(lxL, 41 - lL, lw, 3); R(lxR, 41 - lR, lw, 3);
+      }
+    } else if (F.bottomStyle === "shorts" || F.bottomStyle === "bermuda") {
+      const ch = F.bottomStyle === "bermuda" ? 9 : 6;
+      C(bottom); R(lxL, 29, lw, ch); R(lxR, 29, lw, ch);
+      C(bottomDark); R(lxL + lw - 2, 29, 2, ch); R(lxR + lw - 2, 29, 2, ch); R(lxL, 28 + ch, lxR + lw - lxL, 1);
+      if (ch === 9) { C(bottomLight); R(lxL, 33, lw - 1, 2); R(lxR + 1, 33, lw - 1, 2); }
+      C(skin); R(lxL, 29 + ch, lw, 15 - ch - lL); R(lxR, 29 + ch, lw, 15 - ch - lR);
+      C(skinDark); R(lxL + lw - 2, 29 + ch, 2, 15 - ch - lL); R(lxR + lw - 2, 29 + ch, 2, 15 - ch - lR);
     } else {
       const y0 = F.bottomStyle === "dress" ? 27 : 29;
-      C(clothColor); R(tx - 1, y0, tw + 2, 4); R(tx - 2, y0 + 4, tw + 4, 37 - y0);
-      C(clothDark); R(tx - 2, 36, tw + 4, 1); R(tx + tw - 1, y0 + 2, 3, 35 - y0);
-      C(skin); R(lxL, 37, lw, 7 - lL); R(lxR, 37, lw, 7 - lR); C(skinDark); R(lxL + lw - 2, 37, 2, 7 - lL); R(lxR + lw - 2, 37, 2, 7 - lR);
+      const hem = F.bottomStyle === "longskirt" ? 41 : 36;
+      C(clothColor); R(tx - 1, y0, tw + 2, 4); R(tx - 2, y0 + 4, tw + 4, hem - y0 - 3);
+      C(clothDark); R(tx - 2, hem, tw + 4, 1); R(tx + tw - 1, y0 + 2, 3, hem - y0 - 1);
+      C(skin); R(lxL, hem + 1, lw, 43 - hem - lL); R(lxR, hem + 1, lw, 43 - hem - lR);
+      C(skinDark); R(lxL + lw - 2, hem + 1, 2, 43 - hem - lL); R(lxR + lw - 2, hem + 1, 2, 43 - hem - lR);
     }
     shoe(lxL - 1, 44 - lL); shoe(lxR, 44 - lR);
   };
@@ -1925,15 +1975,42 @@ function personShapes(b, ox, oy, e, o, mono) {
     } else if (F.topStyle === "hoodie") {
       C(topDark); R(cx - 4, 25 + T, 8, 3); R(tx, 16 + T, tw, 1);
       C("#f5f5f5"); R(cx - 2, 17 + T, 1, 4); R(cx + 1, 17 + T, 1, 4);
+    } else if (suit) {
+      C("#f7f7f7"); R(cx - 2, 16 + T, 4, 6);
+      C(topDark); R(cx - 3, 16 + T, 1, 6); R(cx + 2, 16 + T, 1, 6); R(cx, 22 + T, 1, 6); R(cx - 2, 22 + T, 4, 1);
+      C(F.tie); R(cx - 1, 17 + T, 2, 5);
+      C(topLight); R(tx + tw - 3, 19 + T, 2, 1); // pocket square
+    } else if (F.topStyle === "tank") {
+      const sh = P.shoulders ? 1 : 0;
+      C(skin); R(tx - sh, 16 + T, 2 + sh, 4); R(tx + tw - 2, 16 + T, 2 + sh, 4); R(cx - 2, 16 + T, 4, 2);
+      C(skinDark); R(cx - 2, 17 + T, 4, 1);
+    } else if (F.topStyle === "shirt") {
+      C(skin); R(cx - 1, 16 + T, 2, 2); C(skinDark); R(cx - 1, 17 + T, 2, 1);
+      C(topLight); R(cx - 4, 16 + T, 3, 2); R(cx + 1, 16 + T, 3, 2);
+      C(topDark); R(cx, 18 + T, 1, 10);
+      C("#f5f5f5"); R(cx, 20 + T, 1, 1); R(cx, 23 + T, 1, 1); R(cx, 26 + T, 1, 1);
+    } else if (F.topStyle === "polo") {
+      C(topDark); R(cx - 4, 16 + T, 3, 2); R(cx + 1, 16 + T, 3, 2); R(cx - 1, 17 + T, 2, 3);
+      C(skin); R(cx - 1, 16 + T, 2, 1);
+      C("#f5f5f5"); R(cx - 1, 18 + T, 1, 1);
+    } else if (F.topStyle === "sweater") {
+      C(topDark); R(cx - 3, 16 + T, 6, 1);
+      C(topMid); R(tx + 2, 19 + T, tw - 4, 1); R(tx + 2, 22 + T, tw - 4, 1); R(tx + 2, 25 + T, tw - 4, 1);
     } else {
       C(skinDark); R(cx - 2, 16 + T, 4, 1);
     }
-    if (F.topStyle !== "dress") { C("#33303a"); R(P.belly ? tx - 1 : tx, 28 + T, P.belly ? tw + 2 : tw, 1); }
+    if (F.topStyle !== "dress" && !suit) { C("#33303a"); R(P.belly ? tx - 1 : tx, 28 + T, P.belly ? tw + 2 : tw, 1); }
     C(skin); R(14, 14 + H, 4, 3); // neck
     if (P.belly) { C(skin); R(13, 14 + H, 6, 3); }
   };
 
-  const arm = (x, y, sleeve, hand) => { C(top); R(x, y, aw, sleeve); if (hand) { C(skin); R(x, y + sleeve, aw, 4); } if (P.shoulders) { C(topDark); R(x, y + 3, aw, 1); } };
+  const arm = (x, y, sleeve, hand) => {
+    C(sleeveC); R(x, y, aw, sleeve);
+    if (F.topStyle === "sweater") { C(topDark); R(x, y + sleeve - 1, aw, 1); }
+    if (suit) { C("#f7f7f7"); R(x, y + sleeve - 1, aw, 1); }
+    if (hand) { C(skin); R(x, y + sleeve, aw, 4); }
+    if (P.shoulders && F.topStyle !== "tank") { C(topDark); R(x, y + 3, aw, 1); }
+  };
 
   const armsFront = () => {
     const swing = walking ? [0, 2, 0, -2][f] : 0;
@@ -1946,7 +2023,7 @@ function personShapes(b, ox, oy, e, o, mono) {
       }
       case "wave": {
         arm(axL, 17 + T, 7, true);
-        C(top); R(axR, 6 + H, aw, 12);
+        C(sleeveC); R(axR, 6 + H, aw, 12);
         C(skin); R(axR + (Math.floor(o.t / 250) % 2), 2 + H, aw + 1, 4);
         break;
       }
@@ -1954,7 +2031,7 @@ function personShapes(b, ox, oy, e, o, mono) {
         const sip = Math.floor(o.t / 1500) % 4 === 0;
         arm(axL, 17 + T, 7, true);
         const my = sip ? 8 + H : 20 + T;
-        C(top); R(axR, 17 + T, aw, sip ? 3 : 6);
+        C(sleeveC); R(axR, 17 + T, aw, sip ? 3 : 6);
         C(skin); R(axR - 1, my + 4, 4, 3);
         C("#f5f5f5"); R(axR - 1, my, 8, 8);
         C(e.color); R(axR + 1, my + 2, 4, 4);
@@ -1962,12 +2039,12 @@ function personShapes(b, ox, oy, e, o, mono) {
       }
       case "think": {
         arm(axL, 17 + T, 7, true);
-        C(top); R(axR, 17 + T, aw, 5);
+        C(sleeveC); R(axR, 17 + T, aw, 5);
         C(skin); R(19, 11 + H, 5, 4);
         break;
       }
       case "read": {
-        C(top); R(axL, 17 + T, aw, 5); R(axR, 17 + T, aw, 5);
+        C(sleeveC); R(axL, 17 + T, aw, 5); R(axR, 17 + T, aw, 5);
         C("#f5f5f5"); R(cx - 8, 21 + T, 16, 9);
         C("#33303a"); R(cx - 1, 21 + T, 2, 9);
         C("#9aa"); R(cx - 6, 24 + T, 4, 1); R(cx - 6, 27 + T, 4, 1); R(cx + 2, 24 + T, 4, 1); R(cx + 2, 27 + T, 3, 1);
@@ -1982,7 +2059,7 @@ function personShapes(b, ox, oy, e, o, mono) {
         const tilt = p > 0.4 && p < 0.65 ? 1 : 0;
         arm(axL, 19 + T, 7, true);
         const handY = Math.round(24 + T - k * 14);
-        C(top); R(axR, 17 + T, aw, Math.max(2, handY - 17 - T - 1));
+        C(sleeveC); R(axR, 17 + T, aw, Math.max(2, handY - 17 - T - 1));
         C(skin); R(axR - 1, handY, 4, 3);
         const mx = axR - 3, my = handY - 6 + tilt;
         C(OUTLINE); R(mx - 1, my - 1, 9, 10); C(e.color || top); R(mx, my, 7, 8); C("rgba(255,255,255,.35)"); R(mx + 1, my + 1 + tilt, 2, 4); C(OUTLINE); R(mx + 7, my + 2, 3, 5); C(e.color || top); R(mx + 8, my + 3, 1, 3);
@@ -1994,15 +2071,44 @@ function personShapes(b, ox, oy, e, o, mono) {
     }
   };
 
+  // ---- hats (front / back / side) ----
   const hatFront = () => {
-    if (F.hat === "cap") {
-      C(F.hatColor); R(8, 0 + H, 16, 6); R(9, -1 + H, 14, 1);
-      C(hatLight); R(10, 1 + H, 5, 1);
-      C(hatDark); R(7, 6 + H, 18, 2); R(15, 0 + H, 1, 6);
-    } else if (F.hat === "beanie") {
-      C(F.hatColor); R(8, -1 + H, 16, 8); R(9, -2 + H, 14, 1);
-      C(hatDark); R(8, 5 + H, 16, 2);
-      C(hatLight); R(13, -4 + H, 6, 2); R(10, 0 + H, 4, 1);
+    const c = F.hatColor;
+    switch (F.hat) {
+      case "cap": C(c); R(8, 0 + H, 16, 6); R(9, -1 + H, 14, 1); C(hatLight); R(10, 1 + H, 5, 1); C(hatDark); R(7, 6 + H, 18, 2); R(15, 0 + H, 1, 6); break;
+      case "beanie": C(c); R(8, -1 + H, 16, 8); R(9, -2 + H, 14, 1); C(hatDark); R(8, 5 + H, 16, 2); C(hatLight); R(13, -4 + H, 6, 2); R(10, 0 + H, 4, 1); break;
+      case "cowboy": C(c); R(5, 4 + H, 22, 2); R(5, 3 + H, 1, 1); R(26, 3 + H, 1, 1); R(9, -3 + H, 14, 8); C(hatDark); R(5, 6 + H, 22, 1); R(9, 2 + H, 14, 1); R(12, -3 + H, 8, 1); C(hatLight); R(11, -2 + H, 3, 1); break;
+      case "fedora": C(c); R(6, 4 + H, 20, 2); R(9, -2 + H, 14, 7); C(hatDark); R(6, 6 + H, 20, 1); R(9, 2 + H, 14, 2); R(12, -2 + H, 8, 1); C(hatLight); R(11, -1 + H, 3, 1); break;
+      case "bucket": C(c); R(9, -2 + H, 14, 7); R(7, 4 + H, 18, 2); R(6, 5 + H, 2, 3); R(24, 5 + H, 2, 3); C(hatDark); R(9, 3 + H, 14, 1); R(7, 6 + H, 18, 1); R(6, 7 + H, 2, 1); R(24, 7 + H, 2, 1); C(hatLight); R(11, -1 + H, 4, 1); break;
+      case "beret": C(c); R(8, -2 + H, 13, 1); R(6, -1 + H, 17, 3); R(9, 2 + H, 13, 2); C(hatDark); R(9, 3 + H, 13, 1); R(15, -3 + H, 2, 1); C(hatLight); R(9, -1 + H, 4, 1); break;
+      case "bandana": C(c); R(9, -2 + H, 13, 1); R(8, -1 + H, 15, 5); R(22, 3 + H, 2, 2); R(23, 5 + H, 2, 3); R(24, 8 + H, 1, 1); C(hatDark); R(8, 3 + H, 15, 1); R(23, 5 + H, 2, 1); C(hatLight); R(10, 0 + H, 4, 1); break;
+      case "hood": C(c); R(7, -2 + H, 18, 4); R(7, 2 + H, 3, 13); R(22, 2 + H, 3, 13); R(6, 13 + H, 4, 4); R(22, 13 + H, 4, 4); C(hatDark); R(10, 1 + H, 12, 1); R(9, 2 + H, 1, 11); R(22, 2 + H, 1, 11); R(6, 16 + H, 4, 1); R(22, 16 + H, 4, 1); C(hatLight); R(9, -1 + H, 4, 1); break;
+    }
+  };
+  const hatBack = () => {
+    const c = F.hatColor;
+    switch (F.hat) {
+      case "cap": C(c); R(8, 0 + H, 16, 6); R(9, -1 + H, 14, 1); C(hatDark); R(8, 5 + H, 16, 2); R(13, 4 + H, 6, 2); break;
+      case "beanie": C(c); R(8, -1 + H, 16, 8); R(9, -2 + H, 14, 1); C(hatDark); R(8, 5 + H, 16, 2); C(hatLight); R(13, -4 + H, 6, 2); break;
+      case "cowboy": C(c); R(5, 4 + H, 22, 2); R(5, 3 + H, 1, 1); R(26, 3 + H, 1, 1); R(9, -3 + H, 14, 8); C(hatDark); R(5, 6 + H, 22, 1); R(9, 2 + H, 14, 1); C(hatLight); R(11, -2 + H, 3, 1); break;
+      case "fedora": C(c); R(6, 4 + H, 20, 2); R(9, -2 + H, 14, 7); C(hatDark); R(6, 6 + H, 20, 1); R(9, 2 + H, 14, 2); C(hatLight); R(11, -1 + H, 3, 1); break;
+      case "bucket": C(c); R(9, -2 + H, 14, 7); R(7, 4 + H, 18, 2); R(6, 5 + H, 2, 3); R(24, 5 + H, 2, 3); C(hatDark); R(9, 3 + H, 14, 1); R(7, 6 + H, 18, 1); R(6, 7 + H, 2, 1); R(24, 7 + H, 2, 1); C(hatLight); R(11, -1 + H, 4, 1); break;
+      case "beret": C(c); R(8, -2 + H, 13, 1); R(6, -1 + H, 17, 3); R(9, 2 + H, 13, 2); C(hatDark); R(9, 3 + H, 13, 1); R(15, -3 + H, 2, 1); C(hatLight); R(9, -1 + H, 4, 1); break;
+      case "bandana": C(c); R(9, -2 + H, 13, 1); R(8, -1 + H, 15, 5); C(hatDark); R(8, 3 + H, 15, 1); R(14, 3 + H, 4, 2); C(c); R(13, 5 + H, 2, 4); R(17, 5 + H, 2, 4); C(hatDark); R(13, 8 + H, 2, 1); R(17, 8 + H, 2, 1); break;
+      case "hood": C(c); R(7, -2 + H, 18, 17); R(6, 13 + H, 20, 4); R(15, -3 + H, 2, 1); C(hatDark); R(15, -1 + H, 2, 14); R(6, 16 + H, 20, 1); C(hatLight); R(9, -1 + H, 4, 1); break;
+    }
+  };
+  const hatSide = () => {
+    const c = F.hatColor;
+    switch (F.hat) {
+      case "cap": C(c); R(9, 0 + H, 14, 6); R(10, -1 + H, 12, 1); C(hatDark); R(17, 5 + H, 9, 2); C(hatLight); R(11, 1 + H, 4, 1); break;
+      case "beanie": C(c); R(9, -1 + H, 14, 8); R(10, -2 + H, 12, 1); C(hatDark); R(9, 5 + H, 14, 2); C(hatLight); R(11, -4 + H, 5, 2); break;
+      case "cowboy": C(c); R(5, 4 + H, 23, 2); R(5, 3 + H, 1, 1); R(27, 3 + H, 1, 1); R(10, -3 + H, 13, 8); C(hatDark); R(5, 6 + H, 23, 1); R(10, 2 + H, 13, 1); R(13, -3 + H, 7, 1); C(hatLight); R(12, -2 + H, 3, 1); break;
+      case "fedora": C(c); R(6, 4 + H, 21, 2); R(25, 6 + H, 2, 1); R(10, -2 + H, 13, 7); C(hatDark); R(6, 6 + H, 19, 1); R(10, 2 + H, 13, 2); R(13, -2 + H, 7, 1); C(hatLight); R(12, -1 + H, 3, 1); break;
+      case "bucket": C(c); R(10, -2 + H, 13, 7); R(8, 4 + H, 18, 2); R(7, 5 + H, 2, 3); R(25, 5 + H, 2, 3); C(hatDark); R(10, 3 + H, 13, 1); R(8, 6 + H, 18, 1); R(7, 7 + H, 2, 1); R(25, 7 + H, 2, 1); C(hatLight); R(12, -1 + H, 4, 1); break;
+      case "beret": C(c); R(9, -2 + H, 12, 1); R(6, -1 + H, 17, 3); R(10, 2 + H, 12, 2); C(hatDark); R(10, 3 + H, 12, 1); R(14, -3 + H, 2, 1); C(hatLight); R(9, -1 + H, 4, 1); break;
+      case "bandana": C(c); R(10, -2 + H, 12, 1); R(9, -1 + H, 14, 5); R(7, 3 + H, 3, 2); R(6, 5 + H, 2, 4); C(hatDark); R(9, 3 + H, 14, 1); R(7, 5 + H, 1, 3); R(6, 8 + H, 2, 1); C(hatLight); R(11, 0 + H, 4, 1); break;
+      case "hood": C(c); R(8, -2 + H, 16, 4); R(8, 2 + H, 5, 13); R(7, 13 + H, 6, 4); R(22, 1 + H, 2, 4); C(hatDark); R(13, 1 + H, 9, 1); R(12, 2 + H, 1, 11); R(7, 16 + H, 6, 1); C(hatLight); R(10, -1 + H, 4, 1); break;
     }
   };
 
@@ -2020,46 +2126,92 @@ function personShapes(b, ox, oy, e, o, mono) {
     }
   };
 
+  const beardFront = () => {
+    switch (F.beard) {
+      case "full": case "stubble": case "long":
+        C(F.beard === "stubble" ? stubble : beardC); R(10, 11 + H, 2, 3); R(20, 11 + H, 2, 3); R(11, 13 + H, 10, 2);
+        if (F.beard === "long") { R(12, 15 + H, 8, 3); R(13, 18 + H, 6, 1); C(beardLight); R(15, 14 + H, 1, 4); }
+        C(skinDark); R(15, 12 + H, 2, 1);
+        break;
+      case "chin": // circle beard: mustache joined to a rounded chin beard
+        C(beardC); R(12, 11 + H, 8, 1); R(12, 12 + H, 1, 2); R(19, 12 + H, 1, 2); R(12, 13 + H, 8, 2); R(13, 15 + H, 6, 1);
+        C(beardLight); R(14, 14 + H, 1, 1);
+        break;
+      case "goatee": // narrow chin tuft tapering to a point
+        C(beardC); R(14, 13 + H, 4, 2); R(14, 15 + H, 4, 1); R(15, 16 + H, 2, 1); R(15, 17 + H, 1, 1);
+        C(beardLight); R(15, 13 + H, 1, 3);
+        break;
+      case "mustache": C(beardC); R(12, 11 + H, 8, 1); R(12, 12 + H, 1, 1); R(19, 12 + H, 1, 1); break;
+    }
+  };
+  const beardSide = () => {
+    switch (F.beard) {
+      case "full": case "stubble": case "long":
+        C(F.beard === "stubble" ? stubble : beardC); R(14, 12 + H, 8, 3);
+        if (F.beard === "long") { R(15, 15 + H, 6, 3); R(16, 18 + H, 4, 1); C(beardLight); R(17, 14 + H, 1, 4); }
+        break;
+      case "chin": C(beardC); R(18, 11 + H, 4, 1); R(21, 12 + H, 1, 1); R(16, 13 + H, 6, 2); R(17, 15 + H, 4, 1); break;
+      case "goatee": C(beardC); R(18, 13 + H, 4, 2); R(18, 15 + H, 3, 1); R(19, 16 + H, 2, 1); R(19, 17 + H, 1, 1); break;
+      case "mustache": C(beardC); R(18, 11 + H, 4, 1); R(18, 12 + H, 1, 1); break;
+    }
+  };
+
   const headFront = () => {
     C(skin);
     if (L.fem) { R(10, 3 + H, 12, 9); R(11, 12 + H, 10, 2); R(13, 14 + H, 6, 1); }
     else { R(10, 3 + H, 12, 10); R(11, 13 + H, 10, 2); }
     if (P.belly) { C(skin); R(9, 8 + H, 1, 6); R(22, 8 + H, 1, 6); R(10, 13 + H, 12, 2); }
     C(skinDark); R(20, 6 + H, 2, L.fem ? 6 : 7);
-    C(hair); R(9, 1 + H, 14, 6); R(10, 0 + H, 12, 1); R(9, 7 + H, 2, 3); R(21, 7 + H, 2, 3);
-    C(hairLight); R(12, 2 + H, 4, 1);
-    hairFront(b, ox, oy + H, L, C);
+    if (scalp) {
+      C(skin); R(10, 1 + H, 12, 2); R(11, 0 + H, 10, 1);
+      C(skinLight); R(12, 1 + H, 3, 1);
+      if (hs === "balding") { C(hair); R(9, 4 + H, 2, 6); R(21, 4 + H, 2, 6); C(hairDark); R(9, 9 + H, 2, 1); R(21, 9 + H, 2, 1); }
+    } else {
+      C(hairBase); R(9, 1 + H, 14, 6); R(10, 0 + H, 12, 1); R(9, 7 + H, 2, 3); R(21, 7 + H, 2, 3);
+      if (!SHAVED.includes(hs)) { C(hairLight); R(12, 2 + H, 4, 1); }
+    }
+    hairFront(b, ox, oy + H, L, C, hs);
     hatFront();
     if (!blink) {
       C("#1c1a20"); R(12, 8 + H, 2, 3); R(18, 8 + H, 2, 3);
-      if (L.fem) { C("#1c1a20"); R(11, 7 + H, 3, 1); R(18, 7 + H, 3, 1); R(11, 8 + H, 1, 1); R(20, 8 + H, 1, 1); }
+      if (L.fem) { R(11, 7 + H, 3, 1); R(18, 7 + H, 3, 1); R(11, 8 + H, 1, 1); R(20, 8 + H, 1, 1); }
+      C(F.eyes); R(13, 9 + H, 1, 1); R(19, 9 + H, 1, 1);
       C("#ffffff"); R(12, 8 + H, 1, 1); R(18, 8 + H, 1, 1);
-      if (L.fem) { C("#4a9de0"); R(13, 9 + H, 1, 1); R(19, 9 + H, 1, 1); }
     } else { C("#1c1a20"); R(12, 10 + H, 2, 1); R(18, 10 + H, 2, 1); if (L.fem) { R(11, 10 + H, 1, 1); R(20, 10 + H, 1, 1); } }
     if (F.hat === "none") { C(hairDark); R(12, 6 + H, 2, 1); R(18, 6 + H, 2, 1); }
     if (L.fem) { C("#d4607a"); R(15, 12 + H, 2, 1); C("#e98aa0"); R(15, 12 + H, 1, 1); }
     else { C(skinDark); R(15, 12 + H, 2, 1); }
     C(L.fem ? "#f0a0a8" : "#eaa5a0"); R(11, 11 + H, 1, 1); R(20, 11 + H, 1, 1);
-    if (L.fem && L.hairStyle !== "long") { C("#f2c14e"); R(9, 10 + H, 1, 2); R(22, 10 + H, 1, 2); }
-    if (L.beard) { C(hair); R(10, 11 + H, 2, 3); R(20, 11 + H, 2, 3); R(11, 13 + H, 10, 2); C(skinDark); R(15, 12 + H, 2, 1); }
+    if (L.fem && !["long", "bob", "afro"].includes(hs)) { C("#f2c14e"); R(9, 10 + H, 1, 2); R(22, 10 + H, 1, 2); }
+    beardFront();
     glassesFront();
     accessoryFront(b, ox, oy + H, L, C);
   };
 
   const headBack = () => {
-    C(hair); R(9, 1 + H, 14, 13); R(10, 0 + H, 12, 1);
-    C(hairLight); R(12, 2 + H, 5, 1);
-    C(hairDark); R(9, 12 + H, 14, 2);
+    if (scalp) {
+      C(skin); R(10, 1 + H, 12, 13); R(11, 0 + H, 10, 1);
+      C(skinLight); R(12, 2 + H, 4, 1); C(skinDark); R(10, 12 + H, 12, 2);
+      if (hs === "balding") { C(hair); R(9, 5 + H, 14, 9); C(hairDark); R(9, 12 + H, 14, 2); C(hairLight); R(11, 6 + H, 1, 4); }
+    } else {
+      C(hairBase); R(9, 1 + H, 14, 13); R(10, 0 + H, 12, 1);
+      if (!SHAVED.includes(hs)) { C(hairLight); R(12, 2 + H, 5, 1); }
+      C(shade(hairBase, -28)); R(9, 12 + H, 14, 2);
+    }
     C(skin); R(14, 14 + H, 4, 3);
-    switch (L.hairStyle) {
+    switch (hs) {
       case "long": C(hair); R(8, 8 + H, 16, 17); C(hairDark); R(8, 23 + H, 16, 2); C(hairLight); R(11, 10 + H, 1, 9); break;
       case "ponytail": C(hairDark); R(14, 10 + H, 4, 3); C(hair); R(13, 12 + H, 6, 15); C(hairDark); R(13, 25 + H, 6, 2); C(hairLight); R(14, 14 + H, 1, 8); break;
+      case "braid": C(hairDark); R(14, 10 + H, 4, 3); C(hair); R(13, 12 + H, 6, 16); C(hairDark); R(13, 15 + H, 6, 1); R(13, 19 + H, 6, 1); R(13, 23 + H, 6, 1); R(14, 27 + H, 4, 1); C(hairLight); R(14, 13 + H, 1, 2); R(17, 17 + H, 1, 2); R(14, 21 + H, 1, 2); R(17, 25 + H, 1, 2); break;
       case "bun": C(hair); R(12, -4 + H, 8, 6); C(hairLight); R(14, -3 + H, 3, 1); break;
       case "curly": C(hair); R(8, 4 + H, 1, 8); R(23, 4 + H, 1, 8); R(11, -1 + H, 3, 1); R(18, -1 + H, 3, 1); break;
+      case "mohawk": C(hair); R(14, -5 + H, 4, 17); C(hairLight); R(15, -4 + H, 1, 10); break;
+      case "spiky": C(hair); R(10, -2 + H, 2, 2); R(13, -3 + H, 3, 3); R(17, -3 + H, 3, 3); R(20, -2 + H, 2, 2); break;
+      case "afro": C(hair); R(8, -4 + H, 16, 1); R(7, -3 + H, 18, 1); R(6, -2 + H, 20, 15); R(7, 13 + H, 18, 1); C(hairDark); R(7, 12 + H, 18, 1); R(8, 13 + H, 16, 1); R(8, -1 + H, 1, 1); R(12, -2 + H, 1, 1); R(16, -3 + H, 1, 1); R(20, -2 + H, 1, 1); R(23, -1 + H, 1, 1); C(hairLight); R(10, -2 + H, 1, 1); R(14, -2 + H, 1, 1); R(18, -2 + H, 1, 1); R(22, -2 + H, 1, 1); break;
+      case "bob": C(hair); R(7, 4 + H, 18, 11); C(hairDark); R(7, 13 + H, 18, 2); C(hairLight); R(9, 6 + H, 1, 6); break;
     }
-    if (F.hat === "cap") { C(F.hatColor); R(8, 0 + H, 16, 6); R(9, -1 + H, 14, 1); C(hatDark); R(8, 5 + H, 16, 2); R(13, 4 + H, 6, 2); }
-    if (F.hat === "beanie") { C(F.hatColor); R(8, -1 + H, 16, 8); R(9, -2 + H, 14, 1); C(hatDark); R(8, 5 + H, 16, 2); C(hatLight); R(13, -4 + H, 6, 2); }
-    if (F.topStyle === "hoodie") { C(topDark); R(cx - 8, 12 + T, 16, 7); C(top); R(cx - 7, 13 + T, 14, 5); }
+    hatBack();
+    if (F.topStyle === "hoodie" && F.hat !== "hood") { C(topDark); R(cx - 8, 12 + T, 16, 7); C(top); R(cx - 7, 13 + T, 14, 5); }
     if (L.accessory === "headphones" || L.accessory === "headset") { C("#222"); R(9, 3 + H, 14, 2); R(8, 7 + H, 2, 5); R(22, 7 + H, 2, 5); }
   };
 
@@ -2074,7 +2226,12 @@ function personShapes(b, ox, oy, e, o, mono) {
     if (P.belly) { R(tx - 1, 20 + T, tw + 2, 8); }
     C(topDark); R(tx, 27 + T, tw, 2); C(topLight); R(tx + 1, 17 + T, tw - 2, 2);
     if (F.topStyle === "blazer") { C(L.blazer); R(tx, 16 + T, tw, 13); C(shade(L.blazer, -30)); R(cx - 1, 16 + T, 2, 13); }
-    if (F.topStyle !== "dress") { C("#33303a"); R(tx, 28 + T, tw, 1); }
+    else if (F.topStyle === "tank") { C(skin); R(tx, 16 + T, tw, 3); C(top); R(tx + 2, 16 + T, 2, 3); R(tx + tw - 4, 16 + T, 2, 3); }
+    else if (suit) { C(topDark); R(tx + 3, 16 + T, tw - 6, 1); R(cx, 22 + T, 1, 7); }
+    else if (F.topStyle === "shirt") { C(topLight); R(tx + 3, 16 + T, tw - 6, 2); }
+    else if (F.topStyle === "polo") { C(topDark); R(tx + 3, 16 + T, tw - 6, 2); }
+    else if (F.topStyle === "sweater") { C(topDark); R(tx + 3, 16 + T, tw - 6, 1); C(topMid); R(tx + 2, 19 + T, tw - 4, 1); R(tx + 2, 22 + T, tw - 4, 1); R(tx + 2, 25 + T, tw - 4, 1); }
+    if (F.topStyle !== "dress" && !suit) { C("#33303a"); R(tx, 28 + T, tw, 1); }
     const swing = walking ? [0, 2, 0, -2][f] : 0;
     arm(axL, 17 + T + swing, 7, true); arm(axR, 17 + T - swing, 7, true);
     headBack();
@@ -2086,26 +2243,31 @@ function personShapes(b, ox, oy, e, o, mono) {
     if (!sitting) {
       if (sitFree) {
         C(clothColor); R(sx, 29, sw + 2, 5); C(clothDark); R(sx, 33, sw + 2, 1);
-        if (F.bottomStyle === "pants") { C(bottom); R(legF + 2, 34, lw, 7); C(bottomDark); R(legF + 2, 34, 1, 7); } else { C(skin); R(legF + 2, 34, lw, 7); }
-        shoe(legF + 2, 41, lw + 2);
+        if (legCloth) { C(bottom); R(legF + 2, 34, lw, 7); C(bottomDark); R(legF + 2, 34, 1, 7); } else { C(skin); R(legF + 2, 34, lw, 7); }
+        shoe(legF + 2, 41, lw + 2, true);
       } else {
         const back = Math.max(0, -step), fwd = Math.max(0, step);
-        if (F.bottomStyle === "pants") {
+        if (pantsLike) {
           C(bottomDark); R(legB - back, 29, lw, 15 - back);
           C(bottom); R(legF + fwd, 29, lw, 15 - fwd);
-        } else if (F.bottomStyle === "shorts") {
-          C(bottomDark); R(legB - back, 29, lw, 6); C(bottom); R(legF + fwd, 29, lw, 6);
-          C(skinDark); R(legB - back, 35, lw, 9 - back); C(skin); R(legF + fwd, 35, lw, 9 - fwd);
+          if (F.bottomStyle === "cargo") { C(bottomDark); R(legF + fwd + 1, 34, lw - 2, 1); R(legF + fwd + 1, 38, lw - 2, 1); C(bottomLight); R(legF + fwd + 1, 35, lw - 2, 3); }
+          else if (F.bottomStyle === "joggers") { C(shade(bottom, 50)); R(legF + fwd + 1, 29, 1, 12 - fwd); C(bottomDark); R(legF + fwd, 41 - fwd, lw, 3); C(shade(bottom, -45)); R(legB - back, 41 - back, lw, 3); }
+        } else if (F.bottomStyle === "shorts" || F.bottomStyle === "bermuda") {
+          const ch = F.bottomStyle === "bermuda" ? 9 : 6;
+          C(bottomDark); R(legB - back, 29, lw, ch); C(bottom); R(legF + fwd, 29, lw, ch);
+          if (ch === 9) { C(bottomLight); R(legF + fwd + 1, 33, lw - 2, 2); }
+          C(skinDark); R(legB - back, 29 + ch, lw, 15 - ch - back); C(skin); R(legF + fwd, 29 + ch, lw, 15 - ch - fwd);
         } else {
           const y0 = F.bottomStyle === "dress" ? 27 : 29;
-          C(clothColor); R(sx - 1, y0, sw + 3, 4); R(sx - 2, y0 + 4, sw + 5, 37 - y0);
-          C(clothDark); R(sx - 2, 36, sw + 5, 1);
-          C(skinDark); R(legB - back, 37, lw, 7 - back); C(skin); R(legF + fwd, 37, lw, 7 - fwd);
+          const hem = F.bottomStyle === "longskirt" ? 41 : 36;
+          C(clothColor); R(sx - 1, y0, sw + 3, 4); R(sx - 2, y0 + 4, sw + 5, hem - y0 - 3);
+          C(clothDark); R(sx - 2, hem, sw + 5, 1);
+          C(skinDark); R(legB - back, hem + 1, lw, 43 - hem - back); C(skin); R(legF + fwd, hem + 1, lw, 43 - hem - fwd);
         }
-        shoe(legB - back - 1, 44 - back, lw + 1); shoe(legF + fwd - 1, 44 - fwd, lw + 2);
+        shoe(legB - back - 1, 44 - back, lw + 1, true); shoe(legF + fwd - 1, 44 - fwd, lw + 2, true);
       }
     }
-    if (F.topStyle === "hoodie") { C(topDark); R(sx - 4, 11 + H, 9, 7); }
+    if (F.topStyle === "hoodie" && F.hat !== "hood") { C(topDark); R(sx - 4, 11 + H, 9, 7); }
     C(top);
     if (fem) { R(sx, 16 + T, sw, 7); R(sx + sw, 18 + T, 1, 4); R(sx + 1, 23 + T, sw - 2, 3); R(sx, 26 + T, sw, 3); }
     else R(sx, 16 + T, sw, 13);
@@ -2113,34 +2275,44 @@ function personShapes(b, ox, oy, e, o, mono) {
     if (P.shoulders) { C(top); R(sx - 1, 16 + T, sw + 2, 4); }
     C(topDark); R(sx, 17 + T, 2, fem ? 6 : 11); R(sx, 27 + T, sw, 2); C(topLight); R(sx + 4, 17 + T, 3, 3);
     if (F.topStyle === "blazer") { C(L.blazer); R(sx, 16 + T, sw, 13); C(top); R(sx + sw - 3, 16 + T, 3, 6); }
-    if (F.topStyle === "hoodie") { C(topDark); R(sx + 3, 25 + T, 5, 3); C("#f5f5f5"); R(sx + sw - 3, 17 + T, 1, 4); }
-    if (F.topStyle !== "dress") { C("#33303a"); R(sx, 28 + T, sw, 1); }
+    else if (F.topStyle === "hoodie") { C(topDark); R(sx + 3, 25 + T, 5, 3); C("#f5f5f5"); R(sx + sw - 3, 17 + T, 1, 4); }
+    else if (F.topStyle === "tank") { C(skin); R(sx, 16 + T, sw, 2); C(top); R(sx + (sw >> 1) - 1, 16 + T, 2, 2); }
+    else if (suit) { C("#f7f7f7"); R(sx + sw - 3, 16 + T, 3, 4); C(topDark); R(sx + sw - 4, 16 + T, 1, 5); R(sx + sw - 3, 20 + T, 3, 1); C(F.tie); R(sx + sw - 2, 17 + T, 1, 3); }
+    else if (F.topStyle === "shirt") { C(topLight); R(sx + sw - 4, 16 + T, 4, 2); C(topDark); R(sx + sw - 1, 18 + T, 1, 10); }
+    else if (F.topStyle === "polo") { C(topDark); R(sx + sw - 4, 16 + T, 4, 1); R(sx + sw - 2, 17 + T, 2, 1); }
+    else if (F.topStyle === "sweater") { C(topDark); R(sx + 1, 16 + T, sw - 2, 1); C(topMid); R(sx + 1, 19 + T, sw - 2, 1); R(sx + 1, 22 + T, sw - 2, 1); R(sx + 1, 25 + T, sw - 2, 1); }
+    if (F.topStyle !== "dress" && !suit) { C("#33303a"); R(sx, 28 + T, sw, 1); }
     C(skin); R(14, 14 + H, 4, 3);
     const ax = sx + Math.floor((sw - aw) / 2);
     if (o.anim === "drink") {
-      C(top); R(ax + 1, 17 + T, aw, 5); C(skin); R(ax + 3, 21 + T, 3, 3);
+      C(sleeveC); R(ax + 1, 17 + T, aw, 5); C(skin); R(ax + 3, 21 + T, 3, 3);
       C("#f5f5f5"); R(ax + 4, 18 + T, 7, 8); C(e.color); R(ax + 6, 20 + T, 3, 4);
     } else if (o.anim === "read") {
-      C(top); R(ax + 1, 17 + T, aw, 4); C("#f5f5f5"); R(ax + 2, 21 + T, 10, 8); C("#9aa"); R(ax + 4, 24 + T, 5, 1); R(ax + 4, 27 + T, 4, 1); C(skin); R(ax + 1, 24 + T, aw, 4);
+      C(sleeveC); R(ax + 1, 17 + T, aw, 4); C("#f5f5f5"); R(ax + 2, 21 + T, 10, 8); C("#9aa"); R(ax + 4, 24 + T, 5, 1); R(ax + 4, 27 + T, 4, 1); C(skin); R(ax + 1, 24 + T, aw, 4);
     } else if (o.anim === "sitfree") {
-      C(top); R(ax + 1, 17 + T, aw, 6); C(skin); R(ax + 2, 23 + T, aw, 4);
+      C(sleeveC); R(ax + 1, 17 + T, aw, 6); C(skin); R(ax + 2, 23 + T, aw, 4);
     } else {
-      C(top); R(ax + step, 17 + T, aw, 7); C(skin); R(ax + step, 24 + T, aw, 4);
+      C(sleeveC); R(ax + step, 17 + T, aw, 7); if (suit) { C("#f7f7f7"); R(ax + step, 23 + T, aw, 1); } C(skin); R(ax + step, 24 + T, aw, 4);
     }
     C(skin);
     if (L.fem) { R(12, 3 + H, 10, 9); R(13, 12 + H, 9, 2); R(15, 14 + H, 6, 1); } else { R(12, 3 + H, 10, 10); R(13, 13 + H, 8, 2); }
     if (P.belly) { C(skin); R(22, 8 + H, 1, 6); R(12, 13 + H, 10, 2); }
-    C(hair); R(10, 1 + H, 13, 6); R(11, 0 + H, 10, 1); R(10, 7 + H, 4, 7);
-    C(hairLight); R(12, 2 + H, 5, 1);
-    hairSide(b, ox, oy + H, L, C);
-    if (F.hat === "cap") { C(F.hatColor); R(9, 0 + H, 14, 6); R(10, -1 + H, 12, 1); C(hatDark); R(17, 5 + H, 9, 2); C(hatLight); R(11, 1 + H, 4, 1); }
-    if (F.hat === "beanie") { C(F.hatColor); R(9, -1 + H, 14, 8); R(10, -2 + H, 12, 1); C(hatDark); R(9, 5 + H, 14, 2); C(hatLight); R(11, -4 + H, 5, 2); }
-    if (!blink) { C("#1c1a20"); R(17, 8 + H, 2, 3); if (L.fem) R(17, 7 + H, 3, 1); C("#fff"); R(17, 8 + H, 1, 1); } else { C("#1c1a20"); R(17, 10 + H, 2, 1); }
+    if (scalp) {
+      C(skin); R(11, 1 + H, 11, 2); R(12, 0 + H, 9, 1); R(10, 3 + H, 2, 11);
+      C(skinLight); R(13, 1 + H, 3, 1);
+      if (hs === "balding") { C(hair); R(10, 3 + H, 4, 11); C(hairDark); R(10, 12 + H, 4, 2); }
+    } else {
+      C(hairBase); R(10, 1 + H, 13, 6); R(11, 0 + H, 10, 1); R(10, 7 + H, 4, 7);
+      if (!SHAVED.includes(hs)) { C(hairLight); R(12, 2 + H, 5, 1); }
+    }
+    hairSide(b, ox, oy + H, L, C, hs);
+    hatSide();
+    if (!blink) { C("#1c1a20"); R(17, 8 + H, 2, 3); if (L.fem) R(17, 7 + H, 3, 1); C(F.eyes); R(18, 9 + H, 1, 1); C("#fff"); R(17, 8 + H, 1, 1); } else { C("#1c1a20"); R(17, 10 + H, 2, 1); }
     if (F.hat === "none") { C(hairDark); R(17, 6 + H, 3, 1); }
     C(skinDark); R(22, 9 + H, 1, 2);
     if (L.fem) { C("#d4607a"); R(19, 12 + H, 2, 1); } else { C(skinDark); R(19, 12 + H, 2, 1); }
     C(L.fem ? "#f0a0a8" : "#eaa5a0"); R(16, 11 + H, 1, 1);
-    if (L.beard) { C(hair); R(14, 12 + H, 8, 3); }
+    beardSide();
     if (F.glasses === "square") { C("#6b7482"); R(16, 11 + H, 4, 1); R(20, 8 + H, 1, 3); R(14, 8 + H, 3, 1); }
     if (F.glasses === "round") { C("#3a3f4a"); R(16, 7 + H, 4, 1); R(16, 11 + H, 4, 1); R(20, 8 + H, 1, 3); R(14, 8 + H, 2, 1); }
     if (F.glasses === "sun") { C("#1c1a20"); R(16, 8 + H, 5, 3); R(14, 8 + H, 2, 1); }
@@ -2150,30 +2322,54 @@ function personShapes(b, ox, oy, e, o, mono) {
   if (flip) b.restore();
 }
 
-function hairFront(b, ox, hy, L, C) {
+// Style-specific hair on top of the base cap (front view). `hs` is the normalized style.
+function hairFront(b, ox, hy, L, C, hs) {
   const R = (x, y, w, h) => b.fillRect(ox + x, hy + y, w, h);
-  C(L.hair);
-  switch (L.hairStyle) {
+  const h = L.hair, hl = shade(h, 40), hd = shade(h, -28);
+  C(h);
+  switch (hs) {
     case "long":
       R(7, 5, 4, 19); R(21, 5, 4, 19); R(10, 6, 3, 2); R(19, 6, 3, 2);
-      C(shade(L.hair, -28)); R(7, 22, 4, 2); R(21, 22, 4, 2);
-      C(shade(L.hair, 40)); R(8, 8, 1, 6); R(22, 9, 1, 5);
+      C(hd); R(7, 22, 4, 2); R(21, 22, 4, 2);
+      C(hl); R(8, 8, 1, 6); R(22, 9, 1, 5);
       break;
-    case "bun": R(12, -4, 8, 6); R(11, 6, 4, 2); R(19, 6, 3, 1); C(shade(L.hair, 40)); R(14, -3, 3, 1); R(11, 2, 1, 3); break;
-    case "ponytail": R(10, 6, 5, 2); R(18, 6, 4, 1); C(shade(L.hair, 40)); R(12, 2, 4, 1); R(11, 3, 1, 3); C(shade(L.hair, -22)); R(17, 2, 1, 5); break;
+    case "bun": R(12, -4, 8, 6); R(11, 6, 4, 2); R(19, 6, 3, 1); C(hl); R(14, -3, 3, 1); R(11, 2, 1, 3); break;
+    case "ponytail": case "braid": R(10, 6, 5, 2); R(18, 6, 4, 1); C(hl); R(12, 2, 4, 1); R(11, 3, 1, 3); C(shade(h, -22)); R(17, 2, 1, 5); break;
     case "curly": R(8, 4, 1, 8); R(23, 4, 1, 8); R(11, -1, 3, 1); R(18, -1, 3, 1); R(15, -1, 2, 1); break;
-    default: R(10, 6, 5, 2); C(shade(L.hair, -22)); R(16, 2, 1, 5);
+    case "bald": case "balding": case "buzz": break;
+    case "mohawk": R(14, -5, 4, 12); C(hl); R(15, -4, 1, 9); break;
+    case "spiky": R(10, 6, 5, 2); R(10, -2, 2, 2); R(13, -3, 3, 3); R(17, -3, 3, 3); R(20, -2, 2, 2); C(hl); R(14, -2, 1, 2); R(18, -2, 1, 2); break;
+    case "afro":
+      R(8, -4, 16, 1); R(7, -3, 18, 1); R(6, -2, 20, 8); R(6, 6, 3, 4); R(23, 6, 3, 4); R(7, 10, 1, 1); R(24, 10, 1, 1);
+      C(hd); R(7, 9, 2, 1); R(23, 9, 2, 1); R(8, -1, 1, 1); R(12, -2, 1, 1); R(16, -3, 1, 1); R(20, -2, 1, 1); R(23, -1, 1, 1); R(7, 3, 1, 1); R(24, 3, 1, 1);
+      C(hl); R(10, -2, 1, 1); R(14, -2, 1, 1); R(18, -2, 1, 1); R(22, -2, 1, 1); R(9, 1, 1, 1); R(22, 1, 1, 1);
+      break;
+    case "bob": R(7, 4, 3, 11); R(22, 4, 3, 11); R(10, 6, 4, 2); R(18, 6, 4, 1); C(hd); R(7, 13, 3, 2); R(22, 13, 3, 2); C(hl); R(8, 6, 1, 5); R(23, 6, 1, 5); break;
+    case "sidepart": R(9, 6, 8, 2); R(17, 6, 3, 1); C(hd); R(19, 1, 1, 6); C(hl); R(11, 2, 5, 1); break;
+    default: R(10, 6, 5, 2); C(shade(h, -22)); R(16, 2, 1, 5);
   }
 }
 
-function hairSide(b, ox, hy, L, C) {
+function hairSide(b, ox, hy, L, C, hs) {
   const R = (x, y, w, h) => b.fillRect(ox + x, hy + y, w, h);
-  C(L.hair);
-  switch (L.hairStyle) {
-    case "long": R(7, 5, 7, 19); C(shade(L.hair, -28)); R(7, 22, 7, 2); C(shade(L.hair, 40)); R(9, 8, 1, 7); break;
-    case "bun": R(7, -3, 8, 7); C(shade(L.hair, 40)); R(9, -2, 3, 1); break;
-    case "ponytail": R(5, 7, 6, 14); R(8, 4, 5, 4); C(shade(L.hair, -28)); R(5, 12, 6, 2); C(shade(L.hair, 40)); R(7, 8, 1, 6); break;
+  const h = L.hair, hl = shade(h, 40), hd = shade(h, -28);
+  C(h);
+  switch (hs) {
+    case "long": R(7, 5, 7, 19); C(hd); R(7, 22, 7, 2); C(hl); R(9, 8, 1, 7); break;
+    case "bun": R(7, -3, 8, 7); C(hl); R(9, -2, 3, 1); break;
+    case "ponytail": R(5, 7, 6, 14); R(8, 4, 5, 4); C(hd); R(5, 12, 6, 2); C(hl); R(7, 8, 1, 6); break;
+    case "braid": R(8, 4, 5, 4); R(6, 8, 5, 18); C(hd); R(6, 11, 5, 1); R(6, 15, 5, 1); R(6, 19, 5, 1); R(6, 23, 5, 1); R(7, 26, 3, 1); C(hl); R(7, 9, 1, 1); R(9, 13, 1, 1); R(7, 17, 1, 1); R(9, 21, 1, 1); break;
     case "curly": R(8, 4, 2, 9); R(12, -1, 3, 1); R(17, -1, 3, 1); break;
+    case "bald": case "balding": case "buzz": break;
+    case "mohawk": R(10, -5, 11, 6); R(9, 0, 3, 4); C(hl); R(12, -4, 7, 1); break;
+    case "spiky": R(10, 6, 7, 2); R(11, -2, 2, 2); R(14, -3, 3, 3); R(18, -3, 3, 3); R(21, -2, 1, 2); C(hl); R(15, -2, 1, 2); break;
+    case "afro":
+      R(9, -4, 15, 1); R(8, -3, 17, 1); R(7, -2, 19, 8); R(7, 6, 3, 4); R(8, 10, 2, 1);
+      C(hd); R(8, 9, 2, 1); R(9, -1, 1, 1); R(13, -2, 1, 1); R(17, -3, 1, 1); R(21, -2, 1, 1); R(24, -1, 1, 1); R(8, 3, 1, 1);
+      C(hl); R(11, -2, 1, 1); R(15, -2, 1, 1); R(19, -2, 1, 1); R(23, -2, 1, 1);
+      break;
+    case "bob": R(7, 4, 7, 11); R(14, 6, 7, 2); C(hd); R(7, 13, 7, 2); C(hl); R(9, 6, 1, 6); break;
+    case "sidepart": R(10, 6, 8, 2); R(17, 6, 4, 1); break;
     default: R(10, 6, 7, 2);
   }
 }
@@ -2192,24 +2388,39 @@ function accessoryFront(b, ox, hy, L, C) {
   }
 }
 
+function hexRgb(hex) { const n = parseInt(hex.slice(1), 16); return [n >> 16, (n >> 8) & 255, n & 255]; }
+
 function shade(hex, delta) {
   if (!hex || hex[0] !== "#") return hex;
-  const n = parseInt(hex.slice(1), 16);
   const c = (v) => Math.max(0, Math.min(255, v + delta));
-  return `rgb(${c(n >> 16)},${c((n >> 8) & 255)},${c(n & 255)})`;
+  const [r, g, b] = hexRgb(hex);
+  return `rgb(${c(r)},${c(g)},${c(b)})`;
+}
+
+// Blends two hex colors (t = 0 → a, 1 → b); returns hex so the result can be shaded again.
+function mix(a, b, t) {
+  if (!a || a[0] !== "#" || !b || b[0] !== "#") return a;
+  const A = hexRgb(a), B = hexRgb(b);
+  return "#" + A.map((v, i) => Math.round(v + (B[i] - v) * t).toString(16).padStart(2, "0")).join("");
+}
+
+function lum(hex) {
+  if (!hex || hex[0] !== "#") return 128;
+  const [r, g, b] = hexRgb(hex);
+  return (r * 299 + g * 587 + b * 114) / 1000;
 }
 
 // Head-and-shoulders portrait as a data URL; `full` renders the whole standing figure.
 function portraitOf(e, scale = 3, full = false, dir = "down", anim = "stand", frame = 0) {
   const emp = { look: e.look || { skin: "#f1c9a5", hair: "#3b2a20", hairStyle: "short", top: e.color, bottom: "#2f3548" }, color: e.color || (e.look && e.look.top) || "#61afef", seed: 0 };
-  const w = 34, h = full ? 52 : 24;
+  const w = 34, h = full ? 55 : 27; // 5px of headroom for tall hair and hats
   const c = document.createElement("canvas");
   c.width = w * scale; c.height = h * scale;
   const g = c.getContext("2d");
   g.imageSmoothingEnabled = false;
   const tmp = document.createElement("canvas");
   tmp.width = w; tmp.height = h;
-  drawPerson(tmp.getContext("2d"), 1, 2, emp, { dir, anim, frame, t: 5000 });
+  drawPerson(tmp.getContext("2d"), 1, 5, emp, { dir, anim, frame, t: 5000 });
   g.drawImage(tmp, 0, 0, c.width, c.height);
   return c.toDataURL();
 }
@@ -2217,3 +2428,4 @@ function portraitOf(e, scale = 3, full = false, dir = "down", anim = "stand", fr
 window.Office = Office;
 window.drawPerson = drawPerson;
 window.portraitOf = portraitOf;
+window.shoeDefault = shoeDefault;

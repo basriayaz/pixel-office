@@ -109,6 +109,13 @@
       "meeting": "KONTROL ODASI",
       "lounge": "LOUNGE",
       "archive": "KAYIT KABİNİ"
+    },
+    "travel": {
+      "kitchen": "KAFE",
+      "office": "ACENTE",
+      "meeting": "ROTA ODASI",
+      "lounge": "PLAJ LOUNGE",
+      "archive": "BAGAJ"
     }
   },
   "status": {
@@ -477,7 +484,8 @@
       "football": "Futbol kulübü",
       "fashion": "Moda atölyesi",
       "gothic": "Gotik malikâne",
-      "music": "Müzik stüdyosu"
+      "music": "Müzik stüdyosu",
+      "travel": "Seyahat acentesi"
     },
     "closedBanner": "Ofis kapatıldı — tekrar açmak için <code>pixel-office</code> ya da Ofis.command",
     "shutdown": {

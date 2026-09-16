@@ -109,6 +109,13 @@
       "meeting": "CONTROL ROOM",
       "lounge": "LOUNGE",
       "archive": "VOCAL BOOTH"
+    },
+    "travel": {
+      "kitchen": "CAFÉ",
+      "office": "AGENCY",
+      "meeting": "ROUTE ROOM",
+      "lounge": "BEACH LOUNGE",
+      "archive": "BAGGAGE"
     }
   },
   "status": {
@@ -477,7 +484,8 @@
       "football": "Football club",
       "fashion": "Fashion atelier",
       "gothic": "Gothic manor",
-      "music": "Music studio"
+      "music": "Music studio",
+      "travel": "Travel agency"
     },
     "closedBanner": "Office closed — start it again with <code>pixel-office</code>",
     "shutdown": {

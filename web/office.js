@@ -456,6 +456,7 @@ function drawFloors(b, theme = "default") {
     else if (floor === "cobble") drawCobble(b, x, y, w, h);
     else if (floor === "studioCarpet") drawStudioCarpet(b, x, y, w, h);
     else if (floor === "darkTiles") drawDarkTiles(b, x, y, w, h);
+    else if (floor === "sand") drawSand(b, x, y, w, h);
     else if (floor === "checker") drawChecker(b, x, y, w, h);
     else drawConcrete(b, x, y, w, h);
   }
@@ -479,6 +480,8 @@ function drawFloors(b, theme = "default") {
     b.fillStyle = "#5a1d24"; b.fillRect(14, 11 * TILE + 14, 132, 132);
     b.fillStyle = "#ffd166"; for (let i = 0; i < 12; i++) { b.fillRect(16 + i * 11, 11 * TILE + 16, 5, 2); b.fillRect(16 + i * 11, 11 * TILE + 138, 5, 2); b.fillRect(16, 11 * TILE + 18 + i * 11, 2, 5); b.fillRect(140, 11 * TILE + 18 + i * 11, 2, 5); }
     b.fillStyle = "#3a1f28"; b.fillRect(60, 11 * TILE + 60, 40, 40); b.fillStyle = "#ffd166"; b.fillRect(78, 11 * TILE + 66, 4, 28); b.fillRect(66, 11 * TILE + 78, 28, 4);
+  } else if (T.rug === "compass") {
+    drawCompassRug(b, 8, 11 * TILE + 8);
   } else if (T.rug === "vinyl") {
     drawVinylRug(b, 8, 11 * TILE + 8);
   } else if (T.rug === "round") {
@@ -557,9 +560,12 @@ function drawWalls(b, blocked, doors, t, theme = "default") {
       for (let i = 0; i < 14; i++) if ((t / 600 + i * 1.7) % 5 < 4) b.fillRect(wx + 4 + ((i * 37) % 90), 10 + ((i * 13) % 30), 1 + (i % 3 === 0 ? 1 : 0), 1);
       b.fillStyle = "#fff3b0"; b.fillRect(wx + 70, 14, 8, 8); b.fillStyle = sky.top; b.fillRect(wx + 74, 12, 8, 8);
     } else {
+      // clouds drift across the pane — clipped so they never spill onto the wall
+      b.save(); b.beginPath(); b.rect(wx, 8, 96, 40); b.clip();
       b.fillStyle = "rgba(255,255,255,.9)";
       const cx = wx + ((t / 90) % 140) - 40;
       b.fillRect(cx, 18, 22, 6); b.fillRect(cx + 5, 14, 12, 4); b.fillRect(cx + 40, 30, 16, 5); b.fillRect(cx + 44, 27, 8, 3);
+      b.restore();
       b.fillStyle = "#3f7f3f"; b.fillRect(wx, 42, 96, 6); b.fillStyle = "#5aa05a"; for (let i = 0; i < 12; i++) b.fillRect(wx + i * 8, 40 + (i % 2), 6, 3);
     }
     b.fillStyle = "#eef2f4"; b.fillRect(wx + 47, 8, 2, 40); b.fillRect(wx, 27, 96, 2);
@@ -1544,6 +1550,193 @@ function drawWallDecorMusic(b, t) {
 }
 PROPS.music = { counter: drawStudioBar, fridge: drawSpeakerStack, roundTable: drawDrumKit, meetingTable: drawMixingConsole, sofa: drawStudioCouch, coffeeTable: drawSynth, bookshelf: drawVinylShelf, lamp: drawMicStand, cabinets: drawGuitarRack, boxes: drawAmpStack, printer: drawCameraRig, cooler: drawRingLight, coffeeStation: drawHeadphoneStand, wallDecor: drawWallDecorMusic };
 THEME_NAMES.push("music");
+
+// --- travel theme (travel agency / Footyprint) ---
+THEMES.travel = { wall: { face: "#5f9fb0", top: "#74b3c3", base: "#4f8797", base2: "#3c6874", edge: "#2f525c", inner: "#7fb3c1", innerLight: "#9cc7d3", innerDark: "#3a5f69" }, floors: { kitchen: "tiles", office: "wood", meeting: "carpet", lounge: "sand", archive: "concrete" }, rug: "compass" };
+
+function drawSand(b, x, y, w, h) {
+  b.fillStyle = "#ecdcae"; b.fillRect(x, y, w, h);
+  b.fillStyle = "#e2cf9a"; for (let py = y + 3; py < y + h; py += 7) for (let px = x + ((py / 7) % 3) * 3; px < x + w; px += 9) b.fillRect(px, py, 2, 1);
+  b.fillStyle = "#f6ebc8"; for (let py = y + 9; py < y + h; py += 13) for (let px = x + ((py / 13) % 2) * 6; px < x + w; px += 17) b.fillRect(px, py, 1, 1);
+}
+let compassRug = null;
+function drawCompassRug(b, x, y) {
+  if (!compassRug) {
+    compassRug = document.createElement("canvas"); compassRug.width = 144; compassRug.height = 144;
+    const g = compassRug.getContext("2d");
+    disc(g, 72, 72, 70, "#2f6f8f"); disc(g, 72, 72, 66, "#f4efe1"); disc(g, 72, 72, 58, "#2f6f8f"); disc(g, 72, 72, 54, "#f4efe1");
+    g.fillStyle = "#d9d0b8"; for (let a = 0; a < 32; a++) { const r = a % 4 === 0 ? 44 : 50; g.fillRect(72 + Math.round(Math.cos(a / 32 * Math.PI * 2) * r) - 1, 72 + Math.round(Math.sin(a / 32 * Math.PI * 2) * r) - 1, 2, 2); }
+    const star = (col, len, rot) => { for (let i = 0; i < 4; i++) { const a = rot + i * Math.PI / 2; for (let d = 0; d < len; d++) { const wdt = Math.max(1, Math.round((len - d) / len * 7)); const px = 72 + Math.cos(a) * d, py = 72 + Math.sin(a) * d; g.fillStyle = col; g.fillRect(Math.round(px - Math.sin(a) * wdt / 2), Math.round(py + Math.cos(a) * wdt / 2), 1, 1); for (let k = -wdt; k <= wdt; k++) g.fillRect(Math.round(px - Math.sin(a) * k / 2), Math.round(py + Math.cos(a) * k / 2), 1, 1); } } };
+    star("#c9b98a", 30, Math.PI / 4); star("#1f3a5a", 44, 0);
+    g.fillStyle = "#d9534f"; for (let d = 0; d < 44; d++) { const wdt = Math.max(1, Math.round((44 - d) / 44 * 7)); for (let k = -wdt; k <= wdt; k++) g.fillRect(72 + Math.round(k / 2), 72 - d, 1, 1); }
+    disc(g, 72, 72, 4, "#1f3a5a"); disc(g, 72, 72, 2, "#f4efe1");
+    g.fillStyle = "#1f3a5a"; g.fillRect(70, 8, 2, 8); g.fillRect(70, 8, 1, 1); g.fillRect(72, 9, 1, 2); g.fillRect(73, 11, 1, 2); g.fillRect(74, 8, 1, 8); // N
+  }
+  b.drawImage(compassRug, x, y);
+}
+function drawSuitcase(b, x, y, w, h, col, handle = true) {
+  outlineRect(b, x, y, w, h, col); b.fillStyle = shade(col, -30); b.fillRect(x, y + Math.floor(h / 2) - 1, w, 2); b.fillRect(x + 3, y, 2, h); b.fillRect(x + w - 5, y, 2, h);
+  b.fillStyle = shade(col, 28); b.fillRect(x + 1, y + 1, w - 2, 1);
+  if (handle) { b.fillStyle = OUTLINE; b.fillRect(x + Math.floor(w / 2) - 4, y - 3, 8, 3); b.fillStyle = col; b.fillRect(x + Math.floor(w / 2) - 2, y - 2, 4, 1); }
+}
+function drawPlaneIcon(b, x, y, col, dir = 1) { // small side-view plane, dir 1 = flying right
+  b.fillStyle = col; b.fillRect(x, y + 2, 12, 2); b.fillRect(x + 10 * (dir > 0 ? 1 : 0) + (dir > 0 ? 0 : 0), y + 1, 2, 1);
+  b.fillRect(x + (dir > 0 ? 4 : 6), y, 3, 2); b.fillRect(x + (dir > 0 ? 3 : 7), y + 4, 4, 1); b.fillRect(x + (dir > 0 ? 0 : 10), y - 1, 2, 3);
+}
+function drawTravelCafe(b, x, y, t) { // kitchen counter: airport café
+  outlineRect(b, x, y + 6, 160, 26, "#8fbfa6"); b.fillStyle = "#f4efe1"; b.fillRect(x, y + 6, 160, 4); b.fillStyle = "#5f8f78"; b.fillRect(x, y + 30, 160, 2);
+  for (let i = 0; i < 5; i++) { b.fillStyle = "#6fa58a"; b.fillRect(x + i * 32 + 2, y + 14, 28, 16); b.fillStyle = "#f4efe1"; b.fillRect(x + i * 32 + 13, y + 20, 6, 2); }
+  // espresso machine
+  outlineRect(b, x + 8, y - 12, 26, 20, "#c9c9cf"); b.fillStyle = "#8a8a94"; b.fillRect(x + 8, y - 12, 26, 3); b.fillStyle = "#d9534f"; b.fillRect(x + 12, y - 6, 6, 2); drawLed(b, x + 28, y - 7, Math.floor(t / 700) % 2, "#4ade80");
+  b.fillStyle = "rgba(255,255,255,.5)"; b.fillRect(x + 14, y - 20 - (Math.floor(t / 300) % 3), 1, 3);
+  // cups, cake stand, juice
+  for (const [mx, c] of [[42, "#f4efe1"], [54, "#2f6f8f"]]) { outlineRect(b, x + mx, y - 3, 8, 8, c); b.fillStyle = OUTLINE; b.fillRect(x + mx + 9, y - 1, 2, 4); }
+  b.fillStyle = OUTLINE; b.fillRect(x + 76, y - 8, 24, 2); b.fillRect(x + 86, y - 6, 4, 6); b.fillStyle = "#f4efe1"; b.fillRect(x + 77, y - 7, 22, 1);
+  outlineRect(b, x + 80, y - 16, 16, 8, "#e0a458"); b.fillStyle = "#c97a3a"; b.fillRect(x + 82, y - 14, 12, 1); b.fillStyle = "#f4efe1"; b.fillRect(x + 84, y - 16, 8, 2);
+  for (let i = 0; i < 3; i++) { const c = ["#ff8c42", "#ffd166", "#4ade80"][i]; outlineRect(b, x + 112 + i * 12, y - 10, 8, 16, c); b.fillStyle = "#f4efe1"; b.fillRect(x + 114 + i * 12, y - 12, 4, 2); b.fillStyle = OUTLINE; b.fillRect(x + 118 + i * 12, y - 16, 1, 6); }
+  // little "i" info sign at the end
+  outlineRect(b, x + 146, y - 14, 12, 12, "#2f6f8f"); b.fillStyle = "#f4efe1"; b.fillRect(x + 151, y - 11, 2, 2); b.fillRect(x + 151, y - 8, 2, 5);
+}
+function drawGlobe(b, x, y, t = 0) { // fridge slot: globe on a stand
+  outlineRect(b, x + 8, y + 20, 16, 6, "#5c3d22"); b.fillStyle = OUTLINE; b.fillRect(x + 14, y + 8, 4, 12); b.fillStyle = "#c9a781"; b.fillRect(x + 15, y + 9, 2, 10);
+  b.fillStyle = OUTLINE; b.fillRect(x + 4, y - 20, 3, 30); b.fillRect(x + 4, y - 22, 12, 3); b.fillRect(x + 4, y + 8, 12, 3); b.fillStyle = "#c9a781"; b.fillRect(x + 5, y - 19, 1, 28);
+  disc(b, x + 17, y - 6, 13, OUTLINE); disc(b, x + 17, y - 6, 12, "#3b8bc9");
+  const spin = Math.floor(t / 250) % 24;
+  b.fillStyle = "#4ade80";
+  for (const [ox, oy, w, h] of [[-9, -8, 7, 5], [-6, -3, 5, 8], [1, -9, 8, 4], [3, -4, 5, 6], [5, 3, 4, 4], [-2, 5, 4, 3]]) { const px = ((ox + spin) % 24) - 12; if (px + w <= 10 && px >= -10) b.fillRect(x + 17 + px, y - 6 + oy, w, h); }
+  b.fillStyle = "rgba(255,255,255,.25)"; b.fillRect(x + 9, y - 14, 4, 2); b.fillRect(x + 8, y - 12, 2, 4);
+}
+function drawCafeTable(b, x, y) { // roundTable slot: café table with a map
+  b.fillStyle = OUTLINE; b.fillRect(x + 6, y + 2, 52, 26); b.fillRect(x + 2, y + 6, 60, 18);
+  b.fillStyle = "#f4efe1"; b.fillRect(x + 7, y + 3, 50, 24); b.fillRect(x + 3, y + 7, 58, 16);
+  b.fillStyle = "#d9d0b8"; b.fillRect(x + 7, y + 23, 50, 4); b.fillStyle = OUTLINE; b.fillRect(x + 28, y + 26, 8, 6);
+  // folded map
+  outlineRect(b, x + 10, y + 7, 26, 14, "#bfe3f5"); b.fillStyle = "#4ade80"; b.fillRect(x + 13, y + 9, 6, 4); b.fillRect(x + 22, y + 12, 8, 5); b.fillRect(x + 28, y + 8, 4, 3); b.fillStyle = "#d9534f"; b.fillRect(x + 16, y + 10, 2, 2); b.fillRect(x + 25, y + 14, 2, 2);
+  b.fillStyle = "#8fa7b8"; b.fillRect(x + 22, y + 7, 1, 14);
+  // coffee + compass
+  outlineRect(b, x + 42, y + 9, 8, 7, "#f4efe1"); b.fillStyle = "#6b4a2b"; b.fillRect(x + 43, y + 10, 6, 2); b.fillStyle = OUTLINE; b.fillRect(x + 51, y + 11, 2, 3);
+  disc(b, x + 46, y + 22, 4, OUTLINE); disc(b, x + 46, y + 22, 3, "#c9a781"); b.fillStyle = "#d9534f"; b.fillRect(x + 46, y + 20, 1, 2); b.fillStyle = "#1f3a5a"; b.fillRect(x + 46, y + 22, 1, 2);
+}
+function drawMapTable(b, x, y, t = 0) { // meeting table slot 128x48: world map table
+  outlineRect(b, x + 4, y + 4, 120, 48, "#5c3d22"); b.fillStyle = "#7a5230"; b.fillRect(x + 4, y + 4, 120, 4); b.fillStyle = "#3e2a18"; b.fillRect(x + 4, y + 46, 120, 6);
+  outlineRect(b, x + 10, y + 10, 108, 34, "#bfe3f5");
+  b.fillStyle = "#6fc276";
+  for (const [ox, oy, w, h] of [[4, 4, 16, 10], [8, 14, 10, 12], [26, 3, 20, 8], [30, 11, 12, 6], [46, 4, 30, 10], [52, 14, 10, 8], [78, 16, 12, 6], [64, 24, 8, 4], [88, 6, 10, 8]]) b.fillRect(x + 10 + ox, y + 10 + oy, w, h);
+  b.fillStyle = "#3f9d4f"; for (const [ox, oy] of [[6, 6], [30, 5], [50, 7], [90, 8]]) b.fillRect(x + 10 + ox, y + 10 + oy, 4, 2);
+  // route string with pins
+  const pins = [[14, 9], [40, 7], [62, 8], [84, 19]];
+  b.fillStyle = "#d9534f"; for (let i = 0; i < pins.length - 1; i++) { const [ax, ay] = pins[i], [bx, by] = pins[i + 1]; for (let k = 0; k < 8; k++) if (k % 2 === 0) b.fillRect(x + 10 + Math.round(ax + (bx - ax) * k / 8), y + 10 + Math.round(ay + (by - ay) * k / 8), 1, 1); }
+  for (const [px, py] of pins) { b.fillStyle = OUTLINE; b.fillRect(x + 10 + px, y + 10 + py - 4, 1, 4); b.fillStyle = "#d9534f"; b.fillRect(x + 9 + px, y + 10 + py - 6, 3, 3); }
+  // model plane moving along the route
+  const seg = Math.floor(t / 2400) % (pins.length - 1), f = (t % 2400) / 2400; const [ax, ay] = pins[seg], [bx, by] = pins[seg + 1];
+  drawPlaneIcon(b, x + 10 + Math.round(ax + (bx - ax) * f) - 4, y + 10 + Math.round(ay + (by - ay) * f) - 6, "#f4efe1", 1);
+  // magnifier + tickets
+  disc(b, x + 104, y + 36, 5, OUTLINE); disc(b, x + 104, y + 36, 4, "rgba(255,255,255,.55)"); b.fillStyle = OUTLINE; b.fillRect(x + 108, y + 40, 6, 2);
+  outlineRect(b, x + 14, y + 36, 14, 6, "#ffd166"); b.fillStyle = "#d9534f"; b.fillRect(x + 16, y + 38, 6, 1); b.fillStyle = OUTLINE; b.fillRect(x + 24, y + 37, 1, 4);
+}
+function drawBeachSofa(b, x, y) { // sofa slot: rattan sofa under a beach umbrella
+  // umbrella
+  b.fillStyle = OUTLINE; b.fillRect(x + 47, y - 46, 3, 54); b.fillStyle = "#c9a781"; b.fillRect(x + 48, y - 45, 1, 52);
+  for (let r = 0; r < 12; r++) { const half = Math.round(Math.sqrt(12 * 12 - (12 - r) * (12 - r)) * 3.6); b.fillStyle = OUTLINE; b.fillRect(x + 48 - half - 1, y - 58 + r, half * 2 + 3, 1); }
+  for (let r = 0; r < 11; r++) { const half = Math.round(Math.sqrt(12 * 12 - (12 - r) * (12 - r)) * 3.6); for (let px = -half; px <= half; px++) { b.fillStyle = Math.floor((px + half) / 11) % 2 ? "#f4efe1" : "#d9534f"; b.fillRect(x + 48 + px, y - 57 + r, 1, 1); } }
+  b.fillStyle = "#f4efe1"; b.fillRect(x + 47, y - 62, 3, 5);
+  // rattan sofa
+  outlineRect(b, x + 2, y - 14, 92, 22, "#b98b52"); b.fillStyle = "#a67a45"; for (let i = 0; i < 11; i++) b.fillRect(x + 6 + i * 8, y - 12, 1, 18); b.fillStyle = "#d1a468"; b.fillRect(x + 2, y - 14, 92, 2);
+  outlineRect(b, x, y + 6, 96, 22, "#b98b52"); b.fillStyle = "#3b8bc9"; b.fillRect(x + 6, y + 8, 26, 12); b.fillRect(x + 35, y + 8, 26, 12); b.fillRect(x + 64, y + 8, 26, 12);
+  b.fillStyle = "#f4efe1"; for (const sx of [6, 35, 64]) { b.fillRect(x + sx + 6, y + 8, 3, 12); b.fillRect(x + sx + 16, y + 8, 3, 12); }
+  b.fillStyle = "#a67a45"; b.fillRect(x, y + 22, 96, 6); outlineRect(b, x - 2, y + 2, 8, 24, "#b98b52"); outlineRect(b, x + 90, y + 2, 8, 24, "#b98b52");
+}
+function drawBambooTable(b, x, y) { // coffee table slot: bamboo table with cocktails + starfish
+  outlineRect(b, x + 12, y + 8, 72, 16, "#c9a781"); b.fillStyle = "#b98b52"; for (let i = 0; i < 9; i++) b.fillRect(x + 14 + i * 8, y + 9, 1, 14); b.fillStyle = "#e0c89a"; b.fillRect(x + 12, y + 8, 72, 2);
+  b.fillStyle = OUTLINE; b.fillRect(x + 16, y + 24, 3, 6); b.fillRect(x + 77, y + 24, 3, 6);
+  for (const [cx, c] of [[24, "#ff8c42"], [40, "#4ade80"]]) { outlineRect(b, x + cx, y - 2, 8, 10, c); b.fillStyle = "#f4efe1"; b.fillRect(x + cx + 1, y - 1, 6, 2); b.fillStyle = OUTLINE; b.fillRect(x + cx + 3, y + 8, 2, 4); b.fillStyle = "#d9534f"; b.fillRect(x + cx + 5, y - 7, 5, 4); b.fillStyle = OUTLINE; b.fillRect(x + cx + 7, y - 4, 1, 4); }
+  b.fillStyle = "#ff8c42"; b.fillRect(x + 60, y + 2, 2, 8); b.fillRect(x + 57, y + 5, 8, 2); b.fillRect(x + 58, y + 3, 1, 1); b.fillRect(x + 63, y + 3, 1, 1); b.fillRect(x + 58, y + 8, 1, 1); b.fillRect(x + 63, y + 8, 1, 1);
+  b.fillStyle = "#f4efe1"; b.fillRect(x + 70, y + 4, 6, 4); b.fillStyle = "#e9c4d3"; b.fillRect(x + 71, y + 5, 4, 2);
+}
+function drawBrochureRack(b, x, y) { // bookshelf slot: brochure rack
+  outlineRect(b, x + 2, y - 30, 28, 60, "#f4efe1"); b.fillStyle = "#d9d0b8"; b.fillRect(x + 4, y - 28, 24, 56);
+  const cols = ["#3b8bc9", "#ff8c42", "#4ade80", "#d9534f", "#ffd166", "#c678dd"];
+  for (let s = 0; s < 3; s++) { b.fillStyle = "#b9b09a"; b.fillRect(x + 4, y - 12 + s * 18 - 2, 24, 3); for (let i = 0; i < 3; i++) { const c = cols[(s * 3 + i) % cols.length]; outlineRect(b, x + 6 + i * 8, y - 26 + s * 18, 6, 13, c); b.fillStyle = "#f4efe1"; b.fillRect(x + 7 + i * 8, y - 24 + s * 18, 4, 1); b.fillRect(x + 7 + i * 8, y - 21 + s * 18, 3, 1); b.fillStyle = shade(c, -30); b.fillRect(x + 7 + i * 8, y - 17 + s * 18, 4, 3); } }
+  drawPlaneIcon(b, x + 10, y - 38, "#2f6f8f", 1);
+}
+function drawPalm(b, x, y) { // lamp slot: palm tree in a pot
+  outlineRect(b, x + 6, y + 14, 20, 14, "#c97a3a"); b.fillStyle = "#e0a458"; b.fillRect(x + 6, y + 14, 20, 3);
+  b.fillStyle = OUTLINE; b.fillRect(x + 13, y - 26, 6, 40); b.fillStyle = "#a67a45"; b.fillRect(x + 14, y - 25, 4, 38); b.fillStyle = "#7a5230"; for (let i = 0; i < 6; i++) b.fillRect(x + 14, y - 22 + i * 6, 4, 1);
+  const frond = (dx, dy, len, dir) => { for (let i = 0; i < len; i++) { const px = x + 16 + dx + Math.round(i * dir * 1.6), py = y - 26 + dy + Math.round(i * 0.7 + (i > len * 0.6 ? (i - len * 0.6) * 0.5 : 0)); b.fillStyle = OUTLINE; b.fillRect(px - 1, py - 1, 5, 5); } for (let i = 0; i < len; i++) { const px = x + 16 + dx + Math.round(i * dir * 1.6), py = y - 26 + dy + Math.round(i * 0.7 + (i > len * 0.6 ? (i - len * 0.6) * 0.5 : 0)); b.fillStyle = i % 2 ? "#3f9d4f" : "#4ade80"; b.fillRect(px, py, 3, 3); } };
+  frond(0, -2, 12, -1); frond(0, -2, 12, 1); frond(0, -8, 10, -1); frond(0, -8, 10, 1); frond(-1, -10, 7, 0);
+  b.fillStyle = "#7a5230"; b.fillRect(x + 12, y - 24, 3, 3); b.fillRect(x + 18, y - 23, 3, 3);
+}
+function drawLuggageShelf(b, x, y) { // cabinets slot (96 wide): stacked suitcases
+  outlineRect(b, x + 2, y + 20, 92, 6, "#8a8a94"); b.fillStyle = "#c9c9cf"; b.fillRect(x + 2, y + 20, 92, 2);
+  drawSuitcase(b, x + 6, y + 2, 26, 18, "#d9534f"); drawSuitcase(b, x + 36, y + 6, 22, 14, "#ffd166"); drawSuitcase(b, x + 62, y, 28, 20, "#3b8bc9");
+  drawSuitcase(b, x + 10, y - 16, 20, 14, "#4ade80"); drawSuitcase(b, x + 40, y - 12, 18, 14, "#c678dd", false); drawSuitcase(b, x + 64, y - 18, 24, 14, "#ff8c42");
+  b.fillStyle = "#f4efe1"; b.fillRect(x + 70, y + 6, 6, 4); b.fillRect(x + 14, y - 12, 5, 3); b.fillStyle = "#d9534f"; b.fillRect(x + 44, y - 8, 4, 4);
+}
+function drawLuggageCart(b, x, y) { // boxes slot (64 wide): trolley with suitcases
+  b.fillStyle = OUTLINE; b.fillRect(x + 6, y + 22, 52, 3); b.fillRect(x + 52, y - 6, 3, 30); b.fillRect(x + 40, y - 8, 16, 3);
+  b.fillStyle = "#8a8a94"; b.fillRect(x + 7, y + 23, 50, 1); b.fillRect(x + 53, y - 5, 1, 28);
+  disc(b, x + 12, y + 26, 3, OUTLINE); disc(b, x + 12, y + 26, 2, "#3a3a40"); disc(b, x + 50, y + 26, 3, OUTLINE); disc(b, x + 50, y + 26, 2, "#3a3a40");
+  drawSuitcase(b, x + 10, y + 6, 34, 16, "#2f6f8f", false); drawSuitcase(b, x + 14, y - 6, 26, 12, "#ff8c42", false); drawSuitcase(b, x + 20, y - 14, 16, 8, "#ffd166");
+  b.fillStyle = "#f4efe1"; b.fillRect(x + 30, y + 10, 8, 5); b.fillStyle = "#d9534f"; b.fillRect(x + 32, y + 12, 4, 1);
+}
+function drawCheckinKiosk(b, x, y, t = 0) { // printer slot: check-in kiosk
+  outlineRect(b, x + 18, y - 2, 28, 30, "#2f6f8f"); b.fillStyle = "#3f8fb0"; b.fillRect(x + 18, y - 2, 28, 3);
+  outlineRect(b, x + 14, y - 22, 36, 22, "#1c1c22"); b.fillStyle = "#bfe3f5"; b.fillRect(x + 16, y - 20, 32, 18);
+  b.fillStyle = "#2f6f8f"; b.fillRect(x + 18, y - 18, 20, 2); b.fillRect(x + 18, y - 14, 14, 1); b.fillRect(x + 18, y - 11, 24, 1);
+  b.fillStyle = Math.floor(t / 600) % 2 ? "#4ade80" : "#3b8bc9"; b.fillRect(x + 18, y - 7, 28, 4); b.fillStyle = "#f4efe1"; b.fillRect(x + 22, y - 6, 12, 2);
+  drawPlaneIcon(b, x + 34, y - 19, "#d9534f", 1);
+  b.fillStyle = "#1c1c22"; b.fillRect(x + 22, y + 6, 20, 2); b.fillStyle = "#ffd166"; b.fillRect(x + 24, y + 8 + (Math.floor(t / 400) % 3), 16, 5); b.fillStyle = "#d9534f"; b.fillRect(x + 26, y + 10 + (Math.floor(t / 400) % 3), 8, 1);
+  b.fillStyle = "#c9c9cf"; b.fillRect(x + 20, y + 16, 24, 1);
+}
+function drawSignpost(b, x, y) { // cooler slot: direction signpost
+  outlineRect(b, x + 10, y + 22, 12, 6, "#7a5230"); b.fillStyle = OUTLINE; b.fillRect(x + 14, y - 34, 4, 56); b.fillStyle = "#a67a45"; b.fillRect(x + 15, y - 33, 2, 54);
+  const arrow = (ay, w, col, dir) => { b.fillStyle = OUTLINE; b.fillRect(dir > 0 ? x + 12 : x + 20 - w, ay - 1, w + 1, 9); b.fillRect(dir > 0 ? x + 12 + w : x + 18 - w, ay + 1, 2, 5); b.fillRect(dir > 0 ? x + 14 + w : x + 16 - w, ay + 3, 1, 1); b.fillStyle = col; b.fillRect(dir > 0 ? x + 13 : x + 21 - w, ay, w - 1, 7); b.fillStyle = "#f4efe1"; b.fillRect(dir > 0 ? x + 16 : x + 23 - w, ay + 3, w - 8, 1); };
+  arrow(y - 30, 20, "#d9534f", 1); arrow(y - 20, 24, "#3b8bc9", -1); arrow(y - 10, 18, "#4ade80", 1); arrow(y, 22, "#ff8c42", -1);
+}
+function drawCarryOn(b, x, y, t = 0) { // coffeeStation slot: rolling suitcase with stickers
+  b.fillStyle = OUTLINE; b.fillRect(x + 10, y - 16, 3, 12); b.fillRect(x + 19, y - 16, 3, 12); b.fillRect(x + 10, y - 18, 12, 3);
+  drawSuitcase(b, x + 6, y - 6, 20, 26, "#c678dd", false);
+  b.fillStyle = "#ffd166"; b.fillRect(x + 9, y, 5, 4); b.fillStyle = "#4ade80"; b.fillRect(x + 17, y + 6, 6, 4); b.fillStyle = "#f4efe1"; b.fillRect(x + 10, y + 12, 6, 3);
+  disc(b, x + 10, y + 22, 3, OUTLINE); disc(b, x + 10, y + 22, 2, "#3a3a40"); disc(b, x + 22, y + 22, 3, OUTLINE); disc(b, x + 22, y + 22, 2, "#3a3a40");
+  b.fillStyle = "#2f6f8f"; b.fillRect(x + 28, y + 8, 8, 6); b.fillStyle = "#ffd166"; b.fillRect(x + 30, y + 10, 4, 2);
+}
+function drawClockOffset(b, ccx, ccy, offsetH, label) {
+  const d = new Date(); const h = (d.getUTCHours() + offsetH + 24) % 24, m = d.getUTCMinutes();
+  b.fillStyle = "#2b2b2b"; b.fillRect(ccx - 11, ccy - 11, 22, 22); b.fillStyle = "#f7f7f7"; b.fillRect(ccx - 9, ccy - 9, 18, 18);
+  b.fillStyle = "#2b2b2b"; for (let i = 0; i < 4; i++) { const a = (i / 4) * Math.PI * 2; b.fillRect(ccx + Math.round(Math.cos(a) * 7) - 1, ccy + Math.round(Math.sin(a) * 7) - 1, 2, 2); }
+  const ha = ((h % 12) + m / 60) / 12 * Math.PI * 2 - Math.PI / 2, ma = m / 60 * Math.PI * 2 - Math.PI / 2;
+  line(b, ccx, ccy, ccx + Math.cos(ha) * 4, ccy + Math.sin(ha) * 4, "#2b2b2b"); line(b, ccx, ccy, ccx + Math.cos(ma) * 6, ccy + Math.sin(ma) * 6, "#2b2b2b");
+  b.fillStyle = label; b.fillRect(ccx - 6, ccy + 13, 12, 3);
+}
+function drawWallDecorTravel(b, t) {
+  // kitchen wall: bunting flags + world clocks
+  b.fillStyle = "#f4efe1"; b.fillRect(8, 8, 200, 1);
+  const flags = [["#d9534f", "#f4efe1"], ["#3b8bc9", "#ffd166"], ["#4ade80", "#f4efe1"], ["#ff8c42", "#f4efe1"], ["#c678dd", "#ffd166"], ["#2f6f8f", "#d9534f"], ["#ffd166", "#3b8bc9"], ["#f4efe1", "#d9534f"]];
+  for (let i = 0; i < 8; i++) { const px = 12 + i * 25; b.fillStyle = flags[i][0]; b.fillRect(px, 9, 14, 8); b.fillStyle = flags[i][1]; b.fillRect(px, 13, 14, 2); b.fillStyle = flags[i][0]; b.fillRect(px + 4, 17, 6, 3); }
+  drawClockOffset(b, 40, 36, 3, "#d9534f"); drawClockOffset(b, 100, 36, 1, "#3b8bc9"); drawClockOffset(b, 160, 36, -4, "#ffd166");
+  // Footyprint poster (footprint icon) on the office wall, left of the first window
+  outlineRect(b, 8 * TILE - 2, 10, 26, 36, "#2f6f8f"); b.fillStyle = "#3f8fb0"; b.fillRect(8 * TILE, 12, 22, 32);
+  const fx = 8 * TILE + 6, fy = 16; b.fillStyle = "#f4efe1"; b.fillRect(fx + 2, fy + 8, 8, 12); b.fillRect(fx + 3, fy + 20, 6, 4); b.fillRect(fx + 1, fy + 3, 3, 4); b.fillRect(fx + 5, fy + 2, 2, 3); b.fillRect(fx + 8, fy + 3, 2, 3); b.fillRect(fx + 11, fy + 5, 2, 3);
+  b.fillStyle = "#ffd166"; b.fillRect(fx + 2, fy + 26, 10, 1); b.fillRect(fx + 4, fy + 28, 6, 1);
+  // world map mural between the windows with blinking pins + a plane on its route
+  const mx = 9 * TILE + 102, my = 8; outlineRect(b, mx, my, 148, 44, "#2f6f8f"); b.fillStyle = "#3b8bc9"; b.fillRect(mx + 2, my + 2, 144, 40);
+  b.fillStyle = "#6fc276";
+  for (const [ox, oy, w, h] of [[8, 6, 24, 14], [14, 20, 12, 16], [40, 4, 30, 10], [44, 14, 14, 8], [70, 6, 44, 14], [84, 20, 12, 10], [118, 26, 16, 8], [96, 30, 8, 4], [128, 8, 14, 10]]) b.fillRect(mx + 2 + ox, my + 2 + oy, w, h);
+  b.fillStyle = "#3f9d4f"; for (const [ox, oy] of [[12, 10], [44, 7], [76, 10], [132, 12]]) b.fillRect(mx + 2 + ox, my + 2 + oy, 5, 2);
+  const pins = [[20, 12], [50, 9], [80, 12], [124, 28]];
+  b.fillStyle = "#f4efe1"; for (let i = 0; i < pins.length - 1; i++) { const [ax, ay] = pins[i], [bx, by] = pins[i + 1]; for (let k = 0; k < 10; k += 2) b.fillRect(mx + 2 + Math.round(ax + (bx - ax) * k / 10), my + 2 + Math.round(ay + (by - ay) * k / 10), 1, 1); }
+  pins.forEach(([px, py], i) => { const on = Math.floor(t / 500) % pins.length === i; b.fillStyle = on ? "#ffd166" : "#d9534f"; b.fillRect(mx + 1 + px, my + 1 + py, 3, 3); if (on) { b.fillStyle = "rgba(255,209,102,.25)"; b.fillRect(mx - 1 + px, my - 1 + py, 7, 7); } });
+  const seg = Math.floor(t / 2000) % (pins.length - 1), f = (t % 2000) / 2000; const [ax, ay] = pins[seg], [bx, by] = pins[seg + 1];
+  drawPlaneIcon(b, mx + 2 + Math.round(ax + (bx - ax) * f) - 5, my + 2 + Math.round(ay + (by - ay) * f) - 6, "#f4efe1", 1);
+  // departures board on the meeting wall
+  const dx = 23 * TILE + 4; outlineRect(b, dx, 8, 200, 42, "#1c1e24"); b.fillStyle = "#0a0c10"; b.fillRect(dx + 3, 11, 194, 36);
+  b.fillStyle = "#ffd166"; b.fillRect(dx + 8, 14, 44, 3); drawPlaneIcon(b, dx + 180, 12, "#ffd166", 1);
+  const rows = 4; for (let r = 0; r < rows; r++) { const flip = Math.floor((t / 900 + r * 0.7)) % 6; const y = 21 + r * 6; b.fillStyle = "#e8e6e0"; b.fillRect(dx + 8, y, 20 + ((r * 7 + flip) % 3) * 6, 2); b.fillRect(dx + 60, y, 24 + ((r * 5 + flip) % 4) * 5, 2); b.fillStyle = flip === r ? "#4ade80" : (r === 2 && flip === 5 ? "#d9534f" : "#ffd166"); b.fillRect(dx + 120, y, 16, 2); b.fillStyle = "#8fa7b8"; b.fillRect(dx + 150, y, 10 + ((r + flip) % 3) * 4, 2); }
+  // clock in the office
+  drawClock(b, 21 * TILE + 8, 28);
+}
+PROPS.travel = { counter: drawTravelCafe, fridge: drawGlobe, roundTable: drawCafeTable, meetingTable: drawMapTable, sofa: drawBeachSofa, coffeeTable: drawBambooTable, bookshelf: drawBrochureRack, lamp: drawPalm, cabinets: drawLuggageShelf, boxes: drawLuggageCart, printer: drawCheckinKiosk, cooler: drawSignpost, coffeeStation: drawCarryOn, wallDecor: drawWallDecorTravel };
+THEME_NAMES.push("travel");
 
 // ---------- theme previews (for the office picker) ----------
 function renderThemePreview(theme, width = 240) {

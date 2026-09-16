@@ -117,6 +117,8 @@ body.offline .offline-banner { display: block; }
 .modal-card.welcome h2 { font-family: "Silkscreen", monospace; font-size: 15px; color: var(--accent); margin: 4px 0 8px; }
 .modal-card.welcome ol { padding-left: 20px; margin: 6px 0 14px; display: grid; gap: 10px; line-height: 1.5; font-size: 13px; }
 #btnNotify.off { opacity: .45; }
+.lang-select { background: var(--bg-2); color: var(--muted); border: 1px solid var(--line); border-radius: 8px; font: inherit; font-size: 11px; padding: 4px 6px; height: 26px; cursor: pointer; }
+.lang-select:hover { color: var(--text); border-color: var(--accent); }
 .modal-card .actions.right { justify-content: flex-end; }
 .icon-btn.power:hover { border-color: var(--error); color: var(--error); }
 body.closed .office-wrap { opacity: .45; filter: grayscale(.6); }

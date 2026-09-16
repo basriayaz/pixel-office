@@ -11,4 +11,4 @@ First public release.
 - Multiple offices per server with per-office working folders; native folder picker.
 - Colleague messaging between employees.
 - Desktop notifications, first-run sample employees and welcome card, shutdown from UI/CLI.
-- English and Turkish.
+- English and Turkish; live language switching from the top bar, OS language detected on first run.

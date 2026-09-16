@@ -533,6 +533,10 @@
       "denied": "Bildirimler tarayıcı ayarlarında engelli",
       "waiting": "{name} seni bekliyor",
       "replied": "{name} cevap verdi"
+    },
+    "lang": {
+      "title": "Dil",
+      "changed": "Dil değişti — çalışanlar bir sonraki mesajda yeni dile geçer"
     }
   }
 }

@@ -533,6 +533,10 @@
       "denied": "Notifications are blocked in the browser settings",
       "waiting": "{name} needs you",
       "replied": "{name} replied"
+    },
+    "lang": {
+      "title": "Language",
+      "changed": "Language changed — employees switch on their next message"
     }
   }
 }

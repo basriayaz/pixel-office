@@ -30,7 +30,7 @@ pixel-office          # başlat
 pixel-office stop     # kapat (ya da üst bardaki ⏻ düğmesi, ya da Ctrl+C)
 ```
 
-macOS, Linux ve Windows'ta (PowerShell) çalışır. Türkçe arayüz için `~/.pixel-office/config.json` içine `"locale": "tr"` yaz; ilk açılışta `PIXEL_OFFICE_LOCALE=tr npx github:basriayaz/pixel-office` da olur.
+macOS, Linux ve Windows'ta (PowerShell) çalışır. Dili istediğin zaman üst bardaki 🌐 menüsünden değiştirirsin (ilk açılışta işletim sisteminin dili seçilir).
 
 ## Tur
 

@@ -8,18 +8,18 @@ import { Employee, refreshPrompt, type EmployeeConfig } from "./employee.js";
 import { Store } from "./store.js";
 import { expandHome, loadEmployees, loadEmployee, listSkills, writeAgentFile, createEmployeeDir, archiveEmployeeDir, writeSkill, readSkill, deleteSkill, syncClaudeAgents } from "./agents.js";
 import { loadSettings, configPath, readRawConfig, writeRawConfig, officeDefFromRaw, officeIdOf, absPath, displayPath, rootFromEnv, initRoot, PKG_ROOT, THEMES, type OfficeDef, type Theme } from "./config.js";
-import { loadLocale, availableLocales, Translator } from "./i18n.js";
+import { loadLocale, availableLocales, detectLocale, Translator } from "./i18n.js";
 import { initRuntime, t } from "./runtime.js";
 
 const R = rootFromEnv();
 // Global mode sets itself up on first run; project mode expects `pixel-office init`.
 let firstRun = false;
 if (!fs.existsSync(configPath(R))) {
-  if (R.mode === "global") { initRoot(R, { locale: process.env.PIXEL_OFFICE_LOCALE }); console.log(`Created ${configPath(R)}`); firstRun = true; }
+  if (R.mode === "global") { initRoot(R, { locale: detectLocale() }); console.log(`Created ${configPath(R)}`); firstRun = true; }
   else console.log(`No ${configPath(R)} — using defaults (run "pixel-office init" to create one).`);
 }
 const settings = loadSettings(R);
-const locale = loadLocale(settings.locale);
+let locale = loadLocale(settings.locale);
 initRuntime(settings, new Translator(locale.data));
 
 interface OfficeRt {
@@ -138,6 +138,23 @@ app.post("/api/pick-folder", (req, res) => {
     if (code !== 0 || !chosen) return res.json({ cancelled: true, error: code === 2 ? err.trim() : undefined });
     res.json({ path: chosen, display: displayPath(chosen), relative: chosen === R.defaultCwd ? "." : R.mode === "project" && !path.relative(R.base, chosen).startsWith("..") ? path.relative(R.base, chosen) : null });
   });
+});
+
+// Switch the UI + prompt language live. Idle employees get the new prompt on their next message; busy ones on reset.
+app.put("/api/locale", async (req, res) => {
+  const code = String(req.body?.locale ?? "");
+  if (!availableLocales().some((l) => l.code === code)) return res.status(400).json({ error: t("server.notFound") });
+  const raw = readRawConfig(R); raw.locale = code; writeRawConfig(R, raw);
+  settings.locale = code;
+  locale = loadLocale(code);
+  initRuntime(settings, new Translator(locale.data));
+  const defaultNames = new Set(availableLocales().map((l) => String((loadLocale(l.code).data.ui as { offices?: { default?: string } }).offices?.default ?? "")));
+  for (const o of offices.values()) {
+    if (defaultNames.has(o.def.name)) o.def.name = t("ui.offices.default"); // unnamed single office follows the language
+    for (const e of o.employees.values()) if (e.status === "idle") await e.applyConfig(e.cfg).catch(() => {});
+  }
+  broadcast({ type: "reload" });
+  res.json({ ok: true, locale: code });
 });
 
 // Shut the server down from the UI / CLI (localhost only, so no auth): interrupts running turns, tells clients, exits.

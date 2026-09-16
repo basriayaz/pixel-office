@@ -84,6 +84,7 @@ function renderOfficeTabs() {
 
 function handle(m) {
   if (m.type === "shutdown") { markClosed(); return; }
+  if (m.type === "reload") { setTimeout(() => location.reload(), 300); return; }
   if (m.type === "init") {
     for (const o of m.offices) mergeRoster(o.id, o.employees, { id: o.id, name: o.name, cwd: o.cwd, theme: o.theme });
     const hired = params.get("hired");

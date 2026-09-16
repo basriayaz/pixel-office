@@ -30,7 +30,7 @@ pixel-office          # start
 pixel-office stop     # stop (or the ⏻ button in the top bar, or Ctrl+C)
 ```
 
-Works on macOS, Linux and Windows (PowerShell). Set the UI language with `"locale": "tr"` in `~/.pixel-office/config.json` — English and Turkish ship today, [add yours](#contributing).
+Works on macOS, Linux and Windows (PowerShell). Switch the language any time from the 🌐 menu in the top bar (the first run picks your OS language). English and Turkish ship today, [add yours](#contributing).
 
 ## A tour
 

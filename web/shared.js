@@ -41,6 +41,21 @@ async function api(method, url, body) {
   return data;
 }
 
+// Language switcher (🌐) — rendered into #langHost on every page.
+(function buildLangSwitch() {
+  const host = document.getElementById("langHost");
+  if (!host || !Array.isArray(PO.locales) || PO.locales.length < 2) return;
+  const sel = document.createElement("select");
+  sel.className = "lang-select"; sel.title = t("ui.lang.title");
+  for (const l of PO.locales) { const o = document.createElement("option"); o.value = l.code; o.textContent = `🌐 ${l.name}`; o.selected = l.code === PO.locale; sel.appendChild(o); }
+  sel.onchange = async () => {
+    sel.disabled = true;
+    try { await api("PUT", "/api/locale", { locale: sel.value }); toast(t("ui.lang.changed")); setTimeout(() => location.reload(), 600); }
+    catch (e) { toast(e.message); sel.disabled = false; }
+  };
+  host.appendChild(sel);
+})();
+
 // Adds a "Choose…" button next to a folder input; opens the native folder dialog on the server's machine.
 function attachFolderPicker(input) {
   if (!input || input.dataset.picker) return;

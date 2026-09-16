@@ -13,8 +13,25 @@ export function loadLocale(code: string): { code: string; data: Locale } {
   return { code, data: deepMerge(base, JSON.parse(fs.readFileSync(file, "utf8")) as Locale) };
 }
 
-export function availableLocales(): string[] {
-  return fs.readdirSync(path.join(PKG_ROOT, "locales")).filter((f) => f.endsWith(".json")).map((f) => f.slice(0, -5));
+export function availableLocales(): Array<{ code: string; name: string }> {
+  const dir = path.join(PKG_ROOT, "locales");
+  return fs.readdirSync(dir).filter((f) => f.endsWith(".json")).map((f) => {
+    const code = f.slice(0, -5);
+    let name = code;
+    try { name = String((JSON.parse(fs.readFileSync(path.join(dir, f), "utf8")) as Locale).name ?? code); } catch {}
+    return { code, name };
+  }).sort((a, b) => a.code.localeCompare(b.code));
+}
+
+// Best guess of the user's language from the OS ($LANG on Unix, the Intl default locale on Windows), if we ship it.
+export function detectLocale(): string {
+  const codes = new Set(availableLocales().map((l) => l.code));
+  const candidates = [process.env.PIXEL_OFFICE_LOCALE, process.env.LC_ALL, process.env.LC_MESSAGES, process.env.LANG, Intl.DateTimeFormat().resolvedOptions().locale];
+  for (const c of candidates) {
+    const code = String(c ?? "").toLowerCase().split(/[._@-]/)[0];
+    if (code && codes.has(code)) return code;
+  }
+  return "en";
 }
 
 function deepMerge(a: Locale, b: Locale): Locale {

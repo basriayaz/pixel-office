@@ -1,7 +1,7 @@
 {
   "name": "pixel-office",
   "version": "0.1.0",
-  "description": "A pixel-art virtual office for your Claude agents: hire AI employees, give them tasks, watch them work, teach them things they never forget.",
+  "description": "A pixel-art office for your Claude agents: hire AI employees, give them jobs, teach them things they never forget.",
   "license": "MIT",
   "type": "module",
   "bin": {
@@ -39,5 +39,23 @@
     "@types/ws": "^8.5.0",
     "tsx": "^4.19.0",
     "typescript": "^5.6.0"
-  }
+  },
+  "author": "Basri Ayaz (https://github.com/basriayaz)",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/basriayaz/pixel-office.git"
+  },
+  "homepage": "https://github.com/basriayaz/pixel-office#readme",
+  "bugs": {
+    "url": "https://github.com/basriayaz/pixel-office/issues"
+  },
+  "keywords": [
+    "claude",
+    "claude-code",
+    "agent-sdk",
+    "ai-agents",
+    "pixel-art",
+    "virtual-office",
+    "anthropic"
+  ]
 }

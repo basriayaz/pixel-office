@@ -1,4 +1,5 @@
 import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import { expandHome as expandHomeRaw } from "./config.js";
 import type { EmployeeConfig } from "./employee.js";
@@ -195,6 +196,8 @@ export function syncClaudeAgents(office: OfficeDef, emps: EmployeeConfig[]) {
   const { syncClaudeAgents: enabled, multiOffice } = getSettings();
   if (!enabled) return;
   const cwd = office.cwd;
+  // Never write user-level agents: an office without a working folder (home) is not a project.
+  if (path.resolve(cwd) === path.resolve(os.homedir())) return;
   const dir = path.join(cwd, ".claude", "agents");
   fs.mkdirSync(dir, { recursive: true });
   const ownMarker = `<!-- pixel-office office=${office.id} -->`;

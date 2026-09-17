@@ -119,6 +119,7 @@ function handle(m) {
   switch (m.type) {
     case "status":
       e.status = m.status;
+      e.sickUntil = m.sickUntil || 0;
       if (current) { office.setStatus(m.id, m.status, m.reason); renderRoster(); }
       renderOfficeTabs();
       if (selected) { renderHead(e); updateTyping(e); }
@@ -229,7 +230,10 @@ $("chatResize").addEventListener("pointerdown", (ev) => {
   handle.addEventListener("pointermove", move); handle.addEventListener("pointerup", up);
 });
 
+function clearAttachments() { if (attachments.length) { attachments.length = 0; renderAttachments(); } }
+
 function openChat(id) {
+  if (state.selected !== id) clearAttachments();
   const e = cur()?.employees.get(id);
   if (!e) return;
   state.selected = id;
@@ -246,6 +250,7 @@ function openChat(id) {
 }
 
 function closeChat() {
+  clearAttachments();
   state.selected = null;
   office.setSelected(null);
   document.body.classList.remove("chat-open");
@@ -267,7 +272,9 @@ function renderHead(e) {
   $("chatRole").textContent = e.role;
   const chip = $("chatStatus");
   chip.className = "chip " + e.status;
-  chip.textContent = (STATUS_T[e.status] || e.status) + (e.cost ? ` · $${e.cost.toFixed(2)}` : "");
+  const label = e.status === "sick" ? t("ui.chat.sickChip", { min: Math.max(1, Math.ceil(((e.sickUntil || 0) - Date.now()) / 60e3)) }) : STATUS_T[e.status] || e.status;
+  chip.textContent = label + (e.cost ? ` · $${e.cost.toFixed(2)}` : "");
+  $("btnCure").hidden = e.status !== "sick";
   $("btnStop").classList.toggle("active", e.status === "working" || e.status === "waiting");
 }
 
@@ -351,7 +358,8 @@ function buildRow(e, msg) {
   if (msg.role === "assistant") {
     row.innerHTML = `<img class="row-avatar" src="${office.portrait(e.id)}" alt="" /><div class="row-main"><div class="row-meta">${escapeHtml(e.name)} · ${timeStr(msg.ts)}</div><div class="bubble">${md(msg.text)}</div></div>`;
   } else if (msg.role === "user") {
-    row.innerHTML = `<div class="row-main"><div class="bubble">${escapeHtml(msg.text)}</div><div class="row-meta">${timeStr(msg.ts)}</div></div>`;
+    const imgs = msg.images?.length ? `<div class="images">${msg.images.map((u) => `<a href="${escapeHtml(u)}" target="_blank" rel="noopener"><img src="${escapeHtml(u)}" alt="" /></a>`).join("")}</div>` : "";
+    row.innerHTML = `<div class="row-main"><div class="bubble">${imgs}${escapeHtml(msg.text)}</div><div class="row-meta">${timeStr(msg.ts)}</div></div>`;
   } else if (msg.role === "colleague") {
     row.innerHTML = `<div class="row-main"><div class="row-meta">💬 ${escapeHtml(t("ui.chat.fromColleague", { name: msg.from || "" }))} · ${timeStr(msg.ts)}</div><div class="bubble">${md(msg.text)}</div></div>`;
   } else if (msg.role === "auto") {
@@ -530,6 +538,7 @@ $("officeAdd").onsubmit = async (ev) => {
 office.onClick(openChat);
 $("btnClose").onclick = closeChat;
 $("btnStop").onclick = () => { if (state.selected) send({ type: "interrupt", id: state.selected }); };
+$("btnCure").onclick = () => { if (state.selected) send({ type: "cure", id: state.selected }); };
 
 let resetArmed = null;
 $("btnReset").onclick = () => {
@@ -554,11 +563,64 @@ function autoGrow() {
   input.style.height = Math.min(160, input.scrollHeight) + "px";
 }
 input.addEventListener("input", autoGrow);
+// ---- pasted / dropped images, sent along with the next message ----
+const attachments = []; // { media_type, data (base64), url (data URL for the preview) }
+const IMAGE_TYPES = ["image/png", "image/jpeg", "image/gif", "image/webp"];
+const MAX_SIDE = 2000;
+function renderAttachments() {
+  const host = $("chatAttach");
+  host.innerHTML = "";
+  host.hidden = attachments.length === 0;
+  attachments.forEach((a, i) => {
+    const d = document.createElement("div");
+    d.className = "thumb";
+    d.innerHTML = `<img src="${a.url}" alt="" /><button type="button" title="${escapeHtml(t("ui.chat.attachRemove"))}">×</button>`;
+    d.querySelector("button").onclick = () => { attachments.splice(i, 1); renderAttachments(); };
+    host.appendChild(d);
+  });
+}
+// Reads an image file, shrinking very large ones so the payload stays small; gifs are kept as-is.
+function addImageFile(file) {
+  if (!IMAGE_TYPES.includes(file.type) || attachments.length >= 10) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    const url = reader.result;
+    const done = (u, type) => { attachments.push({ media_type: type, data: u.slice(u.indexOf(",") + 1), url: u }); renderAttachments(); input.focus(); };
+    if (file.type === "image/gif") return done(url, file.type);
+    const img = new Image();
+    img.onload = () => {
+      const k = Math.min(1, MAX_SIDE / Math.max(img.width, img.height));
+      if (k === 1) return done(url, file.type);
+      const c = document.createElement("canvas");
+      c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
+      c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+      const type = file.type === "image/png" ? "image/png" : "image/jpeg";
+      done(c.toDataURL(type, 0.9), type);
+    };
+    img.onerror = () => done(url, file.type);
+    img.src = url;
+  };
+  reader.readAsDataURL(file);
+}
+input.addEventListener("paste", (ev) => {
+  const files = [...(ev.clipboardData?.items || [])].filter((it) => it.kind === "file").map((it) => it.getAsFile()).filter(Boolean);
+  if (!files.length) return;
+  ev.preventDefault();
+  files.forEach(addImageFile);
+});
+const chatEl = $("chat");
+chatEl.addEventListener("dragover", (ev) => { if (state.selected && [...ev.dataTransfer.types].includes("Files")) { ev.preventDefault(); chatEl.classList.add("dragover"); } });
+chatEl.addEventListener("dragleave", () => chatEl.classList.remove("dragover"));
+chatEl.addEventListener("drop", (ev) => { ev.preventDefault(); chatEl.classList.remove("dragover"); [...ev.dataTransfer.files].forEach(addImageFile); });
+
 $("chatForm").onsubmit = (ev) => {
   ev.preventDefault();
   const text = input.value.trim();
-  if (!text || !state.selected) return;
-  send({ type: "send", id: state.selected, text });
+  if ((!text && !attachments.length) || !state.selected) return;
+  const images = attachments.map(({ media_type, data }) => ({ media_type, data }));
+  send({ type: "send", id: state.selected, text, ...(images.length ? { images } : {}) });
+  attachments.length = 0;
+  renderAttachments();
   input.value = "";
   autoGrow();
 };
@@ -575,6 +637,8 @@ document.addEventListener("keydown", (ev) => {
 
 function tickClock() {
   $("clock").textContent = new Date().toLocaleTimeString(LOCALE_TAG, { hour: "2-digit", minute: "2-digit" });
+  const e = state.selected && cur()?.employees.get(state.selected);
+  if (e && e.status === "sick") renderHead(e); // minutes left on the chip
 }
 tickClock();
 setInterval(tickClock, 10000);

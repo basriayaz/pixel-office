@@ -26,6 +26,7 @@ export interface OfficeSettings {
   memoryFile: string;
   syncClaudeAgents: boolean;
   refreshHours: number;
+  sickness: boolean; // employees occasionally fall ill for a few minutes
   multiOffice: boolean;
   offices: OfficeDef[];
 }
@@ -144,6 +145,7 @@ export function loadSettings(R: Root): OfficeSettings {
     memoryFile: String(merged.memoryFile),
     syncClaudeAgents: merged.syncClaudeAgents !== false,
     refreshHours: Number(merged.refreshHours),
+    sickness: merged.sickness !== false && process.env.PIXEL_OFFICE_SICKNESS !== "0",
     multiOffice,
     offices,
   };

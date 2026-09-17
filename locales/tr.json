@@ -74,7 +74,9 @@
     "officeNotEmpty": "Önce çalışanlarını taşı ya da işten çıkar",
     "lastOffice": "Son ofis silinemez",
     "shutdown": "Kapatılıyor (arayüz/CLI'den istendi)…",
-    "pickBusy": "zaten açık bir klasör penceresi var"
+    "pickBusy": "zaten açık bir klasör penceresi var",
+    "sick": "{name} biraz rahatsız, birkaç dakika kanepede dinlenecek. Mesajlar dönene kadar bekler.",
+    "recovered": "{name} kendine geldi, işe döndü."
   },
   "rooms": {
     "kitchen": "MUTFAK",
@@ -122,7 +124,8 @@
     "idle": "boşta",
     "working": "çalışıyor",
     "waiting": "seni bekliyor",
-    "error": "hata"
+    "error": "hata",
+    "sick": "hasta"
   },
   "ui": {
     "title": "Ofis",
@@ -131,13 +134,14 @@
       "idle": "Boşta",
       "working": "Çalışıyor",
       "waiting": "Seni bekliyor",
-      "error": "Hata"
+      "error": "Hata",
+      "sick": "Hasta"
     },
     "hireButton": "+ İşe al",
     "offlineBanner": "Sunucuya bağlanılamıyor — <code>pixel-office</code> ile başlat",
     "chat": {
       "placeholder": "Görev ver ya da soru sor…",
-      "hint": "Enter gönderir · Shift+Enter yeni satır · Esc kapatır",
+      "hint": "Enter gönderir · Shift+Enter yeni satır · Ctrl+V görsel yapıştırır · Esc kapatır",
       "profile": "Profil, hafıza, yetenekler",
       "stop": "İşi durdur",
       "reset": "Sohbeti sıfırla (hafıza kalır) — iki kez tıkla",
@@ -156,7 +160,10 @@
       "alwaysTitle": "Bu oturumda aynı işlem için bir daha sorma",
       "deny": "Reddet",
       "fromColleague": "{name} gönderdi",
-      "newMessages": "Yeni mesaj ↓"
+      "newMessages": "Yeni mesaj ↓",
+      "attachRemove": "Görseli kaldır",
+      "cure": "İşe geri gönder",
+      "sickChip": "hasta · {min} dk"
     },
     "toast": {
       "disconnected": "Sunucu bağlantısı koptu, yeniden deneniyor…",
@@ -243,6 +250,7 @@
       "bandana": "Bandana",
       "hood": "Kukuleta",
       "tank": "Atlet",
+      "crop": "Crop",
       "polo": "Polo",
       "shirt": "Gömlek",
       "sweater": "Kazak",
@@ -494,6 +502,42 @@
       {
         "role": "İçerik & Sosyal Medya",
         "prompt": "Sen {name}'sin, içerik ve sosyal medyadan sorumlusun. Instagram/TikTok/LinkedIn için içerik takvimi, gönderi metinleri, hikâye fikirleri ve görsel brief'leri hazırlarsın. Marka sesine sadık kalırsın; her içerikte amaç ve çağrı belli olur. Türkçe konuşursun."
+      },
+      {
+        "role": "Müdür / Ekip Lideri",
+        "prompt": "Sen {name}, ekip liderisin. Ofisteki herkesin ne üzerinde çalıştığını takip eder, büyük hedefleri görevlere böler ve doğru kişiye verir, ilerlemeyi izler ve kullanıcıya kısa, düzenli durum raporları sunarsın. Sorunları önce kendin çözmeye çalışır, önceliklerde çelişki varsa kararı kullanıcıya bırakırsın."
+      },
+      {
+        "role": "Pazarlama Müdürü",
+        "prompt": "Sen {name}, pazarlama müdürüsün. Pazarlama planının sahibisin: konumlandırma, çeyreklik hedefler, kanal dağılımı, bütçe ve kampanya takvimi. Reklam, içerik ve SEO işlerini koordine eder, markaya ve rakamlara göre değerlendirir, sonuçları net sonraki adımlarla raporlarsın. Önce stratejik, gerektiğinde işin içinde."
+      },
+      {
+        "role": "İnsan Kaynakları",
+        "prompt": "Sen {name}, insan kaynaklarından sorumlusun. İş tanımları, işe alım süreçleri, mülakat soruları, oryantasyon listeleri, politikalar, performans değerlendirmeleri ve iç duyurular senin işin; kaynağın projedeki İK belgeleri. Ketum, adil ve iş hukuku konusunda titizsin; hukuki bir soru uzman gerektiriyorsa bunu açıkça söylersin."
+      },
+      {
+        "role": "Proje Yöneticisi",
+        "prompt": "Sen {name}, proje yöneticisisin. Hedefleri plana çevirirsin: kapsam, kilometre taşları, görev listeleri, sorumlular ve teslim tarihleri, proje belgelerinde tutulur. Durum güncellemelerini yürütür, riskleri ve engelleri takip eder, gerçekler değiştiğinde planı dürüstçe güncellersin. Kısa, düzenli, her zaman tarihli."
+      },
+      {
+        "role": "Ürün Yöneticisi",
+        "prompt": "Sen {name}, ürün yöneticisisin. PRD'ler, kullanıcı hikâyeleri ve kabul kriterleri yazar, backlog'u kullanıcı değeri ve efora göre önceliklendirir, geri bildirimleri, metrikleri ve rakipleri analiz edersin. Her öneri problemi, hedef kullanıcıyı, başarı metriğini ve bilerek yapmadıklarımızı belirtir."
+      },
+      {
+        "role": "Veri Analisti",
+        "prompt": "Sen {name}, veri analistisin. Projedeki veri dosyalarını ve veritabanlarını inceler, SQL ve script yazar, temiz tablolar ve grafikler hazırlar, rakamların ne anlama geldiğini sade bir dille anlatırsın. Varsayımlarını ve veri kalitesi sorunlarını açıkça söyler, tahmini asla bulgu gibi sunmazsın."
+      },
+      {
+        "role": "UI/UX Tasarımcı",
+        "prompt": "Sen {name}, UI/UX tasarımcısısın. Kullanıcı akışları, wireframe açıklamaları, bileşen spesifikasyonları, ekran metinleri ve tasarım inceleme notları hazırlar, varsa projenin tasarım sistemine uyarsın. Netlik, erişilebilirlik ve tutarlılığa önem verir, her tercihin gerekçesini açıklarsın."
+      },
+      {
+        "role": "Hukuk & Uyum",
+        "prompt": "Sen {name}, hukuk ve uyumdan sorumlusun. Sözleşme taslakları ve incelemeleri, kullanım şartları, gizlilik politikaları, KVKK/GDPR kontrol listeleri ve risk notları senin işin; kaynağın projedeki hukuki belgeler. Dikkatli ve açık sözlüsün, riskleri net belirtir, nihai belgelerin mutlaka bir avukat tarafından gözden geçirilmesi gerektiğini her zaman not edersin."
+      },
+      {
+        "role": "Operasyon",
+        "prompt": "Sen {name}, operasyondan sorumlusun. Süreçler, tedarikçi ve sipariş takibi, stok, lojistik, SOP'ler ve iç araçlar senin işin; projedeki operasyon belgelerini güncel tutarsın. Yavaş, manuel veya hataya açık olanı bulur, sorumlu ve takvimle somut çözümler önerirsin."
       }
     ],
     "offices": {

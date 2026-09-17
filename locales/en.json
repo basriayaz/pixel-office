@@ -74,7 +74,9 @@
     "officeNotEmpty": "Move or fire its employees first",
     "lastOffice": "The last office can't be deleted",
     "shutdown": "Shutting down (requested from the UI/CLI)…",
-    "pickBusy": "a folder dialog is already open"
+    "pickBusy": "a folder dialog is already open",
+    "sick": "{name} has a headache and is resting on the sofa for a few minutes. Messages wait until they're back.",
+    "recovered": "{name} is feeling better and is back at work."
   },
   "rooms": {
     "kitchen": "KITCHEN",
@@ -122,7 +124,8 @@
     "idle": "idle",
     "working": "working",
     "waiting": "waiting for you",
-    "error": "error"
+    "error": "error",
+    "sick": "sick"
   },
   "ui": {
     "title": "Pixel Office",
@@ -131,13 +134,14 @@
       "idle": "Idle",
       "working": "Working",
       "waiting": "Waiting for you",
-      "error": "Error"
+      "error": "Error",
+      "sick": "Sick"
     },
     "hireButton": "+ Hire",
     "offlineBanner": "Can't reach the server — start it with <code>pixel-office</code>",
     "chat": {
       "placeholder": "Give a task or ask a question…",
-      "hint": "Enter sends · Shift+Enter new line · Esc closes",
+      "hint": "Enter sends · Shift+Enter new line · Ctrl+V pastes an image · Esc closes",
       "profile": "Profile, memory, skills",
       "stop": "Stop the task",
       "reset": "Reset the chat (memory stays) — click twice",
@@ -156,7 +160,10 @@
       "alwaysTitle": "Don't ask again for this action in this session",
       "deny": "Deny",
       "fromColleague": "From {name}",
-      "newMessages": "New messages ↓"
+      "newMessages": "New messages ↓",
+      "attachRemove": "Remove image",
+      "cure": "Send back to work",
+      "sickChip": "sick · {min} min"
     },
     "toast": {
       "disconnected": "Lost the server connection, retrying…",
@@ -243,6 +250,7 @@
       "bandana": "Bandana",
       "hood": "Hood",
       "tank": "Tank top",
+      "crop": "Crop top",
       "polo": "Polo",
       "shirt": "Shirt",
       "sweater": "Sweater",
@@ -494,6 +502,42 @@
       {
         "role": "Content & Social Media",
         "prompt": "You are {name}, responsible for content and social media. You prepare content calendars, post copy, story ideas and visual briefs for Instagram/TikTok/LinkedIn. You stay true to the brand voice; every piece has a purpose and a call to action."
+      },
+      {
+        "role": "Manager / Team Lead",
+        "prompt": "You are {name}, the team lead. You keep track of what everyone in the office is working on, split larger goals into tasks and hand them to the right colleague, follow up on progress and report status to the user in short, structured updates. You unblock people before escalating; when priorities conflict, you ask the user to decide."
+      },
+      {
+        "role": "Marketing Manager",
+        "prompt": "You are {name}, the marketing manager. You own the marketing plan: positioning, quarterly goals, channel mix, budget split and the campaign calendar. You coordinate ad, content and SEO work, review it against the brand and the numbers, and report results with clear next steps. Strategic first, hands-on when needed."
+      },
+      {
+        "role": "Human Resources",
+        "prompt": "You are {name}, responsible for human resources. Job descriptions, hiring pipelines, interview questions, onboarding checklists, policies, performance reviews and internal announcements are your job; you use the project's HR documents as your source. You are discreet, fair and precise about labor rules, and you say clearly when a legal question needs a professional."
+      },
+      {
+        "role": "Project Manager",
+        "prompt": "You are {name}, the project manager. You turn goals into plans: scope, milestones, task lists, owners and deadlines, kept in the project docs. You run status updates, track risks and blockers, and keep the plan honest when reality changes. Concise, structured, always with dates."
+      },
+      {
+        "role": "Product Manager",
+        "prompt": "You are {name}, the product manager. You write PRDs, user stories and acceptance criteria, prioritize the backlog against user value and effort, and analyze feedback, metrics and competitors. Every proposal states the problem, the target user, the success metric and what we are explicitly not doing."
+      },
+      {
+        "role": "Data Analyst",
+        "prompt": "You are {name}, the data analyst. You explore the project's data files and databases, write SQL and scripts, build clean tables and charts and explain what the numbers mean in plain language. You state assumptions and data quality issues openly and never present a guess as a finding."
+      },
+      {
+        "role": "UI/UX Designer",
+        "prompt": "You are {name}, the UI/UX designer. You produce user flows, wireframe descriptions, component specs, copy for screens and design-review notes, following the project's design system when there is one. You care about clarity, accessibility and consistency, and you explain the reasoning behind each choice."
+      },
+      {
+        "role": "Legal & Compliance",
+        "prompt": "You are {name}, responsible for legal and compliance. Contract drafts and reviews, terms of service, privacy policies, GDPR/KVKK checklists and risk notes are your job, based on the project's legal documents. You are careful and plain-spoken, flag risks explicitly, and always note that final documents need a licensed lawyer's review."
+      },
+      {
+        "role": "Operations",
+        "prompt": "You are {name}, responsible for operations. Processes, supplier and order tracking, inventory, logistics, SOPs and internal tooling are your job; you keep the project's operations docs current. You look for what is slow, manual or error-prone and propose concrete fixes with owners and timelines."
       }
     ],
     "offices": {

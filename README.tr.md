@@ -36,7 +36,7 @@ macOS, Linux ve Windows'ta (PowerShell) çalışır. Dili istediğin zaman üst 
 
 ### Sohbet, izinler, hafıza
 
-Çalışana tıkla, sohbeti açılır. Cevaplar Markdown olarak akar; araç çağrıları "N işlem" satırlarında katlanır; dosyalarına dokunan ya da komut çalıştıran her şey önce sorar — **İzin ver**, bu oturum için **Hep izin ver**, ya da **Reddet**. Çalışanlar sana seçenekli soru da sorabilir.
+Çalışana tıkla, sohbeti açılır. Cevaplar Markdown olarak akar; Ctrl+V ile ekran görüntüsü yapıştır (ya da görsel dosyası bırak), mesajınla birlikte gider; araç çağrıları "N işlem" satırlarında katlanır; dosyalarına dokunan ya da komut çalıştıran her şey önce sorar — **İzin ver**, bu oturum için **Hep izin ver**, ya da **Reddet**. Çalışanlar sana seçenekli soru da sorabilir.
 
 ![Sohbette izin kartı](docs/chat-permission.jpg)
 
@@ -50,11 +50,11 @@ Hafıza dosyası düz Markdown. Profili aç (sohbet başlığında ☰): oku, d�
 
 ### İşe alma
 
-**+ İşe al** karakter oluşturucuyu açar: cinsiyet, vücut tipi, ten, göz rengi, 14 saç stili (kel ve dökülmüşten mohawk, afro ve örgüye), kendi rengiyle sakal (kirli, bıyık, keçi, top, tam, uzun), gözlük, kulaklık, şapka (kep, bere, kovboy, fötr, balıkçı, Fransız beresi, bandana, kukuleta), üst (tişört, atlet, polo, gömlek, kazak, hoodie, blazer, kravatlı takım elbise, elbise), alt (pantolon, kargo, eşofman, şort, uzun şort, etek, uzun etek), kendi rengiyle ayakkabı (klasik, spor, bilekli spor, bot, makosen, sandalet, topuklu). Hazır pozisyonlardan birini seç ya da görev tanımını kendin yaz, model / effort / izin modunu belirle, işe al. Yeni çalışan kapıdan konfetiyle girer ve boş bir masaya oturur (ofis başına 12 masa).
+**+ İşe al** karakter oluşturucuyu açar: cinsiyet, vücut tipi, ten, göz rengi, 14 saç stili (kel ve dökülmüşten mohawk, afro ve örgüye), kendi rengiyle sakal (kirli, bıyık, keçi, top, tam, uzun), gözlük, kulaklık, şapka (kep, bere, kovboy, fötr, balıkçı, Fransız beresi, bandana, kukuleta), üst (tişört, atlet, crop, polo, gömlek, kazak, hoodie, blazer, kravatlı takım elbise, elbise), alt (pantolon, kargo, eşofman, şort, uzun şort, etek, uzun etek), kendi rengiyle ayakkabı (klasik, spor, bilekli spor, bot, makosen, sandalet, topuklu). Hazır pozisyonlardan birini seç ya da görev tanımını kendin yaz, model / effort / izin modunu belirle, işe al. Yeni çalışan kapıdan konfetiyle girer ve boş bir masaya oturur (ofis başına 12 masa).
 
 ![İşe alma sayfası](docs/hire.jpg)
 
-Hazır pozisyonlar (her birinin düzenlenebilir görev tanımı var): Kişisel Asistan, Muhasebe & Finans, Reklam & Pazarlama, Müşteri Destek, SEO & İçerik, Yazılım Geliştirici, Satış, İçerik & Sosyal Medya.
+Hazır pozisyonlar (her birinin düzenlenebilir görev tanımı var): Kişisel Asistan, Muhasebe & Finans, Reklam & Pazarlama, Müşteri Destek, SEO & İçerik, Yazılım Geliştirme, Satış, İçerik & Sosyal Medya, Müdür / Ekip Lideri, Pazarlama Müdürü, İnsan Kaynakları, Proje Yöneticisi, Ürün Yöneticisi, Veri Analisti, UI/UX Tasarımcı, Hukuk & Uyum, Operasyon.
 
 ### Ofisler ve temalar
 
@@ -119,6 +119,7 @@ Proje modu ekipler için: `.pixel-office/employees/` klasörünü commit'lersen 
 | `cwd` | ev / proje | çalışanların varsayılan çalışma klasörü |
 | `syncClaudeAgents` | `true` | çalışanları `<cwd>/.claude/agents/` altına yansıt |
 | `refreshHours` | `24` | boştaki çalışanların hafıza ve dokümanları ne sıklıkla gözden geçireceği |
+| `sickness` | `true` | arada boştaki bir çalışan hastalanır ve 3–5 dakika kanepede dinlenir; mesajlar bekler, 💊 düğmesi erken işe döndürür |
 | `offices` | – | ofis listesi (aşağıda); tek ofis için yazma |
 
 Yollar `config.json`'ın bulunduğu klasöre (global) ya da projeye (proje modu) göredir; `~` her yerde çalışır.

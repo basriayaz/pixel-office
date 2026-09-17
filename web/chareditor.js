@@ -23,7 +23,7 @@
   const ACC = [["none", L_("no", "None")], ["headphones", L_("headphonesOpt", "Headphones")], ["headset", L_("headset", "Mic headset")]];
   const GLASSES = [["none", L_("no", "None")], ["square", L_("square", "Square")], ["round", L_("round", "Round")], ["sun", L_("sun", "Sunglasses")]];
   const HATS = [["none", L_("no", "None")], ["cap", L_("cap", "Cap")], ["beanie", L_("beanie", "Beanie")], ["cowboy", L_("cowboy", "Cowboy")], ["fedora", L_("fedora", "Fedora")], ["bucket", L_("bucket", "Bucket hat")], ["beret", L_("beret", "Beret")], ["bandana", L_("bandana", "Bandana")], ["hood", L_("hood", "Hood")]];
-  const TOPSTYLES = [["tshirt", L_("tshirt", "T-shirt")], ["tank", L_("tank", "Tank top")], ["polo", L_("polo", "Polo")], ["shirt", L_("shirt", "Shirt")], ["sweater", L_("sweater", "Sweater")], ["hoodie", L_("hoodie", "Hoodie")], ["suit", L_("suit", "Suit")], ["dress", L_("dress", "Dress")]];
+  const TOPSTYLES = [["tshirt", L_("tshirt", "T-shirt")], ["tank", L_("tank", "Tank top")], ["crop", L_("crop", "Crop top")], ["polo", L_("polo", "Polo")], ["shirt", L_("shirt", "Shirt")], ["sweater", L_("sweater", "Sweater")], ["hoodie", L_("hoodie", "Hoodie")], ["suit", L_("suit", "Suit")], ["dress", L_("dress", "Dress")]];
   const BOTTOMS_S = [["pants", L_("pants", "Pants")], ["cargo", L_("cargo", "Cargo pants")], ["joggers", L_("joggers", "Joggers")], ["shorts", L_("shorts", "Shorts")], ["bermuda", L_("bermuda", "Long shorts")], ["skirt", L_("skirt", "Skirt")], ["longskirt", L_("longskirt", "Long skirt")]];
   const SHOES = [["dark", L_("dark", "Classic")], ["sneakers", L_("sneakers", "Sneakers")], ["hightops", L_("hightops", "High-tops")], ["boots", L_("boots", "Boots")], ["loafers", L_("loafers", "Loafers")], ["sandals", L_("sandals", "Sandals")], ["heels", L_("heels", "Heels")]];
   const BODIES = [["slim", L_("slim", "Slim")], ["normal", L_("normal", "Average")], ["muscular", L_("muscular", "Muscular")], ["heavy", L_("heavy", "Heavy")]];
@@ -33,7 +33,7 @@
 
   function randomLook() {
     const fem = Math.random() < 0.5;
-    const topStyle = pickOne(fem ? ["tshirt", "tshirt", "hoodie", "dress", "blazer", "tank", "shirt", "sweater", "polo", "suit"] : ["tshirt", "tshirt", "hoodie", "blazer", "tank", "shirt", "sweater", "polo", "suit"]);
+    const topStyle = pickOne(fem ? ["tshirt", "tshirt", "hoodie", "dress", "blazer", "tank", "crop", "shirt", "sweater", "polo", "suit"] : ["tshirt", "tshirt", "hoodie", "blazer", "tank", "shirt", "sweater", "polo", "suit"]);
     const look = {
       fem, body: pickOne(["normal", "normal", "slim", "muscular", "heavy"]), skin: pickOne(SKINS), hair: pickOne(HAIRS.slice(0, 8)),
       hairStyle: pickOne(fem ? ["long", "long", "bun", "ponytail", "curly", "bob", "braid", "afro", "sidepart"] : ["short", "short", "buzz", "sidepart", "curly", "spiky", "bald", "balding", "mohawk", "afro"]),

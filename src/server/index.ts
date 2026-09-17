@@ -4,7 +4,7 @@ import http from "node:http";
 import { spawn } from "node:child_process";
 import express, { type Request } from "express";
 import { WebSocketServer, WebSocket } from "ws";
-import { Employee, refreshPrompt, type EmployeeConfig } from "./employee.js";
+import { Employee, refreshPrompt, IMAGE_TYPES, type EmployeeConfig, type ImageInput } from "./employee.js";
 import { Store } from "./store.js";
 import { expandHome, loadEmployees, loadEmployee, listSkills, writeAgentFile, createEmployeeDir, archiveEmployeeDir, writeSkill, readSkill, deleteSkill, syncClaudeAgents } from "./agents.js";
 import { loadSettings, configPath, readRawConfig, writeRawConfig, officeDefFromRaw, officeIdOf, absPath, displayPath, rootFromEnv, initRoot, PKG_ROOT, THEMES, type OfficeDef, type Theme } from "./config.js";
@@ -79,7 +79,7 @@ app.use(express.static(path.join(PKG_ROOT, "web")));
 
 function publicInfo(e: Employee) {
   const { id, name, role, color, look, officeId } = e.cfg;
-  return { id, office: officeId, name, role, color, look, status: e.status, cost: e.cost, model: e.model ?? e.cfg.model ?? null };
+  return { id, office: officeId, name, role, color, look, status: e.status, cost: e.cost, model: e.model ?? e.cfg.model ?? null, sickUntil: e.sickUntil || undefined };
 }
 
 const readText = (p?: string) => { try { return p ? fs.readFileSync(p, "utf8") : ""; } catch { return ""; } };
@@ -104,6 +104,13 @@ const clientConfig = () => ({
 });
 app.get("/i18n.js", (_req, res) => { res.type("application/javascript").send(`window.PO = ${JSON.stringify(clientConfig())};`); });
 app.get("/api/options", (_req, res) => res.json(clientConfig()));
+// Images pasted into a chat, stored per office and employee.
+app.get("/attachments/:office/:emp/:file", (req, res) => {
+  const o = offices.get(String(req.params.office));
+  const p = o?.store.attachmentPath(String(req.params.emp), String(req.params.file));
+  if (!p) { res.status(404).end(); return; }
+  res.sendFile(p);
+});
 
 // Native "choose folder" dialog on the machine the server runs on (macOS Finder, Windows, zenity/kdialog on Linux).
 let picking = false;
@@ -395,6 +402,22 @@ app.use("/api", r);
 const server = http.createServer(app);
 const wss = new WebSocketServer({ server });
 
+// Keeps only well-formed image blocks of a supported type; at most 10 images and ~20 MB of base64 per message.
+function sanitizeImages(raw: unknown): ImageInput[] {
+  if (!Array.isArray(raw)) return [];
+  const out: ImageInput[] = [];
+  let total = 0;
+  for (const im of raw.slice(0, 10)) {
+    if (!im || typeof im !== "object") continue;
+    const { media_type, data } = im as Record<string, unknown>;
+    if (typeof media_type !== "string" || !IMAGE_TYPES.has(media_type) || typeof data !== "string" || !/^[A-Za-z0-9+/=]+$/.test(data)) continue;
+    total += data.length;
+    if (total > 20 * 1024 * 1024) break;
+    out.push({ media_type: media_type as ImageInput["media_type"], data });
+  }
+  return out;
+}
+
 function broadcast(payload: unknown) {
   const data = JSON.stringify(payload);
   for (const c of wss.clients) if (c.readyState === WebSocket.OPEN) c.send(data);
@@ -402,7 +425,7 @@ function broadcast(payload: unknown) {
 
 function wire(e: Employee) {
   const id = e.cfg.id, office = e.cfg.officeId;
-  e.on("status", (status, reason) => broadcast({ type: "status", office, id, status, reason }));
+  e.on("status", (status, reason) => broadcast({ type: "status", office, id, status, reason, sickUntil: e.sickUntil || undefined }));
   e.on("message", (message) => broadcast({ type: "message", office, id, message }));
   e.on("chunk", (text) => broadcast({ type: "chunk", office, id, text }));
   e.on("chunk_end", () => broadcast({ type: "chunk_end", office, id }));
@@ -419,16 +442,21 @@ for (const o of offices.values()) { for (const e of o.employees.values()) wire(e
 wss.on("connection", (ws) => {
   ws.send(JSON.stringify({ type: "init", offices: [...offices.values()].map((o) => ({ ...officeInfo(o), employees: roster(o) })) }));
   ws.on("message", async (raw) => {
-    let msg: { type: string; office?: string; id?: string; text?: string; requestId?: string; allow?: boolean; always?: boolean; answers?: Record<string, unknown> };
+    let msg: { type: string; office?: string; id?: string; text?: string; requestId?: string; allow?: boolean; always?: boolean; answers?: Record<string, unknown>; images?: unknown };
     try { msg = JSON.parse(raw.toString()); } catch { return; }
     const o = offices.get(msg.office ?? defaultOfficeId());
     const e = o && msg.id ? o.employees.get(msg.id) : undefined;
     if (!o || !e) return;
     switch (msg.type) {
       case "open": ws.send(JSON.stringify({ type: "history", office: o.def.id, id: e.cfg.id, messages: e.history, pending: e.pendingAsks })); break;
-      case "send": if (msg.text?.trim()) e.send(msg.text.trim()); break;
+      case "send": {
+        const images = sanitizeImages(msg.images);
+        if (msg.text?.trim() || images.length) e.send((msg.text ?? "").trim(), false, images);
+        break;
+      }
       case "reply": if (msg.requestId) e.reply(msg.requestId, { allow: !!msg.allow, always: !!msg.always, answers: msg.answers }); break;
       case "interrupt": await e.interrupt(); break;
+      case "cure": e.recover(); break;
       case "reset": await e.reset(); break;
       case "refresh": if (e.status === "idle" || e.status === "error") startRefresh(o, e); break;
     }
@@ -446,6 +474,14 @@ setInterval(() => {
     startRefresh(o, e);
   }
 }, 10 * 60e3);
+
+// Now and then an idle employee catches something and rests on the sofa for a few minutes (config `sickness: false` turns it off).
+const SICK_CHANCE = Number(process.env.PIXEL_OFFICE_SICK_CHANCE ?? 1 / 1000); // per employee per check → roughly once per 8 hours of idling
+if (settings.sickness) setInterval(() => {
+  for (const o of offices.values()) for (const e of o.employees.values()) {
+    if (e.status === "idle" && Math.random() < SICK_CHANCE) e.fallIll(Math.round(3 * 60e3 + Math.random() * 2 * 60e3));
+  }
+}, 30e3);
 
 server.on("error", (err: NodeJS.ErrnoException) => {
   if (err.code === "EADDRINUSE") { console.error(t("server.portInUse", { port: settings.port })); process.exit(1); }

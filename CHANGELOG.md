@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Chat: paste images with Ctrl+V or drop image files; they are sent with the message, shown in the history and stored under `data/attachments/`.
+- Sickness: now and then an idle employee falls ill for 3–5 minutes — red cross over the head, rests on the sofa, messages wait until recovery; 💊 in the chat header sends them back early. `sickness: false` in `config.json` (or `PIXEL_OFFICE_SICKNESS=0`) turns it off.
+- Nine more ready-made positions: Manager / Team Lead, Marketing Manager, Human Resources, Project Manager, Product Manager, Data Analyst, UI/UX Designer, Legal & Compliance, Operations.
+- Character creator: crop top.
 - Character creator: eye color; beard styles (stubble, mustache, goatee, circle beard, full, long) and beard color; nine new hair styles (buzz cut, side part, spiky, mohawk, afro, bald, balding, bob, braid); six new hats (cowboy, fedora, bucket, beret, bandana, hood); tank top, polo, shirt, sweater and suit (with tie color) tops; cargo pants, joggers, long shorts and long skirt; high-tops, loafers and sandals; shoe color; redrawn heels. Older `beard: true/false` looks still load.
 
 ## 0.1.0 — 2026-09-16

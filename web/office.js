@@ -195,6 +195,8 @@ class Office {
       return ne;
     });
     for (const e of this.emps) if (e.entering && !e.path.length && !this.atSeat(e)) { this.goTo(e, e.seat.tx, e.seat.ty); this.burst(ENTRANCE.tx * TILE + 16, ENTRANCE.ty * TILE + 16, 40); }
+    // already ill when the page loaded: head for the sofa like a fresh case would
+    for (const e of this.emps) if (e.status === "sick" && !e.spot && !e.entering) this.restOnSofa(e);
     this.labelsEl.innerHTML = "";
     this.labelEls.clear();
     this.roomEls = ROOMS.map((r) => {
@@ -231,6 +233,9 @@ class Office {
       e.spot = null;
       e.bubble = null;
       if (!this.atSeat(e)) this.goTo(e, e.seat.tx, e.seat.ty);
+    } else if (status === "sick") {
+      e.bubble = null;
+      this.restOnSofa(e);
     } else if (status === "idle" && reason === "interrupted") {
       e.bubble = null;
       e.restUntil = now + rand(6000, 15000);
@@ -238,6 +243,14 @@ class Office {
       e.bubble = { kind: "done", until: now + 4000 };
       e.restUntil = now + rand(9000, 22000);
     }
+  }
+
+  // Off to the lounge sofa (or any free seat) to rest until it passes; stays at the desk if nothing is free.
+  restOnSofa(e) {
+    const taken = new Set(this.emps.filter((o) => o !== e && o.spot).map((o) => o.spot.key));
+    const s = SPOTS.find((x) => x.key.startsWith("sofa") && !taken.has(x.key)) || SPOTS.find((x) => x.anim === "sitfree" && !taken.has(x.key));
+    if (s && this.goToSpot(e, s)) e.spot = s;
+    else { e.spot = null; this.goTo(e, e.seat.tx, e.seat.ty); }
   }
 
   setUnread(id, n) { const e = this.emps.find((x) => x.id === id); if (e) e.unread = n; }
@@ -352,7 +365,7 @@ class Office {
       }
       if (this.atSeat(e)) {
         e.dir = "down";
-        e.anim = e.status === "working" ? "type" : e.status === "waiting" ? "wave" : e.status === "error" ? "slump" : "sit";
+        e.anim = e.status === "working" ? "type" : e.status === "waiting" ? "wave" : e.status === "error" || e.status === "sick" ? "slump" : "sit";
         // idle at the desk: now and then pick up the mug and take a sip
         if (e.anim === "sit") {
           if (e.sipping && now - e.sipping < 2600) e.anim = "sip";
@@ -366,7 +379,7 @@ class Office {
         e.anim = "stand";
       }
       if (e.status === "idle" && now > e.restUntil) this.decideIdle(e, now);
-      if (e.status !== "idle" && !this.atSeat(e)) this.goTo(e, e.seat.tx, e.seat.ty);
+      if (e.status !== "idle" && e.status !== "sick" && !this.atSeat(e)) this.goTo(e, e.seat.tx, e.seat.ty);
     }
   }
 
@@ -972,6 +985,11 @@ function drawOverhead(b, e, t, occupied) {
     bubble(20, 18, "#f87171");
     b.fillStyle = "#3a0000";
     for (let i = 0; i < 8; i++) { b.fillRect(cx - 4 + i, top - 15 + bob + i, 2, 2); b.fillRect(cx + 3 - i, top - 15 + bob + i, 2, 2); }
+  } else if (e.status === "sick") {
+    // first-aid sign: red cross on a white card, plus a slow sweat drop
+    bubble(20, 18, "#fff");
+    b.fillStyle = "#e11d48"; b.fillRect(cx - 2, top - 15 + bob, 4, 12); b.fillRect(cx - 6, top - 11 + bob, 12, 4);
+    if (Math.floor(t / 700) % 2) { b.fillStyle = "#7dd3fc"; b.fillRect(e.x + 24, e.y - 14 + (Math.floor(t / 250) % 5), 2, 3); }
   } else if (e.bubble?.kind === "party") {
     bubble(24, 18, "#fff");
     // tiny party popper: cone + sparks
@@ -1999,6 +2017,14 @@ function personShapes(b, ox, oy, e, o, mono) {
     } else {
       C(skinDark); R(cx - 2, 16 + T, 4, 1);
     }
+    if (F.topStyle === "crop") {
+      // bare midriff: skin from the hem down to the belt, waist follows the body shape
+      C(skin);
+      if (fem) { R(tx + 2, 23 + T, tw - 4, 3); R(tx + 1, 26 + T, tw - 2, 1); R(tx, 27 + T, tw, 1); }
+      else R(P.belly ? tx - 1 : tx, 23 + T, P.belly ? tw + 2 : tw, 5);
+      C(skinDark); R(tx + tw - (fem ? 4 : 2), 23 + T, 2, 3); R(tx + tw - 2, 26 + T, 2, 2); R(cx, 26 + T, 1, 1);
+      C(topDark); R(tx, 22 + T, tw, 1);
+    }
     if (F.topStyle !== "dress" && !suit) { C("#33303a"); R(P.belly ? tx - 1 : tx, 28 + T, P.belly ? tw + 2 : tw, 1); }
     C(skin); R(14, 14 + H, 4, 3); // neck
     if (P.belly) { C(skin); R(13, 14 + H, 6, 3); }
@@ -2231,6 +2257,13 @@ function personShapes(b, ox, oy, e, o, mono) {
     else if (F.topStyle === "shirt") { C(topLight); R(tx + 3, 16 + T, tw - 6, 2); }
     else if (F.topStyle === "polo") { C(topDark); R(tx + 3, 16 + T, tw - 6, 2); }
     else if (F.topStyle === "sweater") { C(topDark); R(tx + 3, 16 + T, tw - 6, 1); C(topMid); R(tx + 2, 19 + T, tw - 4, 1); R(tx + 2, 22 + T, tw - 4, 1); R(tx + 2, 25 + T, tw - 4, 1); }
+    else if (F.topStyle === "crop") {
+      C(skin);
+      if (fem) { R(tx + 2, 23 + T, tw - 4, 3); R(tx + 1, 26 + T, tw - 2, 1); R(tx, 27 + T, tw, 1); }
+      else R(P.belly ? tx - 1 : tx, 23 + T, P.belly ? tw + 2 : tw, 5);
+      C(skinDark); R(tx + tw - (fem ? 4 : 2), 23 + T, 2, 3); R(tx + tw - 2, 26 + T, 2, 2);
+      C(topDark); R(tx, 22 + T, tw, 1);
+    }
     if (F.topStyle !== "dress" && !suit) { C("#33303a"); R(tx, 28 + T, tw, 1); }
     const swing = walking ? [0, 2, 0, -2][f] : 0;
     arm(axL, 17 + T + swing, 7, true); arm(axR, 17 + T - swing, 7, true);
@@ -2281,6 +2314,13 @@ function personShapes(b, ox, oy, e, o, mono) {
     else if (F.topStyle === "shirt") { C(topLight); R(sx + sw - 4, 16 + T, 4, 2); C(topDark); R(sx + sw - 1, 18 + T, 1, 10); }
     else if (F.topStyle === "polo") { C(topDark); R(sx + sw - 4, 16 + T, 4, 1); R(sx + sw - 2, 17 + T, 2, 1); }
     else if (F.topStyle === "sweater") { C(topDark); R(sx + 1, 16 + T, sw - 2, 1); C(topMid); R(sx + 1, 19 + T, sw - 2, 1); R(sx + 1, 22 + T, sw - 2, 1); R(sx + 1, 25 + T, sw - 2, 1); }
+    else if (F.topStyle === "crop") {
+      C(skin);
+      if (fem) { R(sx + 1, 23 + T, sw - 2, 3); R(sx, 26 + T, sw, 2); } else R(sx, 23 + T, sw, 5);
+      if (P.belly) { R(sx + sw, 23 + T, 2, 5); }
+      C(skinDark); R(sx, 23 + T, 2, 5);
+      C(topDark); R(sx, 22 + T, sw, 1);
+    }
     if (F.topStyle !== "dress" && !suit) { C("#33303a"); R(sx, 28 + T, sw, 1); }
     C(skin); R(14, 14 + H, 4, 3);
     const ax = sx + Math.floor((sw - aw) / 2);

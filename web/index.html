@@ -26,6 +26,7 @@
       <span class="legend-item" data-i18n-tip="ui.legend.working"><i class="dot working"></i><span class="sr" data-i18n="ui.legend.working"></span></span>
       <span class="legend-item" data-i18n-tip="ui.legend.waiting"><i class="dot waiting"></i><span class="sr" data-i18n="ui.legend.waiting"></span></span>
       <span class="legend-item" data-i18n-tip="ui.legend.error"><i class="dot error"></i><span class="sr" data-i18n="ui.legend.error"></span></span>
+      <span class="legend-item" data-i18n-tip="ui.legend.sick"><i class="dot sick"></i><span class="sr" data-i18n="ui.legend.sick"></span></span>
     </div>
     <a class="btn primary small" id="hireLink" href="hire.html" data-i18n="ui.hireButton">+ Hire</a>
     <div class="clock" id="clock">--:--</div>
@@ -50,12 +51,14 @@
       </div>
       <span class="chip" id="chatStatus"></span>
       <a class="icon-btn" id="btnProfile" href="#" data-i18n-title="ui.chat.profile">☰</a>
+      <button class="icon-btn" id="btnCure" hidden data-i18n-title="ui.chat.cure">💊</button>
       <button class="icon-btn" id="btnStop" data-i18n-title="ui.chat.stop">■</button>
       <button class="icon-btn" id="btnReset" data-i18n-title="ui.chat.reset">⟲</button>
       <button class="icon-btn" id="btnClose" data-i18n-title="ui.chat.close">×</button>
     </div>
     <div class="chat-body" id="chatBody"></div>
     <button class="jump-down" id="jumpDown" hidden data-i18n="ui.chat.newMessages"></button>
+    <div class="chat-attach" id="chatAttach" hidden></div>
     <form class="chat-foot" id="chatForm">
       <textarea id="chatInput" rows="1" data-i18n-ph="ui.chat.placeholder"></textarea>
       <button type="submit" id="btnSend" title="Enter">➤</button>

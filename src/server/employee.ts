@@ -14,7 +14,7 @@ import type { Store } from "./store.js";
 import { t } from "./runtime.js";
 import { officeServer, OFFICE_TOOLS, type Colleagues } from "./office-tools.js";
 
-export type Status = "idle" | "working" | "waiting" | "error";
+export type Status = "idle" | "working" | "waiting" | "error" | "sick";
 
 export interface EmployeeConfig {
   id: string;
@@ -43,7 +43,15 @@ export interface ChatMessage {
   text: string;
   ts: number;
   from?: string;
+  images?: string[]; // URLs of pasted images shown with the message
 }
+
+export interface ImageInput {
+  media_type: "image/png" | "image/jpeg" | "image/gif" | "image/webp";
+  data: string; // base64
+}
+
+export const IMAGE_TYPES = new Set(["image/png", "image/jpeg", "image/gif", "image/webp"]);
 
 export const refreshPrompt = () => t("server.refreshPrompt");
 
@@ -69,9 +77,17 @@ interface PendingAsk {
   resolve: (r: PermissionResult) => void;
 }
 
-const userMsg = (text: string): SDKUserMessage => ({
+const userMsg = (text: string, images?: ImageInput[]): SDKUserMessage => ({
   type: "user",
-  message: { role: "user", content: text },
+  message: {
+    role: "user",
+    content: images?.length
+      ? [
+          ...images.map((im) => ({ type: "image" as const, source: { type: "base64" as const, media_type: im.media_type, data: im.data } })),
+          ...(text ? [{ type: "text" as const, text }] : []),
+        ]
+      : text,
+  },
   parent_tool_use_id: null,
 });
 
@@ -82,6 +98,8 @@ export class Employee extends EventEmitter {
   cost = 0;
   model?: string;
   lastActivity = 0;
+  sickUntil = 0;
+  private sickTimer?: NodeJS.Timeout;
 
   private q?: Query;
   private inbox: SDKUserMessage[] = [];
@@ -89,7 +107,7 @@ export class Employee extends EventEmitter {
   private generation = 0;
   private pending = new Map<string, PendingAsk>();
   private streamText = "";
-  private unanswered: string[] = [];
+  private unanswered: SDKUserMessage[] = [];
   private recovered = false;
   private interrupting = false;
   private colleagues?: Colleagues;
@@ -106,12 +124,17 @@ export class Employee extends EventEmitter {
     return [...this.pending.values()].map((p) => p.request);
   }
 
-  send(text: string, auto = false) {
-    this.push({ role: auto ? "auto" : "user", text, ts: Date.now() });
-    this.setStatus("working");
-    this.unanswered.push(text);
-    this.enqueue(userMsg(text));
-    if (!this.q) this.start();
+  send(text: string, auto = false, images?: ImageInput[]) {
+    const urls = images?.map((im) => {
+      const name = this.store.saveAttachment(this.cfg.id, Buffer.from(im.data, "base64"), im.media_type.split("/")[1].replace("jpeg", "jpg"));
+      return `/attachments/${encodeURIComponent(this.cfg.officeId)}/${encodeURIComponent(this.cfg.id)}/${name}`;
+    });
+    this.push({ role: auto ? "auto" : "user", text, ts: Date.now(), ...(urls?.length ? { images: urls } : {}) });
+    if (!this.sick) this.setStatus("working");
+    const msg = userMsg(text, images);
+    this.unanswered.push(msg);
+    this.enqueue(msg);
+    if (!this.q && !this.sick) this.start();
   }
 
   setColleagues(c: Colleagues) {
@@ -126,17 +149,41 @@ export class Employee extends EventEmitter {
   // A message from another employee; resolves with this employee's next reply when `wait` is set.
   sendFromColleague(from: Employee, text: string, wait: boolean): Promise<string> {
     this.push({ role: "colleague", text, ts: Date.now(), from: from.cfg.name });
-    this.setStatus("working");
-    const prompt = t("server.colleagueMsg", { name: from.cfg.name, role: from.cfg.role, text });
-    this.unanswered.push(prompt);
-    this.enqueue(userMsg(prompt));
-    if (!this.q) this.start();
+    if (!this.sick) this.setStatus("working");
+    const msg = userMsg(t("server.colleagueMsg", { name: from.cfg.name, role: from.cfg.role, text }));
+    this.unanswered.push(msg);
+    this.enqueue(msg);
+    if (!this.q && !this.sick) this.start();
     if (!wait) return Promise.resolve("");
     return new Promise<string>((resolve) => {
       const timer = setTimeout(() => { this.off("turn", onTurn); resolve(t("server.office.noReply")); }, 10 * 60e3);
       const onTurn = (reply: string) => { clearTimeout(timer); resolve(reply || t("server.office.noReply")); };
       this.once("turn", onTurn);
     });
+  }
+
+  get sick() { return this.status === "sick"; }
+
+  // Falls ill for `ms`: messages are still accepted but wait in the inbox until recovery.
+  fallIll(ms: number) {
+    if (this.status !== "idle" || this.pending.size) return;
+    this.sickUntil = Date.now() + ms;
+    this.push({ role: "system", text: t("server.sick", { name: this.cfg.name }), ts: Date.now() });
+    this.setStatus("sick");
+    clearTimeout(this.sickTimer);
+    this.sickTimer = setTimeout(() => this.recover(), ms);
+  }
+
+  recover() {
+    if (!this.sick) return;
+    clearTimeout(this.sickTimer);
+    this.sickTimer = undefined;
+    this.sickUntil = 0;
+    this.push({ role: "system", text: t("server.recovered", { name: this.cfg.name }), ts: Date.now() });
+    if (this.inbox.length) {
+      this.setStatus("working");
+      if (this.q) { this.wake?.(); this.wake = undefined; } else this.start();
+    } else this.setStatus("idle");
   }
 
   async interrupt() {
@@ -153,6 +200,7 @@ export class Employee extends EventEmitter {
   }
 
   async reset() {
+    if (this.sick) { clearTimeout(this.sickTimer); this.sickUntil = 0; }
     await this.interrupt();
     this.stopQuery();
     this.sessionId = undefined;
@@ -229,7 +277,7 @@ export class Employee extends EventEmitter {
 
   private async *input(gen: number): AsyncIterable<SDKUserMessage> {
     while (this.generation === gen) {
-      const next = this.inbox.shift();
+      const next = this.sick ? undefined : this.inbox.shift();
       if (next) {
         yield next;
         continue;
@@ -360,7 +408,7 @@ export class Employee extends EventEmitter {
     this.sessionId = undefined;
     this.store.setSession(this.cfg.id, undefined);
     this.push({ role: "system", text: t("server.sessionRecovered"), ts: Date.now() });
-    for (const text of replay) this.enqueue(userMsg(text));
+    for (const msg of replay) this.enqueue(msg);
     if (replay.length) this.start();
     else this.setStatus("idle");
   }

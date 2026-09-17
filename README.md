@@ -36,7 +36,7 @@ Works on macOS, Linux and Windows (PowerShell). Switch the language any time fro
 
 ### Chat, permissions, memory
 
-Click an employee to open their chat. Replies stream in as Markdown; tool calls are collapsed into "N actions" rows; anything that touches your files or runs a command asks first — **Allow**, **Always allow** for this session, or **Deny**. Employees can also ask you multiple-choice questions.
+Click an employee to open their chat. Replies stream in as Markdown; paste a screenshot with Ctrl+V (or drop an image file) and it goes along with your message; tool calls are collapsed into "N actions" rows; anything that touches your files or runs a command asks first — **Allow**, **Always allow** for this session, or **Deny**. Employees can also ask you multiple-choice questions.
 
 ![Permission request in the chat](docs/chat-permission.jpg)
 
@@ -50,11 +50,11 @@ The memory file is plain Markdown. Open the profile (☰ in the chat header) to 
 
 ### Hiring
 
-**+ Hire** opens a character creator: gender, body type, skin, eye color, 14 hair styles (from bald and balding to mohawk, afro and braid), beards (stubble, mustache, goatee, circle, full, long) with their own color, glasses, headset, hats (cap, beanie, cowboy, fedora, bucket, beret, bandana, hood), tops (t-shirt, tank top, polo, shirt, sweater, hoodie, blazer, suit with tie, dress), bottoms (pants, cargo, joggers, shorts, long shorts, skirt, long skirt), shoes (classic, sneakers, high-tops, boots, loafers, sandals, heels) with their own color. Pick one of the ready-made positions or write your own job description, choose model / effort / permission mode, hire. The new colleague walks in through the door with confetti and sits down at a free desk (up to 12 desks per office).
+**+ Hire** opens a character creator: gender, body type, skin, eye color, 14 hair styles (from bald and balding to mohawk, afro and braid), beards (stubble, mustache, goatee, circle, full, long) with their own color, glasses, headset, hats (cap, beanie, cowboy, fedora, bucket, beret, bandana, hood), tops (t-shirt, tank top, crop top, polo, shirt, sweater, hoodie, blazer, suit with tie, dress), bottoms (pants, cargo, joggers, shorts, long shorts, skirt, long skirt), shoes (classic, sneakers, high-tops, boots, loafers, sandals, heels) with their own color. Pick one of the ready-made positions or write your own job description, choose model / effort / permission mode, hire. The new colleague walks in through the door with confetti and sits down at a free desk (up to 12 desks per office).
 
 ![Hire page](docs/hire.jpg)
 
-Ready-made positions (each comes with a job description you can edit): Personal Assistant, Accounting & Finance, Marketing & Ads, Customer Support, SEO & Content, Software Developer, Sales, Content & Social Media.
+Ready-made positions (each comes with a job description you can edit): Personal Assistant, Accounting & Finance, Marketing & Ads, Customer Support, SEO & Content, Software Developer, Sales, Content & Social Media, Manager / Team Lead, Marketing Manager, Human Resources, Project Manager, Product Manager, Data Analyst, UI/UX Designer, Legal & Compliance, Operations.
 
 ### Offices and themes
 
@@ -119,6 +119,7 @@ Project mode is for teams: commit `.pixel-office/employees/` and your colleagues
 | `cwd` | home / project | default working folder for employees |
 | `syncClaudeAgents` | `true` | mirror employees into `<cwd>/.claude/agents/` |
 | `refreshHours` | `24` | how often idle employees revisit their memory and project docs |
+| `sickness` | `true` | now and then an idle employee catches a cold and rests on the sofa for 3–5 minutes; messages wait, the 💊 button sends them back early |
 | `offices` | – | list of offices (see below); omit for a single office |
 
 Paths are relative to the folder that holds `config.json` (global) or to the project (project mode); `~` works everywhere.

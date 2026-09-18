@@ -162,6 +162,60 @@ body.closed .office-wrap { opacity: .45; filter: grayscale(.6); }
   transform: translateX(100%); transition: transform .25s ease;
 }
 body.chat-open .chat { transform: none; }
+
+/* ---------- meeting panel (takes the chat panel's place while a meeting is on) ---------- */
+body.chat-open .chat.meeting, .chat.meeting { transform: translateX(100%); grid-template-rows: auto 1fr auto auto; z-index: 2; }
+body.meeting-open .chat.meeting { transform: none; }
+body.meeting-open .stage { padding-right: calc(var(--chat-w) + 16px); }
+.meet-icon { width: 40px; height: 40px; border-radius: 10px; background: var(--bg); border: 1px solid var(--line); display: grid; place-items: center; font-size: 18px; flex: none; }
+.meet-main { display: grid; grid-template-rows: auto 1fr; min-height: 0; }
+.meet-main .chat-body { min-height: 0; }
+.meet-people { display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 14px; border-bottom: 1px solid var(--line); }
+.meet-person { display: inline-flex; align-items: center; gap: 5px; padding: 3px 8px 3px 4px; border: 1px solid var(--line); border-radius: 999px; background: var(--bg); font-size: 11px; cursor: pointer; color: var(--text); font-family: inherit; }
+.meet-person:hover { border-color: var(--accent); }
+.meet-person img { width: 24px; height: 18px; image-rendering: pixelated; }
+.meet-person.away { opacity: .5; }
+.meet-person.away::after { content: attr(data-away); color: var(--muted); font-size: 10px; }
+.meet-person.talking { border-color: var(--working); }
+.meet-person.hand { border-color: var(--accent); }
+.meet-foot { border-top: 1px solid var(--line); }
+.meet-foot .chat-foot, .meet-foot .chat-attach { border-top: none; }
+.meet-hands { display: grid; gap: 6px; padding: 8px 14px 0; }
+.meet-hands:empty { display: none; }
+.hand-card { display: flex; align-items: center; gap: 8px; padding: 7px 10px; border: 1px solid var(--accent); border-radius: 10px; background: rgba(255,209,102,.08); font-size: 12px; }
+.hand-card img { width: 28px; height: 21px; image-rendering: pixelated; flex: none; }
+.hand-card .hc-text { flex: 1; min-width: 0; line-height: 1.4; }
+.hand-card .hc-text small { display: block; color: var(--muted); overflow: hidden; text-overflow: ellipsis; }
+.meet-mentions { margin: 6px 14px 0; border: 1px solid var(--line); border-radius: 10px; background: var(--card); overflow: hidden; }
+.meet-mentions[hidden] { display: none; }
+.meet-mentions button { display: flex; align-items: center; gap: 8px; width: 100%; padding: 6px 10px; border: none; background: none; color: var(--text); font: inherit; font-size: 12px; cursor: pointer; text-align: left; }
+.meet-mentions button.on, .meet-mentions button:hover { background: var(--bg); color: var(--accent); }
+.meet-mentions img { width: 24px; height: 18px; image-rendering: pixelated; }
+.row.meet-note { align-self: center; }
+.row .to-tag { font-size: 10px; color: var(--accent); margin-right: 6px; }
+.row.typing-note .sys { font-style: normal; }
+.meet-summary { border: 1px solid var(--line); border-radius: 12px; background: var(--card); padding: 12px 14px; line-height: 1.55; }
+.meet-summary h4 { margin: 0 0 6px; font-size: 11px; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); }
+.meet-summary h4:not(:first-child) { margin-top: 12px; }
+.meet-task { display: flex; align-items: flex-start; gap: 8px; padding: 6px 0; border-top: 1px dashed var(--line); font-size: 12.5px; }
+.meet-task:first-of-type { border-top: none; }
+.meet-task b { color: var(--accent); white-space: nowrap; }
+.meet-task span { flex: 1; min-width: 0; }
+.meet-pick { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 6px; max-height: 40vh; overflow: auto; }
+.meet-pick label { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border: 1px solid var(--line); border-radius: 10px; cursor: pointer; font-size: 12px; background: var(--bg); }
+.meet-pick label:has(input:checked) { border-color: var(--accent); }
+.meet-pick img { width: 28px; height: 21px; image-rendering: pixelated; }
+.meet-pick .mp-name { flex: 1; min-width: 0; line-height: 1.3; }
+.meet-pick .mp-name small { display: block; color: var(--muted); font-size: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.meet-pick-head { display: flex; justify-content: space-between; align-items: center; }
+.link-btn { background: none; border: none; color: var(--accent); font: inherit; font-size: 11px; cursor: pointer; padding: 0; }
+label.radio, label.check { display: flex; align-items: center; gap: 8px; font-size: 12.5px; padding: 4px 0; cursor: pointer; color: var(--text); }
+label.radio span, label.check span { font-size: 12.5px; color: var(--text); letter-spacing: 0; }
+.row.meeting .bubble { background: var(--card); border: 1px solid var(--accent); }
+.history-list { display: grid; gap: 6px; }
+.history-list button { text-align: left; padding: 8px 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--bg); color: var(--text); font: inherit; font-size: 12px; cursor: pointer; }
+.history-list button:hover { border-color: var(--accent); }
+.history-list small { color: var(--muted); display: block; }
 .chat-resize { position: absolute; left: -4px; top: 0; bottom: 0; width: 8px; cursor: col-resize; z-index: 3; }
 .chat-resize:hover, body.resizing .chat-resize { background: linear-gradient(90deg, transparent 0, var(--accent) 3px, var(--accent) 5px, transparent 5px); opacity: .7; }
 body.resizing { cursor: col-resize; user-select: none; }
@@ -392,7 +446,7 @@ body.resizing .chat, body.resizing .stage { transition: none; }
 @media (max-height: 640px) { .roster { display: none; } }
 @media (max-width: 900px) {
   :root { --chat-w: 100vw; }
-  body.chat-open .stage { padding-right: 16px; }
+  body.chat-open .stage, body.meeting-open .stage { padding-right: 16px; }
   .chat { top: 48px; }
   .hire, .ce, .grid2, .grid3, .hire-layout { grid-template-columns: 1fr; }
   .hire-side { position: static; }
@@ -401,3 +455,25 @@ body.resizing .chat, body.resizing .stage { transition: none; }
   .profile-head .profile-portrait { margin: 0 auto; }
   .profile-stats { grid-template-columns: repeat(4, auto); }
 }
+
+/* meeting cards: plain checkboxes and radios, not text-field styled */
+.field[hidden] { display: none; }
+.meet-pick input, label.radio input, label.check input { width: auto; padding: 0; margin: 0; flex: none; accent-color: var(--accent); border: none; background: none; }
+.meet-hands { max-height: 132px; overflow-y: auto; }
+.hand-card .hc-text small { white-space: nowrap; }
+.hand-card .hc-text b { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hand-card .btn { flex: none; }
+.chat.meeting [hidden] { display: none !important; }
+.meet-summary ul, .meet-summary ol { padding-left: 18px; margin: 4px 0; }
+/* hand cards never grow wider than the panel: the grid track may shrink, the reason clamps to two lines */
+.meet-hands { grid-template-columns: minmax(0, 1fr); }
+.hand-card { min-width: 0; flex-wrap: wrap; }
+.hand-card .hc-text { flex: 1 1 140px; overflow: hidden; }
+.hand-card .hc-text small { white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.hand-card .btn { margin-left: auto; }
+.hand-card .btn + .btn { margin-left: 0; }
+/* the panel's single grid column may never grow past the panel, whatever is inside (long reasons, code blocks, tables) */
+.chat, .chat.meeting, .meet-main { grid-template-columns: minmax(0, 1fr); }
+.meet-main, .meet-foot, .chat-head .chat-title { min-width: 0; }
+.chat.meeting .chat-name, .chat.meeting .chat-role { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.chat.meeting .chat-head .btn, .chat.meeting .chat-head .icon-btn { flex: none; }

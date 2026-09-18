@@ -39,7 +39,7 @@ export interface EmployeeConfig {
 }
 
 export interface ChatMessage {
-  role: "user" | "assistant" | "activity" | "system" | "auto" | "colleague";
+  role: "user" | "assistant" | "activity" | "system" | "auto" | "colleague" | "meeting";
   text: string;
   ts: number;
   from?: string;
@@ -99,7 +99,10 @@ export class Employee extends EventEmitter {
   model?: string;
   lastActivity = 0;
   sickUntil = 0;
+  inMeeting = false;
   private sickTimer?: NodeJS.Timeout;
+  private meetingTurn = false;
+  private preamble = ""; // told to the model with the next ordinary message (e.g. "the meeting is over")
 
   private q?: Query;
   private inbox: SDKUserMessage[] = [];
@@ -131,7 +134,7 @@ export class Employee extends EventEmitter {
     });
     this.push({ role: auto ? "auto" : "user", text, ts: Date.now(), ...(urls?.length ? { images: urls } : {}) });
     if (!this.sick) this.setStatus("working");
-    const msg = userMsg(text, images);
+    const msg = userMsg(this.takePreamble() + text, images);
     this.unanswered.push(msg);
     this.enqueue(msg);
     if (!this.q && !this.sick) this.start();
@@ -150,7 +153,7 @@ export class Employee extends EventEmitter {
   sendFromColleague(from: Employee, text: string, wait: boolean): Promise<string> {
     this.push({ role: "colleague", text, ts: Date.now(), from: from.cfg.name });
     if (!this.sick) this.setStatus("working");
-    const msg = userMsg(t("server.colleagueMsg", { name: from.cfg.name, role: from.cfg.role, text }));
+    const msg = userMsg(this.takePreamble() + t("server.colleagueMsg", { name: from.cfg.name, role: from.cfg.role, text }));
     this.unanswered.push(msg);
     this.enqueue(msg);
     if (!this.q && !this.sick) this.start();
@@ -163,10 +166,43 @@ export class Employee extends EventEmitter {
   }
 
   get sick() { return this.status === "sick"; }
+  get inMeetingTurn() { return this.meetingTurn; }
+
+  private takePreamble(): string {
+    const p = this.preamble;
+    this.preamble = "";
+    return p ? p + "\n\n" : "";
+  }
+
+  // One turn of a meeting: the prompt and the answer stay out of this employee's own chat; resolves with what they said.
+  sendMeeting(prompt: string, images?: ImageInput[]): Promise<string> {
+    this.meetingTurn = true;
+    this.turnTexts = [];
+    this.setStatus("working");
+    const msg = userMsg(prompt, images);
+    this.unanswered.push(msg);
+    this.enqueue(msg);
+    if (!this.q) this.start();
+    return new Promise<string>((resolve) => {
+      const done = (reply: string) => { clearTimeout(timer); this.off("turn", done); this.meetingTurn = false; resolve(reply ?? ""); };
+      const timer = setTimeout(() => done(""), 5 * 60e3);
+      this.on("turn", done);
+    });
+  }
+
+  raiseHand(reason: string) {
+    this.emit("raise_hand", reason);
+  }
+
+  // After a meeting: a card in the chat, and the model learns it is over with the next message.
+  meetingOver(topic: string, summary?: string) {
+    this.push({ role: "meeting", text: summary ? t("server.meeting.chatSummary", { topic, summary }) : t("server.meeting.chatEnded", { topic }), ts: Date.now() });
+    this.preamble = t("server.meeting.overNote", { topic });
+  }
 
   // Falls ill for `ms`: messages are still accepted but wait in the inbox until recovery.
   fallIll(ms: number) {
-    if (this.status !== "idle" || this.pending.size) return;
+    if (this.status !== "idle" || this.pending.size || this.inMeeting) return;
     this.sickUntil = Date.now() + ms;
     this.push({ role: "system", text: t("server.sick", { name: this.cfg.name }), ts: Date.now() });
     this.setStatus("sick");
@@ -357,7 +393,7 @@ export class Employee extends EventEmitter {
         const ev = m.event as { type: string; delta?: { type: string; text?: string } };
         if (ev.type === "content_block_delta" && ev.delta?.type === "text_delta" && ev.delta.text) {
           this.streamText += ev.delta.text;
-          this.emit("chunk", ev.delta.text);
+          if (!this.meetingTurn) this.emit("chunk", ev.delta.text);
         }
         break;
       }
@@ -426,6 +462,8 @@ export class Employee extends EventEmitter {
       suppressAlwaysAllowRule?: boolean;
     },
   ): Promise<PermissionResult> {
+    // In a meeting people talk; nothing that needs the boss's approval is started from there.
+    if (this.meetingTurn) return Promise.resolve({ behavior: "deny", message: t("server.meeting.noTools") });
     const isQuestion = toolName === "AskUserQuestion";
     const request: AskRequest = {
       requestId: opts.requestId,
@@ -456,6 +494,10 @@ export class Employee extends EventEmitter {
   }
 
   private push(msg: ChatMessage) {
+    if (this.meetingTurn && (msg.role === "assistant" || msg.role === "activity")) {
+      if (msg.role === "assistant") this.turnTexts.push(msg.text);
+      return;
+    }
     this.history.push(msg);
     if (msg.role === "assistant") this.turnTexts.push(msg.text);
     if (msg.role === "user" || msg.role === "assistant" || msg.role === "colleague") this.lastActivity = msg.ts;

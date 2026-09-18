@@ -48,6 +48,10 @@ Hafıza dosyası düz Markdown. Profili aç (sohbet başlığında ☰): oku, d�
 
 ![Profil sayfası — hafıza sekmesi](docs/memory.jpg)
 
+### Toplantı
+
+Üst çubuktaki **👥 Toplantı** düğmesi toplantı çağırır: konuyu ve kimlerin katılacağını seç (meşgul olanlar ya işini bitirip gelir ya da işi kesilir). Herkes toplantı odasına yürür, sohbet paneli toplantı paneline dönüşür. Yazdığın şey tüm odaya gider; her çalışan en fazla üç cümleyle cevap verir ya da pas geçer, diğerlerinin söylediklerini bir sonraki turda duyar. `@isim` tek kişiye hitap eder (isme tıklayınca eklenir). Daha çok anlatacağı olan el kaldırır — başının üstünde ✋, panelde bir kart — ve **Söz ver** ile uzunca konuşur. **Bitir** kararları ve takip görevlerini içeren bir özet yazar; her görevin yanındaki **Gönder** onu sahibine iletir, özet her katılımcının sohbetine ve kutu işaretliyse hafızasına düşer. Her mesaj katılımcı başına bir tur çalıştırır, kalabalık oda o kadar maliyetlidir. Geçmiş toplantılar 🕘 altında durur.
+
 ### İşe alma
 
 **+ İşe al** karakter oluşturucuyu açar: cinsiyet, vücut tipi, ten, göz rengi, 14 saç stili (kel ve dökülmüşten mohawk, afro ve örgüye), kendi rengiyle sakal (kirli, bıyık, keçi, top, tam, uzun), gözlük, kulaklık, şapka (kep, bere, kovboy, fötr, balıkçı, Fransız beresi, bandana, kukuleta), üst (tişört, atlet, crop, polo, gömlek, kazak, hoodie, blazer, kravatlı takım elbise, elbise), alt (pantolon, kargo, eşofman, şort, uzun şort, etek, uzun etek), kendi rengiyle ayakkabı (klasik, spor, bilekli spor, bot, makosen, sandalet, topuklu). Hazır pozisyonlardan birini seç ya da görev tanımını kendin yaz, model / effort / izin modunu belirle, işe al. Yeni çalışan kapıdan konfetiyle girer ve boş bir masaya oturur (ofis başına 12 masa).

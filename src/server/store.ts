@@ -13,7 +13,7 @@ export class Store {
   private attachmentsDir: string;
   private state: State;
 
-  constructor(dataDir: string) {
+  constructor(private dataDir: string) {
     fs.mkdirSync(dataDir, { recursive: true });
     this.statePath = path.join(dataDir, "state.json");
     this.historyDir = path.join(dataDir, "history");
@@ -58,6 +58,29 @@ export class Store {
     const name = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
     fs.writeFileSync(path.join(dir, name), data);
     return name;
+  }
+
+  // Meeting transcripts, one JSON file per meeting, newest first when listed.
+  saveMeeting(id: string, data: unknown) {
+    const dir = path.join(this.dataDir, "meetings");
+    fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(path.join(dir, `${id}.json`), JSON.stringify(data));
+  }
+
+  listMeetings(): Array<{ id: string; topic: string; startedAt: number; endedAt?: number }> {
+    const dir = path.join(this.dataDir, "meetings");
+    if (!fs.existsSync(dir)) return [];
+    const out: Array<{ id: string; topic: string; startedAt: number; endedAt?: number }> = [];
+    for (const f of fs.readdirSync(dir).filter((x) => x.endsWith(".json")).sort().reverse().slice(0, 50)) {
+      try { const m = JSON.parse(fs.readFileSync(path.join(dir, f), "utf8")); out.push({ id: m.id, topic: m.topic, startedAt: m.startedAt, endedAt: m.endedAt }); } catch {}
+    }
+    return out;
+  }
+
+  loadMeeting(id: string): unknown | null {
+    if (!/^[\w.-]+$/.test(id)) return null;
+    const p = path.join(this.dataDir, "meetings", `${id}.json`);
+    try { return JSON.parse(fs.readFileSync(p, "utf8")); } catch { return null; }
   }
 
   attachmentPath(id: string, name: string): string | null {

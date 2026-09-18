@@ -6,6 +6,7 @@ import express, { type Request } from "express";
 import { WebSocketServer, WebSocket } from "ws";
 import { Employee, refreshPrompt, IMAGE_TYPES, type EmployeeConfig, type ImageInput } from "./employee.js";
 import { Store } from "./store.js";
+import { Meeting } from "./meeting.js";
 import { expandHome, loadEmployees, loadEmployee, listSkills, writeAgentFile, createEmployeeDir, archiveEmployeeDir, writeSkill, readSkill, deleteSkill, syncClaudeAgents } from "./agents.js";
 import { loadSettings, configPath, readRawConfig, writeRawConfig, officeDefFromRaw, officeIdOf, absPath, displayPath, rootFromEnv, initRoot, PKG_ROOT, THEMES, type OfficeDef, type Theme } from "./config.js";
 import { loadLocale, availableLocales, detectLocale, Translator } from "./i18n.js";
@@ -26,6 +27,7 @@ interface OfficeRt {
   def: OfficeDef;
   store: Store;
   employees: Map<string, Employee>;
+  meeting?: Meeting; // the running meeting, or the one that just ended (kept until the panel is closed)
 }
 const offices = new Map<string, OfficeRt>();
 
@@ -250,6 +252,18 @@ type OReq = Request<{ office?: string; id?: string; skill?: string }>;
 const officeOf = (req: OReq) => offices.get(req.params.office ?? defaultOfficeId());
 const empOf = (req: OReq) => officeOf(req)?.employees.get(req.params.id ?? "");
 
+// Past meetings of an office (newest first) and one transcript.
+r.get("/meetings", (req: OReq, res) => {
+  const o = officeOf(req);
+  if (!o) return res.status(404).json({ error: t("server.notFound") });
+  res.json(o.store.listMeetings());
+});
+r.get("/meetings/:id", (req: OReq, res) => {
+  const m = officeOf(req)?.store.loadMeeting(String(req.params.id));
+  if (!m) return res.status(404).json({ error: t("server.notFound") });
+  res.json(m);
+});
+
 r.get("/employees", (req: OReq, res) => {
   const o = officeOf(req);
   if (!o) return res.status(404).json({ error: t("server.notFound") });
@@ -439,14 +453,44 @@ function wire(e: Employee) {
 }
 for (const o of offices.values()) { for (const e of o.employees.values()) wire(e); syncAgents(o); }
 
+function startMeeting(o: OfficeRt, topic: string, ids: string[], interruptBusy: boolean) {
+  if (o.meeting?.active) return;
+  const people = ids.map((id) => o.employees.get(id)).filter((e): e is Employee => !!e && !e.inMeeting);
+  if (!people.length) return;
+  const m = new Meeting(topic, people, o.store, o.def.cwd);
+  o.meeting = m;
+  const office = o.def.id;
+  m.on("state", () => { if (o.meeting === m) broadcast({ type: "meeting", office, meeting: m.state() }); });
+  m.on("entry", (entry) => { if (o.meeting === m) broadcast({ type: "meeting_entry", office, meetingId: m.id, entry }); });
+  void m.start(interruptBusy);
+}
+
 wss.on("connection", (ws) => {
-  ws.send(JSON.stringify({ type: "init", offices: [...offices.values()].map((o) => ({ ...officeInfo(o), employees: roster(o) })) }));
+  ws.send(JSON.stringify({ type: "init", offices: [...offices.values()].map((o) => ({ ...officeInfo(o), employees: roster(o), meeting: o.meeting?.state() ?? null })) }));
   ws.on("message", async (raw) => {
-    let msg: { type: string; office?: string; id?: string; text?: string; requestId?: string; allow?: boolean; always?: boolean; answers?: Record<string, unknown>; images?: unknown };
+    let msg: { type: string; office?: string; id?: string; text?: string; requestId?: string; allow?: boolean; always?: boolean; answers?: Record<string, unknown>; images?: unknown;
+      topic?: string; ids?: unknown; to?: unknown; interrupt?: boolean; summary?: boolean; memory?: boolean };
     try { msg = JSON.parse(raw.toString()); } catch { return; }
     const o = offices.get(msg.office ?? defaultOfficeId());
-    const e = o && msg.id ? o.employees.get(msg.id) : undefined;
-    if (!o || !e) return;
+    if (!o) return;
+    const idList = (v: unknown) => (Array.isArray(v) ? v.filter((x): x is string => typeof x === "string").slice(0, 50) : []);
+    switch (msg.type) {
+      case "meeting_start": startMeeting(o, clean(msg.topic, 120), idList(msg.ids), !!msg.interrupt); return;
+      case "meeting_say": {
+        const images = sanitizeImages(msg.images);
+        const text = (msg.text ?? "").trim().slice(0, 8000);
+        if (!o.meeting?.active || (!text && !images.length)) return;
+        const urls = images.map((im) => `/attachments/${encodeURIComponent(o.def.id)}/_meeting/${o.store.saveAttachment("_meeting", Buffer.from(im.data, "base64"), im.media_type.split("/")[1].replace("jpeg", "jpg"))}`);
+        o.meeting.say(text, images, urls, idList(msg.to));
+        return;
+      }
+      case "meeting_grant": if (msg.id) o.meeting?.grant(msg.id); return;
+      case "meeting_dismiss": if (msg.id) o.meeting?.dismissHand(msg.id); return;
+      case "meeting_end": await o.meeting?.end({ summary: msg.summary !== false, memory: !!msg.memory }); return;
+      case "meeting_close": if (o.meeting && !o.meeting.active && !o.meeting.summarizing) { o.meeting = undefined; broadcast({ type: "meeting", office: o.def.id, meeting: null }); } return;
+    }
+    const e = msg.id ? o.employees.get(msg.id) : undefined;
+    if (!e) return;
     switch (msg.type) {
       case "open": ws.send(JSON.stringify({ type: "history", office: o.def.id, id: e.cfg.id, messages: e.history, pending: e.pendingAsks })); break;
       case "send": {
@@ -468,7 +512,7 @@ setInterval(() => {
   const now = Date.now();
   for (const o of offices.values()) for (const e of o.employees.values()) {
     const hours = e.cfg.refreshHours ?? 0;
-    if (hours <= 0 || e.status !== "idle") continue;
+    if (hours <= 0 || e.status !== "idle" || e.inMeeting) continue;
     const last = o.store.getMeta<number>(e.cfg.id, "lastRefresh") ?? 0;
     if (now - last < hours * 3600e3 || e.lastActivity <= last) continue;
     startRefresh(o, e);

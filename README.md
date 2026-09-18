@@ -48,6 +48,10 @@ The memory file is plain Markdown. Open the profile (☰ in the chat header) to 
 
 ![Memory tab on the profile page](docs/memory.jpg)
 
+### Meetings
+
+**👥 Meeting** in the top bar calls a meeting: pick a topic and who joins (busy people either finish first or are interrupted). Everybody walks to the meeting room and the chat panel becomes the meeting panel. What you write goes to the whole room; each employee answers in up to three sentences or passes, and hears what the others said with the next round. `@name` addresses one person (click a name to insert it). Someone with more to say raises a hand — ✋ over their head and a card in the panel — and **Give the floor** lets them speak at length. **End** writes a summary with decisions and follow-up tasks; each task has a **Send** button that hands it to its owner, the summary lands in every participant's chat and, if you leave the box ticked, in their memory. Every message runs one turn per participant, so a big room costs accordingly. Past meetings stay under 🕘.
+
 ### Hiring
 
 **+ Hire** opens a character creator: gender, body type, skin, eye color, 14 hair styles (from bald and balding to mohawk, afro and braid), beards (stubble, mustache, goatee, circle, full, long) with their own color, glasses, headset, hats (cap, beanie, cowboy, fedora, bucket, beret, bandana, hood), tops (t-shirt, tank top, crop top, polo, shirt, sweater, hoodie, blazer, suit with tie, dress), bottoms (pants, cargo, joggers, shorts, long shorts, skirt, long skirt), shoes (classic, sneakers, high-tops, boots, loafers, sandals, heels) with their own color. Pick one of the ready-made positions or write your own job description, choose model / effort / permission mode, hire. The new colleague walks in through the door with confetti and sits down at a free desk (up to 12 desks per office).

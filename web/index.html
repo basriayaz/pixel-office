@@ -28,6 +28,7 @@
       <span class="legend-item" data-i18n-tip="ui.legend.error"><i class="dot error"></i><span class="sr" data-i18n="ui.legend.error"></span></span>
       <span class="legend-item" data-i18n-tip="ui.legend.sick"><i class="dot sick"></i><span class="sr" data-i18n="ui.legend.sick"></span></span>
     </div>
+    <button class="btn small" id="btnMeeting" data-i18n-title="ui.meeting.buttonTip"><span>👥</span> <span data-i18n="ui.meeting.button"></span></button>
     <a class="btn primary small" id="hireLink" href="hire.html" data-i18n="ui.hireButton">+ Hire</a>
     <div class="clock" id="clock">--:--</div>
   </header>
@@ -65,6 +66,70 @@
     </form>
     <div class="chat-hint" data-i18n="ui.chat.hint"></div>
   </aside>
+
+  <aside class="chat meeting" id="meeting">
+    <div class="chat-resize" id="meetResize" title="⇔"></div>
+    <div class="chat-head">
+      <div class="meet-icon">👥</div>
+      <div class="chat-title">
+        <div class="chat-name"><span id="meetTopic">—</span></div>
+        <div class="chat-role" id="meetSub"></div>
+      </div>
+      <button class="icon-btn" id="meetHistory" data-i18n-title="ui.meeting.history">🕘</button>
+      <button class="btn small danger" id="meetEnd" data-i18n="ui.meeting.end"></button>
+      <button class="icon-btn" id="meetClose" hidden data-i18n-title="ui.meeting.close">×</button>
+    </div>
+    <div class="meet-main">
+      <div class="meet-people" id="meetPeople"></div>
+      <div class="chat-body" id="meetBody"></div>
+    </div>
+    <div class="meet-foot">
+      <div class="meet-hands" id="meetHands"></div>
+      <div class="meet-mentions" id="meetMentions" hidden></div>
+      <div class="chat-attach" id="meetAttach" hidden></div>
+      <form class="chat-foot" id="meetForm">
+        <textarea id="meetInput" rows="1" data-i18n-ph="ui.meeting.placeholder"></textarea>
+        <button type="submit" title="Enter">➤</button>
+      </form>
+    </div>
+    <div class="chat-hint" id="meetHint" data-i18n="ui.meeting.hint"></div>
+  </aside>
+
+  <div class="modal" id="meetStartModal" hidden>
+    <div class="modal-card narrow">
+      <div class="modal-head"><h2 data-i18n="ui.meeting.startTitle"></h2><button class="icon-btn" id="meetStartClose" data-i18n-title="ui.meeting.cancel">×</button></div>
+      <form id="meetStartForm">
+        <label class="field"><span data-i18n="ui.meeting.topic"></span><input id="meetTopicInput" maxlength="120" data-i18n-ph="ui.meeting.topicPh" /></label>
+        <div class="field">
+          <span class="meet-pick-head"><span data-i18n="ui.meeting.participants"></span><span class="meet-pick-tools"><button type="button" class="link-btn" id="meetAll" data-i18n="ui.meeting.all"></button> · <button type="button" class="link-btn" id="meetNone" data-i18n="ui.meeting.none"></button></span></span>
+          <div class="meet-pick" id="meetPick"></div>
+        </div>
+        <div class="field" id="meetBusyField" hidden>
+          <span data-i18n="ui.meeting.busyLabel"></span>
+          <label class="radio"><input type="radio" name="meetBusy" value="wait" checked /> <span data-i18n="ui.meeting.busyWait"></span></label>
+          <label class="radio"><input type="radio" name="meetBusy" value="interrupt" /> <span data-i18n="ui.meeting.busyInterrupt"></span></label>
+        </div>
+        <small class="muted" id="meetCost"></small>
+        <div class="actions right">
+          <button type="button" class="link-btn" id="meetStartHistory" style="margin-right:auto" data-i18n="ui.meeting.history"></button>
+          <button class="btn ghost" type="button" id="meetStartCancel" data-i18n="ui.meeting.cancel"></button>
+          <button class="btn primary" type="submit" data-i18n="ui.meeting.start"></button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal" id="meetEndModal" hidden>
+    <div class="modal-card narrow">
+      <div class="modal-head"><h2 data-i18n="ui.meeting.endTitle"></h2><button class="icon-btn" id="meetEndClose" data-i18n-title="ui.meeting.cancel">×</button></div>
+      <label class="check"><input type="checkbox" id="meetOptSummary" checked /> <span data-i18n="ui.meeting.optSummary"></span></label>
+      <label class="check"><input type="checkbox" id="meetOptMemory" checked /> <span data-i18n="ui.meeting.optMemory"></span></label>
+      <div class="actions right">
+        <button class="btn ghost" id="meetEndCancel" data-i18n="ui.meeting.cancel"></button>
+        <button class="btn danger" id="meetEndConfirm" data-i18n="ui.meeting.endConfirm"></button>
+      </div>
+    </div>
+  </div>
 
   <div class="modal" id="officesModal" hidden>
     <div class="modal-card">
@@ -110,5 +175,6 @@
   <script src="office.js"></script>
   <script src="shared.js"></script>
   <script src="app.js"></script>
+  <script src="meeting.js"></script>
 </body>
 </html>

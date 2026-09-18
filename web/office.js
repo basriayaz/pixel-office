@@ -42,6 +42,19 @@ const SPOTS = [
   { key: "window", tx: 20, ty: 2, dir: "up", anim: "stand" },
 ];
 
+// Where people go during a meeting: the four chairs first, then standing places around the table.
+const MEETING_SPOTS = [
+  ...SPOTS.filter((s) => s.key.startsWith("meet")),
+  { key: "meetS1", tx: 25, ty: 3, dir: "down", anim: "stand" },
+  { key: "meetS2", tx: 25, ty: 6, dir: "up", anim: "stand" },
+  { key: "meetS3", tx: 23, ty: 4, dir: "right", anim: "stand" },
+  { key: "meetS4", tx: 28, ty: 4, dir: "left", anim: "stand" },
+  { key: "meetS5", tx: 27, ty: 3, dir: "down", anim: "stand" },
+  { key: "meetS6", tx: 27, ty: 6, dir: "up", anim: "stand" },
+  { key: "meetS7", tx: 28, ty: 6, dir: "left", anim: "stand" },
+  { key: "meetS8", tx: 28, ty: 5, dir: "left", anim: "stand" },
+];
+
 // Desk layout inside the open office (x 8..21): seat tile columns / rows by head-count
 function deskLayout(n) {
   const cols = n <= 2 ? [14] : n <= 4 ? [11, 17] : [10, 14, 18];
@@ -229,6 +242,7 @@ class Office {
     const prev = e.status;
     e.status = status;
     const now = performance.now();
+    if (e.meet) { e.bubble = null; return; } // in a meeting: stays in the room whatever the status
     if (status === "working" || status === "waiting" || status === "error") {
       e.spot = null;
       e.bubble = null;
@@ -251,6 +265,39 @@ class Office {
     const s = SPOTS.find((x) => x.key.startsWith("sofa") && !taken.has(x.key)) || SPOTS.find((x) => x.anim === "sitfree" && !taken.has(x.key));
     if (s && this.goToSpot(e, s)) e.spot = s;
     else { e.spot = null; this.goTo(e, e.seat.tx, e.seat.ty); }
+  }
+
+  // Meeting on: participants gather in the meeting room; `hands` = ids with a raised hand. null ends it.
+  setMeeting(ids, hands = []) {
+    const inRoom = new Set(ids || []);
+    const raised = new Set(hands);
+    this.meetingOn = inRoom.size > 0;
+    const now = performance.now();
+    for (const e of this.emps) {
+      e.hand = raised.has(e.id);
+      if (inRoom.has(e.id)) {
+        if (e.meet) continue;
+        e.meet = true;
+        e.bubble = null;
+        e.spot = null;
+      } else if (e.meet) {
+        e.meet = false;
+        e.spot = null;
+        this.goTo(e, e.seat.tx, e.seat.ty);
+        e.restUntil = now + rand(9000, 22000);
+      } else if (this.meetingOn && e.spot && e.spot.key.startsWith("meet")) {
+        // somebody idling in the meeting room makes way
+        e.spot = null;
+        this.goTo(e, e.seat.tx, e.seat.ty);
+        e.restUntil = now + rand(9000, 22000);
+      }
+    }
+    for (const e of this.emps) {
+      if (!e.meet || e.spot) continue;
+      const taken = new Set(this.emps.filter((o) => o !== e && o.spot).map((o) => o.spot.key));
+      const s = MEETING_SPOTS.find((x) => !taken.has(x.key));
+      if (s && this.goToSpot(e, s)) e.spot = s;
+    }
   }
 
   setUnread(id, n) { const e = this.emps.find((x) => x.id === id); if (e) e.unread = n; }
@@ -333,7 +380,7 @@ class Office {
 
   freeSpot(e) {
     const taken = new Set(this.emps.filter((o) => o !== e && o.spot).map((o) => o.spot.key));
-    const options = SPOTS.filter((s) => !taken.has(s.key));
+    const options = SPOTS.filter((s) => !taken.has(s.key) && !(this.meetingOn && s.key.startsWith("meet")));
     return options.length ? options[Math.floor(Math.random() * options.length)] : null;
   }
 
@@ -378,6 +425,7 @@ class Office {
       } else {
         e.anim = "stand";
       }
+      if (e.meet) continue;
       if (e.status === "idle" && now > e.restUntil) this.decideIdle(e, now);
       if (e.status !== "idle" && e.status !== "sick" && !this.atSeat(e)) this.goTo(e, e.seat.tx, e.seat.ty);
     }
@@ -973,7 +1021,22 @@ function drawOverhead(b, e, t, occupied) {
     b.fillStyle = "#fff"; for (let i = 0; i < 6; i++) b.fillRect(cx - 8 + i, y0 + 3 + i, 1, 1), b.fillRect(cx + 7 - i, y0 + 3 + i, 1, 1);
     top = y0 - 4;
   }
-  if (e.status === "working" && (e.anim === "type" || e.anim === "walk")) {
+  if (e.meet && e.hand) {
+    // raised hand: palm and four fingers on a white card
+    bubble(20, 20, "#fff");
+    const hx = cx - 5, hy = top - 17 + bob;
+    b.fillStyle = "#e0a030"; b.fillRect(hx, hy + 5, 10, 9); b.fillRect(hx - 2, hy + 8, 2, 4);
+    for (let i = 0; i < 4; i++) b.fillRect(hx + i * 3, hy + (i === 0 || i === 3 ? 2 : 0), 2, 6);
+    b.fillStyle = "#ffd166"; b.fillRect(hx + 1, hy + 6, 8, 7); for (let i = 0; i < 4; i++) b.fillRect(hx + i * 3, hy + (i === 0 || i === 3 ? 3 : 1), 1, 4);
+  } else if (e.meet && e.status === "working" && !e.path.length) {
+    // speaking in the meeting
+    bubble(28, 16, "#fff");
+    b.fillStyle = "#2b2b2b";
+    const n = Math.floor(t / 350) % 4;
+    for (let i = 0; i < 3; i++) b.fillRect(cx - 10 + i * 8, top - 10 + bob + (i < n ? -2 : 0), 4, 4);
+  } else if (e.meet) {
+    // listening: nothing over the head
+  } else if (e.status === "working" && (e.anim === "type" || e.anim === "walk")) {
     bubble(28, 16, "#fff");
     b.fillStyle = "#2b2b2b";
     const n = Math.floor(t / 350) % 4;

@@ -8,7 +8,7 @@ export interface Colleagues {
   list(): Employee[];
 }
 
-export const OFFICE_TOOLS = ["mcp__office__list_colleagues", "mcp__office__message_colleague"];
+export const OFFICE_TOOLS = ["mcp__office__list_colleagues", "mcp__office__message_colleague", "mcp__office__raise_hand"];
 
 const text = (s: string, isError = false) => ({ content: [{ type: "text" as const, text: s }], ...(isError ? { isError: true } : {}) });
 
@@ -27,6 +27,11 @@ export function officeServer(self: Employee, colleagues: Colleagues) {
       tool("list_colleagues", t("server.office.listDesc"), {}, async () => {
         const rows = others().map((e) => `- ${e.cfg.name} (${e.cfg.role}) — ${e.status}`);
         return text(rows.length ? rows.join("\n") : t("server.office.none"));
+      }),
+      tool("raise_hand", t("server.office.handDesc"), { reason: z.string().describe(t("server.office.handReasonDesc")) }, async ({ reason }) => {
+        if (!self.inMeeting) return text(t("server.office.handNoMeeting"), true);
+        self.raiseHand(reason.trim().slice(0, 200));
+        return text(t("server.office.handRaised"));
       }),
       tool(
         "message_colleague",

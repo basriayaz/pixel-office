@@ -45,7 +45,7 @@ function mergeRoster(officeId, list, info) {
     const old = prev?.employees.get(e.id);
     employees.set(e.id, { ...e, messages: old?.messages ?? [], pending: old?.pending ?? [], loaded: old?.loaded ?? false, unread: old?.unread ?? 0 });
   }
-  state.offices.set(officeId, { info: info ?? prev?.info ?? { id: officeId, name: officeId }, employees });
+  state.offices.set(officeId, { info: info ?? prev?.info ?? { id: officeId, name: officeId }, employees, meeting: prev?.meeting ?? null });
 }
 
 function showOffice(officeId, keepChat = false) {
@@ -65,6 +65,7 @@ function showOffice(officeId, keepChat = false) {
   office.fit(); // roster height changes with head-count
   if (state.selected && o.employees.has(state.selected)) { renderHead(o.employees.get(state.selected)); send({ type: "open", id: state.selected }); }
   else if (state.selected) closeChat();
+  meetingUI.sync();
 }
 
 function renderOfficeTabs() {
@@ -87,7 +88,7 @@ function handle(m) {
   if (m.type === "shutdown") { markClosed(); return; }
   if (m.type === "reload") { setTimeout(() => location.reload(), 300); return; }
   if (m.type === "init") {
-    for (const o of m.offices) mergeRoster(o.id, o.employees, { id: o.id, name: o.name, cwd: o.cwd, theme: o.theme });
+    for (const o of m.offices) { mergeRoster(o.id, o.employees, { id: o.id, name: o.name, cwd: o.cwd, theme: o.theme }); state.offices.get(o.id).meeting = o.meeting ?? null; }
     const hired = params.get("hired");
     if (hired && !state.inited) { state.entering = new Set([hired]); history.replaceState(null, "", `/?office=${encodeURIComponent(state.office)}`); }
     state.inited = true;
@@ -112,6 +113,7 @@ function handle(m) {
     else renderOfficeTabs();
     return;
   }
+  if (m.type === "meeting" || m.type === "meeting_entry") { meetingUI.onMessage(m); return; }
   const e = employeesOf(m.office)?.get(m.id);
   if (!e) return;
   const current = m.office === state.office;
@@ -120,6 +122,7 @@ function handle(m) {
     case "status":
       e.status = m.status;
       e.sickUntil = m.sickUntil || 0;
+      if (current) meetingUI.onStatus();
       if (current) { office.setStatus(m.id, m.status, m.reason); renderRoster(); }
       renderOfficeTabs();
       if (selected) { renderHead(e); updateTyping(e); }
@@ -175,7 +178,7 @@ function handle(m) {
       e.cost = m.cost;
       if (m.model) e.model = m.model;
       if (selected) renderHead(e);
-      else if (m.durationMs > 0) toast(t("ui.toast.done", { name: e.name }));
+      else if (m.durationMs > 0 && !meetingUI.has(e.id)) toast(t("ui.toast.done", { name: e.name }));
       if (current) renderRoster();
       break;
   }
@@ -221,7 +224,7 @@ function applyChatW() {
 }
 applyChatW();
 window.addEventListener("resize", applyChatW);
-$("chatResize").addEventListener("pointerdown", (ev) => {
+for (const hid of ["chatResize", "meetResize"]) $(hid).addEventListener("pointerdown", (ev) => {
   if (window.innerWidth <= 900) return;
   ev.preventDefault();
   const handle = ev.currentTarget; handle.setPointerCapture(ev.pointerId); document.body.classList.add("resizing");
@@ -230,9 +233,10 @@ $("chatResize").addEventListener("pointerdown", (ev) => {
   handle.addEventListener("pointermove", move); handle.addEventListener("pointerup", up);
 });
 
-function clearAttachments() { if (attachments.length) { attachments.length = 0; renderAttachments(); } }
+function clearAttachments() { chatAttachments.clear(); }
 
 function openChat(id) {
+  if (meetingUI.intercept(id)) return;
   if (state.selected !== id) clearAttachments();
   const e = cur()?.employees.get(id);
   if (!e) return;
@@ -362,6 +366,8 @@ function buildRow(e, msg) {
     row.innerHTML = `<div class="row-main"><div class="bubble">${imgs}${escapeHtml(msg.text)}</div><div class="row-meta">${timeStr(msg.ts)}</div></div>`;
   } else if (msg.role === "colleague") {
     row.innerHTML = `<div class="row-main"><div class="row-meta">💬 ${escapeHtml(t("ui.chat.fromColleague", { name: msg.from || "" }))} · ${timeStr(msg.ts)}</div><div class="bubble">${md(msg.text)}</div></div>`;
+  } else if (msg.role === "meeting") {
+    row.innerHTML = `<div class="row-main"><div class="row-meta">👥 ${timeStr(msg.ts)}</div><div class="bubble">${md(msg.text)}</div></div>`;
   } else if (msg.role === "auto") {
     row.innerHTML = `<details class="auto-card"><summary>${t("ui.chat.autoRefresh")} · ${timeStr(msg.ts)}</summary><div class="auto-text">${escapeHtml(msg.text)}</div></details>`;
   } else {
@@ -563,64 +569,68 @@ function autoGrow() {
   input.style.height = Math.min(160, input.scrollHeight) + "px";
 }
 input.addEventListener("input", autoGrow);
-// ---- pasted / dropped images, sent along with the next message ----
-const attachments = []; // { media_type, data (base64), url (data URL for the preview) }
+// ---- pasted / dropped images, sent along with the next message (chat and meeting panels share this) ----
 const IMAGE_TYPES = ["image/png", "image/jpeg", "image/gif", "image/webp"];
 const MAX_SIDE = 2000;
-function renderAttachments() {
-  const host = $("chatAttach");
-  host.innerHTML = "";
-  host.hidden = attachments.length === 0;
-  attachments.forEach((a, i) => {
-    const d = document.createElement("div");
-    d.className = "thumb";
-    d.innerHTML = `<img src="${a.url}" alt="" /><button type="button" title="${escapeHtml(t("ui.chat.attachRemove"))}">×</button>`;
-    d.querySelector("button").onclick = () => { attachments.splice(i, 1); renderAttachments(); };
-    host.appendChild(d);
-  });
-}
-// Reads an image file, shrinking very large ones so the payload stays small; gifs are kept as-is.
-function addImageFile(file) {
-  if (!IMAGE_TYPES.includes(file.type) || attachments.length >= 10) return;
-  const reader = new FileReader();
-  reader.onload = () => {
-    const url = reader.result;
-    const done = (u, type) => { attachments.push({ media_type: type, data: u.slice(u.indexOf(",") + 1), url: u }); renderAttachments(); input.focus(); };
-    if (file.type === "image/gif") return done(url, file.type);
-    const img = new Image();
-    img.onload = () => {
-      const k = Math.min(1, MAX_SIDE / Math.max(img.width, img.height));
-      if (k === 1) return done(url, file.type);
-      const c = document.createElement("canvas");
-      c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
-      c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
-      const type = file.type === "image/png" ? "image/png" : "image/jpeg";
-      done(c.toDataURL(type, 0.9), type);
-    };
-    img.onerror = () => done(url, file.type);
-    img.src = url;
+function makeAttachments(inputEl, hostEl, dropEl, canDrop = () => true) {
+  const list = []; // { media_type, data (base64), url (data URL for the preview) }
+  const render = () => {
+    hostEl.innerHTML = "";
+    hostEl.hidden = list.length === 0;
+    list.forEach((a, i) => {
+      const d = document.createElement("div");
+      d.className = "thumb";
+      d.innerHTML = `<img src="${a.url}" alt="" /><button type="button" title="${escapeHtml(t("ui.chat.attachRemove"))}">×</button>`;
+      d.querySelector("button").onclick = () => { list.splice(i, 1); render(); };
+      hostEl.appendChild(d);
+    });
   };
-  reader.readAsDataURL(file);
+  // Reads an image file, shrinking very large ones so the payload stays small; gifs are kept as-is.
+  const addFile = (file) => {
+    if (!IMAGE_TYPES.includes(file.type) || list.length >= 10) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const url = reader.result;
+      const done = (u, type) => { list.push({ media_type: type, data: u.slice(u.indexOf(",") + 1), url: u }); render(); inputEl.focus(); };
+      if (file.type === "image/gif") return done(url, file.type);
+      const img = new Image();
+      img.onload = () => {
+        const k = Math.min(1, MAX_SIDE / Math.max(img.width, img.height));
+        if (k === 1) return done(url, file.type);
+        const c = document.createElement("canvas");
+        c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
+        c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+        const type = file.type === "image/png" ? "image/png" : "image/jpeg";
+        done(c.toDataURL(type, 0.9), type);
+      };
+      img.onerror = () => done(url, file.type);
+      img.src = url;
+    };
+    reader.readAsDataURL(file);
+  };
+  inputEl.addEventListener("paste", (ev) => {
+    const files = [...(ev.clipboardData?.items || [])].filter((it) => it.kind === "file").map((it) => it.getAsFile()).filter(Boolean);
+    if (!files.length) return;
+    ev.preventDefault();
+    files.forEach(addFile);
+  });
+  dropEl.addEventListener("dragover", (ev) => { if (canDrop() && [...ev.dataTransfer.types].includes("Files")) { ev.preventDefault(); dropEl.classList.add("dragover"); } });
+  dropEl.addEventListener("dragleave", () => dropEl.classList.remove("dragover"));
+  dropEl.addEventListener("drop", (ev) => { ev.preventDefault(); dropEl.classList.remove("dragover"); [...ev.dataTransfer.files].forEach(addFile); });
+  return {
+    get length() { return list.length; },
+    clear() { if (list.length) { list.length = 0; render(); } },
+    take() { const out = list.map(({ media_type, data }) => ({ media_type, data })); list.length = 0; render(); return out; },
+  };
 }
-input.addEventListener("paste", (ev) => {
-  const files = [...(ev.clipboardData?.items || [])].filter((it) => it.kind === "file").map((it) => it.getAsFile()).filter(Boolean);
-  if (!files.length) return;
-  ev.preventDefault();
-  files.forEach(addImageFile);
-});
-const chatEl = $("chat");
-chatEl.addEventListener("dragover", (ev) => { if (state.selected && [...ev.dataTransfer.types].includes("Files")) { ev.preventDefault(); chatEl.classList.add("dragover"); } });
-chatEl.addEventListener("dragleave", () => chatEl.classList.remove("dragover"));
-chatEl.addEventListener("drop", (ev) => { ev.preventDefault(); chatEl.classList.remove("dragover"); [...ev.dataTransfer.files].forEach(addImageFile); });
+const chatAttachments = makeAttachments(input, $("chatAttach"), $("chat"), () => !!state.selected);
 
 $("chatForm").onsubmit = (ev) => {
   ev.preventDefault();
   const text = input.value.trim();
-  if ((!text && !attachments.length) || !state.selected) return;
-  const images = attachments.map(({ media_type, data }) => ({ media_type, data }));
+  if ((!text && !chatAttachments.length) || !state.selected) return;
+  const images = chatAttachments.take();
   send({ type: "send", id: state.selected, text, ...(images.length ? { images } : {}) });
-  attachments.length = 0;
-  renderAttachments();
   input.value = "";
   autoGrow();
 };
@@ -642,5 +652,4 @@ function tickClock() {
 }
 tickClock();
 setInterval(tickClock, 10000);
-
-connect();
+// connect() is called at the end of meeting.js, once every script is in place

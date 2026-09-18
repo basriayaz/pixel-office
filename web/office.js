@@ -553,6 +553,10 @@ function drawFloors(b, theme = "default") {
     else if (floor === "darkTiles") drawDarkTiles(b, x, y, w, h);
     else if (floor === "sand") drawSand(b, x, y, w, h);
     else if (floor === "checker") drawChecker(b, x, y, w, h);
+    else if (floor === "clouds") drawClouds(b, x, y, w, h);
+    else if (floor === "dreamwood") drawDreamWood(b, x, y, w, h);
+    else if (floor === "starCarpet") drawStarCarpet(b, x, y, w, h);
+    else if (floor === "nightTiles") drawNightTiles(b, x, y, w, h);
     else drawConcrete(b, x, y, w, h);
   }
   // door thresholds
@@ -579,6 +583,8 @@ function drawFloors(b, theme = "default") {
     drawCompassRug(b, 8, 11 * TILE + 8);
   } else if (T.rug === "vinyl") {
     drawVinylRug(b, 8, 11 * TILE + 8);
+  } else if (T.rug === "moon") {
+    drawMoonRug(b, 8, 11 * TILE + 8);
   } else if (T.rug === "round") {
     b.fillStyle = "#e9c4d3"; b.fillRect(30, 11 * TILE + 30, 100, 100); b.fillRect(20, 11 * TILE + 46, 120, 68); b.fillRect(46, 11 * TILE + 20, 68, 120);
     b.fillStyle = "#f4dbe5"; b.fillRect(40, 11 * TILE + 40, 80, 80); b.fillRect(32, 11 * TILE + 52, 96, 56); b.fillRect(52, 11 * TILE + 32, 56, 96);
@@ -2532,3 +2538,207 @@ window.Office = Office;
 window.drawPerson = drawPerson;
 window.portraitOf = portraitOf;
 window.shoeDefault = shoeDefault;
+
+// --- dream theme (dream interpretation & visualisation studio) ---
+THEMES.dream = { dark: true, wall: { face: "#3b2f6b", top: "#4b3d84", base: "#2e2454", base2: "#211a3d", edge: "#161130", inner: "#4a3c7c", innerLight: "#6152a0", innerDark: "#251e42" }, floors: { kitchen: "clouds", office: "dreamwood", meeting: "starCarpet", lounge: "clouds", archive: "nightTiles" }, rug: "moon" };
+const DREAM = { night: "#1c1740", navy: "#262058", violet: "#6d5bb5", lilac: "#a99be0", cloud: "#e9e6f7", cloudDark: "#cfc9ec", gold: "#ffd166", goldDark: "#c9973b", pink: "#f4a6c8", teal: "#7fd8d0", wood: "#5a4a7a", woodDark: "#3f3358", woodLight: "#7a6a9e" };
+
+function drawClouds(b, x, y, w, h) { // soft cloud floor
+  b.fillStyle = "#d9d5ef"; b.fillRect(x, y, w, h);
+  let s = 7;
+  for (let i = 0; i < Math.floor((w * h) / 900); i++) {
+    s = (s * 1103515245 + 12345) & 0x7fffffff;
+    const px = x + (s % w), py = y + ((s >> 8) % h), cw = 14 + (s >> 16) % 18, ch = 6 + (s >> 20) % 5;
+    if (px + cw > x + w || py + ch + 3 > y + h) continue;
+    b.fillStyle = "#f3f1fb"; b.fillRect(px, py, cw, ch); b.fillRect(px + 4, py - 3, cw - 8, 3);
+    b.fillStyle = "#c9c3e6"; b.fillRect(px, py + ch, cw, 1);
+  }
+}
+function drawDreamWood(b, x, y, w, h) { // muted violet planks
+  b.fillStyle = DREAM.wood; b.fillRect(x, y, w, h);
+  for (let py = y; py < y + h; py += 16) {
+    const row = (py - y) / 16;
+    b.fillStyle = row % 2 ? "#564771" : "#5e4e80"; b.fillRect(x, py, w, 16);
+    b.fillStyle = DREAM.woodDark; b.fillRect(x, py + 15, w, 1);
+    const off = (row % 3) * 48; for (let px = x + 24 - off; px < x + w; px += 144) if (px >= x) b.fillRect(px, py, 1, 16);
+    b.fillStyle = "rgba(255,255,255,.06)"; for (let px = x + 40 + off; px < x + w; px += 144) if (px + 6 < x + w) b.fillRect(px, py + 5, 6, 1);
+  }
+}
+function drawStarCarpet(b, x, y, w, h) { // deep navy carpet with tiny stars
+  b.fillStyle = DREAM.navy; b.fillRect(x, y, w, h);
+  b.fillStyle = "#2d2766"; for (let py = y + 4; py < y + h; py += 8) for (let px = x + ((py / 8) % 2) * 4; px < x + w; px += 8) b.fillRect(px, py, 2, 2);
+  b.fillStyle = "#fff3b0"; for (let i = 0; i < Math.floor((w * h) / 700); i++) { const px = x + ((i * 53) % (w - 4)), py = y + ((i * 97) % (h - 4)); b.fillRect(px + 1, py, 1, 3); b.fillRect(px, py + 1, 3, 1); }
+}
+function drawNightTiles(b, x, y, w, h) {
+  for (let py = y; py < y + h; py += 32) for (let px = x; px < x + w; px += 32) { b.fillStyle = ((px + py) / 32) % 2 ? "#332b5c" : "#2d2652"; b.fillRect(px, py, 32, 32); b.fillStyle = "#211b40"; b.fillRect(px, py + 31, 32, 1); b.fillRect(px + 31, py, 1, 32); b.fillStyle = "rgba(255,255,255,.05)"; b.fillRect(px + 2, py + 2, 12, 1); }
+}
+let moonRug = null;
+function drawMoonRug(b, x, y) { // crescent moon on a night-blue round rug
+  if (!moonRug) {
+    moonRug = document.createElement("canvas"); moonRug.width = 144; moonRug.height = 144;
+    const g = moonRug.getContext("2d");
+    disc(g, 72, 72, 70, "#3a2f6e"); disc(g, 72, 72, 64, DREAM.night); disc(g, 72, 72, 60, "#221c4a");
+    g.fillStyle = DREAM.gold; for (let a = 0; a < 24; a++) g.fillRect(72 + Math.round(Math.cos(a / 24 * Math.PI * 2) * 62) - 1, 72 + Math.round(Math.sin(a / 24 * Math.PI * 2) * 62) - 1, 2, 2);
+    disc(g, 72, 72, 34, DREAM.gold); disc(g, 84, 64, 30, "#221c4a");
+    g.fillStyle = "#fff3b0"; for (const [sx, sy] of [[92, 84], [104, 72], [96, 100], [40, 108], [110, 96]]) { g.fillRect(sx, sy - 2, 1, 5); g.fillRect(sx - 2, sy, 5, 1); }
+  }
+  b.drawImage(moonRug, x, y);
+}
+function drawZ(b, x, y, col, s = 1) { // a floating "z"
+  b.fillStyle = col; b.fillRect(x, y, 4 * s, s); b.fillRect(x + 2 * s, y + s, s, s); b.fillRect(x + s, y + 2 * s, s, s); b.fillRect(x, y + 3 * s, 4 * s, s);
+}
+function drawCrystalBall(b, cx, cy, r, t, seed = 0) { // glowing crystal ball on a small stand
+  const pulse = (Math.floor((t + seed) / 400) % 4);
+  b.fillStyle = `rgba(127,216,208,${0.10 + pulse * 0.04})`; b.fillRect(cx - r - 4, cy - r - 4, r * 2 + 8, r * 2 + 8);
+  outlineRect(b, cx - r + 1, cy + r - 2, r * 2 - 2, 4, DREAM.goldDark);
+  disc(b, cx, cy, r + 1, OUTLINE); disc(b, cx, cy, r, "#8fd3e8"); disc(b, cx + 1, cy + 1, r - 2, "#6fb8d8");
+  b.fillStyle = "#e8fbff"; b.fillRect(cx - r + 2, cy - r + 3, 2, 3); b.fillRect(cx - r + 3, cy - r + 2, 3, 1);
+  b.fillStyle = "#c9a5f0"; b.fillRect(cx - 1 + (pulse % 2), cy - 1, 3, 2); b.fillRect(cx + 2 - pulse, cy + 2, 2, 1);
+}
+function drawTeaBar(b, x, y, t) { // kitchen counter: herbal tea bar
+  outlineRect(b, x, y + 6, 160, 26, DREAM.wood); b.fillStyle = DREAM.woodLight; b.fillRect(x, y + 6, 160, 4); b.fillStyle = DREAM.woodDark; b.fillRect(x, y + 30, 160, 2);
+  for (let i = 0; i < 5; i++) { b.fillStyle = "#4e4070"; b.fillRect(x + i * 32 + 2, y + 14, 28, 16); b.fillStyle = DREAM.gold; b.fillRect(x + i * 32 + 13, y + 21, 6, 2); }
+  // kettle with steam
+  outlineRect(b, x + 8, y - 8, 22, 14, "#c9c9d6"); b.fillStyle = "#9d9db0"; b.fillRect(x + 8, y - 8, 22, 3); b.fillStyle = OUTLINE; b.fillRect(x + 30, y - 4, 6, 2); b.fillRect(x + 34, y - 8, 2, 5); b.fillRect(x + 14, y - 12, 10, 4); b.fillStyle = DREAM.gold; b.fillRect(x + 16, y - 11, 6, 2);
+  b.fillStyle = "rgba(255,255,255,.55)"; for (let i = 0; i < 3; i++) { const ph = (Math.floor(t / 260) + i * 2) % 6; b.fillRect(x + 34 + (ph % 2), y - 14 - ph * 2, 2, 2); }
+  // jars of herbs, moon mug, honey
+  for (let i = 0; i < 3; i++) { const c = ["#7fb87f", "#c9a06a", "#a06ac9"][i]; outlineRect(b, x + 46 + i * 13, y - 10, 10, 16, "#dfe6f0"); b.fillStyle = c; b.fillRect(x + 48 + i * 13, y - 4, 6, 8); b.fillStyle = DREAM.wood; b.fillRect(x + 46 + i * 13, y - 12, 10, 3); }
+  outlineRect(b, x + 92, y - 6, 10, 10, DREAM.night); b.fillStyle = DREAM.gold; b.fillRect(x + 96, y - 3, 3, 3); b.fillRect(x + 97, y - 4, 1, 1); b.fillStyle = OUTLINE; b.fillRect(x + 103, y - 3, 2, 4);
+  outlineRect(b, x + 112, y - 8, 12, 12, "#f0b840"); b.fillStyle = "#c98a20"; b.fillRect(x + 114, y - 2, 8, 2); b.fillStyle = DREAM.wood; b.fillRect(x + 113, y - 11, 10, 3);
+  // stack of dream journals at the end
+  for (let i = 0; i < 3; i++) { outlineRect(b, x + 134 + (i % 2), y - 2 - i * 4, 20, 4, [DREAM.violet, DREAM.pink, DREAM.teal][i]); }
+}
+function drawGrandfatherClock(b, x, y, t = 0) { // fridge slot: tall clock with a swinging pendulum and a moon face
+  outlineRect(b, x + 4, y - 30, 24, 60, DREAM.wood); b.fillStyle = DREAM.woodLight; b.fillRect(x + 4, y - 30, 24, 3); b.fillStyle = DREAM.woodDark; b.fillRect(x + 4, y + 26, 24, 4);
+  disc(b, x + 16, y - 18, 9, OUTLINE); disc(b, x + 16, y - 18, 8, "#f4ecd8");
+  b.fillStyle = DREAM.night; b.fillRect(x + 13, y - 24, 6, 3); disc(b, x + 20, y - 21, 3, "#f4ecd8"); // moon phase dial
+  const d = new Date(); const ha = ((d.getHours() % 12) + d.getMinutes() / 60) / 12 * Math.PI * 2 - Math.PI / 2, ma = d.getMinutes() / 60 * Math.PI * 2 - Math.PI / 2;
+  line(b, x + 16, y - 17, x + 16 + Math.cos(ha) * 4, y - 17 + Math.sin(ha) * 4, OUTLINE); line(b, x + 16, y - 17, x + 16 + Math.cos(ma) * 6, y - 17 + Math.sin(ma) * 6, OUTLINE);
+  b.fillStyle = "#2a2340"; b.fillRect(x + 8, y - 6, 16, 30);
+  const sw = Math.round(Math.sin(t / 500) * 4);
+  b.fillStyle = DREAM.gold; b.fillRect(x + 15 + Math.round(sw / 2), y - 6, 2, 18); disc(b, x + 16 + sw, y + 14, 4, DREAM.goldDark); disc(b, x + 16 + sw, y + 14, 3, DREAM.gold);
+}
+function drawMoonTable(b, x, y, t = 0) { // roundTable slot: table with a crescent-moon top and a candle
+  b.fillStyle = OUTLINE; b.fillRect(x + 6, y + 2, 52, 26); b.fillRect(x + 2, y + 6, 60, 18);
+  b.fillStyle = DREAM.night; b.fillRect(x + 7, y + 3, 50, 24); b.fillRect(x + 3, y + 7, 58, 16);
+  b.fillStyle = "#151033"; b.fillRect(x + 7, y + 23, 50, 4); b.fillStyle = OUTLINE; b.fillRect(x + 28, y + 26, 8, 6);
+  disc(b, x + 22, y + 14, 8, DREAM.gold); disc(b, x + 25, y + 12, 7, DREAM.night);
+  b.fillStyle = "#fff3b0"; b.fillRect(x + 40, y + 8, 1, 3); b.fillRect(x + 39, y + 9, 3, 1); b.fillRect(x + 48, y + 16, 1, 3); b.fillRect(x + 47, y + 17, 3, 1);
+  b.fillStyle = "#f4ecd8"; b.fillRect(x + 40, y + 16, 3, 7); drawCandleFlame(b, x + 40, y + 16, t, 3);
+}
+function drawCloudStool(b, x, y) { // stool slot: cloud pouf
+  outlineRect(b, x + 7, y + 14, 18, 8, DREAM.cloud); b.fillStyle = "#ffffff"; b.fillRect(x + 9, y + 12, 6, 3); b.fillRect(x + 17, y + 11, 6, 4); b.fillStyle = OUTLINE; b.fillRect(x + 9, y + 11, 6, 1); b.fillRect(x + 17, y + 10, 6, 1);
+  b.fillStyle = DREAM.cloudDark; b.fillRect(x + 8, y + 20, 16, 2);
+}
+function drawDreamTable(b, x, y, t = 0) { // meeting table slot 128x48: interpretation table
+  outlineRect(b, x + 4, y + 4, 120, 48, DREAM.wood); b.fillStyle = DREAM.woodLight; b.fillRect(x + 4, y + 4, 120, 4); b.fillStyle = DREAM.woodDark; b.fillRect(x + 4, y + 46, 120, 6);
+  b.fillStyle = "#4e4272"; b.fillRect(x + 8, y + 10, 112, 34);
+  // open dream dictionary
+  outlineRect(b, x + 14, y + 14, 40, 26, "#f4ecd8"); b.fillStyle = "#d9d0b8"; b.fillRect(x + 34, y + 14, 1, 26);
+  b.fillStyle = "#8a7fb8"; for (let i = 0; i < 5; i++) { b.fillRect(x + 17, y + 18 + i * 4, 14 - (i % 2) * 4, 1); b.fillRect(x + 37, y + 18 + i * 4, 13 - ((i + 1) % 2) * 4, 1); }
+  b.fillStyle = DREAM.gold; b.fillRect(x + 40, y + 20, 6, 6); b.fillStyle = DREAM.night; b.fillRect(x + 43, y + 20, 5, 5);
+  // crystal ball in the middle, tarot cards, candles
+  drawCrystalBall(b, x + 70, y + 24, 8, t, 40);
+  for (let i = 0; i < 3; i++) { const c = [DREAM.violet, DREAM.pink, DREAM.teal][i]; outlineRect(b, x + 88 + i * 9, y + 16 + (i % 2) * 2, 8, 12, "#f4ecd8"); b.fillStyle = c; b.fillRect(x + 90 + i * 9, y + 18 + (i % 2) * 2, 4, 8); b.fillStyle = DREAM.gold; b.fillRect(x + 91 + i * 9, y + 21 + (i % 2) * 2, 2, 2); }
+  for (const [cx, seed] of [[x + 60, 1], [x + 112, 2]]) { b.fillStyle = "#f4ecd8"; b.fillRect(cx, y + 32, 3, 8); drawCandleFlame(b, cx, y + 32, t, seed); }
+  b.fillStyle = "rgba(255,209,102,.08)"; b.fillRect(x + 8, y + 10, 112, 34);
+}
+function drawChaise(b, x, y) { // sofa slot: the analyst's velvet couch
+  outlineRect(b, x + 2, y - 12, 34, 20, "#7a3b6b"); b.fillStyle = "#9a4f88"; b.fillRect(x + 2, y - 12, 34, 3); b.fillStyle = "#5e2c52"; b.fillRect(x + 4, y - 4, 30, 1);
+  outlineRect(b, x, y + 6, 96, 22, "#7a3b6b"); b.fillStyle = "#9a4f88"; b.fillRect(x + 4, y + 8, 88, 10); b.fillStyle = "#5e2c52"; b.fillRect(x, y + 22, 96, 6); b.fillStyle = "#b565a2"; for (let i = 0; i < 5; i++) b.fillRect(x + 8 + i * 18, y + 10, 10, 1);
+  outlineRect(b, x + 6, y + 2, 26, 10, DREAM.cloud); b.fillStyle = DREAM.cloudDark; b.fillRect(x + 8, y + 9, 22, 2); // pillow
+  outlineRect(b, x + 56, y + 4, 36, 8, DREAM.lilac); b.fillStyle = DREAM.violet; for (let i = 0; i < 4; i++) b.fillRect(x + 58 + i * 9, y + 6, 4, 1); // folded blanket
+  b.fillStyle = OUTLINE; b.fillRect(x + 4, y + 28, 4, 4); b.fillRect(x + 88, y + 28, 4, 4); b.fillStyle = DREAM.goldDark; b.fillRect(x + 5, y + 28, 2, 3); b.fillRect(x + 89, y + 28, 2, 3);
+}
+function drawCrystalStand(b, x, y, t = 0) { // coffee table slot: low table with a crystal ball and cards
+  outlineRect(b, x + 12, y + 8, 72, 16, DREAM.wood); b.fillStyle = DREAM.woodLight; b.fillRect(x + 12, y + 8, 72, 2); b.fillStyle = OUTLINE; b.fillRect(x + 16, y + 24, 3, 6); b.fillRect(x + 77, y + 24, 3, 6);
+  drawCrystalBall(b, x + 48, y + 8, 7, t, 90);
+  outlineRect(b, x + 18, y + 10, 10, 12, "#f4ecd8"); b.fillStyle = DREAM.pink; b.fillRect(x + 20, y + 12, 6, 8); outlineRect(b, x + 26, y + 12, 10, 12, "#f4ecd8"); b.fillStyle = DREAM.violet; b.fillRect(x + 28, y + 14, 6, 8);
+  outlineRect(b, x + 64, y + 12, 14, 8, DREAM.night); b.fillStyle = DREAM.gold; b.fillRect(x + 66, y + 14, 4, 4); b.fillStyle = DREAM.night; b.fillRect(x + 68, y + 14, 3, 3); // notebook with a moon
+}
+function drawDreamShelf(b, x, y) { // bookshelf slot: dream journals + an hourglass
+  outlineRect(b, x + 2, y - 30, 28, 60, DREAM.wood); b.fillStyle = "#332a55"; b.fillRect(x + 4, y - 28, 24, 56);
+  const cols = [DREAM.violet, DREAM.pink, DREAM.teal, DREAM.gold, "#6a8fd8", "#c96a8a"];
+  for (let s = 0; s < 3; s++) {
+    b.fillStyle = DREAM.woodLight; b.fillRect(x + 4, y - 12 + s * 18 - 2, 24, 2);
+    if (s === 1) { b.fillStyle = OUTLINE; b.fillRect(x + 12, y - 27 + s * 18, 8, 1); b.fillRect(x + 12, y - 16 + s * 18, 8, 1); b.fillStyle = "#e8fbff"; b.fillRect(x + 13, y - 26 + s * 18, 6, 4); b.fillRect(x + 13, y - 20 + s * 18, 6, 4); b.fillStyle = DREAM.gold; b.fillRect(x + 15, y - 21 + s * 18, 2, 3); continue; }
+    for (let i = 0; i < 4; i++) { const c = cols[(s * 4 + i) % cols.length]; outlineRect(b, x + 5 + i * 6, y - 26 + s * 18 - (i % 2), 5, 13 + (i % 2), c); b.fillStyle = "#fff3b0"; b.fillRect(x + 7 + i * 6, y - 22 + s * 18, 1, 1); }
+  }
+}
+function drawMoonLamp(b, x, y, t = 0) { // lamp slot: floor lamp with a glowing moon
+  const glow = 0.10 + (Math.floor(t / 700) % 2) * 0.04;
+  b.fillStyle = `rgba(255,243,176,${glow})`; b.fillRect(x - 2, y - 30, 36, 34);
+  outlineRect(b, x + 8, y + 22, 16, 6, DREAM.woodDark); b.fillStyle = OUTLINE; b.fillRect(x + 14, y - 12, 4, 34); b.fillStyle = DREAM.goldDark; b.fillRect(x + 15, y - 11, 2, 32);
+  disc(b, x + 16, y - 16, 11, OUTLINE); disc(b, x + 16, y - 16, 10, "#fff3b0"); b.fillStyle = "#f0dc8a"; b.fillRect(x + 10, y - 20, 4, 3); b.fillRect(x + 18, y - 14, 5, 4); b.fillRect(x + 12, y - 10, 3, 2);
+}
+function drawApothecary(b, x, y) { // cabinets slot: cabinet of little drawers and labelled jars
+  outlineRect(b, x + 2, y - 20, 92, 46, DREAM.wood); b.fillStyle = DREAM.woodLight; b.fillRect(x + 2, y - 20, 92, 3);
+  for (let r = 0; r < 3; r++) for (let c = 0; c < 6; c++) { outlineRect(b, x + 6 + c * 15, y - 14 + r * 12, 12, 9, "#6a5a92"); b.fillStyle = DREAM.gold; b.fillRect(x + 11 + c * 15, y - 10 + r * 12, 2, 1); b.fillStyle = "#f4ecd8"; b.fillRect(x + 8 + c * 15, y - 13 + r * 12, 8, 2); }
+  for (let i = 0; i < 4; i++) { const c = ["#7fb87f", "#a06ac9", "#f0b840", "#7fd8d0"][i]; outlineRect(b, x + 10 + i * 22, y - 34, 12, 14, "#dfe6f0"); b.fillStyle = c; b.fillRect(x + 12 + i * 22, y - 28, 8, 7); b.fillStyle = DREAM.wood; b.fillRect(x + 10 + i * 22, y - 36, 12, 3); b.fillStyle = "#f4ecd8"; b.fillRect(x + 12 + i * 22, y - 31, 8, 2); }
+}
+function drawPillowPile(b, x, y) { // boxes slot: pile of pillows and a blanket
+  outlineRect(b, x + 4, y + 14, 44, 12, DREAM.violet); b.fillStyle = DREAM.lilac; b.fillRect(x + 6, y + 16, 40, 2);
+  outlineRect(b, x + 10, y + 4, 34, 12, DREAM.pink); b.fillStyle = "#f8c6dc"; b.fillRect(x + 12, y + 6, 30, 2);
+  outlineRect(b, x + 16, y - 6, 28, 12, DREAM.cloud); b.fillStyle = "#ffffff"; b.fillRect(x + 18, y - 4, 24, 2); b.fillStyle = DREAM.cloudDark; b.fillRect(x + 18, y + 3, 24, 1);
+  outlineRect(b, x + 44, y + 8, 18, 18, DREAM.teal); b.fillStyle = "#5fb8b0"; for (let i = 0; i < 4; i++) b.fillRect(x + 46, y + 11 + i * 4, 14, 1);
+  drawZ(b, x + 30, y - 14, DREAM.gold, 1); drawZ(b, x + 36, y - 20, DREAM.gold, 1);
+}
+function drawEasel(b, x, y, t = 0) { // printer slot: easel where a dream is being painted
+  b.fillStyle = OUTLINE; b.fillRect(x + 20, y - 8, 3, 38); b.fillRect(x + 42, y - 8, 3, 38); b.fillRect(x + 30, y - 4, 3, 34); b.fillRect(x + 16, y + 14, 34, 2);
+  b.fillStyle = DREAM.woodLight; b.fillRect(x + 21, y - 7, 1, 36); b.fillRect(x + 43, y - 7, 1, 36);
+  outlineRect(b, x + 14, y - 24, 38, 30, "#f4ecd8");
+  // the painting: night sky, moon, hills; a brush stroke that "appears" over time
+  b.fillStyle = DREAM.night; b.fillRect(x + 16, y - 22, 34, 20); b.fillStyle = "#6a3b8a"; b.fillRect(x + 16, y - 8, 34, 6); b.fillStyle = "#4a2a6a"; b.fillRect(x + 16, y - 6, 34, 8);
+  disc(b, x + 40, y - 16, 4, DREAM.gold); b.fillStyle = "#fff3b0"; b.fillRect(x + 20, y - 18, 1, 1); b.fillRect(x + 26, y - 20, 1, 1); b.fillRect(x + 31, y - 15, 1, 1);
+  const prog = Math.floor(t / 300) % 30; b.fillStyle = DREAM.pink; b.fillRect(x + 18, y - 12, Math.min(28, prog), 2); b.fillStyle = DREAM.teal; b.fillRect(x + 18, y - 9, Math.max(0, Math.min(28, prog - 8)), 1);
+  // palette and brush
+  disc(b, x + 8, y + 22, 7, OUTLINE); disc(b, x + 8, y + 22, 6, "#c9a781"); for (const [ox, oy, c] of [[-3, -2, DREAM.pink], [1, -3, DREAM.teal], [3, 1, DREAM.gold], [-2, 2, DREAM.violet]]) { b.fillStyle = c; b.fillRect(x + 8 + ox, y + 22 + oy, 2, 2); }
+  b.fillStyle = OUTLINE; b.fillRect(x + 52, y + 16, 2, 12); b.fillStyle = DREAM.pink; b.fillRect(x + 52, y + 14, 2, 3);
+}
+function drawHourglass(b, x, y, t = 0) { // cooler slot: big hourglass with falling sand
+  outlineRect(b, x + 6, y - 26, 20, 4, DREAM.woodDark); outlineRect(b, x + 6, y + 22, 20, 4, DREAM.woodDark);
+  b.fillStyle = OUTLINE; b.fillRect(x + 7, y - 22, 2, 44); b.fillRect(x + 23, y - 22, 2, 44);
+  b.fillStyle = "#e8fbff"; for (let i = 0; i < 20; i++) { const w = Math.abs(i - 10) < 2 ? 2 : Math.min(14, 4 + Math.abs(i - 10) * 2); b.fillRect(x + 16 - w / 2, y - 22 + i * 2, w, 2); b.fillRect(x + 16 - w / 2, y + 2 + (19 - i) * 2 - 20 + 20, 0, 0); }
+  const f = (t / 8000) % 1; // top empties, bottom fills
+  b.fillStyle = DREAM.gold;
+  const topH = Math.round((1 - f) * 14), botH = Math.round(f * 14);
+  for (let i = 0; i < topH; i++) { const row = 9 - i; const w = Math.min(12, 2 + row * 2); if (row >= 0) b.fillRect(x + 16 - w / 2, y - 22 + row * 2, w, 2); }
+  for (let i = 0; i < botH; i++) { const row = 19 - i; const w = Math.min(12, 2 + (19 - row) * 2); b.fillRect(x + 16 - w / 2, y - 22 + row * 2, w, 2); }
+  b.fillRect(x + 15, y - 4 + (Math.floor(t / 120) % 3), 2, 4);
+}
+function drawDreamcatcher(b, x, y, t = 0) { // coffeeStation slot: dreamcatcher on a stand, feathers swaying
+  outlineRect(b, x + 8, y + 22, 16, 6, DREAM.woodDark); b.fillStyle = OUTLINE; b.fillRect(x + 14, y - 30, 4, 52); b.fillStyle = DREAM.goldDark; b.fillRect(x + 15, y - 29, 2, 50);
+  disc(b, x + 16, y - 12, 12, OUTLINE); disc(b, x + 16, y - 12, 11, DREAM.wood); disc(b, x + 16, y - 12, 9, DREAM.night);
+  b.fillStyle = DREAM.lilac; for (let a = 0; a < 8; a++) line(b, x + 16, y - 12, x + 16 + Math.cos(a / 8 * Math.PI * 2) * 9, y - 12 + Math.sin(a / 8 * Math.PI * 2) * 9, DREAM.lilac);
+  disc(b, x + 16, y - 12, 2, DREAM.gold);
+  const sway = Math.round(Math.sin(t / 600) * 2);
+  for (const [ox, len, c] of [[-6, 12, DREAM.pink], [0, 16, DREAM.teal], [6, 12, DREAM.gold]]) { b.fillStyle = OUTLINE; b.fillRect(x + 16 + ox + sway, y - 2, 1, 6); b.fillStyle = c; b.fillRect(x + 15 + ox + sway, y + 4, 3, len); b.fillStyle = shade(c, -30); b.fillRect(x + 16 + ox + sway, y + 4, 1, len); }
+}
+function drawWallDecorDream(b, t) {
+  // night sky in the windows, whatever the time of day
+  for (const wx of [9 * TILE, 17 * TILE]) {
+    b.fillStyle = "#2a2150"; b.fillRect(wx - 4, 4, 104, 48); b.fillStyle = "#1a153a"; b.fillRect(wx - 4, 50, 104, 3);
+    const g = b.createLinearGradient(0, 8, 0, 48); g.addColorStop(0, "#120e2c"); g.addColorStop(1, "#3a2d6e"); b.fillStyle = g; b.fillRect(wx, 8, 96, 40);
+    b.fillStyle = "#fff8d0"; for (let i = 0; i < 16; i++) if ((t / 700 + i * 1.3) % 5 < 4) b.fillRect(wx + 3 + ((i * 41) % 90), 10 + ((i * 17) % 30), 1 + (i % 4 === 0 ? 1 : 0), 1);
+    disc(b, wx + 74, 18, 6, "#fff3b0"); disc(b, wx + 77, 16, 5, "#120e2c");
+    b.save(); b.beginPath(); b.rect(wx, 8, 96, 40); b.clip(); b.fillStyle = "rgba(233,230,247,.35)"; const cx = wx + ((t / 160) % 140) - 40; b.fillRect(cx, 30, 26, 5); b.fillRect(cx + 6, 27, 12, 3); b.fillRect(cx + 50, 14, 18, 4); b.restore();
+    b.fillStyle = "#2a2150"; b.fillRect(wx + 47, 8, 2, 40); b.fillRect(wx, 27, 96, 2);
+  }
+  // moon phases along the kitchen wall
+  for (let i = 0; i < 5; i++) { const px = 22 + i * 36; disc(b, px, 26, 9, OUTLINE); disc(b, px, 26, 8, "#fff3b0"); if (i !== 2) { const k = i < 2 ? 1 : -1; disc(b, px + k * (i === 0 || i === 4 ? 4 : 7), 26, 8, THEMES.dream.wall.face); } }
+  // floating z's over the kitchen
+  for (let i = 0; i < 3; i++) { const ph = (t / 900 + i * 1.1) % 3; drawZ(b, 150 + i * 14 + Math.round(ph), 40 - Math.round(ph * 6), `rgba(255,243,176,${0.9 - ph * 0.25})`, 1 + (i === 2 ? 1 : 0)); }
+  // the all-seeing eye between the windows
+  const ex = 14 * TILE + 16; b.fillStyle = OUTLINE; b.fillRect(ex - 18, 22, 36, 12); b.fillRect(ex - 14, 18, 28, 4); b.fillRect(ex - 14, 34, 28, 4); b.fillRect(ex - 8, 14, 16, 4); b.fillRect(ex - 8, 38, 16, 4);
+  b.fillStyle = "#f4ecd8"; b.fillRect(ex - 16, 23, 32, 10); b.fillRect(ex - 12, 19, 24, 4); b.fillRect(ex - 12, 33, 24, 4);
+  const look = Math.floor(t / 1700) % 3 - 1; disc(b, ex + look * 2, 28, 5, "#5a3d9a"); disc(b, ex + look * 2, 28, 3, OUTLINE); b.fillStyle = "#fff"; b.fillRect(ex + look * 2 - 2, 26, 1, 1);
+  b.fillStyle = DREAM.gold; for (let i = 0; i < 6; i++) { const a = i / 6 * Math.PI * 2; b.fillRect(ex + Math.round(Math.cos(a) * 24) - 1, 28 + Math.round(Math.sin(a) * 16) - 1, 2, 2); }
+  // constellation on the meeting wall, a framed dream painting, and a clock
+  const cx = 23 * TILE + 10; b.fillStyle = "#fff8d0"; const pts = [[6, 12], [30, 8], [52, 18], [78, 10], [96, 26], [126, 14], [150, 22]];
+  for (let i = 0; i < pts.length - 1; i++) { const [ax, ay] = pts[i], [bx, by] = pts[i + 1]; for (let k = 0; k < 10; k += 2) b.fillRect(cx + Math.round(ax + (bx - ax) * k / 10), 10 + Math.round(ay + (by - ay) * k / 10), 1, 1); }
+  pts.forEach(([px, py], i) => { const tw = Math.floor(t / 400 + i) % 4 === 0; b.fillStyle = tw ? DREAM.gold : "#fff8d0"; b.fillRect(cx + px - 1, 10 + py - 1, 3, 3); });
+  outlineRect(b, 28 * TILE - 6, 8, 36, 40, DREAM.goldDark); b.fillStyle = DREAM.night; b.fillRect(28 * TILE - 2, 12, 28, 32); b.fillStyle = "#6a3b8a"; b.fillRect(28 * TILE - 2, 32, 28, 12); disc(b, 28 * TILE + 16, 22, 5, DREAM.gold); b.fillStyle = DREAM.pink; b.fillRect(28 * TILE + 2, 36, 12, 2);
+  drawClock(b, 21 * TILE + 8, 28);
+}
+PROPS.dream = { counter: drawTeaBar, fridge: drawGrandfatherClock, roundTable: drawMoonTable, stool: drawCloudStool, meetingTable: drawDreamTable, sofa: drawChaise, coffeeTable: drawCrystalStand, bookshelf: drawDreamShelf, lamp: drawMoonLamp, cabinets: drawApothecary, boxes: drawPillowPile, printer: drawEasel, cooler: drawHourglass, coffeeStation: drawDreamcatcher, wallDecor: drawWallDecorDream };
+THEME_NAMES.push("dream");

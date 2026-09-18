@@ -477,3 +477,60 @@ body.resizing .chat, body.resizing .stage { transition: none; }
 .meet-main, .meet-foot, .chat-head .chat-title { min-width: 0; }
 .chat.meeting .chat-name, .chat.meeting .chat-role { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .chat.meeting .chat-head .btn, .chat.meeting .chat-head .icon-btn { flex: none; }
+
+/* ---------- board: tasks + shared notebook ---------- */
+#btnBoard { position: relative; }
+#btnBoard .badge { background: var(--error); color: #fff; font-size: 10px; font-weight: 600; min-width: 16px; height: 16px; border-radius: 8px; display: inline-grid; place-items: center; padding: 0 4px; margin-left: 2px; }
+#btnBoard .badge[hidden] { display: none; }
+.board-card { width: min(860px, 96vw); display: flex; flex-direction: column; }
+.board-card .modal-head { gap: 12px; }
+.board-card .modal-head .tabs { display: flex; gap: 6px; margin-right: auto; }
+.board-card .tabs button { background: var(--bg); border: 1px solid var(--line); color: var(--muted); padding: 6px 12px; border-radius: 8px; font: inherit; font-size: 12px; cursor: pointer; }
+.board-card .tabs button.on { border-color: var(--accent); color: var(--accent); }
+.board-bar { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+.board-bar select, .board-new select, .board-new input, .board-new textarea, .task-edit select, .note-card input, .note-card textarea { background: var(--bg); color: var(--text); border: 1px solid var(--line); border-radius: 8px; padding: 7px 10px; font: inherit; font-size: 12.5px; min-width: 0; }
+.board-new textarea, .note-card textarea { resize: vertical; line-height: 1.5; width: 100%; }
+.board-list { display: grid; gap: 6px; max-height: 46vh; overflow-y: auto; padding-right: 2px; }
+.board-empty { padding: 18px 4px; line-height: 1.6; }
+.board-more { font-size: 11px; padding: 4px 2px; }
+.board-group { display: flex; align-items: center; gap: 6px; font-size: 11px; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); margin-top: 8px; }
+.board-group span { opacity: .7; }
+.tdot { width: 8px; height: 8px; border-radius: 2px; display: inline-block; background: var(--idle); }
+.tdot.doing { background: var(--working); } .tdot.review { background: var(--accent); } .tdot.blocked { background: var(--error); } .tdot.done { background: #4a6a9c; }
+.task-card, .note-card { border: 1px solid var(--line); border-radius: 10px; background: var(--bg); padding: 8px 10px; min-width: 0; }
+.task-card.blocked { border-color: var(--error); } .task-card.review { border-color: var(--accent); } .task-card.done { opacity: .65; }
+.task-head, .note-head { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.task-head img, .note-head img { width: 32px; height: 24px; image-rendering: pixelated; flex: none; }
+.note-you { width: 32px; text-align: center; color: var(--accent); flex: none; }
+.task-main { flex: 1; min-width: 0; cursor: pointer; }
+.task-title { font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.task-card.open .task-title, .note-card.open .task-title { white-space: normal; }
+.task-title b { color: var(--accent); font-weight: 600; }
+.task-meta { font-size: 10.5px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-top: 2px; }
+.task-actions { display: flex; gap: 6px; flex: none; }
+.task-body { margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--line); display: grid; gap: 6px; font-size: 12.5px; line-height: 1.55; }
+.task-note { background: var(--card); border-radius: 8px; padding: 6px 8px; }
+.task-note span { display: block; font-size: 10px; color: var(--muted); }
+.task-edit { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.task-edit .t-del { margin-left: auto; }
+.note-text { font-size: 12.5px; line-height: 1.55; margin-top: 6px; cursor: pointer; overflow-wrap: anywhere; }
+.note-text.clamp { max-height: 4.6em; overflow: hidden; -webkit-mask-image: linear-gradient(#000 60%, transparent); mask-image: linear-gradient(#000 60%, transparent); }
+.note-text ul, .note-text ol { padding-left: 18px; margin: 4px 0; }
+.note-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 6px; }
+.note-actions[hidden] { display: none; }
+.note-card input, .note-card textarea { width: 100%; margin-bottom: 6px; }
+.tag { display: inline-block; border: 1px solid var(--line); border-radius: 999px; padding: 0 6px; font-size: 10px; color: var(--accent); }
+.board-new { margin-top: 12px; border-top: 1px solid var(--line); padding-top: 4px; display: grid; gap: 8px; }
+.board-new h3 { margin: 10px 0 0; }
+.board-row { display: flex; gap: 8px; } .board-row input { flex: 1; }
+.board-new .actions { justify-content: space-between; margin-top: 0; }
+.board-new .actions small { flex: 1; min-width: 200px; line-height: 1.5; }
+.check-field { display: flex; gap: 10px; align-items: flex-start; margin-bottom: 12px; cursor: pointer; }
+.check-field input { width: auto; margin-top: 3px; accent-color: var(--accent); }
+.check-field small { display: block; color: var(--muted); font-size: 11px; line-height: 1.5; font-weight: 400; }
+.board-card [hidden] { display: none !important; }
+.tag.alert { color: #fff; background: var(--error); border-color: var(--error); }
+.task-card.alert-waiting, .task-card.alert-stalled { border-color: var(--waiting); }
+.task-card.alert-waiting .tag.alert, .task-card.alert-stalled .tag.alert { background: var(--waiting); border-color: var(--waiting); color: #1a1a1a; }
+.task-card.alert-error, .task-card.alert-orphan { border-color: var(--error); }
+.task-edit label.check { padding: 0; }

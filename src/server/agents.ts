@@ -1,4 +1,5 @@
 import fs from "node:fs";
+import { execFileSync } from "node:child_process";
 import os from "node:os";
 import path from "node:path";
 import { expandHome as expandHomeRaw } from "./config.js";
@@ -63,6 +64,35 @@ function findMemoryFile(dir: string): string {
   return preferred;
 }
 
+// A private git worktree for one employee: <repo>/.pixel-office/worktrees/<id> on branch po/<id>.
+// Returns the folder to work in (mirroring `base`'s position inside the repo), or why it could not be made.
+export function ensureWorktree(base: string, id: string): { path?: string; error?: string } {
+  const git = (cwd: string, ...args: string[]) => execFileSync("git", ["-C", cwd, ...args], { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] }).trim();
+  let top: string;
+  try { top = git(base, "rev-parse", "--show-toplevel"); git(base, "rev-parse", "--verify", "HEAD"); }
+  catch { return { error: t("server.worktree.notRepo", { dir: base }) }; }
+  const dir = path.join(top, ".pixel-office", "worktrees", id);
+  const inside = path.join(dir, path.relative(top, path.resolve(base)));
+  try {
+    if (!fs.existsSync(path.join(dir, ".git"))) {
+      fs.mkdirSync(path.dirname(dir), { recursive: true });
+      try { git(top, "worktree", "prune"); } catch {}
+      let hasBranch = true;
+      try { git(top, "rev-parse", "--verify", `refs/heads/po/${id}`); } catch { hasBranch = false; }
+      git(top, "worktree", "add", ...(hasBranch ? [dir, `po/${id}`] : ["-b", `po/${id}`, dir]));
+      // keep the worktrees out of `git status` of the main folder without touching the project's .gitignore
+      const exclude = path.join(path.resolve(top, git(top, "rev-parse", "--git-common-dir")), "info", "exclude");
+      const line = ".pixel-office/worktrees/";
+      const cur = fs.existsSync(exclude) ? fs.readFileSync(exclude, "utf8") : "";
+      if (!cur.split(/\r?\n/).includes(line)) { fs.mkdirSync(path.dirname(exclude), { recursive: true }); fs.writeFileSync(exclude, cur + (cur && !cur.endsWith("\n") ? "\n" : "") + line + "\n"); }
+    }
+    fs.mkdirSync(inside, { recursive: true });
+    return { path: inside };
+  } catch (err) {
+    return { error: t("server.worktree.failed", { message: ((err as { stderr?: string }).stderr || (err as Error).message).toString().trim().split("\n").pop() ?? "" }) };
+  }
+}
+
 // Builds an employee config from its folder (agent.md + memory + skills/).
 export function loadEmployee(dir: string, index: number, office: OfficeDef): EmployeeConfig {
   const agentFile = path.join(dir, "agent.md");
@@ -72,7 +102,10 @@ export function loadEmployee(dir: string, index: number, office: OfficeDef): Emp
   const role = meta.role ?? meta.description?.split(/[.\n]/)[0].slice(0, 40) ?? t("server.defaultRole");
   const color = meta.color ?? PALETTE[index % PALETTE.length];
   const settings = getSettings();
-  const cwd = meta.cwd ? expandHome(meta.cwd) : office.cwd;
+  const baseCwd = meta.cwd ? expandHome(meta.cwd) : office.cwd;
+  let cwd = baseCwd;
+  const worktree = meta.worktree === "true";
+  if (worktree) { const w = ensureWorktree(baseCwd, id); if (w.path) cwd = w.path; else console.warn(`[${name}] ${w.error}`); }
   const tools = meta.tools ? meta.tools.replace(/^\[|\]$/g, "").split(",").map((x) => x.trim()).filter(Boolean) : undefined;
   const cfg: EmployeeConfig = {
     id, name, role, color, cwd, dir, agentFile, officeId: office.id,
@@ -86,6 +119,8 @@ export function loadEmployee(dir: string, index: number, office: OfficeDef): Emp
     refreshHours: meta.refreshHours !== undefined ? Number(meta.refreshHours) : settings.refreshHours,
     effort: meta.effort as EmployeeConfig["effort"],
     hired: meta.hired ?? fs.statSync(dir).birthtime.toISOString().slice(0, 10),
+    manager: meta.manager === "true",
+    worktree, baseCwd,
   };
   ensureDirs(cfg);
   return cfg;
@@ -123,9 +158,11 @@ export function writeAgentFile(cfg: EmployeeConfig) {
   if (cfg.model) lines.push(`model: ${cfg.model}`);
   if (cfg.effort) lines.push(`effort: ${cfg.effort}`);
   if (cfg.permissionMode && cfg.permissionMode !== "default") lines.push(`permissionMode: ${cfg.permissionMode}`);
+  if (cfg.manager) lines.push(`manager: true`);
+  if (cfg.worktree) lines.push(`worktree: true`);
   if (cfg.allowedTools?.length) lines.push(`tools: ${cfg.allowedTools.join(", ")}`);
   if (cfg.refreshHours !== undefined && cfg.refreshHours !== getSettings().refreshHours) lines.push(`refreshHours: ${cfg.refreshHours}`);
-  if (cfg.cwd !== getOffice(cfg.officeId).cwd) lines.push(`cwd: ${cfg.cwd}`);
+  if ((cfg.baseCwd ?? cfg.cwd) !== getOffice(cfg.officeId).cwd) lines.push(`cwd: ${cfg.baseCwd ?? cfg.cwd}`);
   lines.push(`look: ${JSON.stringify(cfg.look)}`, "---", cfg.systemPrompt.trim(), "");
   fs.writeFileSync(cfg.agentFile, lines.join("\n"));
 }

@@ -28,6 +28,7 @@
       <span class="legend-item" data-i18n-tip="ui.legend.error"><i class="dot error"></i><span class="sr" data-i18n="ui.legend.error"></span></span>
       <span class="legend-item" data-i18n-tip="ui.legend.sick"><i class="dot sick"></i><span class="sr" data-i18n="ui.legend.sick"></span></span>
     </div>
+    <button class="btn small" id="btnBoard" data-i18n-title="ui.board.buttonTip"><span>📋</span> <span data-i18n="ui.board.button"></span><span class="badge" id="boardBadge" hidden></span></button>
     <button class="btn small" id="btnMeeting" data-i18n-title="ui.meeting.buttonTip"><span>👥</span> <span data-i18n="ui.meeting.button"></span></button>
     <a class="btn primary small" id="hireLink" href="hire.html" data-i18n="ui.hireButton">+ Hire</a>
     <div class="clock" id="clock">--:--</div>
@@ -94,6 +95,37 @@
     </div>
     <div class="chat-hint" id="meetHint" data-i18n="ui.meeting.hint"></div>
   </aside>
+
+  <div class="modal" id="boardModal" hidden>
+    <div class="modal-card board-card">
+      <div class="modal-head">
+        <nav class="tabs" id="boardTabs"><button type="button" data-tab="tasks" data-i18n="ui.board.tabTasks"></button><button type="button" data-tab="notes" data-i18n="ui.board.tabNotes"></button></nav>
+        <small class="muted" id="boardManager"></small>
+        <button class="icon-btn" id="boardClose" data-i18n-title="ui.board.close">×</button>
+      </div>
+      <section id="boardTasks">
+        <div class="board-bar"><select id="taskOwnerFilter"></select><button class="btn small primary" type="button" id="taskStartAll" hidden></button><label class="check"><input type="checkbox" id="taskShowDone" /> <span data-i18n="ui.board.showDone"></span></label></div>
+        <div id="taskList" class="board-list"></div>
+        <form id="newTaskForm" class="board-new">
+          <h3 data-i18n="ui.board.newTask"></h3>
+          <div class="board-row"><input id="newTaskTitle" maxlength="160" required data-i18n-ph="ui.board.taskTitle" /><select id="newTaskOwner"></select></div>
+          <textarea id="newTaskDetail" rows="2" data-i18n-ph="ui.board.taskDetail"></textarea>
+          <label class="check"><input type="checkbox" id="newTaskReview" /> <span data-i18n="ui.board.needsReviewLong"></span></label>
+          <div class="actions"><small class="muted" data-i18n="ui.board.addHint"></small><button class="btn primary small" type="submit" data-i18n="ui.board.add"></button></div>
+        </form>
+      </section>
+      <section id="boardNotes" hidden>
+        <div class="board-bar"><select id="noteAuthorFilter"></select><small class="muted" id="notesCount"></small></div>
+        <div id="noteList" class="board-list"></div>
+        <form id="newNoteForm" class="board-new">
+          <h3 data-i18n="ui.board.newNote"></h3>
+          <input id="newNoteTitle" maxlength="140" required data-i18n-ph="ui.board.noteTitle" />
+          <textarea id="newNoteText" rows="3" required data-i18n-ph="ui.board.noteText"></textarea>
+          <div class="board-row"><input id="newNoteTags" data-i18n-ph="ui.board.noteTags" /><button class="btn primary small" type="submit" data-i18n="ui.board.addNote"></button></div>
+        </form>
+      </section>
+    </div>
+  </div>
 
   <div class="modal" id="meetStartModal" hidden>
     <div class="modal-card narrow">
@@ -175,6 +207,7 @@
   <script src="office.js"></script>
   <script src="shared.js"></script>
   <script src="app.js"></script>
+  <script src="board.js"></script>
   <script src="meeting.js"></script>
 </body>
 </html>

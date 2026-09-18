@@ -9,7 +9,7 @@
 - **Every employee is a real Claude Code session** with its own job description, persistent memory, skills, model and permission level. They read and edit files, run commands and browse the web inside the folder you give them.
 - **Status at a glance.** Working, waiting for your permission, done, unread reply — you see it on the character, on the roster and in the browser tab. Idle employees wander around, grab coffee and chat.
 - **Teach once, remember forever.** What you tell an employee goes into a Markdown memory file that is loaded every session and that you can edit yourself.
-- **Several companies, one server.** Offices per company or team, each with its own folder, employees and theme (classic, football club, fashion atelier, gothic manor, music studio, travel agency).
+- **Several companies, one server.** Offices per company or team, each with its own folder, employees and theme (classic, football club, fashion atelier, gothic manor, music studio, travel agency, dream studio).
 
 ## Quick start
 
@@ -52,13 +52,23 @@ The memory file is plain Markdown. Open the profile (☰ in the chat header) to 
 
 **👥 Meeting** in the top bar calls a meeting: pick a topic and who joins (busy people either finish first or are interrupted). Everybody walks to the meeting room and the chat panel becomes the meeting panel. What you write goes to the whole room; each employee answers in up to three sentences or passes, and hears what the others said with the next round. `@name` addresses one person (click a name to insert it). Someone with more to say raises a hand — ✋ over their head and a card in the panel — and **Give the floor** lets them speak at length. **End** writes a summary with decisions and follow-up tasks; each task has a **Send** button that hands it to its owner, the summary lands in every participant's chat and, if you leave the box ticked, in their memory. Every message runs one turn per participant, so a big room costs accordingly. Past meetings stay under 🕘.
 
+### Board and project manager
+
+**📋 Board** holds two things every employee of the office shares. The **shared notebook** is where they write down what matters beyond one chat (findings, decisions, numbers, risks) and read what colleagues found before starting their own work; you can add, edit and delete notes too. The **task list** is a plan: you and the project manager put tasks on it with an owner, and nothing starts by itself. Press **Start** on a task, pick a person and press **Start their open tasks**, or tell them in chat to do their open tasks on the board. Owners mark each task in progress, done (with a short result note) or blocked (with the reason); blocked and in-review tasks show as a badge on the button.
+
+Make one employee the **project manager** (profile → Settings → Project manager). They can read the whole notebook, see what a colleague has recently been doing without interrupting them, put tasks on the board and start them once you give the go-ahead. The natural loop: everybody researches their area and saves notes → you ask the project manager where things stand, what is missing and what to do next → they propose tasks with clear owners and scopes so work does not collide → you say go → owners work and tick their tasks off. No polling runs in the background: the project manager only costs a turn when you talk to them.
+
+Keeping order: tick **Needs review** on a task (or let the project manager set it) and the owner cannot close it — finished work waits in review until you or the project manager **Approve** it or **Send back**. The board flags tasks whose owner is waiting for your permission, hit a session error, stopped working or left the office, and the 📋 button counts them. Meeting follow-ups are added to the board rather than started. Notes are given to employees as information, never as instructions, and near-duplicate notes are caught when they are saved.
+
+For developers working on the same repository at the same time, tick **Own working copy** on their profile: each gets a private git worktree in `.pixel-office/worktrees/<id>` on branch `po/<id>`, commits there, and names the branch in the task's result note. Merging into the main branch is yours (or the project manager's, when you ask). The folder must be a git repository with at least one commit; switching it on starts that employee's chat on a fresh session.
+
 ### Hiring
 
 **+ Hire** opens a character creator: gender, body type, skin, eye color, 14 hair styles (from bald and balding to mohawk, afro and braid), beards (stubble, mustache, goatee, circle, full, long) with their own color, glasses, headset, hats (cap, beanie, cowboy, fedora, bucket, beret, bandana, hood), tops (t-shirt, tank top, crop top, polo, shirt, sweater, hoodie, blazer, suit with tie, dress), bottoms (pants, cargo, joggers, shorts, long shorts, skirt, long skirt), shoes (classic, sneakers, high-tops, boots, loafers, sandals, heels) with their own color. Pick one of the ready-made positions or write your own job description, choose model / effort / permission mode, hire. The new colleague walks in through the door with confetti and sits down at a free desk (up to 12 desks per office).
 
 ![Hire page](docs/hire.jpg)
 
-Ready-made positions (each comes with a job description you can edit): Personal Assistant, Accounting & Finance, Marketing & Ads, Customer Support, SEO & Content, Software Developer, Sales, Content & Social Media, Manager / Team Lead, Marketing Manager, Human Resources, Project Manager, Product Manager, Data Analyst, UI/UX Designer, Legal & Compliance, Operations.
+Ready-made positions (each comes with a job description you can edit): Personal Assistant, Accounting & Finance, Marketing & Ads, Customer Support, SEO & Content, Software Developer, Sales, Content & Social Media, Manager / Team Lead, Marketing Manager, Human Resources, Project Manager, Product Manager, Data Analyst, UI/UX Designer, Legal & Compliance, Operations, Mobile Developer, Frontend Developer, Backend Developer, DevOps Engineer, QA Engineer, AI / ML Engineer, Data Engineer, Graphic Designer, Market & Competitor Analyst, Business Analyst, Business Development, Growth Manager, Strategy Consultant, PR & Communications, Community Manager, Copywriter, E-commerce Manager.
 
 ### Offices and themes
 

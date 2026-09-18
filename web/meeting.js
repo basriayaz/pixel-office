@@ -168,7 +168,12 @@ const meetingUI = (() => {
       const k = m.tasks[Number(b.dataset.task)], key = `${m.id}:${b.dataset.task}`;
       const mark = () => { b.textContent = t("ui.meeting.taskSent"); b.disabled = true; };
       if (sentTasks.has(key) || past) { if (sentTasks.has(key)) mark(); else b.hidden = true; return; }
-      b.onclick = () => { send({ type: "send", id: k.to, text: k.task }); sentTasks.add(key); mark(); };
+      // onto the board, not straight to work: it starts when the boss or the project manager says so
+      b.onclick = async () => {
+        const title = k.task.length > 90 ? k.task.slice(0, 87).replace(/\s+\S*$/, "") + "…" : k.task;
+        try { await api("POST", `/api/offices/${encodeURIComponent(state.office)}/board/tasks`, { owner: k.to, title, detail: `${k.task}\n\n(${t("ui.meeting.title")}: ${m.topic || m.id})` }); sentTasks.add(key); mark(); }
+        catch (err) { toast(err.message); }
+      };
     });
     if (!html) card.hidden = true;
     return card;

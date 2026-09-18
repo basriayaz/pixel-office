@@ -23,6 +23,8 @@ export class Store {
     this.state = { sessions: loaded.sessions ?? {}, meta: loaded.meta ?? {} };
   }
 
+  get dir() { return this.dataDir; }
+
   private save() {
     fs.writeFileSync(this.statePath, JSON.stringify(this.state, null, 2));
   }

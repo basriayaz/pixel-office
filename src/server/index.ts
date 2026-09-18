@@ -7,7 +7,8 @@ import { WebSocketServer, WebSocket } from "ws";
 import { Employee, refreshPrompt, IMAGE_TYPES, type EmployeeConfig, type ImageInput } from "./employee.js";
 import { Store } from "./store.js";
 import { Meeting } from "./meeting.js";
-import { expandHome, loadEmployees, loadEmployee, listSkills, writeAgentFile, createEmployeeDir, archiveEmployeeDir, writeSkill, readSkill, deleteSkill, syncClaudeAgents } from "./agents.js";
+import { Board, TASK_STATUSES, type TaskStatus } from "./board.js";
+import { expandHome, ensureWorktree, loadEmployees, loadEmployee, listSkills, writeAgentFile, createEmployeeDir, archiveEmployeeDir, writeSkill, readSkill, deleteSkill, syncClaudeAgents } from "./agents.js";
 import { loadSettings, configPath, readRawConfig, writeRawConfig, officeDefFromRaw, officeIdOf, absPath, displayPath, rootFromEnv, initRoot, PKG_ROOT, THEMES, type OfficeDef, type Theme } from "./config.js";
 import { loadLocale, availableLocales, detectLocale, Translator } from "./i18n.js";
 import { initRuntime, t } from "./runtime.js";
@@ -28,6 +29,7 @@ interface OfficeRt {
   store: Store;
   employees: Map<string, Employee>;
   meeting?: Meeting; // the running meeting, or the one that just ended (kept until the panel is closed)
+  board: Board;      // shared notebook + task list
 }
 const offices = new Map<string, OfficeRt>();
 
@@ -42,17 +44,25 @@ function storeFor(def: OfficeDef): Store {
   return new Store(dir);
 }
 
+const colleaguesOf = (o: { employees: Map<string, Employee>; board: Board }) => ({ list: () => [...o.employees.values()], board: () => o.board });
+
 function openOffice(def: OfficeDef): OfficeRt {
   if (!def.name) def.name = t("ui.offices.default");
   const store = storeFor(def);
   const employees = new Map<string, Employee>();
+  let manager: string | undefined;
   for (const cfg of loadEmployees(def)) {
     if (employees.has(cfg.id)) throw new Error(t("server.duplicateId", { id: cfg.id }));
+    // one project manager per office, also when agent.md files were edited by hand: the first one keeps the role
+    if (cfg.manager && manager) { console.warn(t("server.board.extraManager", { name: cfg.name, manager })); cfg.manager = false; writeAgentFile(cfg); }
+    else if (cfg.manager) manager = cfg.name;
     employees.set(cfg.id, new Employee(cfg, store));
   }
-  const o: OfficeRt = { def, store, employees };
+  const board = new Board(store.dir);
+  const o: OfficeRt = { def, store, employees, board };
   offices.set(def.id, o);
-  for (const e of employees.values()) e.setColleagues({ list: () => [...employees.values()] });
+  board.on("change", () => broadcast({ type: "board", office: def.id, board: board.state() }));
+  for (const e of employees.values()) e.setColleagues(colleaguesOf(o));
   return o;
 }
 // A brand-new office gets three sample employees so the first screen isn't empty (PIXEL_OFFICE_SAMPLES=0 disables).
@@ -81,7 +91,7 @@ app.use(express.static(path.join(PKG_ROOT, "web")));
 
 function publicInfo(e: Employee) {
   const { id, name, role, color, look, officeId } = e.cfg;
-  return { id, office: officeId, name, role, color, look, status: e.status, cost: e.cost, model: e.model ?? e.cfg.model ?? null, sickUntil: e.sickUntil || undefined };
+  return { id, office: officeId, name, role, color, look, status: e.status, cost: e.cost, model: e.model ?? e.cfg.model ?? null, sickUntil: e.sickUntil || undefined, manager: !!e.cfg.manager };
 }
 
 const readText = (p?: string) => { try { return p ? fs.readFileSync(p, "utf8") : ""; } catch { return ""; } };
@@ -252,6 +262,72 @@ type OReq = Request<{ office?: string; id?: string; skill?: string }>;
 const officeOf = (req: OReq) => offices.get(req.params.office ?? defaultOfficeId());
 const empOf = (req: OReq) => officeOf(req)?.employees.get(req.params.id ?? "");
 
+// Shared board: the notebook and the task list. The boss edits both from the panel; employees through their office tools.
+r.get("/board", (req: OReq, res) => {
+  const o = officeOf(req);
+  if (!o) return res.status(404).json({ error: t("server.notFound") });
+  res.json(o.board.state());
+});
+r.post("/board/tasks", (req: OReq, res) => {
+  const o = officeOf(req), b = req.body ?? {};
+  const owner = o?.employees.get(String(b.owner ?? ""));
+  const title = clean(b.title, 160);
+  if (!o || !owner || !title) return res.status(400).json({ error: t("server.board.taskFields") });
+  // only listed: the owner starts when the boss (or the project manager) says so
+  res.json(o.board.addTask(owner.cfg.id, title, clean(b.detail, 8000), "user", !!b.review));
+});
+// "Start": the task goes to its owner as an ordinary message from the boss, so it shows in the chat and can be answered.
+r.post("/board/tasks/:id/start", (req: OReq, res) => {
+  const o = officeOf(req);
+  const k = o?.board.tasks.find((x) => x.id === Number(req.params.id));
+  const owner = k && o?.employees.get(k.owner);
+  if (!o || !k || !owner) return res.status(404).json({ error: t("server.notFound") });
+  if (owner.inMeeting) return res.status(409).json({ error: t("server.board.inMeeting", { id: k.id, name: owner.cfg.name }) });
+  o.board.updateTask(k.id, { status: "doing" }, "user");
+  owner.send(t("server.board.taskMessage", { id: k.id, title: k.title, detail: k.detail || "-" }));
+  res.json(k);
+});
+r.put("/board/tasks/:id", (req: OReq, res) => {
+  const o = officeOf(req), b = req.body ?? {};
+  const owner = b.owner !== undefined ? o?.employees.get(String(b.owner)) : undefined;
+  const k = o?.board.updateTask(Number(req.params.id), {
+    status: pick(b.status, TASK_STATUSES) as TaskStatus | undefined, owner: owner?.cfg.id,
+    title: b.title !== undefined ? clean(b.title, 160) : undefined, detail: b.detail !== undefined ? clean(b.detail, 8000) : undefined, note: clean(b.note, 2000) || undefined,
+    review: b.review !== undefined ? !!b.review : undefined,
+  }, "user");
+  if (!k) return res.status(404).json({ error: t("server.notFound") });
+  res.json(k);
+});
+// "Do your open tasks": one message instead of one per task; the owner works through them in order and marks each.
+r.post("/board/start-all", (req: OReq, res) => {
+  const o = officeOf(req);
+  const owner = o?.employees.get(String(req.body?.owner ?? ""));
+  if (!o || !owner) return res.status(404).json({ error: t("server.notFound") });
+  if (owner.inMeeting) return res.status(409).json({ error: t("server.board.inMeeting", { id: "", name: owner.cfg.name }) });
+  owner.send(t("server.board.doOpenTasks"));
+  res.json({ ok: true });
+});
+r.delete("/board/tasks/:id", (req: OReq, res) => {
+  if (!officeOf(req)?.board.deleteTask(Number(req.params.id))) return res.status(404).json({ error: t("server.notFound") });
+  res.json({ ok: true });
+});
+r.post("/board/notes", (req: OReq, res) => {
+  const o = officeOf(req), b = req.body ?? {};
+  const title = clean(b.title, 140), text = clean(b.text, 12000);
+  if (!o || !title || !text) return res.status(400).json({ error: t("server.board.noteFields") });
+  res.json(o.board.addNote("user", t("server.meeting.boss"), title, text, Array.isArray(b.tags) ? b.tags.map(String) : []));
+});
+r.put("/board/notes/:id", (req: OReq, res) => {
+  const b = req.body ?? {};
+  const n = officeOf(req)?.board.updateNote(Number(req.params.id), { title: b.title !== undefined ? clean(b.title, 140) : undefined, text: b.text !== undefined ? clean(b.text, 12000) : undefined, tags: Array.isArray(b.tags) ? b.tags.map(String) : undefined });
+  if (!n) return res.status(404).json({ error: t("server.notFound") });
+  res.json(n);
+});
+r.delete("/board/notes/:id", (req: OReq, res) => {
+  if (!officeOf(req)?.board.deleteNote(Number(req.params.id))) return res.status(404).json({ error: t("server.notFound") });
+  res.json({ ok: true });
+});
+
 // Past meetings of an office (newest first) and one transcript.
 r.get("/meetings", (req: OReq, res) => {
   const o = officeOf(req);
@@ -277,7 +353,10 @@ r.get("/employees/:id/detail", (req: OReq, res) => {
   res.json({
     ...publicInfo(e),
     officeName: o.def.name,
-    cwd: e.cfg.cwd,
+    cwd: e.cfg.baseCwd ?? e.cfg.cwd,
+    workdir: e.cfg.cwd,
+    worktree: !!e.cfg.worktree,
+    branch: e.cfg.worktree ? `po/${e.cfg.id}` : null,
     officeCwd: o.def.cwd,
     hired: e.cfg.hired ?? null,
     effort: e.cfg.effort ?? null,
@@ -292,6 +371,7 @@ r.get("/employees/:id/detail", (req: OReq, res) => {
     skillsDir: e.cfg.pluginDir ? path.join(e.cfg.pluginDir, "skills") : null,
     refreshHours: e.cfg.refreshHours ?? 0,
     lastRefresh: o.store.getMeta<number>(e.cfg.id, "lastRefresh") ?? null,
+    currentManager: [...o.employees.values()].find((x) => x.cfg.manager && x !== e)?.cfg.name ?? null,
     stats: { messages: e.history.length, tasks: userMsgs, lastActivity: e.lastActivity || null },
     recent: e.history.slice(-30),
   });
@@ -342,7 +422,7 @@ r.post("/employees", (req: OReq, res) => {
     cwd: clean(b.cwd, 500) || undefined,
   });
   const e = new Employee(loadEmployee(dir, o.employees.size, o.def), o.store);
-  e.setColleagues({ list: () => [...o.employees.values()] });
+  e.setColleagues(colleaguesOf(o));
   o.employees.set(e.cfg.id, e);
   wire(e);
   syncAgents(o);
@@ -364,7 +444,19 @@ r.put("/employees/:id", async (req: OReq, res) => {
   if (b.effort !== undefined) cfg.effort = pick(b.effort, EFFORTS);
   if (b.permissionMode !== undefined) cfg.permissionMode = pick(b.permissionMode, PERMS) ?? "default";
   if (b.refreshHours !== undefined) cfg.refreshHours = Math.max(0, Number(b.refreshHours) || 0);
-  if (b.cwd !== undefined) { const c = clean(b.cwd, 500); cfg.cwd = c ? expandHome(c) : o.def.cwd; }
+  if (b.cwd !== undefined) { const c = clean(b.cwd, 500); cfg.baseCwd = c ? expandHome(c) : o.def.cwd; }
+  if (b.worktree !== undefined) cfg.worktree = !!b.worktree;
+  if (b.cwd !== undefined || b.worktree !== undefined) {
+    const base = cfg.baseCwd ?? cfg.cwd;
+    if (cfg.worktree) {
+      const w = ensureWorktree(base, cfg.id);
+      if (!w.path) return res.status(400).json({ error: w.error });
+      cfg.cwd = w.path;
+    } else cfg.cwd = base;
+  }
+  if (b.manager !== undefined) cfg.manager = !!b.manager;
+  // one project manager per office: appointing a new one relieves the previous
+  if (cfg.manager && !e.cfg.manager) for (const other of o.employees.values()) if (other !== e && other.cfg.manager) { const oc = { ...other.cfg, manager: false }; writeAgentFile(oc); await other.applyConfig(oc); }
   writeAgentFile(cfg);
   await e.applyConfig(cfg);
   syncAgents(o);
@@ -376,6 +468,8 @@ r.delete("/employees/:id", async (req: OReq, res) => {
   const o = officeOf(req), e = empOf(req);
   if (!o || !e) return res.status(404).json({ error: t("server.notFound") });
   await e.dispose();
+  // their unfinished tasks stay on the board, flagged so somebody else gets them
+  for (const k of o.board.tasks.filter((x) => x.owner === e.cfg.id && x.status !== "done")) o.board.updateTask(k.id, { status: "blocked", note: t("server.board.ownerLeft", { name: e.cfg.name }) }, "system");
   o.employees.delete(e.cfg.id);
   o.store.setSession(e.cfg.id, undefined);
   o.store.deleteHistory(e.cfg.id);
@@ -441,6 +535,12 @@ function wire(e: Employee) {
   const id = e.cfg.id, office = e.cfg.officeId;
   e.on("status", (status, reason) => broadcast({ type: "status", office, id, status, reason, sickUntil: e.sickUntil || undefined }));
   e.on("message", (message) => broadcast({ type: "message", office, id, message }));
+  // a session that fell over cannot be "doing" anything: its tasks show as blocked instead of looking busy forever
+  e.on("status", (status) => {
+    if (status !== "error") return;
+    const o = offices.get(office);
+    for (const k of o?.board.tasks.filter((x) => x.owner === id && x.status === "doing") ?? []) o!.board.updateTask(k.id, { status: "blocked", note: t("server.board.sessionError") }, "system");
+  });
   e.on("chunk", (text) => broadcast({ type: "chunk", office, id, text }));
   e.on("chunk_end", () => broadcast({ type: "chunk_end", office, id }));
   e.on("ask", (request) => broadcast({ type: "ask", office, id, request }));
@@ -466,7 +566,7 @@ function startMeeting(o: OfficeRt, topic: string, ids: string[], interruptBusy: 
 }
 
 wss.on("connection", (ws) => {
-  ws.send(JSON.stringify({ type: "init", offices: [...offices.values()].map((o) => ({ ...officeInfo(o), employees: roster(o), meeting: o.meeting?.state() ?? null })) }));
+  ws.send(JSON.stringify({ type: "init", offices: [...offices.values()].map((o) => ({ ...officeInfo(o), employees: roster(o), meeting: o.meeting?.state() ?? null, board: o.board.state() })) }));
   ws.on("message", async (raw) => {
     let msg: { type: string; office?: string; id?: string; text?: string; requestId?: string; allow?: boolean; always?: boolean; answers?: Record<string, unknown>; images?: unknown;
       topic?: string; ids?: unknown; to?: unknown; interrupt?: boolean; summary?: boolean; memory?: boolean };

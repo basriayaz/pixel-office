@@ -9,7 +9,7 @@
 - **Her çalışan gerçek bir Claude Code oturumu**: kendi görev tanımı, kalıcı hafızası, yetenekleri, modeli ve izin seviyesi var. Verdiğin klasörde dosya okur ve düzenler, komut çalıştırır, web'e bakar.
 - **Durum bir bakışta**: çalışıyor, iznini bekliyor, bitti, okunmamış cevap — karakterin üstünde, listede ve tarayıcı sekmesinde görürsün. Boştakiler dolaşır, kahve alır, sohbet eder.
 - **Bir kez öğret, hep hatırlasın.** Çalışana söylediğin şey her oturumda yüklenen bir Markdown hafıza dosyasına yazılır; sen de düzenleyebilirsin.
-- **Birden fazla şirket, tek sunucu.** Şirket ya da ekip başına ofis; her birinin kendi klasörü, çalışanları ve teması (klasik, futbol kulübü, moda atölyesi, gotik malikâne, müzik stüdyosu, seyahat acentesi).
+- **Birden fazla şirket, tek sunucu.** Şirket ya da ekip başına ofis; her birinin kendi klasörü, çalışanları ve teması (klasik, futbol kulübü, moda atölyesi, gotik malikâne, müzik stüdyosu, seyahat acentesi, rüya atölyesi).
 
 ## Hızlı başlangıç
 
@@ -52,13 +52,23 @@ Hafıza dosyası düz Markdown. Profili aç (sohbet başlığında ☰): oku, d�
 
 Üst çubuktaki **👥 Toplantı** düğmesi toplantı çağırır: konuyu ve kimlerin katılacağını seç (meşgul olanlar ya işini bitirip gelir ya da işi kesilir). Herkes toplantı odasına yürür, sohbet paneli toplantı paneline dönüşür. Yazdığın şey tüm odaya gider; her çalışan en fazla üç cümleyle cevap verir ya da pas geçer, diğerlerinin söylediklerini bir sonraki turda duyar. `@isim` tek kişiye hitap eder (isme tıklayınca eklenir). Daha çok anlatacağı olan el kaldırır — başının üstünde ✋, panelde bir kart — ve **Söz ver** ile uzunca konuşur. **Bitir** kararları ve takip görevlerini içeren bir özet yazar; her görevin yanındaki **Gönder** onu sahibine iletir, özet her katılımcının sohbetine ve kutu işaretliyse hafızasına düşer. Her mesaj katılımcı başına bir tur çalıştırır, kalabalık oda o kadar maliyetlidir. Geçmiş toplantılar 🕘 altında durur.
 
+### Pano ve proje yöneticisi
+
+**📋 Pano** ofisteki herkesin paylaştığı iki şeyi tutar. **Ortak defter**, tek bir sohbetin ötesinde önemi olan şeylerin (bulgular, kararlar, rakamlar, riskler) yazıldığı ve işe başlamadan önce arkadaşların bulduklarının okunduğu yerdir; sen de not ekler, düzenler, silersin. **Görev listesi** bir plandır: görevleri sahibiyle birlikte sen ve proje yöneticisi koyarsınız, hiçbir şey kendiliğinden başlamaz. Bir görevde **Başlat**'a bas, bir kişiyi seçip **açık görevleri başlat** de, ya da sohbette panodaki açık işlerini yapmasını söyle. Sahipler her görevi yapılıyor, bitti (kısa sonuç notuyla) ya da takıldı (sebebiyle) olarak işaretler; takılan ve incelemedeki görevler düğmede rozet olarak görünür.
+
+Bir çalışanı **proje yöneticisi** yap (profil → Ayarlar → Proje yöneticisi). Defterin tamamını okur, bir arkadaşının son zamanlarda ne yaptığını onu rahatsız etmeden görür, panoya görev koyar ve sen onay verince başlatır. Doğal döngü: herkes kendi alanını araştırıp not alır → proje yöneticisine durumu, eksikleri ve sıradaki adımı sorarsın → işler çakışmasın diye net sahipli ve kapsamlı görevler önerir → başla dersin → sahipler çalışır ve görevlerini işaretler. Arka planda sürekli kontrol eden bir şey yoktur: proje yöneticisi sadece onunla konuştuğunda tur harcar.
+
+Düzeni korumak için: bir görevde **İnceleme gerekli** kutusunu işaretle (ya da proje yöneticisi işaretlesin), sahibi görevi kapatamaz — biten iş, sen ya da proje yöneticisi **Onayla** ya da **Geri gönder** diyene kadar incelemede bekler. Pano, sahibi senden izin bekleyen, oturumu hata veren, çalışmayı bırakan ya da ofisten ayrılan görevleri işaretler ve 📋 düğmesinde sayar. Toplantı sonrası görevler başlatılmaz, panoya eklenir. Notlar çalışanlara talimat olarak değil bilgi olarak verilir, neredeyse aynı başlıklı notlar kaydedilirken yakalanır.
+
+Aynı depoda aynı anda çalışan geliştiriciler için profillerinde **Ayrı çalışma kopyası** kutusunu işaretle: her biri `.pixel-office/worktrees/<id>` altında, `po/<id>` dalında özel bir git çalışma kopyası alır, oraya commit eder ve görevin sonuç notunda dalı belirtir. Ana dala birleştirme senin işindir (ya da istediğinde proje yöneticisinin). Klasör en az bir commit'i olan bir git deposu olmalıdır; açıldığında o çalışanın sohbeti yeni bir oturumla devam eder.
+
 ### İşe alma
 
 **+ İşe al** karakter oluşturucuyu açar: cinsiyet, vücut tipi, ten, göz rengi, 14 saç stili (kel ve dökülmüşten mohawk, afro ve örgüye), kendi rengiyle sakal (kirli, bıyık, keçi, top, tam, uzun), gözlük, kulaklık, şapka (kep, bere, kovboy, fötr, balıkçı, Fransız beresi, bandana, kukuleta), üst (tişört, atlet, crop, polo, gömlek, kazak, hoodie, blazer, kravatlı takım elbise, elbise), alt (pantolon, kargo, eşofman, şort, uzun şort, etek, uzun etek), kendi rengiyle ayakkabı (klasik, spor, bilekli spor, bot, makosen, sandalet, topuklu). Hazır pozisyonlardan birini seç ya da görev tanımını kendin yaz, model / effort / izin modunu belirle, işe al. Yeni çalışan kapıdan konfetiyle girer ve boş bir masaya oturur (ofis başına 12 masa).
 
 ![İşe alma sayfası](docs/hire.jpg)
 
-Hazır pozisyonlar (her birinin düzenlenebilir görev tanımı var): Kişisel Asistan, Muhasebe & Finans, Reklam & Pazarlama, Müşteri Destek, SEO & İçerik, Yazılım Geliştirme, Satış, İçerik & Sosyal Medya, Müdür / Ekip Lideri, Pazarlama Müdürü, İnsan Kaynakları, Proje Yöneticisi, Ürün Yöneticisi, Veri Analisti, UI/UX Tasarımcı, Hukuk & Uyum, Operasyon.
+Hazır pozisyonlar (her birinin düzenlenebilir görev tanımı var): Kişisel Asistan, Muhasebe & Finans, Reklam & Pazarlama, Müşteri Destek, SEO & İçerik, Yazılım Geliştirme, Satış, İçerik & Sosyal Medya, Müdür / Ekip Lideri, Pazarlama Müdürü, İnsan Kaynakları, Proje Yöneticisi, Ürün Yöneticisi, Veri Analisti, UI/UX Tasarımcı, Hukuk & Uyum, Operasyon, Mobil Geliştirici, Frontend Geliştirici, Backend Geliştirici, DevOps Mühendisi, Test Mühendisi (QA), Yapay Zekâ / ML Mühendisi, Veri Mühendisi, Grafik Tasarımcı, Pazar & Rakip Analisti, İş Analisti, İş Geliştirme, Büyüme Yöneticisi, Strateji Danışmanı, PR & İletişim, Topluluk Yöneticisi, Metin Yazarı, E-ticaret Yöneticisi.
 
 ### Ofisler ve temalar
 

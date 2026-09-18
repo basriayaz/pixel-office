@@ -36,6 +36,10 @@ async function load() {
     $("effortHint").textContent = EFFORT_INFO[settings.effort]?.desc || "";
     buildChoiceCards($("fPerm"), permItems(), settings.perm, (v) => { settings.perm = v; });
     $("fRefresh").value = detail.refreshHours;
+    $("fManager").checked = !!detail.manager;
+    $("fManagerInfo").textContent = detail.currentManager ? t("ui.profile.managerTakeover", { name: detail.currentManager }) : "";
+    $("fWorktree").checked = !!detail.worktree;
+    $("fWorktreeInfo").textContent = detail.worktree ? `${detail.branch} · ${detail.workdir}` : "";
     $("fCwd").value = detail.cwd === detail.officeCwd ? "" : detail.cwd;
     attachFolderPicker($("fCwd"));
   }
@@ -60,7 +64,7 @@ function renderHead() {
   const days = daysSince(detail.hired);
   $("pMeta").innerHTML = [
     detail.hired ? `${t("ui.profile.hiredOn", { date: new Date(detail.hired).toLocaleDateString(LOCALE_TAG) })} (${days === 0 ? t("ui.profile.startedToday") : t("ui.profile.withUs", { n: days })})` : "",
-    `${t("ui.profile.workdir")} <code>${escapeHtml(detail.cwd)}</code>`,
+    `${t("ui.profile.workdir")} <code>${escapeHtml(detail.workdir || detail.cwd)}</code>`,
   ].filter(Boolean).join("<br>");
   const model = detail.model || detail.configuredModel;
   $("pBadges").innerHTML = [
@@ -143,7 +147,7 @@ $("saveProfile").onclick = async () => {
 
 $("saveSettings").onclick = async () => {
   try {
-    await api("PUT", `${API}/employees/${encodeURIComponent(id)}`, { model: settings.model, effort: settings.effort, permissionMode: settings.perm, refreshHours: Number($("fRefresh").value), cwd: $("fCwd").value.trim() });
+    await api("PUT", `${API}/employees/${encodeURIComponent(id)}`, { model: settings.model, effort: settings.effort, permissionMode: settings.perm, refreshHours: Number($("fRefresh").value), cwd: $("fCwd").value.trim(), manager: $("fManager").checked, worktree: $("fWorktree").checked });
     toast(t("ui.profile.settingsSaved"));
     load();
   } catch (err) { toast(t("ui.profile.error", { message: err.message })); }

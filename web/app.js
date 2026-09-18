@@ -45,7 +45,7 @@ function mergeRoster(officeId, list, info) {
     const old = prev?.employees.get(e.id);
     employees.set(e.id, { ...e, messages: old?.messages ?? [], pending: old?.pending ?? [], loaded: old?.loaded ?? false, unread: old?.unread ?? 0 });
   }
-  state.offices.set(officeId, { info: info ?? prev?.info ?? { id: officeId, name: officeId }, employees, meeting: prev?.meeting ?? null });
+  state.offices.set(officeId, { info: info ?? prev?.info ?? { id: officeId, name: officeId }, employees, meeting: prev?.meeting ?? null, board: prev?.board ?? null });
 }
 
 function showOffice(officeId, keepChat = false) {
@@ -66,6 +66,7 @@ function showOffice(officeId, keepChat = false) {
   if (state.selected && o.employees.has(state.selected)) { renderHead(o.employees.get(state.selected)); send({ type: "open", id: state.selected }); }
   else if (state.selected) closeChat();
   meetingUI.sync();
+  boardUI.refresh();
 }
 
 function renderOfficeTabs() {
@@ -88,7 +89,7 @@ function handle(m) {
   if (m.type === "shutdown") { markClosed(); return; }
   if (m.type === "reload") { setTimeout(() => location.reload(), 300); return; }
   if (m.type === "init") {
-    for (const o of m.offices) { mergeRoster(o.id, o.employees, { id: o.id, name: o.name, cwd: o.cwd, theme: o.theme }); state.offices.get(o.id).meeting = o.meeting ?? null; }
+    for (const o of m.offices) { mergeRoster(o.id, o.employees, { id: o.id, name: o.name, cwd: o.cwd, theme: o.theme }); state.offices.get(o.id).meeting = o.meeting ?? null; state.offices.get(o.id).board = o.board ?? null; }
     const hired = params.get("hired");
     if (hired && !state.inited) { state.entering = new Set([hired]); history.replaceState(null, "", `/?office=${encodeURIComponent(state.office)}`); }
     state.inited = true;
@@ -114,6 +115,7 @@ function handle(m) {
     return;
   }
   if (m.type === "meeting" || m.type === "meeting_entry") { meetingUI.onMessage(m); return; }
+  if (m.type === "board") { const o = state.offices.get(m.office); if (o) { o.board = m.board; boardUI.refresh(m.office); } return; }
   const e = employeesOf(m.office)?.get(m.id);
   if (!e) return;
   const current = m.office === state.office;
@@ -122,7 +124,7 @@ function handle(m) {
     case "status":
       e.status = m.status;
       e.sickUntil = m.sickUntil || 0;
-      if (current) meetingUI.onStatus();
+      if (current) { meetingUI.onStatus(); boardUI.refresh(); }
       if (current) { office.setStatus(m.id, m.status, m.reason); renderRoster(); }
       renderOfficeTabs();
       if (selected) { renderHead(e); updateTyping(e); }

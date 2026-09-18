@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 // Package root (where web/, locales/, templates/ live) — works from src/ (tsx) and dist/ (built).
 export const PKG_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 
-export const THEMES = ["default", "football", "fashion", "gothic", "music", "travel"] as const;
+export const THEMES = ["default", "football", "fashion", "gothic", "music", "travel", "dream"] as const;
 export type Theme = (typeof THEMES)[number];
 
 export interface OfficeDef {

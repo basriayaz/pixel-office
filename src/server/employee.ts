@@ -36,6 +36,9 @@ export interface EmployeeConfig {
   refreshHours?: number;
   effort?: "low" | "medium" | "high" | "xhigh" | "max";
   hired?: string;
+  manager?: boolean; // project manager: sees everybody's activity and assigns tasks
+  worktree?: boolean; // works in a private git worktree (branch po/<id>) so parallel code changes cannot collide
+  baseCwd?: string;   // the configured working folder; `cwd` is the worktree inside it when `worktree` is on
 }
 
 export interface ChatMessage {
@@ -325,7 +328,9 @@ export class Employee extends EventEmitter {
   private buildPrompt(): string {
     const parts = [this.cfg.systemPrompt];
     const others = this.colleagues?.list().filter((e) => e !== this) ?? [];
-    if (others.length) parts.push(t("server.office.prompt", { list: others.map((e) => `- ${e.cfg.name} — ${e.cfg.role}`).join("\n") }));
+    if (others.length) parts.push(t("server.office.prompt", { list: others.map((e) => `- ${e.cfg.name} — ${e.cfg.role}${e.cfg.manager ? " — " + t("server.board.managerTag") : ""}`).join("\n") }));
+    if (this.colleagues) parts.push(t(this.cfg.manager ? "server.board.promptManager" : "server.board.prompt"));
+    if (this.cfg.worktree && this.cfg.baseCwd && this.cfg.baseCwd !== this.cfg.cwd) parts.push(t("server.worktree.prompt", { branch: `po/${this.cfg.id}`, base: this.cfg.baseCwd }));
     if (this.cfg.memoryFile) {
       const rel = path.relative(this.cfg.cwd, this.cfg.memoryFile);
       let memory = "";
@@ -521,6 +526,15 @@ function describeTool(name: string, input: Record<string, unknown>): string {
   if (name === "AskUserQuestion") return t("server.askingYou");
   if (name === "mcp__office__message_colleague") return t("server.tool.message_colleague", { v: `${s(input.to)}: ${s(input.message).slice(0, 120)}` });
   if (name === "mcp__office__list_colleagues") return t("server.tool.list_colleagues");
+  if (name.startsWith("mcp__office__")) {
+    const short = name.slice("mcp__office__".length);
+    const v: Record<string, string> = {
+      share_note: s(input.title), read_notes: Array.isArray(input.ids) ? `#${(input.ids as unknown[]).join(", #")}` : "", list_tasks: "",
+      update_task: `#${s(input.id)}${input.status ? " → " + s(input.status) : ""}`, assign_task: `${s(input.to)}: ${s(input.title)}`, start_task: s(input.id),
+      colleague_activity: s(input.name), raise_hand: s(input.reason),
+    };
+    if (short in v) return t(`server.tool.${short}`, { v: v[short] }).trim();
+  }
   if (name in arg || name === "TodoWrite") return t(`server.tool.${name}`, { v: arg[name] ?? "" });
   return `${name}${Object.keys(input).length ? ": " + s(input).slice(0, 100) : ""}`;
 }

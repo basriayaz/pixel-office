@@ -121,6 +121,7 @@ export function loadEmployee(dir: string, index: number, office: OfficeDef): Emp
     hired: meta.hired ?? fs.statSync(dir).birthtime.toISOString().slice(0, 10),
     manager: meta.manager === "true",
     worktree, baseCwd,
+    connectorsOff: meta.connectorsOff ? meta.connectorsOff.split(",").map((x) => x.trim()).filter(Boolean) : undefined,
   };
   ensureDirs(cfg);
   return cfg;
@@ -161,6 +162,7 @@ export function writeAgentFile(cfg: EmployeeConfig) {
   if (cfg.manager) lines.push(`manager: true`);
   if (cfg.worktree) lines.push(`worktree: true`);
   if (cfg.allowedTools?.length) lines.push(`tools: ${cfg.allowedTools.join(", ")}`);
+  if (cfg.connectorsOff?.length) lines.push(`connectorsOff: ${cfg.connectorsOff.join(", ")}`);
   if (cfg.refreshHours !== undefined && cfg.refreshHours !== getSettings().refreshHours) lines.push(`refreshHours: ${cfg.refreshHours}`);
   if ((cfg.baseCwd ?? cfg.cwd) !== getOffice(cfg.officeId).cwd) lines.push(`cwd: ${cfg.baseCwd ?? cfg.cwd}`);
   lines.push(`look: ${JSON.stringify(cfg.look)}`, "---", cfg.systemPrompt.trim(), "");

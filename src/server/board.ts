@@ -16,6 +16,9 @@ export interface Task {
   updated: number;
   notes: Array<{ ts: number; by: string; text: string }>;
   review?: boolean;   // the owner cannot close it: "done" from the owner becomes "review" until the boss or the project manager approves
+  after?: number[];   // tasks that must be done before this one can start
+  autoStart?: string; // a start was approved (by this employee id or "user") while prerequisites were open: it begins by itself once they are done
+  session?: string;   // the Claude session this task runs in, so a task sent back from review continues where it stopped
 }
 
 export interface Note {
@@ -95,25 +98,44 @@ export class Board extends EventEmitter {
   }
 
   // ---- tasks ----
-  addTask(owner: string, title: string, detail: string, createdBy: string, review = false): Task {
+  addTask(owner: string, title: string, detail: string, createdBy: string, review = false, after: number[] = []): Task {
     const now = Date.now();
-    const task: Task = { id: this.data.nextTask++, title: title.trim().slice(0, 160), detail: detail.trim().slice(0, 8000), owner, status: "todo", createdBy, created: now, updated: now, notes: [], ...(review ? { review: true } : {}) };
+    const deps = [...new Set(after)].filter((id) => this.data.tasks.some((x) => x.id === id));
+    const task: Task = { id: this.data.nextTask++, title: title.trim().slice(0, 160), detail: detail.trim().slice(0, 8000), owner, status: "todo", createdBy, created: now, updated: now, notes: [], ...(review ? { review: true } : {}), ...(deps.length ? { after: deps } : {}) };
     this.data.tasks.push(task);
     this.save();
     return task;
   }
 
-  updateTask(id: number, patch: { status?: TaskStatus; owner?: string; title?: string; detail?: string; note?: string; review?: boolean }, by: string): Task | undefined {
+  // Prerequisites of a task that are not done yet (deleted ones do not hold anything up).
+  waitingOn(task: Task): number[] {
+    return (task.after ?? []).filter((id) => { const d = this.data.tasks.find((x) => x.id === id); return d && d.status !== "done"; });
+  }
+
+  // Bookkeeping that is not a change of the task itself: no "updated" stamp.
+  markTask(id: number, patch: { autoStart?: string | null; session?: string | null }) {
+    const task = this.data.tasks.find((x) => x.id === id);
+    if (!task) return;
+    if (patch.autoStart !== undefined) { if (patch.autoStart) task.autoStart = patch.autoStart; else delete task.autoStart; }
+    if (patch.session !== undefined) { if (patch.session) task.session = patch.session; else delete task.session; }
+    this.save();
+  }
+
+  updateTask(id: number, patch: { status?: TaskStatus; owner?: string; title?: string; detail?: string; note?: string; review?: boolean; after?: number[] }, by: string): Task | undefined {
     const task = this.data.tasks.find((x) => x.id === id);
     if (!task) return undefined;
+    const prev = task.status;
     if (patch.status && TASK_STATUSES.includes(patch.status)) task.status = patch.status;
     if (patch.owner) task.owner = patch.owner;
     if (patch.title !== undefined) task.title = patch.title.trim().slice(0, 160) || task.title;
     if (patch.detail !== undefined) task.detail = patch.detail.trim().slice(0, 8000);
     if (patch.review !== undefined) { if (patch.review) task.review = true; else delete task.review; }
+    if (patch.after) { const deps = [...new Set(patch.after)].filter((d) => d !== id && this.data.tasks.some((x) => x.id === d)); if (deps.length) task.after = deps; else delete task.after; }
+    if (task.status !== "todo") delete task.autoStart;
     if (patch.note?.trim()) task.notes.push({ ts: Date.now(), by, text: patch.note.trim().slice(0, 2000) });
     task.updated = Date.now();
     this.save();
+    if (task.status !== prev) this.emit("status", task, prev, by); // the office reacts: prerequisites met, digest for the project manager
     return task;
   }
 

@@ -8,6 +8,8 @@ import { t } from "./runtime.js";
 export interface Colleagues {
   list(): Employee[];
   board(): Board;
+  // Hands a task to its owner: "waiting" = prerequisites still open (it starts by itself once they are done), "queued" = the owner is busy.
+  launch(task: Task, from: Employee): "started" | "queued" | "waiting";
 }
 
 export const OFFICE_TOOLS = ["list_colleagues", "message_colleague", "raise_hand", "share_note", "read_notes", "edit_note", "delete_note", "list_tasks", "update_task", "assign_task", "start_task", "colleague_activity"].map((n) => `mcp__office__${n}`);
@@ -23,7 +25,11 @@ export function officeServer(self: Employee, colleagues: Colleagues) {
   };
   const board = () => colleagues.board();
   const nameOf = (id: string) => (id === "user" ? t("server.meeting.boss") : colleagues.list().find((e) => e.cfg.id === id)?.cfg.name ?? id);
-  const taskLine = (k: Task) => `#${k.id} [${k.status}] ${k.title} — ${nameOf(k.owner)}${k.notes.length ? ` (${t("server.board.lastNote")}: ${k.notes[k.notes.length - 1].text.slice(0, 160)})` : ""}`;
+  const started = (k: Task, target: Employee) => {
+    const r = colleagues.launch(k, self);
+    return t(r === "started" ? "server.board.started" : r === "queued" ? "server.board.queued" : "server.board.waitingDeps", { id: k.id, name: target.cfg.name, deps: board().waitingOn(k).map((d) => "#" + d).join(", ") });
+  };
+  const taskLine = (k: Task) => `#${k.id} [${k.status}] ${k.title} — ${nameOf(k.owner)}${k.after?.length ? ` (${t("server.board.afterTag")} ${k.after.map((d) => "#" + d).join(", ")})` : ""}${k.notes.length ? ` (${t("server.board.lastNote")}: ${k.notes[k.notes.length - 1].text.slice(0, 160)})` : ""}`;
   const notManager = () => text(t("server.board.managerOnly"), true);
   return createSdkMcpServer({
     name: "office",
@@ -116,30 +122,29 @@ export function officeServer(self: Employee, colleagues: Colleagues) {
         detail: z.string().describe(t("server.board.taskDetailDesc")),
         start_now: z.boolean().optional().describe(t("server.board.startNowDesc")),
         needs_review: z.boolean().optional().describe(t("server.board.needsReviewDesc")),
-      }, async ({ to, title, detail, start_now, needs_review }) => {
+        after: z.array(z.number()).optional().describe(t("server.board.afterDesc")),
+      }, async ({ to, title, detail, start_now, needs_review, after }) => {
         if (!self.cfg.manager) return notManager();
         const target = find(to) ?? (slug(to) === self.cfg.id || slug(to) === slug(self.cfg.name) ? self : undefined);
         if (!target) return text(t("server.office.notFound", { name: to, list: others().map((e) => e.cfg.name).join(", ") }), true);
-        const k = board().addTask(target.cfg.id, title, detail, self.cfg.id, !!needs_review);
+        const k = board().addTask(target.cfg.id, title, detail, self.cfg.id, !!needs_review, after ?? []);
         self.note(t("server.board.assignedNote", { id: k.id, name: target.cfg.name, title: k.title }));
         if (!start_now || target === self) return text(t("server.board.assigned", { id: k.id, name: target.cfg.name }));
-        if (target.inMeeting) return text(t("server.board.inMeeting", { id: k.id, name: target.cfg.name }));
-        board().updateTask(k.id, { status: "doing" }, self.cfg.id);
-        void target.sendFromColleague(self, t("server.board.taskMessage", { id: k.id, title: k.title, detail: k.detail || "-" }), false);
-        return text(t("server.board.started", { id: k.id, name: target.cfg.name }));
+        return text(started(k, target));
       }),
       // Nobody starts a task on their own: the owner gets it only when the manager (or the boss) says go.
-      tool("start_task", t("server.board.startDesc"), { id: z.number() }, async ({ id }) => {
+      tool("start_task", t("server.board.startDesc"), { ids: z.array(z.number()).describe(t("server.board.startIdsDesc")) }, async ({ ids }) => {
         if (!self.cfg.manager) return notManager();
-        const k = board().tasks.find((x) => x.id === id);
-        if (!k) return text(t("server.board.noSuchTask", { id }), true);
-        const target = colleagues.list().find((e) => e.cfg.id === k.owner);
-        if (!target || target === self) return text(t("server.board.noOwner", { id }), true);
-        if (target.inMeeting) return text(t("server.board.inMeeting", { id, name: target.cfg.name }), true);
-        board().updateTask(id, { status: "doing" }, self.cfg.id);
-        self.note(t("server.board.startedNote", { id, name: target.cfg.name, title: k.title }));
-        void target.sendFromColleague(self, t("server.board.taskMessage", { id: k.id, title: k.title, detail: k.detail || "-" }), false);
-        return text(t("server.board.started", { id, name: target.cfg.name }));
+        const out: string[] = [];
+        for (const id of ids) {
+          const k = board().tasks.find((x) => x.id === id);
+          const target = k && colleagues.list().find((e) => e.cfg.id === k.owner);
+          if (!k) { out.push(t("server.board.noSuchTask", { id })); continue; }
+          if (!target || target === self || k.status === "done") { out.push(t("server.board.noOwner", { id })); continue; }
+          self.note(t("server.board.startedNote", { id, name: target.cfg.name, title: k.title }));
+          out.push(started(k, target));
+        }
+        return text(out.join("\n"));
       }),
       tool("colleague_activity", t("server.board.activityDesc"), {
         name: z.string().describe(t("server.office.toDesc")),

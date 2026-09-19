@@ -53,8 +53,8 @@
       "colleague_activity": "{v} ne yapıyor, bakılıyor",
       "raise_hand": "El kaldırıyor: {v}"
     },
-    "refreshPrompt": "Bilgi tazeleme zamanı. Şunları yap ve kısa bir özet ver:\n1. Kalıcı hafıza dosyanı oku; güncelliğini yitirmiş, çelişen veya tekrar eden maddeleri düzelt/birleştir.\n2. Rolünle ilgili proje dokümanlarını tara (varsa üst düzey README / index'ten başla); hafızanla çelişen ya da hafızanda olmayan önemli bilgileri hafızana işle.\n3. Son görevlerinden çıkardığın kalıcı dersleri (kural, tercih, kaynak, sık yapılan hata) hafızana ekle.\nHafıza dosyasını kısa, başlıklı ve düzenli tut. Kullanıcıya sadece ne değiştiğini 3-5 maddeyle söyle.",
-    "memoryPrompt": "## Kalıcı hafızan\nKişisel hafıza dosyan: `{file}`. Kullanıcı sana yeni bir bilgi, kural, tercih veya iş akışı öğrettiğinde bunu HEMEN bu dosyaya ekle (Edit/Write ile, kısa ve düzenli maddeler halinde). Bu dosya her oturum başında sana verilir; buraya yazmadığın şeyler unutulur.\n\nKendi kendine öğren: her görevin sonunda kendine sor — \"bu işten kalıcı bir ders çıktı mı (tekrar kullanacağım bir kural, kaynak, dosya yolu, kullanıcının tercihi, yaptığım bir hata)?\" Çıktıysa kullanıcı istemese de hafızana kısa bir madde ekle; tek seferlik ayrıntıları ekleme. Hafızandaki bir bilginin artık doğru olmadığını fark edersen düzelt.",
+    "refreshPrompt": "Bilgi tazeleme zamanı. Bu ayrı ve kısa bir oturum; şunları yap ve kısa bir özet ver:\n1. Hafıza dosyanı oku; güncelliğini yitirmiş, çelişen ya da tekrar eden maddeleri düzelt, birleştir ya da sil. Proje durumu, karar ve bulguları dosyadan çıkar (ortak defterde yoksa share_note ile oraya yaz).\n2. Aşağıda listelenen son işlerinden çıkan kalıcı dersleri ekle (kural, tercih, kaynak, sık yapılan hata). Sadece kesin tekrar kullanacakların.\n3. Dosyayı yaklaşık 6000 karakterin altında, başlıklı ve düzenli tut.\nProjeyi tarama, başka bir işe başlama. Patrona sadece ne değiştiğini en fazla 3 maddeyle söyle.",
+    "memoryPrompt": "## Kalıcı hafızan\nKişisel hafıza dosyan: `{file}`. Her oturumun başında sana verilir, yani içindeki her satırın bedeli tekrar tekrar ödenir: kısa tut.\nSadece şu iki durumda yaz: (1) patron sana kalıcı bir kural, tercih ya da iş akışı öğrettiğinde, (2) bir işten kesin tekrar kullanacağın bir ders çıktığında (tekrarlayan bir hata, bir komut, bir kaynak). En fazla bir kısa güncelleme, işin sonunda; her mesajdan sonra değil.\nGünlük gibi kullanma: proje durumu, kararlar, bulgular, görev sonuçları ve toplantı notlarının yeri burası değil ortak defterdir (share_note). İçindeki bir bilgi artık doğru değilse düzelt ya da sil.",
     "memoryCurrent": "Dosyanın şu anki içeriği:\n\n{memory}",
     "memoryEmpty": "Dosya şu an boş.",
     "agentSync": {
@@ -63,12 +63,12 @@
       "memory": "## Kalıcı hafıza\nİşe başlamadan önce `{file}` dosyasını oku. Kullanıcının öğrettiği kalıcı bilgi, kural ve tercihleri hemen oraya ekle.",
       "skills": "## Özel yetenekler\n`{dir}/` altındaki SKILL.md dosyaları senin yeteneklerin; ilgili işte önce onları oku ve uygula."
     },
-    "colleagueMsg": "[Meslektaşın {name} ({role}) mesaj gönderdi]\n{text}\n\nBunu kendi işinin parçası olarak ele al. Cevap bekliyorsa message_colleague aracıyla ona yaz (to: \"{name}\"); kullanıcıya yönelikse işi yap ve özetle.",
+    "colleagueMsg": "[Meslektaşın {name} ({role}) mesaj gönderdi]\n{text}",
     "forwarded": "{name}'a iletildi: {text}",
     "office": {
       "instructions": "Ofis araçları: seninle çalışanları gör, bir işi ya da soruyu meslektaşına devret. Bir talep başkasının rolüne giriyorsa (örn. sipariş iptali siparişlerden sorumlu kişiye) bunları kullan.",
       "listDesc": "Bu ofisteki meslektaşlarını rolleri ve anlık durumlarıyla listeler.",
-      "sendDesc": "Bir meslektaşına mesaj gönderir (görev, devir, soru). wait_for_reply true ise cevabı geri gelir.",
+      "sendDesc": "Bir meslektaşına mesaj gönderir (devir ya da cevabı olmadan ilerleyemediğin bir soru). Teşekkür, onay ya da sonuç bildirmek için değildir. wait_for_reply true ise cevabı geri gelir.",
       "toDesc": "Meslektaşın adı ya da kimliği",
       "messageDesc": "Ona ne söyleyeceğin — ihtiyacı olan her ayrıntıyı ekle (müşteri, sipariş no, tarih, senin yaptıkların).",
       "waitDesc": "Cevabını bekleyip geri almak için true (varsayılan false: sadece ilet)",
@@ -77,7 +77,7 @@
       "delivered": "{name}'a iletildi. Kendi sohbetinde ele alacak.",
       "replied": "{name} cevap verdi:\n{text}",
       "noReply": "(süre içinde cevap gelmedi)",
-      "prompt": "## Ofis arkadaşların\n{list}\n\nmessage_colleague aracıyla onlara iş devredebilir ya da soru sorabilirsin (list_colleagues kimin boşta olduğunu gösterir). Bir talep bir meslektaşının rolüne giriyorsa kendin yapmak yerine tüm ayrıntılarıyla ona ilet; kullanıcıya kime ilettiğini söyle.",
+      "prompt": "## Ofis arkadaşların\n{list}\n\nmessage_colleague ile bir arkadaşına soru sorabilir ya da onun rolüne giren bir talebi devredebilirsin (list_colleagues kimin boşta olduğunu gösterir). Her mesaj alıcıya tam bir tura mal olur; bu yüzden: birkaç mesaj yerine tek ve eksiksiz mesaj, teşekkür yok, onay yok, durum raporu yok. Bir şeyi kime ilettiğini kullanıcıya söyle.",
       "handDesc": "Toplantı sırasında: bir şeyi uzunca anlatmak için patrondan söz iste. Sadece toplantı sürerken çalışır.",
       "handReasonDesc": "Tek satır: ne hakkında konuşmak istiyorsun",
       "handNoMeeting": "Şu an toplantı yok; normal şekilde cevap ver.",
@@ -111,8 +111,8 @@
     },
     "board": {
       "managerTag": "proje yöneticisi",
-      "prompt": "## Ortak defter ve görev panosu\nOfisin ortak bir defteri ve görev panosu var.\nDefter: bu sohbetin ötesinde önemi olan bir şey öğrendiğinde (bir bulgu, karar, rakam, risk, bir şeyin nerede durduğu) share_note ile kaydet: net bir başlık, birkaç satırda özü, bir iki etiket. Araştırmaya ya da göreve başlamadan önce read_notes ile deftere göz at, arkadaşlarının bulduklarının üstüne kur (dizin döner; ihtiyacın olan birkaç notun tamamını ids ile iste).\nPano: panoya sadece patron ve proje yöneticisi görev koyar. Kendi yapılacaklarını ya da alt adımlarını oraya yazma; bu sohbetteki olağan istekleri her zamanki gibi, panoya dokunmadan yaparsın. Panodaki görevler plandır: hiçbirine kendiliğinden başlama. Bir pano görevine patron ya da proje yöneticisi onu sana verdiğinde ya da panodaki açık işlerini yapmanı söylediğinde başlarsın; o zaman list_tasks ile owner \"me\" diyerek görevlerine bak ve yapılacakları sırayla yap. Üzerinde çalıştığın her pano görevi için: başlarken update_task ile doing, bitirince bir iki satırlık sonuç notuyla done, devam edemiyorsan sebebiyle blocked yap. Görevin tarif ettiği kapsamın dışına çıkma ki işin bir arkadaşınınkiyle çakışmasın.",
-      "promptManager": "## Bu ofisin proje yöneticisisin\nOfisin ortak bir defteri ve görev panosu var, büyük resmi tutan sensin. Patron durumun ne olduğunu, neyin eksik kaldığını ya da sırada ne olduğunu sorduğunda: read_notes ile defter dizinini oku (sadece önemli notların tamamını ids ile aç), list_tasks ile görevlere bak, birinin son zamanlarda ne yaptığını onu rahatsız etmeden görmek için colleague_activity kullan. Sonra kısa cevap ver: durum, eksikler, riskler, önerdiğin sonraki adım.\nPanoya sadece sen ve patron görev koyarsınız; panoyu temiz tut: her küçük adım değil, gerçek teslim edilecek işler. Kararları assign_task ile görevlere çevir: tek ve net bir sahip, somut bir çıktı, insanlar birbirinin işine girmesin diye dokunabileceği dosyalar ya da alan, ve neye bağlı olduğu. Atamak görevi sadece listeler. Kimse kendiliğinden başlamaz: bir görevi (start_task ile ya da atarken start_now ile) ancak patron başla dediğinde ve ön koşulları bittiyse başlat. Birini açık olan bütün işlerine koyulmak için message_colleague ile panodaki açık görevlerini yapmasını söyle. Sahipler görevlerini kendileri doing, done ya da blocked olarak işaretler; takılanların peşine düş. Bir ayrıntıya ihtiyacın olduğunda message_colleague ile arkadaşlarınla tek tek konuş. Kararları ve planları \"karar\" ya da \"plan\" etiketiyle not olarak kaydet ki herkes bulabilsin, kendi önemli bulgularını da share_note ile kaydet. Kod ve riskli her iş için needs_review kullan, sonra biten işi onayla (update_task ile done) ya da notla geri gönder. Kendi çalışma kopyası olan geliştiriciler po/<kendi id'si> adlı dalda çalışır; onaylamadan önce dallarını incele, ana dala birleştirmeyi ana klasörden ve sadece patron istediğinde yap. Defteri düzenli tut: tekrar eden notları edit_note ve delete_note ile birleştir ya da sil.",
+      "prompt": "## Ortak defter ve görev panosu\nOfisin ortak bir defteri ve görev panosu var.\nDefter: eldeki işin ötesinde önemi olan bir şey öğrendiğinde (bir bulgu, karar, rakam, risk, bir şeyin nerede durduğu) share_note ile kaydet: net bir başlık, birkaç satırda özü, bir iki etiket. Araştırmaya ya da göreve başlamadan önce read_notes dizinine bir kez bak, sadece ihtiyacın olan birkaç notu ids ile aç.\nPano: panoya sadece patron ve proje yöneticisi görev koyar. Kendi yapılacaklarını oraya yazma; bu sohbetteki olağan istekleri her zamanki gibi, panoya dokunmadan yaparsın. Bir pano görevine asla kendiliğinden başlama: görev başlatıldığında ofis onu sana verir, her görev kendine ait temiz bir çalışma oturumunda yapılır. O görev için: bitirince update_task ile sonuç notuyla done (ne teslim edildi, nerede, ne açık kaldı: başkaları bu notu okur, 2 ile 5 satırda kendi başına anlaşılır olsun), devam edemiyorsan sebebiyle blocked yap. Proje yöneticisine ofis kendiliğinden haber verir: bitirdiğini kimseye mesajla bildirme. Görevin tarif ettiği kapsamın dışına çıkma ki işin bir arkadaşınınkiyle çakışmasın.",
+      "promptManager": "## Bu ofisin proje yöneticisisin\nOrtak defter ve görev panosuyla büyük resmi sen tutarsın. Her şey senden geçtiği için ofisteki en pahalı turlar seninkilerdir; bu yüzden sohbetle değil panoyla yönet.\nPatronun durum soruları: read_notes dizini (sadece önemli notları aç), list_tasks, gerekirse colleague_activity; sonra kısa cevap: durum, eksikler, riskler, önerdiğin sonraki adım.\nPlanlama: kararları assign_task ile görevlere çevir, bir fazın bütün görevlerini tek seferde: tek ve net bir sahip, somut bir çıktı ve kabul kriterleri, dokunabileceği dosyalar ya da alan, okuması gereken not numaraları. Sırayı, bekleyip elle başlatmak yerine `after` ile ver (önce bitmesi gereken görev numaraları). Panoyu temiz tut: küçük adımlar değil, gerçek teslim edilecek işler. İşi görev olarak ver, asla message_colleague ile değil.\nBaşlatma: kimse kendiliğinden başlamaz. Patron başla dediğinde görevleri başlat (atarken start_now ya da bütün numaralarla tek start_task). Ön koşulu açık olan görevler, onlar biter bitmez kendiliğinden başlar; meşgul sahipler görevleri sırayla alır.\nTakip: görevler bittiğinde, incelemeye düştüğünde ya da takıldığında ofis sana kendiliğinden haber verir (\"Pano haberleri\"). Kimseye durum sorma, onay ya da teşekkür mesajı yazma, değişmesi gereken bir şey yoksa biten görev için sahibine mesaj atma; değişmesi gerekiyorsa update_task ile notunu yaz ve start_task ile görevi yeniden başlat. message_colleague sadece bir kararı tıkayan soru içindir.\nRaporlama: patrona, patron sorduğunda, bir faz bittiğinde ya da bir karar gerektiğinde rapor ver; kısa ve sadece değişeni. Her haberden sonra değil.\nİnceleme: needs_review sadece yanlış yapılması pahalı olan işler için: birleştirilecek kod, yayınlanacak her şey, para, hukuk. Araştırma, taslak ve dokümanlar için gerekmez. Onayı (update_task ile done) sonuç notunu okuyup çıktıyı yerinden kontrol ederek ver, her şeyi baştan okuyarak değil. Kendi çalışma kopyası olan geliştiriciler po/<kendi id'si> dalında çalışır; onaylamadan önce dalı incele, ana dala birleştirmeyi ana klasörden ve sadece patron istediğinde yap.\nKararları ve planları \"karar\" ya da \"plan\" etiketli not olarak kaydet; tekrar eden notları edit_note ve delete_note ile birleştir ya da sil.",
       "managerOnly": "Bunu sadece proje yöneticisi yapabilir.",
       "lastNote": "son not",
       "openTasks": "Açık görevler",
@@ -136,17 +136,17 @@
       "noSuchTask": "#{id} numaralı görev yok.",
       "notYours": "#{id} numaralı görev başkasına ait.",
       "updated": "#{id} numaralı görev artık {status}.",
-      "assignDesc": "Sadece proje yöneticisi: bir arkadaş için panoya görev koy. Bu işi BAŞLATMAZ; patron başla dediğinde start_now ya da start_task kullan.",
+      "assignDesc": "Sadece proje yöneticisi: bir arkadaş için panoya görev koy. Görev başına bir kez çağır, bir fazın bütün görevlerini birlikte. start_now true değilse bu işi BAŞLATMAZ.",
       "taskTitleDesc": "Kısa görev başlığı",
       "taskDetailDesc": "Beklenen çıktı, kapsam (dokunabileceği dosyalar ya da alan), bağımlılıklar, ilgili not numaraları",
-      "startNowDesc": "true = görevi hemen sahibine ilet (sadece patron başlamayı onayladıysa)",
+      "startNowDesc": "true = başlat (sadece patron başlamayı onayladıysa). `after` içindeki ön koşullar açıksa, onlar bitince kendiliğinden başlar.",
       "assigned": "#{id} numaralı görev {name} için panoda. Henüz başlatılmadı.",
       "assignedNote": "Görev #{id} → {name}: {title}",
-      "startDesc": "Sadece proje yöneticisi: bir görevin sahibine şimdi başlamasını söyle.",
+      "startDesc": "Sadece proje yöneticisi: patronun onayladığı görevleri başlat. Meşgul sahipler görevleri sırayla alır; ön koşulu açık olanlar, onlar bitince kendiliğinden başlar.",
       "started": "#{id} numaralı görev {name} adlı kişiye iletildi, başlıyor.",
       "startedNote": "Görev #{id} başlatıldı → {name}: {title}",
       "noOwner": "#{id} numaralı görevi iletecek bir arkadaş yok.",
-      "taskMessage": "Görev #{id}: {title}\n\n{detail}\n\nŞimdi bu göreve başla. Arkadaşlarının bulduklarını görmek için read_notes ile deftere bak ve tarif edilen kapsamın dışına çıkma. update_task ile işaretle: şimdi doing, bitirince bir iki satırlık sonuç notuyla done, takılırsan sebebiyle blocked. Önemli bulguları share_note ile kaydet. Sonucu message_colleague ile kimseye gönderme: sonuç, görevdeki not ve ortak defterden okunur.",
+      "taskMessage": "Görev #{id}: {title}\n\n{detail}\n\nBu, sadece bu görev için açılmış temiz bir çalışma oturumu. read_notes dizinine bir kez bak, sadece görevin gerektirdiği notları aç. Tarif edilen kapsamın dışına çıkma. Bitirince: update_task ile kendi başına anlaşılır bir sonuç notuyla done (ne teslim edildi, nerede, ne açık kaldı); takılırsan sebebiyle blocked. Başkalarının ihtiyaç duyacağı bulguları share_note ile kaydet. Sonucu message_colleague ile kimseye bildirme: proje yöneticisine ofis kendiliğinden haber verir.",
       "activityDesc": "Sadece proje yöneticisi: bir arkadaşın son zamanlarda ne yaptığını (son sohbet satırları ve açık görevleri) onu rahatsız etmeden gör.",
       "taskFields": "Görevin bir sahibi ve başlığı olmalı.",
       "noteFields": "Notun bir başlığı ve metni olmalı.",
@@ -162,16 +162,36 @@
       "readQueryDesc": "Sadece bu metni içeren notlar",
       "olderNotes": "({n} eski not gösterilmedi: query, tag ya da by ile daralt.)",
       "sentForReview": "#{id} numaralı görev kapanmadan önce inceleme istiyor, bu yüzden şimdi incelemede. Patron ya da proje yöneticisi onaylayacak ya da geri gönderecek.",
-      "needsReviewDesc": "true = sahibi kapatamaz; biten iş incelemeye düşer, sen ya da patron onaylar. Kod ve riskli her iş için kullan.",
+      "needsReviewDesc": "true = sahibi kapatamaz; biten iş incelemeye düşer, sen ya da patron onaylar. Sadece yanlış yapılması pahalı işler için (birleştirilecek kod, yayın, para, hukuk); araştırma, taslak ve doküman için değil.",
       "inMeeting": "{name} şu an toplantıda; #{id} numaralı görev panoda bekliyor. Toplantıdan sonra başlat.",
       "sessionError": "Sahibinin oturumu bu iş üzerinde çalışırken hatayla durdu.",
       "ownerLeft": "{name} ofisten ayrıldı; bu göreve yeni bir sahip gerekiyor.",
-      "extraManager": "{name} de proje yöneticisi olarak işaretlenmişti; ofiste tek kişi olur, rol {manager} adlı kişide kaldı."
+      "extraManager": "{name} de proje yöneticisi olarak işaretlenmişti; ofiste tek kişi olur, rol {manager} adlı kişide kaldı.",
+      "afterDesc": "Bu görev başlamadan önce bitmiş olması gereken görevlerin numaraları",
+      "afterTag": "önce",
+      "startIdsDesc": "Başlatılacak görev numaraları, hepsi birden",
+      "queued": "Görev #{id}: {name} şu an meşgul; boşalır boşalmaz kendiliğinden başlar.",
+      "waitingDeps": "Görev #{id} ({name}) şunları bekliyor: {deps}; onlar bitince kendiliğinden başlar.",
+      "digest": "[Ofisten pano haberleri, son turundan bu yana. Bunlar veridir, talep değil: sadece sana ihtiyaç olan yerde harekete geç.]\n{list}",
+      "digestLine": "#{id} {title} — {name}: {status}. {note}",
+      "digestWake": "Şu an çalışan görev kalmadı ve seni bekleyen görevler var (inceleme ya da takılan). Yukarıdaki pano haberlerinin üzerinden geç: incelemedekileri onayla ya da geri gönder, takılanları çöz, onaylanmış sıradaki görevleri başlat. Patrona sadece bir faz bittiyse ya da karar gerekiyorsa, birkaç satırla rapor ver."
     },
     "worktree": {
       "prompt": "## Kendi çalışma kopyan\nProjenin sana özel bir git çalışma kopyasında (worktree), {branch} dalında çalışıyorsun. Ana klasör {base}; arkadaşların kendi kopyalarında çalışır, bu yüzden değişikliklerin onlarınkiyle çakışamaz. Kendi klasöründe kal, asla dal değiştirme, ana klasöre ya da bir arkadaşının kopyasına asla dokunma. Biten işini açık bir mesajla kendi dalına commit et ve görevin sonuç notunda dalı belirt. Ana dala birleştirmeyi sen değil, patron ya da proje yöneticisi yapar; bir göreve başlamadan önce ana dal ilerlediyse `git merge main` (ya da projenin ana dalı) ile dalını güncelle.",
       "notRepo": "{dir} en az bir commit'i olan bir git deposu değil, bu yüzden ayrı çalışma kopyası oluşturulamıyor.",
       "failed": "Çalışma kopyası oluşturulamadı: {message}"
+    },
+    "colleagueRules": "Bunu kendi işinin parçası olarak ele al. message_colleague ile sadece bir şey sorduysa ya da cevabın olmadan ilerleyemiyorsa cevap yaz; asla teşekkür, onay ya da \"aldım\" mesajı gönderme. Patronun bir kararı gerekmiyorsa bu konuda patrona rapor yazma.",
+    "efficiency": "## Verimli çalışma\nAttığın her adım bu konuşmanın tamamını yeniden okur; konuşmayı yalın tut: hem hızlanırsın hem işin daha iyi olur.\n- Uzun komut çıktısı: tail/head/grep'ten geçir ya da dosyaya yazıp gereken kısmını oku. Log, build çıktısı ya da büyük dosyaları asla olduğu gibi konuşmaya dökme.\n- Dosyanın gereken kısmını oku (offset/limit, önce Grep); okuduğun dosyayı değişmediyse yeniden okuma.\n- Mesajlara, notlara ve görev notlarına dosya içeriği yapıştırma: yolunu ver.\n- Ekran görüntüsü ve görsellere sadece gerçekten bakman gerekiyorsa bak.\n- Önce planla, sonra olabildiğince az adımda yap; bağımsız komutları birlikte çalıştır.\n- Son cevap kısa olsun: ne yapıldı, nerede, ne açık kaldı. Adımları baştan anlatma.",
+    "memoryTooLong": "NOT: hafıza dosyan {chars} karakter, {limit} sınırının üstünde. Dosyaya bir sonraki dokunuşunda yoğunlaştır: proje durumunu ve kararları ortak deftere taşı, tekrarları birleştir, eskiyenleri sil.",
+    "refreshRecent": "Son pano görevlerin:\n{tasks}\n\nSohbetinin son satırları:\n{chat}",
+    "compacted": "Konuşma hafif kalsın diye özetlendi (öncesi {tokens}k token)",
+    "task": {
+      "cleanSession": "Görev #{id}: temiz bir oturumda çalışılıyor",
+      "resumed": "Görev #{id}: görevin kendi oturumunda devam ediliyor",
+      "startedBy": "(Başlatan: proje yöneticisi {name}. Görevi işaretlediğinde ofis ona kendiliğinden haber verir; sonucu ona mesajla gönderme.)",
+      "backWith": "Görev sana şu notla geri geldi:\n{note}",
+      "backNote": "[Not: #{id} \"{title}\" pano görevini SEN yaptın; bu sohbetin parçası olmayan ayrı bir çalışma oturumunda çalıştığın için burada izi yok. Durum: {status}. Sonuç notun: {note}. Ayrıntılar görevde ve ortak defterde.]"
     }
   },
   "rooms": {
@@ -266,7 +286,8 @@
       "newMessages": "Yeni mesaj ↓",
       "attachRemove": "Görseli kaldır",
       "cure": "İşe geri gönder",
-      "sickChip": "hasta · {min} dk"
+      "sickChip": "hasta · {min} dk",
+      "contextTip": "Konuşma boyutu: her adımda {k}k token yeniden okunuyor. Fazla büyüyünce kendiliğinden özetlenir; pano görevleri temiz oturumlarda çalışır."
     },
     "toast": {
       "disconnected": "Sunucu bağlantısı koptu, yeniden deneniyor…",
@@ -483,10 +504,21 @@
       "error": "Hata: {message}",
       "colleague": "Meslektaş",
       "manager": "Proje yöneticisi",
-      "managerHint": "Herkesin son etkinliğini ve ortak defteri görür, görev atar ve başlatır. Ofis başına bir kişi yeter.",
+      "managerHint": "Herkesin son etkinliğini ve ortak defteri görür, görev atar ve başlatır. Ofis başına bir kişi yeter. İpucu: herkes yöneticinin yazdığı görev tarifleriyle çalışır, bu role güçlü bir model verin. Ofis haberleri yöneticiye toplu ilettiği için (rapor başına bir tur yerine) maliyeti makul kalır.",
       "worktree": "Ayrı çalışma kopyası (git worktree)",
       "worktreeHint": "Başkalarıyla aynı anda çalışan geliştiriciler için: projenin kendi dalında özel bir kopyasını alır, kod değişiklikleri çakışamaz. Git deposu gerekir. Mevcut sohbet yeni bir oturumla devam eder.",
-      "managerTakeover": "Şu anki proje yöneticisi: {name}. Bunu işaretlersen rol devredilir; {name} proje yöneticisi olmaktan çıkar."
+      "managerTakeover": "Şu anki proje yöneticisi: {name}. Bunu işaretlersen rol devredilir; {name} proje yöneticisi olmaktan çıkar.",
+      "connectorsTitle": "Bağlayıcılar",
+      "connectorsHint": "claude.ai hesabınıza bağlı servisler (Vercel, Stripe, Gmail…). Varsayılan olarak her çalışana hepsi gelir ve çalışan bunlar üzerinden sizin hesabınızla işlem yapabilir. Bu rolün işi olmayanları kapatın: izin sormadan çalışan biri aksi halde orada yayın yapabilir, satın alabilir ya da bir şeyleri değiştirebilir. Token'a etkisi küçüktür; asıl mesele kontrol ve odak.",
+      "connectorsLoading": "Hesabınızdaki bağlayıcılar soruluyor…",
+      "connectorsNone": "Bu hesapta bağlayıcı yok.",
+      "connectorTools": "{n} araç",
+      "connectorNeedsAuth": "claude.ai'de oturum açılmamış (açılana kadar hiçbir şey eklemez)",
+      "connectorOffline": "şu an kullanılamıyor",
+      "connectorsAllOff": "Hepsini kapat",
+      "connectorsAllOn": "Hepsini aç",
+      "connectorsSaved": "Kaydedildi. Bir sonraki mesajdan itibaren geçerli.",
+      "connectorsNext": "Kaydedildi. Eldeki iş bitince geçerli olur."
     },
     "models": {
       "claude-opus-5": {
@@ -911,7 +943,11 @@
         "sick": "sahibi hasta",
         "stalled": "üzerinde çalışılmıyor",
         "orphan": "sahipsiz"
-      }
+      },
+      "afterTag": "önce {ids}",
+      "afterHint": "Ancak bu görevler bitince başlayabilir",
+      "queuedTag": "sırada",
+      "queuedHint": "Başlatma onaylandı: sahibi boşalınca ve ön koşullar bitince kendiliğinden başlar"
     }
   }
 }

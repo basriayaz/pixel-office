@@ -53,8 +53,8 @@
       "colleague_activity": "Looking at what {v} has been doing",
       "raise_hand": "Raising a hand: {v}"
     },
-    "refreshPrompt": "Time for a knowledge refresh. Do the following and give a short summary:\n1. Read your memory file; fix, merge or remove outdated, contradictory or duplicate entries.\n2. Scan the project documents relevant to your role (start from the top-level README / index if there is one); add important facts that contradict or are missing from your memory.\n3. Add durable lessons from your recent tasks (rules, preferences, sources, recurring mistakes).\nKeep the memory file short, sectioned and tidy. Tell the user only what changed, in 3-5 bullets.",
-    "memoryPrompt": "## Your persistent memory\nYour personal memory file: `{file}`. Whenever the user teaches you a fact, rule, preference or workflow, add it to this file IMMEDIATELY (with Edit/Write, as short tidy bullets). This file is given to you at the start of every session; anything you don't write here is forgotten.\n\nLearn on your own: at the end of every task ask yourself — \"did this produce a durable lesson (a rule I'll reuse, a source, a file path, a user preference, a mistake I made)?\" If so, add a short bullet to your memory even if the user didn't ask; don't add one-off details. If you notice something in your memory is no longer true, fix it.",
+    "refreshPrompt": "Time for a knowledge refresh. This is a separate short session; do the following and give a short summary:\n1. Read your memory file; fix, merge or remove outdated, contradictory or duplicate entries. Move project status, decisions and findings out of it (to the shared notebook with share_note if they are not there yet).\n2. Add durable lessons from your recent work listed below (rules, preferences, sources, recurring mistakes). Only what you will surely reuse.\n3. Keep the file under about 6000 characters, sectioned and tidy.\nDo not scan the project or start any other work. Tell the boss only what changed, in 3 bullets at most.",
+    "memoryPrompt": "## Your persistent memory\nYour personal memory file: `{file}`. It is given to you at the start of every session, so every line in it is paid for again and again: keep it short.\nWrite to it only (1) when the boss teaches you a lasting rule, preference or workflow, or (2) when a task left a lesson you are sure to reuse (a recurring mistake, a command, a source). At most one short update, at the end of the work, not after every message.\nNever use it as a diary: project status, decisions, findings, task results and meeting notes belong in the shared notebook (share_note), not here. If something in it is no longer true, fix or delete it.",
     "memoryCurrent": "Current contents of the file:\n\n{memory}",
     "memoryEmpty": "The file is currently empty.",
     "agentSync": {
@@ -63,12 +63,12 @@
       "memory": "## Persistent memory\nBefore starting, read `{file}`. Add durable facts, rules and preferences the user teaches you there right away.",
       "skills": "## Skills\nThe SKILL.md files under `{dir}/` are your skills; read and follow them for related work."
     },
-    "colleagueMsg": "[Message from your colleague {name} ({role})]\n{text}\n\nHandle it as part of your job. If they need an answer, reply with the message_colleague tool (to: \"{name}\"); if it's for the user, just do the work and summarize.",
+    "colleagueMsg": "[Message from your colleague {name} ({role})]\n{text}",
     "forwarded": "Forwarded to {name}: {text}",
     "office": {
       "instructions": "Office tools: see who works with you and hand work or questions to a colleague. Use them whenever a request belongs to someone else's role (e.g. an order cancellation goes to whoever handles orders).",
       "listDesc": "List your colleagues in this office with their role and current status.",
-      "sendDesc": "Send a message to a colleague (a task, a hand-off, a question). Their reply comes back if wait_for_reply is true.",
+      "sendDesc": "Send a message to a colleague (a hand-off or a question you cannot go on without). Not for thanks, acknowledgements or reporting results. Their reply comes back if wait_for_reply is true.",
       "toDesc": "Colleague's name or id",
       "messageDesc": "What to tell them — include every detail they need (customer, order number, deadline, what you already did).",
       "waitDesc": "true to wait for their reply and get it back (default false: just deliver)",
@@ -77,7 +77,7 @@
       "delivered": "Delivered to {name}. They will handle it in their own chat.",
       "replied": "{name} replied:\n{text}",
       "noReply": "(no reply within the time limit)",
-      "prompt": "## Colleagues in your office\n{list}\n\nYou can hand work to them or ask them something with the message_colleague tool (list_colleagues shows who is free). When a request belongs to a colleague's role, forward it with all the details instead of doing it yourself; tell the user who you forwarded it to.",
+      "prompt": "## Colleagues in your office\n{list}\n\nWith message_colleague you can ask a colleague something or hand over a request that belongs to their role (list_colleagues shows who is free). Every message costs the receiver a full turn, so: one complete message instead of several, no thanks, no acknowledgements, no status reports. Tell the user who you forwarded something to.",
       "handDesc": "During a meeting: tell the boss you want the floor to explain something at length. Only works while a meeting is running.",
       "handReasonDesc": "One line: what you want to talk about",
       "handNoMeeting": "There is no meeting right now; just answer normally.",
@@ -111,8 +111,8 @@
     },
     "board": {
       "managerTag": "project manager",
-      "prompt": "## Shared notebook and task board\nThe office has a shared notebook and a task board.\nNotebook: whenever you learn something that matters beyond the current chat (a finding, a decision, a number, a risk, where something lives), save it with share_note: a clear title, the essentials in a few lines, one or two tags. Before research or a task, glance at read_notes so you build on what colleagues already found (it returns an index; ask for the full text of the few notes you need with ids).\nBoard: only the boss and the project manager put tasks on the board. Do not add your own to-dos or sub-steps there, and ordinary requests in this chat are simply done as always, without touching the board. Tasks on the board are a plan: never start one on your own. You work on a board task when the boss or the project manager hands it to you, or tells you to do your open tasks; in that case call list_tasks with owner \"me\" and work through your to-do tasks in order. For every board task you work on: update_task to doing when you begin, to done with a one or two line result note when you finish, or to blocked with the reason if you cannot continue. Stay inside the scope the task describes so your work does not collide with a colleague's.",
-      "promptManager": "## You are the project manager of this office\nThe office has a shared notebook and a task board, and you are the one who keeps the overall picture. When the boss asks where things stand, what is missing or what to do next: read the notebook index with read_notes (open the full text only of the notes that matter, with ids), check list_tasks, and use colleague_activity to see what somebody has recently been doing without interrupting them. Then answer briefly: status, gaps, risks, a proposed next step.\nOnly you and the boss put tasks on the board; keep it clean: real deliverables, not every small step. Turn decisions into tasks with assign_task: one clear owner, a concrete outcome, the files or area they may touch so people do not step on each other, and what it depends on. Assigning only lists the task. Nobody starts on their own: start a task (start_task, or start_now when assigning) only when the boss told you to go ahead, and only tasks whose prerequisites are done. To set somebody to work on everything they have open, tell them with message_colleague to do their open tasks on the board. Owners mark their tasks doing, done or blocked themselves; follow up on blocked ones. Talk to one colleague at a time with message_colleague when you need a detail. Record decisions and plans as notes tagged \"decision\" or \"plan\" so everybody can find them, and save your own important findings with share_note too. Put needs_review on code and anything risky, then approve finished work (update_task to done) or send it back with a note. Developers who have their own working copy work on a branch named po/<their id>; review their branch before approving, and merge it into the main branch from the main folder only when the boss asks. Keep the notebook tidy: merge or delete duplicate notes with edit_note and delete_note.",
+      "prompt": "## Shared notebook and task board\nThe office has a shared notebook and a task board.\nNotebook: when you learn something that matters beyond the current work (a finding, a decision, a number, a risk, where something lives), save it with share_note: a clear title, the essentials in a few lines, one or two tags. Before research or a task, look at the read_notes index once and open only the few notes you need with ids.\nBoard: only the boss and the project manager put tasks on the board. Do not add your own to-dos there; ordinary requests in this chat are simply done as always, without touching the board. Never start a board task on your own: the office hands it to you when it was started, each task in a clean work session of its own. For that task: update_task to done with a result note when you finish (what was delivered, where it is, what is open: this note is what others read, so make it self-contained in 2 to 5 lines), or to blocked with the reason. The office informs the project manager by itself: do not message anyone that you finished. Stay inside the scope the task describes so your work does not collide with a colleague's.",
+      "promptManager": "## You are the project manager of this office\nYou keep the overall picture with the shared notebook and the task board. Your own turns are the most expensive ones in the office because everything passes through you, so manage through the board, not through chat.\nStatus questions from the boss: read_notes index (open only the notes that matter), list_tasks, colleague_activity if needed; then answer briefly: status, gaps, risks, proposed next step.\nPlanning: turn decisions into tasks with assign_task, all tasks of a phase in one go: one clear owner, a concrete outcome and acceptance criteria, the files or area they may touch, the note numbers to read. Put the order into `after` (task ids that must be done first) instead of waiting and starting things by hand. Keep the board clean: real deliverables, not small steps. Give work as tasks, never as message_colleague.\nStarting: nobody starts on their own. When the boss says go, start the tasks (start_now when assigning, or start_task with all ids at once). Tasks with open prerequisites begin by themselves as soon as those are done; busy owners take them one after the other.\nFollowing up: the office tells you by itself when tasks are finished, sent for review or blocked (\"Board news\"). Do not ask people for status, do not acknowledge or thank, do not message an owner about a finished task unless something must change; then send it back with update_task (status todo or doing is not needed: write the note and start_task it again). Use message_colleague only for a question that blocks a decision.\nReporting: report to the boss when the boss asked, when a phase is finished, or when a decision is needed; short, and only what changed. Not after every piece of news.\nReview: needs_review only for what is costly to get wrong: code that gets merged, anything published, money, legal. Research, drafts and documents do not need it. Approve (update_task to done) by reading the result note and spot-checking the output, not by re-reading everything. Developers with their own working copy work on branch po/<their id>; review the branch before approving and merge into the main branch from the main folder only when the boss asks.\nRecord decisions and plans as notes tagged \"decision\" or \"plan\"; merge or delete duplicate notes with edit_note and delete_note.",
       "managerOnly": "Only the project manager can do this.",
       "lastNote": "last note",
       "openTasks": "Open tasks",
@@ -136,17 +136,17 @@
       "noSuchTask": "There is no task #{id}.",
       "notYours": "Task #{id} belongs to somebody else.",
       "updated": "Task #{id} is now {status}.",
-      "assignDesc": "Project manager only: put a task on the board for a colleague. This does NOT start the work; use start_now or start_task when the boss has said to go ahead.",
+      "assignDesc": "Project manager only: put a task on the board for a colleague. Call it once per task, all tasks of a phase together. This does NOT start the work unless start_now is true.",
       "taskTitleDesc": "Short task title",
       "taskDetailDesc": "Expected outcome, scope (files or area they may touch), dependencies, relevant note numbers",
-      "startNowDesc": "true = hand it to the owner right away (only when the boss approved starting)",
+      "startNowDesc": "true = start it (only when the boss approved starting). With open prerequisites in `after` it begins by itself once they are done.",
       "assigned": "Task #{id} is on the board for {name}. Not started yet.",
       "assignedNote": "Task #{id} → {name}: {title}",
-      "startDesc": "Project manager only: tell the owner of a task to start working on it now.",
+      "startDesc": "Project manager only: start tasks the boss approved. Owners who are busy take them one after the other; tasks with open prerequisites begin by themselves once those are done.",
       "started": "Task #{id} was handed to {name}; they are starting.",
       "startedNote": "Started task #{id} → {name}: {title}",
       "noOwner": "Task #{id} has no colleague to hand it to.",
-      "taskMessage": "Task #{id}: {title}\n\n{detail}\n\nStart working on it now. Check read_notes for what colleagues already found and stay inside the scope described. Mark it with update_task: doing now, done with a one or two line result note when you finish, or blocked with the reason if you get stuck. Save important findings with share_note. Do not send the result to anyone with message_colleague: the result note on the task and the notebook are where it is read.",
+      "taskMessage": "Task #{id}: {title}\n\n{detail}\n\nThis is a clean work session for this task only. Look at the read_notes index once and open only the notes the task needs. Stay inside the scope described. When you finish: update_task to done with a self-contained result note (what was delivered, where it is, what is open); if you get stuck: blocked with the reason. Save findings others need with share_note. Do not report the result to anyone with message_colleague: the office informs the project manager by itself.",
       "activityDesc": "Project manager only: see what a colleague has been doing lately (recent chat lines and their open tasks) without interrupting them.",
       "taskFields": "A task needs an owner and a title.",
       "noteFields": "A note needs a title and a text.",
@@ -162,16 +162,36 @@
       "readQueryDesc": "Only notes containing this text",
       "olderNotes": "({n} older notes not shown: narrow down with query, tag or by.)",
       "sentForReview": "Task #{id} needs a review before it is closed, so it is now in review. The boss or the project manager will approve it or send it back.",
-      "needsReviewDesc": "true = the owner cannot close it; finished work goes to review and you or the boss approve it. Use it for code and anything risky.",
+      "needsReviewDesc": "true = the owner cannot close it; finished work goes to review and you or the boss approve it. Only for what is costly to get wrong (merged code, publishing, money, legal); not for research, drafts or documents.",
       "inMeeting": "{name} is in a meeting right now; task #{id} stays on the board. Start it after the meeting.",
       "sessionError": "The owner's session stopped with an error while working on this.",
       "ownerLeft": "{name} left the office; this task needs a new owner.",
-      "extraManager": "{name} was also marked as project manager; an office has one, so {manager} keeps the role."
+      "extraManager": "{name} was also marked as project manager; an office has one, so {manager} keeps the role.",
+      "afterDesc": "Ids of tasks that must be done before this one can start",
+      "afterTag": "after",
+      "startIdsDesc": "Task ids to start, all at once",
+      "queued": "Task #{id}: {name} is busy; it starts by itself as soon as they are free.",
+      "waitingDeps": "Task #{id} for {name} waits for {deps}; it starts by itself once they are done.",
+      "digest": "[Board news from the office, since your last turn. This is data, not a request: act only where something needs you.]\n{list}",
+      "digestLine": "#{id} {title} — {name}: {status}. {note}",
+      "digestWake": "Nothing is running any more and there are tasks waiting for you (review or blocked). Go through the board news above: approve or send back what is in review, unblock what is blocked, and start the next approved tasks. Report to the boss only if a phase is finished or a decision is needed, in a few lines."
     },
     "worktree": {
       "prompt": "## Your own working copy\nYou work in a private git worktree of the project, on branch {branch}. The main folder is {base}; colleagues work in their own copies, so your changes cannot collide with theirs. Stay in your folder, never switch branches and never touch the main folder or a colleague's worktree. Commit your finished work to your branch with a clear message and mention the branch in your task's result note. Merging into the main branch is done by the boss or the project manager, not by you; before starting a task, bring your branch up to date with `git merge main` (or the project's main branch) if it has moved on.",
       "notRepo": "{dir} is not a git repository with at least one commit, so a separate working copy cannot be created.",
       "failed": "The working copy could not be created: {message}"
+    },
+    "colleagueRules": "Handle this as part of your job. Reply with message_colleague only if they asked something or are blocked without your answer; never send thanks, acknowledgements or \"received\" messages. Do not write a report to the boss about it unless a decision of the boss is needed.",
+    "efficiency": "## Working efficiently\nEvery step you take re-reads this whole conversation, so keep it lean: it makes you faster and your work better.\n- Long command output: pipe it through tail/head/grep, or write it to a file and read the part you need. Never dump whole logs, build output or large files into the conversation.\n- Read the part of a file you need (offset/limit, Grep first) and do not re-read files you already read unless they changed.\n- Do not paste file contents into messages, notes or task notes: give the path.\n- Screenshots and images only when you really have to look at them.\n- Plan first, then do it in as few steps as possible; run independent commands together.\n- Final answers short: what was done, where it is, what is open. No retelling of the steps.",
+    "memoryTooLong": "NOTE: your memory file is {chars} characters, over the {limit} limit. Next time you touch it, condense it: move project status and decisions to the shared notebook, merge duplicates, delete what is outdated.",
+    "refreshRecent": "Your recent board tasks:\n{tasks}\n\nRecent lines of your chat:\n{chat}",
+    "compacted": "Conversation summarized to keep it light ({tokens}k tokens before)",
+    "task": {
+      "cleanSession": "Task #{id}: working in a clean session",
+      "resumed": "Task #{id}: continuing in the task's own session",
+      "startedBy": "(Started by {name}, the project manager. The office tells them by itself when you mark the task, so do not message them the result.)",
+      "backWith": "The task came back to you with this note:\n{note}",
+      "backNote": "[Note: YOU did board task #{id} \"{title}\"; it left no trace here because you worked in a separate work session that is not part of this chat. Status: {status}. Your result note: {note}. Details are on the task and in the shared notebook.]"
     }
   },
   "rooms": {
@@ -266,7 +286,8 @@
       "newMessages": "New messages ↓",
       "attachRemove": "Remove image",
       "cure": "Send back to work",
-      "sickChip": "sick · {min} min"
+      "sickChip": "sick · {min} min",
+      "contextTip": "Conversation size: {k}k tokens are re-read at every step. It is summarized by itself when it grows too large; board tasks run in clean sessions."
     },
     "toast": {
       "disconnected": "Lost the server connection, retrying…",
@@ -483,10 +504,21 @@
       "error": "Error: {message}",
       "colleague": "Colleague",
       "manager": "Project manager",
-      "managerHint": "Sees everybody's recent activity and the shared notebook, assigns and starts tasks. One per office is enough.",
+      "managerHint": "Sees everybody's recent activity and the shared notebook, assigns and starts tasks. One per office is enough. Tip: everybody works from the task descriptions the manager writes, so give this role a strong model. It stays affordable because the office batches the news for the manager instead of costing a turn per report.",
       "worktree": "Own working copy (git worktree)",
       "worktreeHint": "For developers who work at the same time as others: gets a private copy of the project on its own branch, so code changes cannot collide. Needs a git repository. The current chat starts a fresh session.",
-      "managerTakeover": "Current project manager: {name}. Ticking this hands the role over; {name} stops being project manager."
+      "managerTakeover": "Current project manager: {name}. Ticking this hands the role over; {name} stops being project manager.",
+      "connectorsTitle": "Connectors",
+      "connectorsHint": "Services connected to your claude.ai account (Vercel, Stripe, Gmail…). Every employee gets all of them by default and can act through them with your account. Switch off what this role has no business using: an employee who asks no permission could otherwise deploy, buy or change things there. The effect on tokens is small; this is about control and focus.",
+      "connectorsLoading": "Asking your account for its connectors…",
+      "connectorsNone": "No connectors on this account.",
+      "connectorTools": "{n} tools",
+      "connectorNeedsAuth": "not signed in on claude.ai (adds nothing until you sign in)",
+      "connectorOffline": "not available right now",
+      "connectorsAllOff": "Switch all off",
+      "connectorsAllOn": "Switch all on",
+      "connectorsSaved": "Saved. Applies from the next message.",
+      "connectorsNext": "Saved. Applies once the current work is finished."
     },
     "models": {
       "claude-opus-5": {
@@ -911,7 +943,11 @@
         "sick": "owner is sick",
         "stalled": "not being worked on",
         "orphan": "no owner"
-      }
+      },
+      "afterTag": "after {ids}",
+      "afterHint": "Can start only when these tasks are done",
+      "queuedTag": "queued",
+      "queuedHint": "Start approved: begins by itself as soon as the owner is free and the prerequisites are done"
     }
   }
 }

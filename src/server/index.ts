@@ -4,10 +4,10 @@ import http from "node:http";
 import { spawn } from "node:child_process";
 import express, { type Request } from "express";
 import { WebSocketServer, WebSocket } from "ws";
-import { Employee, refreshPrompt, IMAGE_TYPES, type EmployeeConfig, type ImageInput } from "./employee.js";
+import { Employee, listConnectors, IMAGE_TYPES, type EmployeeConfig, type ImageInput } from "./employee.js";
 import { Store } from "./store.js";
 import { Meeting } from "./meeting.js";
-import { Board, TASK_STATUSES, type TaskStatus } from "./board.js";
+import { Board, TASK_STATUSES, type TaskStatus, type Task } from "./board.js";
 import { expandHome, ensureWorktree, loadEmployees, loadEmployee, listSkills, writeAgentFile, createEmployeeDir, archiveEmployeeDir, writeSkill, readSkill, deleteSkill, syncClaudeAgents } from "./agents.js";
 import { loadSettings, configPath, readRawConfig, writeRawConfig, officeDefFromRaw, officeIdOf, absPath, displayPath, rootFromEnv, initRoot, PKG_ROOT, THEMES, type OfficeDef, type Theme } from "./config.js";
 import { loadLocale, availableLocales, detectLocale, Translator } from "./i18n.js";
@@ -44,7 +44,34 @@ function storeFor(def: OfficeDef): Store {
   return new Store(dir);
 }
 
-const colleaguesOf = (o: { employees: Map<string, Employee>; board: Board }) => ({ list: () => [...o.employees.values()], board: () => o.board });
+const colleaguesOf = (o: { employees: Map<string, Employee>; board: Board }) => ({ list: () => [...o.employees.values()], board: () => o.board, launch: (k: Task, from: Employee) => launch(o, k, from) });
+
+// A start that was approved (the Start button, or the project manager's start) goes through here. With open prerequisites the
+// approval is remembered on the task and it begins by itself when they are done; nothing starts that nobody approved.
+function launch(o: { employees: Map<string, Employee>; board: Board }, k: Task, from?: Employee): "started" | "queued" | "waiting" {
+  const by = from?.cfg.id ?? "user";
+  const owner = o.employees.get(k.owner);
+  if (!owner || o.board.waitingOn(k).length) { o.board.markTask(k.id, { autoStart: by }); return "waiting"; }
+  const r = owner.startTask(k.id, from);
+  if (r === "queued") o.board.markTask(k.id, { autoStart: by });
+  return r;
+}
+
+// What follows from a task changing state, without any model having to tell another one about it.
+function onTaskStatus(o: { employees: Map<string, Employee>; board: Board }, k: Task, by: string) {
+  const owner = o.employees.get(k.owner);
+  owner?.poke();
+  if (k.status === "done") for (const w of o.board.tasks) {
+    if (w.status === "todo" && w.autoStart && w.after?.includes(k.id) && !o.board.waitingOn(w).length) launch(o, w, o.employees.get(w.autoStart));
+  }
+  const pm = [...o.employees.values()].find((e) => e.cfg.manager);
+  if (!pm || !owner || pm === owner || (by !== k.owner && by !== "system") || !["done", "review", "blocked"].includes(k.status)) return;
+  const note = k.notes[k.notes.length - 1]?.text.replace(/\s+/g, " ").slice(0, 400) ?? "";
+  // one turn for the whole wave: the manager is woken only when nothing is running any more and something needs a decision
+  const running = o.board.tasks.some((x) => x.status === "doing");
+  const needsManager = o.board.tasks.some((x) => x.status === "review" || x.status === "blocked");
+  pm.addDigest(t("server.board.digestLine", { id: k.id, title: k.title, name: owner.cfg.name, status: k.status, note: note || "-" }), !running && needsManager);
+}
 
 function openOffice(def: OfficeDef): OfficeRt {
   if (!def.name) def.name = t("ui.offices.default");
@@ -62,6 +89,7 @@ function openOffice(def: OfficeDef): OfficeRt {
   const o: OfficeRt = { def, store, employees, board };
   offices.set(def.id, o);
   board.on("change", () => broadcast({ type: "board", office: def.id, board: board.state() }));
+  board.on("status", (k: Task, _prev: TaskStatus, by: string) => onTaskStatus(o, k, by));
   for (const e of employees.values()) e.setColleagues(colleaguesOf(o));
   return o;
 }
@@ -91,7 +119,7 @@ app.use(express.static(path.join(PKG_ROOT, "web")));
 
 function publicInfo(e: Employee) {
   const { id, name, role, color, look, officeId } = e.cfg;
-  return { id, office: officeId, name, role, color, look, status: e.status, cost: e.cost, model: e.model ?? e.cfg.model ?? null, sickUntil: e.sickUntil || undefined, manager: !!e.cfg.manager };
+  return { id, office: officeId, name, role, color, look, status: e.status, cost: e.cost, context: e.context, task: e.currentTask ?? null, model: e.model ?? e.cfg.model ?? null, sickUntil: e.sickUntil || undefined, manager: !!e.cfg.manager };
 }
 
 const readText = (p?: string) => { try { return p ? fs.readFileSync(p, "utf8") : ""; } catch { return ""; } };
@@ -274,7 +302,7 @@ r.post("/board/tasks", (req: OReq, res) => {
   const title = clean(b.title, 160);
   if (!o || !owner || !title) return res.status(400).json({ error: t("server.board.taskFields") });
   // only listed: the owner starts when the boss (or the project manager) says so
-  res.json(o.board.addTask(owner.cfg.id, title, clean(b.detail, 8000), "user", !!b.review));
+  res.json(o.board.addTask(owner.cfg.id, title, clean(b.detail, 8000), "user", !!b.review, Array.isArray(b.after) ? b.after.map(Number).filter(Number.isFinite) : []));
 });
 // "Start": the task goes to its owner as an ordinary message from the boss, so it shows in the chat and can be answered.
 r.post("/board/tasks/:id/start", (req: OReq, res) => {
@@ -283,9 +311,7 @@ r.post("/board/tasks/:id/start", (req: OReq, res) => {
   const owner = k && o?.employees.get(k.owner);
   if (!o || !k || !owner) return res.status(404).json({ error: t("server.notFound") });
   if (owner.inMeeting) return res.status(409).json({ error: t("server.board.inMeeting", { id: k.id, name: owner.cfg.name }) });
-  o.board.updateTask(k.id, { status: "doing" }, "user");
-  owner.send(t("server.board.taskMessage", { id: k.id, title: k.title, detail: k.detail || "-" }));
-  res.json(k);
+  res.json({ ...k, launch: launch(o, k) });
 });
 r.put("/board/tasks/:id", (req: OReq, res) => {
   const o = officeOf(req), b = req.body ?? {};
@@ -294,6 +320,7 @@ r.put("/board/tasks/:id", (req: OReq, res) => {
     status: pick(b.status, TASK_STATUSES) as TaskStatus | undefined, owner: owner?.cfg.id,
     title: b.title !== undefined ? clean(b.title, 160) : undefined, detail: b.detail !== undefined ? clean(b.detail, 8000) : undefined, note: clean(b.note, 2000) || undefined,
     review: b.review !== undefined ? !!b.review : undefined,
+    after: Array.isArray(b.after) ? b.after.map(Number).filter(Number.isFinite) : undefined,
   }, "user");
   if (!k) return res.status(404).json({ error: t("server.notFound") });
   res.json(k);
@@ -304,8 +331,11 @@ r.post("/board/start-all", (req: OReq, res) => {
   const owner = o?.employees.get(String(req.body?.owner ?? ""));
   if (!o || !owner) return res.status(404).json({ error: t("server.notFound") });
   if (owner.inMeeting) return res.status(409).json({ error: t("server.board.inMeeting", { id: "", name: owner.cfg.name }) });
-  owner.send(t("server.board.doOpenTasks"));
-  res.json({ ok: true });
+  // each open task in a clean session of its own, one after the other, prerequisites respected
+  const open = o.board.tasks.filter((k) => k.owner === owner.cfg.id && (k.status === "todo" || k.status === "blocked"));
+  if (settings.taskSessions) for (const k of open) launch(o, k);
+  else owner.send(t("server.board.doOpenTasks"));
+  res.json({ ok: true, tasks: open.length });
 });
 r.delete("/board/tasks/:id", (req: OReq, res) => {
   if (!officeOf(req)?.board.deleteTask(Number(req.params.id))) return res.status(404).json({ error: t("server.notFound") });
@@ -368,6 +398,7 @@ r.get("/employees/:id/detail", (req: OReq, res) => {
     memoryFile: e.cfg.memoryFile ?? null,
     memory: readText(e.cfg.memoryFile),
     skills: listSkills(e.cfg.pluginDir),
+    connectorsOff: e.cfg.connectorsOff ?? [],
     skillsDir: e.cfg.pluginDir ? path.join(e.cfg.pluginDir, "skills") : null,
     refreshHours: e.cfg.refreshHours ?? 0,
     lastRefresh: o.store.getMeta<number>(e.cfg.id, "lastRefresh") ?? null,
@@ -375,6 +406,22 @@ r.get("/employees/:id/detail", (req: OReq, res) => {
     stats: { messages: e.history.length, tasks: userMsgs, lastActivity: e.lastActivity || null },
     recent: e.history.slice(-30),
   });
+});
+
+// claude.ai connectors of the account: every employee gets them unless switched off on their profile.
+r.get("/connectors", async (req: OReq, res) => {
+  const o = officeOf(req);
+  if (!o) return res.status(404).json({ error: t("server.notFound") });
+  res.json(await listConnectors(o.def.cwd, req.query.fresh === "1"));
+});
+r.put("/employees/:id/connectors", (req: OReq, res) => {
+  const e = empOf(req);
+  if (!e) return res.status(404).json({ error: t("server.notFound") });
+  const off = Array.isArray(req.body?.off) ? [...new Set((req.body.off as unknown[]).map((x) => clean(x, 80).replace(/,/g, "")).filter(Boolean))].slice(0, 100) : [];
+  const cfg: EmployeeConfig = { ...e.cfg, connectorsOff: off.length ? off : undefined };
+  writeAgentFile(cfg);
+  e.setConfigQuietly(cfg);
+  res.json({ ok: true, off, applies: e.busy ? "next" : "now" });
 });
 
 r.put("/employees/:id/memory", (req: OReq, res) => {
@@ -387,8 +434,7 @@ r.put("/employees/:id/memory", (req: OReq, res) => {
 });
 
 function startRefresh(o: OfficeRt, e: Employee) {
-  e.send(refreshPrompt(), true);
-  o.store.setMeta(e.cfg.id, "lastRefresh", Date.now());
+  if (e.refresh()) o.store.setMeta(e.cfg.id, "lastRefresh", Date.now());
 }
 
 r.post("/employees/:id/refresh", (req: OReq, res) => {
@@ -546,6 +592,7 @@ function wire(e: Employee) {
   e.on("ask", (request) => broadcast({ type: "ask", office, id, request }));
   e.on("ask_done", (requestId) => broadcast({ type: "ask_done", office, id, requestId }));
   e.on("result", (res) => broadcast({ type: "result", office, id, ...res, model: e.model }));
+  e.on("status", () => broadcast({ type: "usage", office, id, context: e.context, task: e.currentTask ?? null }));
   e.on("reset", () => {
     broadcast({ type: "history", office, id, messages: [], pending: [] });
     broadcast({ type: "result", office, id, cost: 0, durationMs: 0 });

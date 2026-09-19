@@ -48,6 +48,7 @@ async function load() {
   $("skillsPath").textContent = detail.skillsDir || "";
   $("refreshInfo").textContent = detail.lastRefresh ? t("ui.profile.lastRefresh", { date: fmtDate(detail.lastRefresh) }) : t("ui.profile.neverRefreshed");
   renderSkills();
+  renderConnectors();
   renderRecent();
 }
 
@@ -78,6 +79,38 @@ function renderHead() {
     <div><b>${detail.stats.messages}</b><span>${t("ui.profile.stats.messages")}</span></div>
     <div><b>$${(detail.cost || 0).toFixed(2)}</b><span>${t("ui.profile.stats.cost")}</span></div>
     <div><b>${detail.stats.lastActivity ? new Date(detail.stats.lastActivity).toLocaleDateString(LOCALE_TAG) : "—"}</b><span>${t("ui.profile.stats.last")}</span></div>`;
+}
+
+// claude.ai connectors: all come along by default; each switch keeps one out of this employee's sessions.
+let connectors = null;
+async function saveConnectors(off) {
+  const r = await api("PUT", `${API}/employees/${encodeURIComponent(id)}/connectors`, { off });
+  detail.connectorsOff = r.off;
+  renderConnectors();
+  toast(t(r.applies === "next" ? "ui.profile.connectorsNext" : "ui.profile.connectorsSaved"));
+}
+async function renderConnectors() {
+  const host = $("connectorList");
+  if (!connectors) {
+    host.innerHTML = `<div class="muted">${t("ui.profile.connectorsLoading")}</div>`;
+    try { connectors = await api("GET", `${API}/connectors`); } catch { connectors = []; }
+  }
+  const off = new Set(detail.connectorsOff || []);
+  // a connector that was switched off stays listed even when the account no longer reports it
+  const rows = [...connectors, ...[...off].filter((n) => !connectors.some((c) => c.name === n)).map((name) => ({ name, status: "unknown", tools: null }))];
+  host.innerHTML = rows.length ? "" : `<div class="muted">${t("ui.profile.connectorsNone")}</div>`;
+  $("connectorsAllOff").hidden = $("connectorsAllOn").hidden = !rows.length;
+  for (const c of rows) {
+    const row = document.createElement("label");
+    row.className = "skill";
+    row.style.cursor = "pointer";
+    const state = c.status === "connected" ? t("ui.profile.connectorTools", { n: c.tools ?? 0 }) : t(c.status === "needs-auth" ? "ui.profile.connectorNeedsAuth" : "ui.profile.connectorOffline");
+    row.innerHTML = `<div><b>${escapeHtml(c.name.replace(/^claude\.ai /, ""))}</b><div class="muted">${escapeHtml(state)}</div></div><input type="checkbox" style="width:auto;accent-color:var(--accent)"${off.has(c.name) ? "" : " checked"} />`;
+    row.querySelector("input").onchange = (ev) => { const next = new Set(off); if (ev.target.checked) next.delete(c.name); else next.add(c.name); saveConnectors([...next]); };
+    host.appendChild(row);
+  }
+  $("connectorsAllOff").onclick = () => saveConnectors(rows.map((c) => c.name));
+  $("connectorsAllOn").onclick = () => saveConnectors([]);
 }
 
 function renderSkills() {

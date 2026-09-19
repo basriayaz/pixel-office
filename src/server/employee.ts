@@ -11,7 +11,7 @@ import {
   type PermissionMode,
 } from "@anthropic-ai/claude-agent-sdk";
 import type { Store } from "./store.js";
-import { t } from "./runtime.js";
+import { t, getSettings } from "./runtime.js";
 import { officeServer, OFFICE_TOOLS, type Colleagues } from "./office-tools.js";
 
 export type Status = "idle" | "working" | "waiting" | "error" | "sick";
@@ -39,6 +39,29 @@ export interface EmployeeConfig {
   manager?: boolean; // project manager: sees everybody's activity and assigns tasks
   worktree?: boolean; // works in a private git worktree (branch po/<id>) so parallel code changes cannot collide
   baseCwd?: string;   // the configured working folder; `cwd` is the worktree inside it when `worktree` is on
+  connectorsOff?: string[]; // claude.ai connectors (by server name) this employee does not get; all others come along by default
+}
+
+export interface Connector { name: string; status: string; tools: number | null }
+
+// The claude.ai connectors of the account the office runs on. Asked from a Claude process that never gets a message, so it costs no tokens.
+let connectorCache: { at: number; list: Connector[] } | undefined;
+let connectorProbe: Promise<Connector[]> | undefined;
+export function listConnectors(cwd: string, fresh = false): Promise<Connector[]> {
+  if (!fresh && connectorCache && Date.now() - connectorCache.at < 5 * 60e3) return Promise.resolve(connectorCache.list);
+  return (connectorProbe ??= (async () => {
+    let release = () => {};
+    const silent = (async function* (): AsyncGenerator<SDKUserMessage> { await new Promise<void>((r) => (release = r)); })();
+    const q = query({ prompt: silent, options: { cwd, settingSources: [], persistSession: false } });
+    try {
+      let servers = await q.mcpServerStatus();
+      for (let i = 0; i < 6 && (!servers.length || servers.some((x) => x.status === "pending")); i++) { await new Promise((r) => setTimeout(r, 1500)); servers = await q.mcpServerStatus(); }
+      const list = servers.filter((x) => x.scope === "claudeai").map((x) => ({ name: x.name, status: x.status, tools: x.tools?.length ?? null }));
+      connectorCache = { at: Date.now(), list };
+      return list;
+    } catch { return connectorCache?.list ?? []; }
+    finally { release(); connectorProbe = undefined; }
+  })());
 }
 
 export interface ChatMessage {
@@ -56,7 +79,6 @@ export interface ImageInput {
 
 export const IMAGE_TYPES = new Set(["image/png", "image/jpeg", "image/gif", "image/webp"]);
 
-export const refreshPrompt = () => t("server.refreshPrompt");
 
 export interface AskRequest {
   requestId: string;
@@ -94,11 +116,15 @@ const userMsg = (text: string, images?: ImageInput[]): SDKUserMessage => ({
   parent_tool_use_id: null,
 });
 
+// A memory file is paid for in every session; past this size the employee is asked to condense it.
+const MEMORY_SOFT_LIMIT = 8000;
+
 export class Employee extends EventEmitter {
   status: Status = "idle";
   history: ChatMessage[];
   sessionId?: string;
   cost = 0;
+  context = 0; // tokens in the model's window at its last call: what every further step of this conversation costs to re-read
   model?: string;
   lastActivity = 0;
   sickUntil = 0;
@@ -118,11 +144,18 @@ export class Employee extends EventEmitter {
   private interrupting = false;
   private colleagues?: Colleagues;
   private turnTexts: string[] = [];
+  private costBase = 0;    // spent by earlier Claude processes of this employee
+  private taskId?: number; // the board task being worked on, in a clean session of its own
+  private taskQueue: Array<{ id: number; from?: Employee }> = [];
+  private side?: "refresh"; // a throw-away session that leaves no trace in the chat session
+  private held: Array<{ from: Employee; text: string; resolve?: (reply: string) => void }> = []; // colleague messages waiting for the running turn to end
+  private digest: string[] = []; // board news for the project manager, handed over with the next message instead of costing a turn each
 
   constructor(public cfg: EmployeeConfig, private store: Store) {
     super();
     this.history = store.loadHistory(cfg.id);
     this.sessionId = store.getSession(cfg.id);
+    this.cost = store.getMeta<number>(cfg.id, "cost") ?? 0;
     this.lastActivity = [...this.history].reverse().find((m) => m.role === "user" || m.role === "assistant")?.ts ?? 0;
   }
 
@@ -130,7 +163,11 @@ export class Employee extends EventEmitter {
     return [...this.pending.values()].map((p) => p.request);
   }
 
+  get busy() { return this.status === "working" || this.status === "waiting"; }
+  get currentTask() { return this.taskId; }
+
   send(text: string, auto = false, images?: ImageInput[]) {
+    this.leaveFinishedTask();
     const urls = images?.map((im) => {
       const name = this.store.saveAttachment(this.cfg.id, Buffer.from(im.data, "base64"), im.media_type.split("/")[1].replace("jpeg", "jpg"));
       return `/attachments/${encodeURIComponent(this.cfg.officeId)}/${encodeURIComponent(this.cfg.id)}/${name}`;
@@ -153,28 +190,141 @@ export class Employee extends EventEmitter {
   }
 
   // A message from another employee; resolves with this employee's next reply when `wait` is set.
+  // While a turn is running (or a meeting is on) it waits: a message dropped into the middle of a turn reaches the model
+  // inside a tool result, where it looks like an injection and gets ignored. Everything that piled up arrives as one message.
   sendFromColleague(from: Employee, text: string, wait: boolean): Promise<string> {
+    this.leaveFinishedTask();
     this.push({ role: "colleague", text, ts: Date.now(), from: from.cfg.name });
+    const reply = wait ? new Promise<string>((resolve) => {
+      let open = true;
+      const once = (r: string) => { if (!open) return; open = false; clearTimeout(timer); resolve(r || t("server.office.noReply")); };
+      const timer = setTimeout(() => once(""), 10 * 60e3);
+      this.held.push({ from, text, resolve: once });
+    }) : (this.held.push({ from, text }), Promise.resolve(""));
+    if (!this.busy && !this.inMeeting) this.deliverHeld();
+    return reply;
+  }
+
+  private deliverHeld(): boolean {
+    if (!this.held.length) return false;
+    const batch = this.held.splice(0);
+    const waiters = batch.filter((h) => h.resolve);
+    if (waiters.length) this.once("turn", (reply: string) => { for (const w of waiters) w.resolve!(reply); });
+    const body = batch.map((h) => t("server.colleagueMsg", { name: h.from.cfg.name, role: h.from.cfg.role, text: h.text })).join("\n\n");
     if (!this.sick) this.setStatus("working");
-    const msg = userMsg(this.takePreamble() + t("server.colleagueMsg", { name: from.cfg.name, role: from.cfg.role, text }));
+    const msg = userMsg(this.takePreamble() + body + "\n\n" + t("server.colleagueRules"));
     this.unanswered.push(msg);
     this.enqueue(msg);
     if (!this.q && !this.sick) this.start();
-    if (!wait) return Promise.resolve("");
-    return new Promise<string>((resolve) => {
-      const timer = setTimeout(() => { this.off("turn", onTurn); resolve(t("server.office.noReply")); }, 10 * 60e3);
-      const onTurn = (reply: string) => { clearTimeout(timer); resolve(reply || t("server.office.noReply")); };
-      this.once("turn", onTurn);
-    });
+    return true;
+  }
+
+  // ---- board tasks: each one in a clean session ----
+  // The chat session is never the place where long work piles up: what a step costs is the size of the conversation behind it.
+  startTask(id: number, from?: Employee): "started" | "queued" {
+    const k = this.colleagues?.board().tasks.find((x) => x.id === id);
+    if (!getSettings().taskSessions && k) {
+      this.colleagues!.board().updateTask(id, { status: "doing" }, from?.cfg.id ?? "user");
+      const text = t("server.board.taskMessage", { id, title: k.title, detail: k.detail || "-" });
+      if (from) void this.sendFromColleague(from, text, false); else this.send(text);
+      return "started";
+    }
+    this.leaveFinishedTask();
+    if (this.busy || this.sick || this.inMeeting || this.taskId !== undefined || this.side) {
+      if (!this.taskQueue.some((q) => q.id === id)) this.taskQueue.push({ id, from });
+      return "queued";
+    }
+    return this.beginTask(id, from) ? "started" : "queued";
+  }
+
+  private beginTask(id: number, from?: Employee): boolean {
+    const board = this.colleagues?.board();
+    const k = board?.tasks.find((x) => x.id === id);
+    if (!board || !k || k.status === "done" || k.owner !== this.cfg.id) return false;
+    this.stopQuery();
+    this.taskId = id;
+    this.setStatus("working"); // before the board hears about it: its listeners must find this employee busy
+    const back = k.session ? k.notes[k.notes.length - 1]?.text : undefined; // sent back (e.g. from review): same session, plus what was said
+    board.updateTask(id, { status: "doing" }, from?.cfg.id ?? "user");
+    this.push({ role: "system", text: t(k.session ? "server.task.resumed" : "server.task.cleanSession", { id }), ts: Date.now() });
+    const text = t("server.board.taskMessage", { id, title: k.title, detail: k.detail || "-" })
+      + (from ? "\n\n" + t("server.task.startedBy", { name: from.cfg.name }) : "")
+      + (back ? "\n\n" + t("server.task.backWith", { note: back }) : "");
+    this.push({ role: from ? "colleague" : "user", text, ts: Date.now(), ...(from ? { from: from.cfg.name } : {}) });
+    this.setStatus("working");
+    const msg = userMsg(text);
+    this.unanswered.push(msg);
+    this.enqueue(msg);
+    this.start();
+    return true;
+  }
+
+  // Back to the chat session once the task is no longer "doing"; the chat learns the outcome in two lines.
+  private leaveFinishedTask(): boolean {
+    if (this.taskId === undefined || this.busy) return false;
+    const k = this.colleagues?.board().tasks.find((x) => x.id === this.taskId);
+    if (k && k.status === "doing" && k.owner === this.cfg.id) return false;
+    const note = t("server.task.backNote", { id: this.taskId, title: k?.title ?? "", status: k?.status ?? "-", note: k?.notes[k.notes.length - 1]?.text.slice(0, 600) ?? "-" });
+    this.preamble = this.preamble ? this.preamble + "\n" + note : note;
+    this.taskId = undefined;
+    this.stopQuery();
+    return true;
+  }
+
+  // Something changed while this employee sat idle (a task was closed from the panel, the meeting ended, they recovered).
+  poke() {
+    if (this.busy || this.sick || this.inMeeting) return;
+    this.leaveFinishedTask();
+    this.afterTurn();
+  }
+
+  private afterTurn() {
+    if (this.inMeeting || this.busy) return;
+    if (this.side) { this.side = undefined; this.stopQuery(); }
+    this.leaveFinishedTask();
+    while (this.taskId === undefined && this.taskQueue.length) {
+      const next = this.taskQueue.shift()!;
+      if (this.beginTask(next.id, next.from)) return;
+    }
+    this.deliverHeld();
+  }
+
+  // Board news for the project manager. It rides along with the next message; `wake` starts a turn for it when the manager is free.
+  addDigest(line: string, wake: boolean) {
+    this.digest.push(line);
+    if (this.digest.length > 40) this.digest.splice(0, this.digest.length - 40);
+    if (wake && !this.busy && !this.sick && !this.inMeeting && this.taskId === undefined && !this.side) this.send(t("server.board.digestWake"), true);
+  }
+
+  // Self-refresh in a throw-away session: tidying the memory file does not need the whole chat behind it.
+  refresh(): boolean {
+    if (this.busy || this.sick || this.inMeeting || this.taskId !== undefined || this.side) return false;
+    this.stopQuery();
+    this.side = "refresh";
+    const prompt = t("server.refreshPrompt");
+    this.push({ role: "auto", text: prompt, ts: Date.now() });
+    this.setStatus("working");
+    const mine = this.colleagues?.board().tasks.filter((k) => k.owner === this.cfg.id && k.notes.length).slice(-8)
+      .map((k) => `- #${k.id} ${k.title} [${k.status}]: ${k.notes[k.notes.length - 1].text.replace(/\s+/g, " ").slice(0, 300)}`) ?? [];
+    const chat = this.history.filter((m) => m.role === "user" || m.role === "assistant").slice(-12)
+      .map((m) => `- ${m.role === "user" ? t("server.meeting.boss") : this.cfg.name}: ${m.text.replace(/\s+/g, " ").slice(0, 300)}`);
+    const msg = userMsg(prompt + "\n\n" + t("server.refreshRecent", { tasks: mine.join("\n") || "-", chat: chat.join("\n") || "-" }));
+    this.unanswered.push(msg);
+    this.enqueue(msg);
+    this.start();
+    return true;
   }
 
   get sick() { return this.status === "sick"; }
   get inMeetingTurn() { return this.meetingTurn; }
 
+  // Notes for the chat session only: a task or refresh session has no use for them.
   private takePreamble(): string {
-    const p = this.preamble;
+    if (this.taskId !== undefined || this.side) return "";
+    const parts = [this.preamble, this.digest.length ? t("server.board.digest", { list: this.digest.map((x) => "- " + x).join("\n") }) : ""].filter(Boolean);
     this.preamble = "";
-    return p ? p + "\n\n" : "";
+    this.digest = [];
+    return parts.length ? parts.join("\n\n") + "\n\n" : "";
   }
 
   // One turn of a meeting: the prompt and the answer stay out of this employee's own chat; resolves with what they said.
@@ -200,7 +350,8 @@ export class Employee extends EventEmitter {
   // After a meeting: a card in the chat, and the model learns it is over with the next message.
   meetingOver(topic: string, summary?: string) {
     this.push({ role: "meeting", text: summary ? t("server.meeting.chatSummary", { topic, summary }) : t("server.meeting.chatEnded", { topic }), ts: Date.now() });
-    this.preamble = t("server.meeting.overNote", { topic });
+    const note = t("server.meeting.overNote", { topic });
+    this.preamble = this.preamble ? this.preamble + "\n" + note : note;
   }
 
   // Falls ill for `ms`: messages are still accepted but wait in the inbox until recovery.
@@ -222,7 +373,7 @@ export class Employee extends EventEmitter {
     if (this.inbox.length) {
       this.setStatus("working");
       if (this.q) { this.wake?.(); this.wake = undefined; } else this.start();
-    } else this.setStatus("idle");
+    } else { this.setStatus("idle"); this.poke(); }
   }
 
   async interrupt() {
@@ -235,6 +386,7 @@ export class Employee extends EventEmitter {
     this.flushStream();
     this.unanswered = [];
     this.push({ role: "system", text: t("server.stopped"), ts: Date.now() });
+    if (this.side) { this.side = undefined; this.stopQuery(); }
     this.setStatus("idle", "interrupted");
   }
 
@@ -243,9 +395,14 @@ export class Employee extends EventEmitter {
     await this.interrupt();
     this.stopQuery();
     this.sessionId = undefined;
-    this.cost = 0;
+    this.cost = this.costBase = this.context = 0;
+    this.store.setMeta(this.cfg.id, "cost", 0);
     this.history = [];
     this.unanswered = [];
+    this.taskId = undefined;
+    this.taskQueue = [];
+    this.digest = [];
+    for (const h of this.held.splice(0)) h.resolve?.("");
     this.store.setSession(this.cfg.id, undefined);
     this.store.saveHistory(this.cfg.id, this.history);
     this.emit("reset");
@@ -258,6 +415,13 @@ export class Employee extends EventEmitter {
     await this.interrupt();
     this.cfg = cfg;
     this.stopQuery();
+    this.emit("config");
+  }
+
+  // A change that can wait for the next Claude process: nothing running is interrupted for it.
+  setConfigQuietly(cfg: EmployeeConfig) {
+    this.cfg = cfg;
+    if (!this.busy) this.stopQuery();
     this.emit("config");
   }
 
@@ -331,25 +495,34 @@ export class Employee extends EventEmitter {
     if (others.length) parts.push(t("server.office.prompt", { list: others.map((e) => `- ${e.cfg.name} — ${e.cfg.role}${e.cfg.manager ? " — " + t("server.board.managerTag") : ""}`).join("\n") }));
     if (this.colleagues) parts.push(t(this.cfg.manager ? "server.board.promptManager" : "server.board.prompt"));
     if (this.cfg.worktree && this.cfg.baseCwd && this.cfg.baseCwd !== this.cfg.cwd) parts.push(t("server.worktree.prompt", { branch: `po/${this.cfg.id}`, base: this.cfg.baseCwd }));
+    parts.push(t("server.efficiency"));
     if (this.cfg.memoryFile) {
       const rel = path.relative(this.cfg.cwd, this.cfg.memoryFile);
       let memory = "";
       try { memory = fs.readFileSync(this.cfg.memoryFile, "utf8").trim(); } catch {}
-      parts.push(t("server.memoryPrompt", { file: rel }) + "\n\n" + (memory ? t("server.memoryCurrent", { memory }) : t("server.memoryEmpty")));
+      parts.push(t("server.memoryPrompt", { file: rel }) + "\n\n" + (memory ? t("server.memoryCurrent", { memory }) : t("server.memoryEmpty")) + (memory.length > MEMORY_SOFT_LIMIT ? "\n\n" + t("server.memoryTooLong", { chars: memory.length, limit: MEMORY_SOFT_LIMIT }) : ""));
     }
     return parts.join("\n\n");
   }
 
   private start() {
     const gen = this.generation;
+    this.costBase = this.cost; // a new Claude process counts its cost from zero
+    this.context = 0;
+    const compactAt = getSettings().compactAtTokens;
+    const task = this.taskId !== undefined ? this.colleagues?.board().tasks.find((x) => x.id === this.taskId) : undefined;
     this.q = query({
       prompt: this.input(gen),
       options: {
         cwd: this.cfg.cwd,
         systemPrompt: { type: "preset", preset: "claude_code", append: this.buildPrompt() },
         plugins: this.cfg.pluginDir ? [{ type: "local", path: this.cfg.pluginDir }] : undefined,
-        resume: this.sessionId,
-        title: `${this.cfg.name} — ${this.cfg.role}`,
+        resume: this.side ? undefined : this.taskId !== undefined ? task?.session : this.sessionId,
+        persistSession: this.side ? false : undefined,
+        // summarize in place long before the model's own limit: on a 1M-token model a chat otherwise grows until every step re-reads a book
+        settings: { ...(compactAt ? { autoCompactWindow: compactAt } : {}), ...(this.cfg.connectorsOff?.length ? { deniedMcpServers: this.cfg.connectorsOff.map((serverName) => ({ serverName })) } : {}) },
+        env: compactAt ? { ...process.env, CLAUDE_CODE_AUTO_COMPACT_WINDOW: String(compactAt) } : undefined,
+        title: this.taskId !== undefined ? `${this.cfg.name} — #${this.taskId} ${task?.title ?? ""}`.slice(0, 120) : `${this.cfg.name} — ${this.cfg.role}`,
         includePartialMessages: true,
         permissionMode: this.cfg.permissionMode ?? "default",
         allowedTools: [...(this.cfg.allowedTools ?? []), ...OFFICE_TOOLS],
@@ -387,10 +560,12 @@ export class Employee extends EventEmitter {
     switch (m.type) {
       case "system":
         if (m.subtype === "init") {
-          this.sessionId = m.session_id;
           this.model = m.model;
-          this.store.setSession(this.cfg.id, m.session_id);
+          if (this.taskId !== undefined) this.colleagues?.board().markTask(this.taskId, { session: m.session_id });
+          else if (!this.side) { this.sessionId = m.session_id; this.store.setSession(this.cfg.id, m.session_id); }
           console.log(t("server.sessionOpened", { name: this.cfg.name, model: m.model }));
+        } else if (m.subtype === "compact_boundary") {
+          this.push({ role: "activity", text: t("server.compacted", { tokens: Math.round(m.compact_metadata.pre_tokens / 1000) }), ts: Date.now() });
         }
         break;
       case "stream_event": {
@@ -404,6 +579,8 @@ export class Employee extends EventEmitter {
       }
       case "assistant": {
         if (m.parent_tool_use_id) break;
+        const u = m.message.usage;
+        if (u) this.context = (u.input_tokens ?? 0) + (u.cache_read_input_tokens ?? 0) + (u.cache_creation_input_tokens ?? 0);
         for (const block of m.message.content) {
           if (block.type === "text") {
             this.streamText = "";
@@ -423,20 +600,22 @@ export class Employee extends EventEmitter {
         const wasInterrupted = this.interrupting;
         this.interrupting = false;
         if (m.subtype === "success") {
-          this.cost = m.total_cost_usd;
+          this.cost = this.costBase + m.total_cost_usd;
+          this.store.setMeta(this.cfg.id, "cost", this.cost);
           this.recovered = false;
           this.unanswered = [];
         } else if (!wasInterrupted) {
           const detail = "errors" in m && Array.isArray(m.errors) ? m.errors.join("; ") : m.subtype;
-          if (/No conversation found/i.test(detail) && this.sessionId && !this.recovered) {
+          if (/No conversation found/i.test(detail) && !this.side && (this.taskId !== undefined || this.sessionId) && !this.recovered) {
             this.recoverSession();
             return;
           }
           this.push({ role: "system", text: t("server.turnError", { detail }), ts: Date.now() });
         }
         if (wasInterrupted) break;
-        this.emit("result", { cost: this.cost, durationMs: m.duration_ms });
+        this.emit("result", { cost: this.cost, durationMs: m.duration_ms, context: this.context });
         if (this.pending.size === 0) this.setStatus("idle");
+        this.afterTurn();
         break;
       }
     }
@@ -446,8 +625,8 @@ export class Employee extends EventEmitter {
     const replay = this.unanswered.slice();
     this.stopQuery();
     this.recovered = true;
-    this.sessionId = undefined;
-    this.store.setSession(this.cfg.id, undefined);
+    if (this.taskId !== undefined) this.colleagues?.board().markTask(this.taskId, { session: null });
+    else { this.sessionId = undefined; this.store.setSession(this.cfg.id, undefined); }
     this.push({ role: "system", text: t("server.sessionRecovered"), ts: Date.now() });
     for (const msg of replay) this.enqueue(msg);
     if (replay.length) this.start();
@@ -530,7 +709,7 @@ function describeTool(name: string, input: Record<string, unknown>): string {
     const short = name.slice("mcp__office__".length);
     const v: Record<string, string> = {
       share_note: s(input.title), read_notes: Array.isArray(input.ids) ? `#${(input.ids as unknown[]).join(", #")}` : "", list_tasks: "",
-      update_task: `#${s(input.id)}${input.status ? " → " + s(input.status) : ""}`, assign_task: `${s(input.to)}: ${s(input.title)}`, start_task: s(input.id),
+      update_task: `#${s(input.id)}${input.status ? " → " + s(input.status) : ""}`, assign_task: `${s(input.to)}: ${s(input.title)}`, start_task: Array.isArray(input.ids) ? (input.ids as unknown[]).join(", #") : s(input.id),
       colleague_activity: s(input.name), raise_hand: s(input.reason),
     };
     if (short in v) return t(`server.tool.${short}`, { v: v[short] }).trim();

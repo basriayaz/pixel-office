@@ -27,6 +27,8 @@ export interface OfficeSettings {
   syncClaudeAgents: boolean;
   refreshHours: number;
   sickness: boolean; // employees occasionally fall ill for a few minutes
+  compactAtTokens: number; // a conversation is summarized in place once its context passes this size (0 = the model's own limit)
+  taskSessions: boolean;   // every board task runs in a clean session of its own instead of the employee's ever-growing chat
   multiOffice: boolean;
   offices: OfficeDef[];
 }
@@ -146,6 +148,9 @@ export function loadSettings(R: Root): OfficeSettings {
     syncClaudeAgents: merged.syncClaudeAgents !== false,
     refreshHours: Number(merged.refreshHours),
     sickness: merged.sickness !== false && process.env.PIXEL_OFFICE_SICKNESS !== "0",
+    // Claude Code accepts 100k at the least; anything lower would be ignored silently
+    compactAtTokens: ((n) => (n > 0 ? Math.max(100000, n) : 0))(Number(process.env.PIXEL_OFFICE_COMPACT_AT ?? merged.compactAtTokens ?? 190000) || 0),
+    taskSessions: merged.taskSessions !== false,
     multiOffice,
     offices,
   };

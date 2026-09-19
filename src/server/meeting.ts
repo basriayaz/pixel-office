@@ -178,6 +178,7 @@ export class Meeting extends EventEmitter {
     this.persist();
     this.emit("state");
     this.emit("ended");
+    for (const e of this.people) e.poke(); // tasks and colleague messages that waited for the meeting
   }
 
   private plainTranscript(): string {

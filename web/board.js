@@ -97,7 +97,7 @@ const boardUI = (() => {
     card.innerHTML = `
       <div class="task-head">
         ${owner ? `<img src="${office.portrait(k.owner)}" alt="" />` : ""}
-        <div class="task-main"><div class="task-title"><b>#${k.id}</b> ${escapeHtml(k.title)}${k.review ? ` <span class="tag" title="${escapeHtml(t("ui.board.reviewHint"))}">${escapeHtml(t("ui.board.reviewTag"))}</span>` : ""}${alert ? ` <span class="tag alert">${escapeHtml(t(`ui.board.alert.${alert}`))}</span>` : ""}</div>
+        <div class="task-main"><div class="task-title"><b>#${k.id}</b> ${escapeHtml(k.title)}${k.review ? ` <span class="tag" title="${escapeHtml(t("ui.board.reviewHint"))}">${escapeHtml(t("ui.board.reviewTag"))}</span>` : ""}${k.after?.length ? ` <span class="tag" title="${escapeHtml(t("ui.board.afterHint"))}">${escapeHtml(t("ui.board.afterTag", { ids: k.after.map((d) => "#" + d).join(", ") }))}</span>` : ""}${k.autoStart && k.status === "todo" ? ` <span class="tag" title="${escapeHtml(t("ui.board.queuedHint"))}">${escapeHtml(t("ui.board.queuedTag"))}</span>` : ""}${alert ? ` <span class="tag alert">${escapeHtml(t(`ui.board.alert.${alert}`))}</span>` : ""}</div>
           <div class="task-meta">${escapeHtml(owner?.name || t("ui.board.noOwner"))} · ${escapeHtml(t("ui.board.by", { name: who(k.createdBy) }))} · ${when(k.updated)}${last && !isOpen ? ` · <i>${escapeHtml(last.text.slice(0, 90))}</i>` : ""}</div></div>
         <div class="task-actions"></div>
       </div>

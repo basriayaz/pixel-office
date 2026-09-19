@@ -4,7 +4,8 @@ const API = `/api/offices/${encodeURIComponent(officeId)}`;
 document.title = `${t("ui.hire.crumb")} — ${t("ui.title")}`;
 if (PO.multiOffice) { document.querySelector(".crumb").textContent = `${t("ui.hire.crumb")} · ${officeInfo.name}`; document.querySelector("a.btn.ghost").href = `/?office=${encodeURIComponent(officeId)}`; }
 let look = null;
-const sel = { model: PO.models[0] || "claude-opus-5", effort: "high", perm: "default" };
+// balanced defaults: the strongest model at high effort is a choice for the hard jobs, not the starting point
+const sel = { model: PO.models.includes("claude-sonnet-5") ? "claude-sonnet-5" : PO.models[0], effort: "medium", perm: "default" };
 
 const editor = new CharEditor($("editor"), { fem: false, hairStyle: "short", top: "#61afef" }, (l) => { look = l; }, { previewEl: $("preview") });
 $("pvDate").textContent = new Date().toLocaleDateString(LOCALE_TAG);

@@ -176,8 +176,13 @@ function handle(m) {
       e.pending = e.pending.filter((p) => p.requestId !== m.requestId);
       if (selected) document.querySelector(`[data-ask="${m.requestId}"]`)?.remove();
       break;
+    case "usage":
+      e.context = m.context; e.task = m.task;
+      if (selected) renderHead(e);
+      break;
     case "result":
       e.cost = m.cost;
+      if (m.context !== undefined) e.context = m.context;
       if (m.model) e.model = m.model;
       if (selected) renderHead(e);
       else if (m.durationMs > 0 && !meetingUI.has(e.id)) toast(t("ui.toast.done", { name: e.name }));
@@ -279,7 +284,9 @@ function renderHead(e) {
   const chip = $("chatStatus");
   chip.className = "chip " + e.status;
   const label = e.status === "sick" ? t("ui.chat.sickChip", { min: Math.max(1, Math.ceil(((e.sickUntil || 0) - Date.now()) / 60e3)) }) : STATUS_T[e.status] || e.status;
-  chip.textContent = label + (e.cost ? ` · $${e.cost.toFixed(2)}` : "");
+  // context = how much the model re-reads at every step; it is what makes an employee slow and expensive
+  chip.textContent = label + (e.task ? ` · #${e.task}` : "") + (e.context >= 1000 ? ` · ${Math.round(e.context / 1000)}k` : "") + (e.cost ? ` · $${e.cost.toFixed(2)}` : "");
+  chip.title = e.context >= 1000 ? t("ui.chat.contextTip", { k: Math.round(e.context / 1000) }) : "";
   $("btnCure").hidden = e.status !== "sick";
   $("btnStop").classList.toggle("active", e.status === "working" || e.status === "waiting");
 }

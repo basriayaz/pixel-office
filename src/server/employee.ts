@@ -149,6 +149,7 @@ export class Employee extends EventEmitter {
   private taskQueue: Array<{ id: number; from?: Employee }> = [];
   private side?: "refresh"; // a throw-away session that leaves no trace in the chat session
   private held: Array<{ from: Employee; text: string; resolve?: (reply: string) => void }> = []; // colleague messages waiting for the running turn to end
+  private autoQueue: Array<{ text: string; still?: () => boolean }> = []; // office messages (e.g. "discovery round") that wait for a free moment instead of cutting into a turn
   private digest: string[] = []; // board news for the project manager, handed over with the next message instead of costing a turn each
 
   constructor(public cfg: EmployeeConfig, private store: Store) {
@@ -165,6 +166,8 @@ export class Employee extends EventEmitter {
 
   get busy() { return this.status === "working" || this.status === "waiting"; }
   get currentTask() { return this.taskId; }
+  get hasOfficeMessages() { return this.autoQueue.length > 0; }
+  get hasNews() { return this.digest.length > 0; }
 
   send(text: string, auto = false, images?: ImageInput[]) {
     this.leaveFinishedTask();
@@ -248,6 +251,7 @@ export class Employee extends EventEmitter {
     board.updateTask(id, { status: "doing" }, from?.cfg.id ?? "user");
     this.push({ role: "system", text: t(k.session ? "server.task.resumed" : "server.task.cleanSession", { id }), ts: Date.now() });
     const text = t("server.board.taskMessage", { id, title: k.title, detail: k.detail || "-" })
+      + (k.kind === "discovery" ? "\n\n" + t("server.cycle.discoveryTask") : "")
       + (from ? "\n\n" + t("server.task.startedBy", { name: from.cfg.name }) : "")
       + (back ? "\n\n" + t("server.task.backWith", { note: back }) : "");
     this.push({ role: from ? "colleague" : "user", text, ts: Date.now(), ...(from ? { from: from.cfg.name } : {}) });
@@ -286,14 +290,24 @@ export class Employee extends EventEmitter {
       const next = this.taskQueue.shift()!;
       if (this.beginTask(next.id, next.from)) return;
     }
+    if (this.taskId === undefined && this.autoQueue.length) {
+      const due = this.autoQueue.splice(0).filter((m) => !m.still || m.still());
+      if (due.length) { this.send(due.map((m) => m.text).join("\n\n"), true); return; }
+    }
     this.deliverHeld();
   }
 
+  // A message from the office itself. Never dropped into a running turn: it waits until this employee is free.
+  // `still` is asked again at the moment of delivery: a call that was overtaken by events is dropped instead of costing a turn.
+  sendWhenFree(text: string, still?: () => boolean) {
+    if (!this.autoQueue.some((m) => m.text === text)) this.autoQueue.push({ text, still }); // the same call twice is one call
+    if (!this.busy && !this.sick && !this.inMeeting && this.taskId === undefined && !this.side) this.afterTurn();
+  }
+
   // Board news for the project manager. It rides along with the next message; `wake` starts a turn for it when the manager is free.
-  addDigest(line: string, wake: boolean) {
+  addDigest(line: string) {
     this.digest.push(line);
     if (this.digest.length > 40) this.digest.splice(0, this.digest.length - 40);
-    if (wake && !this.busy && !this.sick && !this.inMeeting && this.taskId === undefined && !this.side) this.send(t("server.board.digestWake"), true);
   }
 
   // Self-refresh in a throw-away session: tidying the memory file does not need the whole chat behind it.
@@ -401,6 +415,7 @@ export class Employee extends EventEmitter {
     this.unanswered = [];
     this.taskId = undefined;
     this.taskQueue = [];
+    this.autoQueue = [];
     this.digest = [];
     for (const h of this.held.splice(0)) h.resolve?.("");
     this.store.setSession(this.cfg.id, undefined);
@@ -497,7 +512,8 @@ export class Employee extends EventEmitter {
     if (this.cfg.worktree && this.cfg.baseCwd && this.cfg.baseCwd !== this.cfg.cwd) parts.push(t("server.worktree.prompt", { branch: `po/${this.cfg.id}`, base: this.cfg.baseCwd }));
     parts.push(t("server.efficiency"));
     if (this.cfg.memoryFile) {
-      const rel = path.relative(this.cfg.cwd, this.cfg.memoryFile);
+      // the full path: a relative one (../../../…) stops pointing anywhere the moment the employee cd's into a subfolder
+      const rel = this.cfg.memoryFile;
       let memory = "";
       try { memory = fs.readFileSync(this.cfg.memoryFile, "utf8").trim(); } catch {}
       parts.push(t("server.memoryPrompt", { file: rel }) + "\n\n" + (memory ? t("server.memoryCurrent", { memory }) : t("server.memoryEmpty")) + (memory.length > MEMORY_SOFT_LIMIT ? "\n\n" + t("server.memoryTooLong", { chars: memory.length, limit: MEMORY_SOFT_LIMIT }) : ""));
@@ -515,12 +531,15 @@ export class Employee extends EventEmitter {
       prompt: this.input(gen),
       options: {
         cwd: this.cfg.cwd,
+        // the employee's own folder (memory, skills) lives outside the project they work in: writing there must not be "outside the working directory"
+        additionalDirectories: this.cfg.dir ? [this.cfg.dir] : undefined,
         systemPrompt: { type: "preset", preset: "claude_code", append: this.buildPrompt() },
         plugins: this.cfg.pluginDir ? [{ type: "local", path: this.cfg.pluginDir }] : undefined,
         resume: this.side ? undefined : this.taskId !== undefined ? task?.session : this.sessionId,
         persistSession: this.side ? false : undefined,
         // summarize in place long before the model's own limit: on a 1M-token model a chat otherwise grows until every step re-reads a book
-        settings: { ...(compactAt ? { autoCompactWindow: compactAt } : {}), ...(this.cfg.connectorsOff?.length ? { deniedMcpServers: this.cfg.connectorsOff.map((serverName) => ({ serverName })) } : {}) },
+        // one memory, the one the boss sees on the profile page: Claude Code's own hidden per-folder memory would be a second place to look
+        settings: { autoMemoryEnabled: false, ...(compactAt ? { autoCompactWindow: compactAt } : {}), ...(this.cfg.connectorsOff?.length ? { deniedMcpServers: this.cfg.connectorsOff.map((serverName) => ({ serverName })) } : {}) },
         env: compactAt ? { ...process.env, CLAUDE_CODE_AUTO_COMPACT_WINDOW: String(compactAt) } : undefined,
         title: this.taskId !== undefined ? `${this.cfg.name} — #${this.taskId} ${task?.title ?? ""}`.slice(0, 120) : `${this.cfg.name} — ${this.cfg.role}`,
         includePartialMessages: true,
@@ -711,6 +730,7 @@ function describeTool(name: string, input: Record<string, unknown>): string {
       share_note: s(input.title), read_notes: Array.isArray(input.ids) ? `#${(input.ids as unknown[]).join(", #")}` : "", list_tasks: "",
       update_task: `#${s(input.id)}${input.status ? " → " + s(input.status) : ""}`, assign_task: `${s(input.to)}: ${s(input.title)}`, start_task: Array.isArray(input.ids) ? (input.ids as unknown[]).join(", #") : s(input.id),
       colleague_activity: s(input.name), raise_hand: s(input.reason),
+      remember: s(input.fact).slice(0, 120), propose_idea: s(input.title), list_ideas: "", review_idea: `#${s(input.id)}${input.rank ? " → " + s(input.rank) : ""}${input.duplicate_of ? " = #" + s(input.duplicate_of) : ""}`, promote_idea: `#${s(input.id)} → ${s(input.to)}`,
     };
     if (short in v) return t(`server.tool.${short}`, { v: v[short] }).trim();
   }

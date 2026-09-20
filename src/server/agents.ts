@@ -211,6 +211,27 @@ export function listSkills(pluginDir?: string): Array<{ name: string; descriptio
   return out;
 }
 
+// Skills that come with the project the employee works in (<cwd>/.claude/skills, up to the repository root). Claude Code
+// loads them by itself; they are listed so the profile shows everything the employee can do, not only what was added here.
+export function listProjectSkills(cwd: string): Array<{ name: string; description: string; dir: string }> {
+  const out: Array<{ name: string; description: string; dir: string }> = [];
+  let dir = path.resolve(cwd);
+  for (let i = 0; i < 8; i++) {
+    const skills = path.join(dir, ".claude", "skills");
+    if (fs.existsSync(skills) && dir !== os.homedir()) {
+      for (const name of fs.readdirSync(skills).sort()) {
+        const f = path.join(skills, name, "SKILL.md");
+        if (!fs.existsSync(f) || out.some((x) => x.name === name)) continue;
+        const { meta } = parseAgentFile(f);
+        out.push({ name: meta.name ?? name, description: (meta.description ?? "").slice(0, 300), dir: path.join(skills, name) });
+      }
+    }
+    if (fs.existsSync(path.join(dir, ".git")) || path.dirname(dir) === dir) break;
+    dir = path.dirname(dir);
+  }
+  return out;
+}
+
 export function writeSkill(pluginDir: string, name: string, description: string, body: string) {
   const dir = path.join(pluginDir, "skills", slug(name));
   fs.mkdirSync(dir, { recursive: true });

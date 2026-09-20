@@ -534,3 +534,16 @@ body.resizing .chat, body.resizing .stage { transition: none; }
 .task-card.alert-waiting .tag.alert, .task-card.alert-stalled .tag.alert { background: var(--waiting); border-color: var(--waiting); color: #1a1a1a; }
 .task-card.alert-error, .task-card.alert-orphan { border-color: var(--error); }
 .task-edit label.check { padding: 0; }
+/* ideas: owner picker, comment and buttons on one wrapping line */
+.note-actions { flex-wrap: wrap; align-items: center; }
+.note-actions .i-owner { background: var(--bg); color: var(--text); border: 1px solid var(--line); border-radius: 8px; padding: 6px 8px; font: inherit; font-size: 12.5px; }
+.note-actions .i-comment { flex: 1 1 180px; width: auto; margin: 0; }
+.note-actions .i-buttons { display: flex; gap: 6px; flex-wrap: wrap; }
+#boardTabs .badge { margin-left: 6px; }
+/* how the office works: one wrapping line under the board tabs */
+.board-mode { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; padding: 8px 0 10px; border-bottom: 1px solid var(--line); margin-bottom: 10px; font-size: 12.5px; }
+.board-mode label { display: flex; gap: 6px; align-items: center; color: var(--muted); }
+.board-mode label[hidden] { display: none; }
+.board-mode select, .board-mode input { background: var(--bg); color: var(--text); border: 1px solid var(--line); border-radius: 8px; padding: 5px 8px; font: inherit; font-size: 12.5px; }
+.board-mode input { width: 64px; }
+.board-mode small { flex: 1 1 100%; }

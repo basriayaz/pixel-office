@@ -51,10 +51,15 @@
       "assign_task": "Görev atanıyor: {v}",
       "start_task": "Görev #{v} başlatılıyor",
       "colleague_activity": "{v} ne yapıyor, bakılıyor",
-      "raise_hand": "El kaldırıyor: {v}"
+      "raise_hand": "El kaldırıyor: {v}",
+      "propose_idea": "Fikir öneriyor: {v}",
+      "list_ideas": "Fikir kutusuna bakılıyor",
+      "promote_idea": "Fikir panoya taşınıyor: {v}",
+      "review_idea": "Fikir kutusu sıralanıyor: {v}",
+      "remember": "Hafızaya yazıyor: {v}"
     },
     "refreshPrompt": "Bilgi tazeleme zamanı. Bu ayrı ve kısa bir oturum; şunları yap ve kısa bir özet ver:\n1. Hafıza dosyanı oku; güncelliğini yitirmiş, çelişen ya da tekrar eden maddeleri düzelt, birleştir ya da sil. Proje durumu, karar ve bulguları dosyadan çıkar (ortak defterde yoksa share_note ile oraya yaz).\n2. Aşağıda listelenen son işlerinden çıkan kalıcı dersleri ekle (kural, tercih, kaynak, sık yapılan hata). Sadece kesin tekrar kullanacakların.\n3. Dosyayı yaklaşık 6000 karakterin altında, başlıklı ve düzenli tut.\nProjeyi tarama, başka bir işe başlama. Patrona sadece ne değiştiğini en fazla 3 maddeyle söyle.",
-    "memoryPrompt": "## Kalıcı hafızan\nKişisel hafıza dosyan: `{file}`. Her oturumun başında sana verilir, yani içindeki her satırın bedeli tekrar tekrar ödenir: kısa tut.\nSadece şu iki durumda yaz: (1) patron sana kalıcı bir kural, tercih ya da iş akışı öğrettiğinde, (2) bir işten kesin tekrar kullanacağın bir ders çıktığında (tekrarlayan bir hata, bir komut, bir kaynak). En fazla bir kısa güncelleme, işin sonunda; her mesajdan sonra değil.\nGünlük gibi kullanma: proje durumu, kararlar, bulgular, görev sonuçları ve toplantı notlarının yeri burası değil ortak defterdir (share_note). İçindeki bir bilgi artık doğru değilse düzelt ya da sil.",
+    "memoryPrompt": "## Kalıcı hafızan\nKişisel hafıza dosyan `{file}` (tam yoldur: çalıştığın projenin dışında durur, bu yüzden her zaman aynen böyle kullan, asla göreli yol kullanma). Satır eklemenin kolay yolu, yol gerektirmeyen remember aracıdır; dosyanın kendisini Edit ile sadece düzenlemek, birleştirmek ya da silmek için aç. Her oturumun başında sana verilir, yani içindeki her satırın bedeli tekrar tekrar ödenir: kısa tut.\nSadece şu iki durumda yaz: (1) patron sana kalıcı bir kural, tercih ya da iş akışı öğrettiğinde, (2) bir işten kesin tekrar kullanacağın bir ders çıktığında (tekrarlayan bir hata, bir komut, bir kaynak). En fazla bir kısa güncelleme, işin sonunda; her mesajdan sonra değil.\nGünlük gibi kullanma: proje durumu, kararlar, bulgular, görev sonuçları ve toplantı notlarının yeri burası değil ortak defterdir (share_note). İçindeki bir bilgi artık doğru değilse düzelt ya da sil.",
     "memoryCurrent": "Dosyanın şu anki içeriği:\n\n{memory}",
     "memoryEmpty": "Dosya şu an boş.",
     "agentSync": {
@@ -111,8 +116,8 @@
     },
     "board": {
       "managerTag": "proje yöneticisi",
-      "prompt": "## Ortak defter ve görev panosu\nOfisin ortak bir defteri ve görev panosu var.\nDefter: eldeki işin ötesinde önemi olan bir şey öğrendiğinde (bir bulgu, karar, rakam, risk, bir şeyin nerede durduğu) share_note ile kaydet: net bir başlık, birkaç satırda özü, bir iki etiket. Araştırmaya ya da göreve başlamadan önce read_notes dizinine bir kez bak, sadece ihtiyacın olan birkaç notu ids ile aç.\nPano: panoya sadece patron ve proje yöneticisi görev koyar. Kendi yapılacaklarını oraya yazma; bu sohbetteki olağan istekleri her zamanki gibi, panoya dokunmadan yaparsın. Bir pano görevine asla kendiliğinden başlama: görev başlatıldığında ofis onu sana verir, her görev kendine ait temiz bir çalışma oturumunda yapılır. O görev için: bitirince update_task ile sonuç notuyla done (ne teslim edildi, nerede, ne açık kaldı: başkaları bu notu okur, 2 ile 5 satırda kendi başına anlaşılır olsun), devam edemiyorsan sebebiyle blocked yap. Proje yöneticisine ofis kendiliğinden haber verir: bitirdiğini kimseye mesajla bildirme. Görevin tarif ettiği kapsamın dışına çıkma ki işin bir arkadaşınınkiyle çakışmasın.",
-      "promptManager": "## Bu ofisin proje yöneticisisin\nOrtak defter ve görev panosuyla büyük resmi sen tutarsın. Her şey senden geçtiği için ofisteki en pahalı turlar seninkilerdir; bu yüzden sohbetle değil panoyla yönet.\nPatronun durum soruları: read_notes dizini (sadece önemli notları aç), list_tasks, gerekirse colleague_activity; sonra kısa cevap: durum, eksikler, riskler, önerdiğin sonraki adım.\nPlanlama: kararları assign_task ile görevlere çevir, bir fazın bütün görevlerini tek seferde: tek ve net bir sahip, somut bir çıktı ve kabul kriterleri, dokunabileceği dosyalar ya da alan, okuması gereken not numaraları. Sırayı, bekleyip elle başlatmak yerine `after` ile ver (önce bitmesi gereken görev numaraları). Panoyu temiz tut: küçük adımlar değil, gerçek teslim edilecek işler. İşi görev olarak ver, asla message_colleague ile değil.\nBaşlatma: kimse kendiliğinden başlamaz. Patron başla dediğinde görevleri başlat (atarken start_now ya da bütün numaralarla tek start_task). Ön koşulu açık olan görevler, onlar biter bitmez kendiliğinden başlar; meşgul sahipler görevleri sırayla alır.\nTakip: görevler bittiğinde, incelemeye düştüğünde ya da takıldığında ofis sana kendiliğinden haber verir (\"Pano haberleri\"). Kimseye durum sorma, onay ya da teşekkür mesajı yazma, değişmesi gereken bir şey yoksa biten görev için sahibine mesaj atma; değişmesi gerekiyorsa update_task ile notunu yaz ve start_task ile görevi yeniden başlat. message_colleague sadece bir kararı tıkayan soru içindir.\nRaporlama: patrona, patron sorduğunda, bir faz bittiğinde ya da bir karar gerektiğinde rapor ver; kısa ve sadece değişeni. Her haberden sonra değil.\nİnceleme: needs_review sadece yanlış yapılması pahalı olan işler için: birleştirilecek kod, yayınlanacak her şey, para, hukuk. Araştırma, taslak ve dokümanlar için gerekmez. Onayı (update_task ile done) sonuç notunu okuyup çıktıyı yerinden kontrol ederek ver, her şeyi baştan okuyarak değil. Kendi çalışma kopyası olan geliştiriciler po/<kendi id'si> dalında çalışır; onaylamadan önce dalı incele, ana dala birleştirmeyi ana klasörden ve sadece patron istediğinde yap.\nKararları ve planları \"karar\" ya da \"plan\" etiketli not olarak kaydet; tekrar eden notları edit_note ve delete_note ile birleştir ya da sil.",
+      "prompt": "## Ortak defter ve görev panosu\nOfisin ortak bir defteri ve görev panosu var.\nDefter: eldeki işin ötesinde önemi olan bir şey öğrendiğinde (bir bulgu, karar, rakam, risk, bir şeyin nerede durduğu) share_note ile kaydet: net bir başlık, birkaç satırda özü, bir iki etiket. Araştırmaya ya da göreve başlamadan önce read_notes dizinine bir kez bak, sadece ihtiyacın olan birkaç notu ids ile aç.\nPano: panoya sadece patron ve proje yöneticisi görev koyar. Kendi yapılacaklarını oraya yazma; bu sohbetteki olağan istekleri her zamanki gibi, panoya dokunmadan yaparsın. Bir pano görevine asla kendiliğinden başlama: görev başlatıldığında ofis onu sana verir, her görev kendine ait temiz bir çalışma oturumunda yapılır. O görev için: bitirince update_task ile sonuç notuyla done (ne teslim edildi, nerede, ne açık kaldı: başkaları bu notu okur, 2 ile 5 satırda kendi başına anlaşılır olsun), devam edemiyorsan sebebiyle blocked yap. Proje yöneticisine ofis kendiliğinden haber verir: bitirdiğini kimseye mesajla bildirme. Görevin tarif ettiği kapsamın dışına çıkma ki işin bir arkadaşınınkiyle çakışmasın.\nFikirler: çalışırken görevinin dışında kalan ama ürünü ya da şirketi iyileştirecek şeyler fark edeceksin (bir rakipte bizde olmayan bir özellik, daha iyi olabilecek bir ekran, bir risk, daha ucuz bir yol). Bunları kendin yapma, kimseye mesaj da atma: propose_idea ile fikir kutusuna bırak: net bir başlık, neden değer olduğu ve neye dayandığı (rakip adı, not numaraları, rakamlar), kaba büyüklüğü (S = saatler, M = bir iki gün, L = daha fazla). Her çağrıda tek fikir, sadece gerçek olanlar; tekrar etmemek için önce list_ideas'a bak. Fikir görev değildir: hangisinin panoya taşınacağına patron karar verir.",
+      "promptManager": "## Bu ofisin proje yöneticisisin\nOrtak defter ve görev panosuyla büyük resmi sen tutarsın. Her şey senden geçtiği için ofisteki en pahalı turlar seninkilerdir; bu yüzden sohbetle değil panoyla yönet.\nPatronun durum soruları: read_notes dizini (sadece önemli notları aç), list_tasks, gerekirse colleague_activity; sonra kısa cevap: durum, eksikler, riskler, önerdiğin sonraki adım.\nPlanlama: kararları assign_task ile görevlere çevir, bir fazın bütün görevlerini tek seferde: tek ve net bir sahip, somut bir çıktı ve kabul kriterleri, dokunabileceği dosyalar ya da alan, okuması gereken not numaraları. Sırayı, bekleyip elle başlatmak yerine `after` ile ver (önce bitmesi gereken görev numaraları). Panoyu temiz tut: küçük adımlar değil, gerçek teslim edilecek işler. İşi görev olarak ver, asla message_colleague ile değil.\nBaşlatma: kimse kendiliğinden başlamaz. Patron başla dediğinde görevleri başlat (atarken start_now ya da bütün numaralarla tek start_task). Ön koşulu açık olan görevler, onlar biter bitmez kendiliğinden başlar; meşgul sahipler görevleri sırayla alır.\nTakip: görevler bittiğinde, incelemeye düştüğünde ya da takıldığında ofis sana kendiliğinden haber verir (\"Pano haberleri\"). Kimseye durum sorma, onay ya da teşekkür mesajı yazma, değişmesi gereken bir şey yoksa biten görev için sahibine mesaj atma; değişmesi gerekiyorsa update_task ile notunu yaz ve start_task ile görevi yeniden başlat. message_colleague sadece bir kararı tıkayan soru içindir.\nRaporlama: patrona, patron sorduğunda, bir faz bittiğinde ya da bir karar gerektiğinde rapor ver; kısa ve sadece değişeni. Her haberden sonra değil.\nİnceleme: needs_review sadece yanlış yapılması pahalı olan işler için: birleştirilecek kod, yayınlanacak her şey, para, hukuk. Araştırma, taslak ve dokümanlar için gerekmez. Onayı (update_task ile done) sonuç notunu okuyup çıktıyı yerinden kontrol ederek ver, her şeyi baştan okuyarak değil. Kendi çalışma kopyası olan geliştiriciler po/<kendi id'si> dalında çalışır; onaylamadan önce dalı incele, ana dala birleştirmeyi ana klasörden ve sadece patron istediğinde yap.\nKararları ve planları \"karar\" ya da \"plan\" etiketli not olarak kaydet; tekrar eden notları edit_note ve delete_note ile birleştir ya da sil.\nFikir kutusu: herkes önerilerini oraya bırakır (list_ideas). Pano boşken boş oturmazsın: bir faz bittiğinde patrona raporunu, en değerli üç açık fikir ve her biri için tavsiyenle bitir (değer mi değmez mi, büyüklüğü, kim yapar, neye bağlı), böylece patron tek cevapla karar verir. Kendi fikirlerini propose_idea ile ekle. Bir fikri panoya promote_idea ile sadece patron söylediğinde taşı (göreve dönüşür; start_now sadece patron başlamasını da söylediyse).",
       "managerOnly": "Bunu sadece proje yöneticisi yapabilir.",
       "lastNote": "son not",
       "openTasks": "Açık görevler",
@@ -146,7 +151,7 @@
       "started": "#{id} numaralı görev {name} adlı kişiye iletildi, başlıyor.",
       "startedNote": "Görev #{id} başlatıldı → {name}: {title}",
       "noOwner": "#{id} numaralı görevi iletecek bir arkadaş yok.",
-      "taskMessage": "Görev #{id}: {title}\n\n{detail}\n\nBu, sadece bu görev için açılmış temiz bir çalışma oturumu. read_notes dizinine bir kez bak, sadece görevin gerektirdiği notları aç. Tarif edilen kapsamın dışına çıkma. Bitirince: update_task ile kendi başına anlaşılır bir sonuç notuyla done (ne teslim edildi, nerede, ne açık kaldı); takılırsan sebebiyle blocked. Başkalarının ihtiyaç duyacağı bulguları share_note ile kaydet. Sonucu message_colleague ile kimseye bildirme: proje yöneticisine ofis kendiliğinden haber verir.",
+      "taskMessage": "Görev #{id}: {title}\n\n{detail}\n\nBu, sadece bu görev için açılmış temiz bir çalışma oturumu. read_notes dizinine bir kez bak, sadece görevin gerektirdiği notları aç. Tarif edilen kapsamın dışına çıkma. Bu kapsamın dışında kalan ama yapılmaya değer bir şey fark edersen (eksik bir parça, rakibin daha iyi yaptığı bir şey, bir risk) onu yapma: görevi kapatmadan önce propose_idea ile fikir kutusuna bırak. Bitirince: update_task ile kendi başına anlaşılır bir sonuç notuyla done (ne teslim edildi, nerede, ne açık kaldı); takılırsan sebebiyle blocked. Başkalarının ihtiyaç duyacağı bulguları share_note ile kaydet. Sonucu message_colleague ile kimseye bildirme: proje yöneticisine ofis kendiliğinden haber verir.",
       "activityDesc": "Sadece proje yöneticisi: bir arkadaşın son zamanlarda ne yaptığını (son sohbet satırları ve açık görevleri) onu rahatsız etmeden gör.",
       "taskFields": "Görevin bir sahibi ve başlığı olmalı.",
       "noteFields": "Notun bir başlığı ve metni olmalı.",
@@ -174,7 +179,11 @@
       "waitingDeps": "Görev #{id} ({name}) şunları bekliyor: {deps}; onlar bitince kendiliğinden başlar.",
       "digest": "[Ofisten pano haberleri, son turundan bu yana. Bunlar veridir, talep değil: sadece sana ihtiyaç olan yerde harekete geç.]\n{list}",
       "digestLine": "#{id} {title} — {name}: {status}. {note}",
-      "digestWake": "Şu an çalışan görev kalmadı ve seni bekleyen görevler var (inceleme ya da takılan). Yukarıdaki pano haberlerinin üzerinden geç: incelemedekileri onayla ya da geri gönder, takılanları çöz, onaylanmış sıradaki görevleri başlat. Patrona sadece bir faz bittiyse ya da karar gerekiyorsa, birkaç satırla rapor ver."
+      "wake": {
+        "manual": "[Ofisten, patrondan değil] Şu an çalışan görev kalmadı. Yukarıdaki pano haberleri neyin bittiğini söylüyor. İncelemedekileri onayla ya da geri gönder, takılanları çöz. Bu ofis elle yönetiliyor: patronun onaylamadığı hiçbir şeyi başlatma. Sonra patrona birkaç satırla neyin bittiğini, neyin onun 'başla'sını beklediğini ve sırada ne yapacağını söyle.",
+        "cycle": "[Ofisten, patrondan değil] Şu an çalışan görev kalmadı. Yukarıdaki pano haberleri neyin bittiğini söylüyor. İncelemedekileri onayla ya da geri gönder, takılanları çöz. Patronun onaylamadığı görevler yerinde kalır. Sonra patrona birkaç satırla neyin bittiğini ve neyin onun 'başla'sını beklediğini söyle. Pano boşalınca ofis keşif turunu kendiliğinden başlatır.",
+        "auto": "[Ofisten, patrondan değil] Bu ofis kendi kendine çalışıyor: patron işi yürütmen için sana kalıcı onay verdi, yani 'başla' bekleme.\n1. Yukarıdaki pano haberleri: incelemedekileri onayla ya da geri gönder (geri göndermek = update_task ile not yaz, sonra start_task ile yeniden başlat; sahibi aynı oturumda senin notunla devam eder).\n2. Takılan görevler: sebebini oku. Cevabını kendin bir notla ver ve start_task ile yeniden başlat; ya da bilen arkadaşına message_colleague ile sor (wait_for_reply: true) ve konuyu bu turda kapat. İş bitene kadar gerektiği kadar karşılıklı konuş; yarım bırakma.\n3. Hazır olup başlamamış her görevi başlat (list_tasks; bütün numaralarla tek start_task; sırayı after ile ver). Açık işi olup boş oturan insan israftır.\n4. Hedefe varmak için eksik bir şey varsa söylenmesini bekleme, görevleri ekle (assign_task, start_now).\nŞunlara dokunmadan patrona bırak: para harcatan, yayınlanan, hukuka dokunan, patronun sabitlediği bir şeyi değiştiren ya da yön değişikliği olan her şey. Patrona sadece bir faz bittiğinde ya da bu kararlardan biri gerektiğinde, birkaç satırla rapor ver."
+      }
     },
     "worktree": {
       "prompt": "## Kendi çalışma kopyan\nProjenin sana özel bir git çalışma kopyasında (worktree), {branch} dalında çalışıyorsun. Ana klasör {base}; arkadaşların kendi kopyalarında çalışır, bu yüzden değişikliklerin onlarınkiyle çakışamaz. Kendi klasöründe kal, asla dal değiştirme, ana klasöre ya da bir arkadaşının kopyasına asla dokunma. Biten işini açık bir mesajla kendi dalına commit et ve görevin sonuç notunda dalı belirt. Ana dala birleştirmeyi sen değil, patron ya da proje yöneticisi yapar; bir göreve başlamadan önce ana dal ilerlediyse `git merge main` (ya da projenin ana dalı) ile dalını güncelle.",
@@ -192,6 +201,50 @@
       "startedBy": "(Başlatan: proje yöneticisi {name}. Görevi işaretlediğinde ofis ona kendiliğinden haber verir; sonucu ona mesajla gönderme.)",
       "backWith": "Görev sana şu notla geri geldi:\n{note}",
       "backNote": "[Not: #{id} \"{title}\" pano görevini SEN yaptın; bu sohbetin parçası olmayan ayrı bir çalışma oturumunda çalıştığın için burada izi yok. Durum: {status}. Sonuç notun: {note}. Ayrıntılar görevde ve ortak defterde.]"
+    },
+    "ideas": {
+      "proposeDesc": "Ofisin fikir kutusuna bir öneri bırak: şu anki görevinin dışında kalan, yapılmaya değer bir şey. Görev değildir ve kimse başlamaz; patron karar verir.",
+      "titleDesc": "Kısa ve belirli: ne yapılmalı",
+      "whyDesc": "Neden değer ve neye dayanıyor: rakip adları, not numaraları, rakamlar, yapılmazsa riski. Birkaç satır.",
+      "effortDesc": "Kaba büyüklük: S = saatler, M = bir iki gün, L = daha fazla",
+      "ownerDesc": "Biliyorsan en iyi kimin yapacağı (bir arkadaşın adı)",
+      "listDesc": "Fikir kutusu (varsayılan: yeni ve ertelenenler). Birinin tam metni için id ver.",
+      "promoteDesc": "Sadece proje yöneticisi ve sadece patron söylediğinde: bir fikri panoda göreve çevir.",
+      "similar": "Benzer bir fikir zaten var: #{id} \"{title}\" ({name}) [{status}]. Yeniden kaydedilmedi.",
+      "saved": "Fikir #{id} kutuda. Kararı patron verir; sen kendi işine devam et.",
+      "none": "Fikir yok.",
+      "cannotMove": "Fikir #{id} yok ya da zaten panoda.",
+      "moved": "Fikir #{id} artık {name} için görev #{task}.",
+      "movedNote": "Fikir #{id} → görev #{task} ({name}): {title}",
+      "closingNudge": "Son cevabından önce: bu görevin dışında kalan ama yapılmaya değer bir şey fark ettin mi (eksik bir parça, rakibin daha iyi yaptığı bir şey, bir risk, daha ucuz bir yol)? Fark ettiysen her birini şimdi propose_idea ile fikir kutusuna bırak. Yoksa sadece kısa son cevabını ver.",
+      "reviewDesc": "Sadece proje yöneticisi: fikir kutusunu patron için sırala. Bir fikre yapılma sırasındaki yerini, tavsiyeni, düzeltilmiş büyüklüğünü ya da sahibini ver; ya da başka bir fikrin tekrarı olarak işaretle.",
+      "rankDesc": "Yapılma sırasındaki yeri: 1 = ilk yapılacak. 0 listenden çıkarır. Sadece gerçekten sırada yapacağın birkaç fikri sırala.",
+      "adviceDesc": "Patron için bir iki satır: neden (ya da neden değil), neye bağlı",
+      "duplicateDesc": "Bunu zaten söyleyen fikrin numarası; bu fikir tekrar olarak kapatılır",
+      "duplicateNote": "#{id} ile aynı",
+      "merged": "Fikir #{id}, #{into} fikrinin tekrarı olarak kapatıldı.",
+      "reviewed": "Fikir #{id} güncellendi."
+    },
+    "cycle": {
+      "discover": "[Ofisten, patrondan değil] Pano boşaldı, bir keşif turu başlıyor. Amacı: hiçbir şeye dokunmadan, sırada neyin yapılmaya değer olduğunu bulmak.\n1. Hiçbir şey iki kez araştırılmasın diye list_ideas'a ve defter dizinine bak.\n2. En fazla {n} kişiyi etrafa bakmaya gönder; her birine assign_task ile, discovery: true ve start_now: true vererek, hepsini bu turda: rakiplerde olup bizde olmayan ne var, kullanıcıları neden şikâyet ediyor, bizde açık ya da zayıf kalan ne, ucuza yapılıp kullanıcının hissedeceği ne olur. Her birine dar bir soru ver ve her aday için eldekilerle kısa vadede yapıp yapamayacağımıza bakmalarını söyle. Eforu, o işi yapacak kişi değerlendirir.\n3. Keşif görevleri projede hiçbir şeyi değiştirmez: kod yok, tasarım yok, yayın yok. Sonuçlar propose_idea kayıtları ve bir not olarak gelir: görev başına en fazla 3 fikir, sadece en iyileri, akla gelen her şey değil. Küçük ekipte daha az kişi gönder.\nBu turun bütçesi: yaklaşık ${budget}. Şimdi patrona rapor verme; bittiklerinde çağrılacaksın.",
+      "compile": "[Ofisten] Keşif turu bitti (yaklaşık ${spent} harcandı). list_ideas'ın üzerinden geç: tekrarları review_idea (duplicate_of) ile kapat; sırada gerçekten yapacağın 3 ile 5 fikre review_idea ile yerini ver (rank 1 = ilk; bir iki satır tavsiye, düzeltilmiş büyüklük ve sahip). Kalanları sırasız bırak. Sonra patrona TEK ve kısa bir rapor ver: sırada yapacağın 3 ile 5 fikir, öncelik sırasıyla, her biri için bir satır gerekçe ve büyüklüğü; bir de yapılmamasını önerdiklerin. Panoya hiçbir şey taşıma: kararı patron Fikirler sekmesinden verir ya da sana söyler.",
+      "compileAuto": "[Ofisten] Keşif turu bitti (bütçe ${budget}, harcanan yaklaşık ${spent}). Bu ofis kendi kendine çalışıyor: list_ideas'ın üzerinden geç, tekrarları review_idea (duplicate_of) ile kapat, en iyileri review_idea ile sırala. Büyüklüğü S ya da M olan en iyi fikirleri promote_idea ile panoya taşı ve başlat (start_now, sırayı after ile ver); bütçenin kalanının makul ölçüde izin verdiği kadar. Şunlara dokunmadan patrona bırak: büyüklüğü L olan her şey, para harcatan, yayınlanan, hukuka dokunan ya da patronun sabitlediği bir şeyi değiştiren her şey. Sonra patrona TEK ve kısa bir rapor ver: neyi neden başlattın, ne onun kararını bekliyor.",
+      "discoveryTask": "Bu bir KEŞİF görevidir: bak, karşılaştır, değerlendir. Projede hiçbir şeyi değiştirme: kod yok, tasarım dosyası yok, yayın yok, satın alma yok. En fazla 3 öneri, sadece en iyileri. Her öneri propose_idea ile fikir kutusuna gider (başlık, neden ve neye dayandığı, büyüklük S/M/L, kim yapar); başkalarının ihtiyaç duyacağı bulgular nota. Her öneri için eldekilerle kısa vadede yapıp yapamayacağımızı söyle.",
+      "discoveryDesc": "true = sadece araştırma (keşif görevi): sahibi projede hiçbir şeyi değiştirmez, fikirler ve bir notla cevap verir. İnceleme gerektirmez.",
+      "limit": "Bu keşif turunda zaten {n} görev var; sınır bu. Gelenlerle çalış.",
+      "budget": "Bu turun bütçesi doldu (${spent} / ${budget}). Kalanını patrona bırak.",
+      "noManager": "Bu ofiste proje yöneticisi yok; keşif turu için biri gerekli.",
+      "running": "Zaten bir keşif turu sürüyor.",
+      "notQuiet": "Panoda hâlâ açık iş var; keşif turu pano boşalınca başlar.",
+      "dayLimit": "Bugünün keşif turları doldu.",
+      "undecided": "Beş ya da daha fazla fikir hâlâ patronun kararını bekliyor; üstüne yeni tur açılmaz."
+    },
+    "memoryTool": {
+      "desc": "Kendi hafıza dosyana kalıcı tek bir satır kaydet (patronun öğrettiği bir kural ya da tercih, ya da kesin tekrar kullanacağın bir ders). Hangi klasörde olursan ol çalışır; dosyanın yolunu bilmen gerekmez. Proje durumu, karar ve bulgular için değildir: onlar share_note'a gider.",
+      "factDesc": "Kısa ve kendi başına anlaşılır tek satır",
+      "sectionDesc": "Altına yazılacak başlık (yoksa oluşturulur), ör. Kurallar, Tercihler, Kaynaklar",
+      "known": "Bu zaten hafızanda var.",
+      "saved": "Hafızana kaydedildi ({file}, şu an {chars} karakter)."
     }
   },
   "rooms": {
@@ -518,7 +571,9 @@
       "connectorsAllOff": "Hepsini kapat",
       "connectorsAllOn": "Hepsini aç",
       "connectorsSaved": "Kaydedildi. Bir sonraki mesajdan itibaren geçerli.",
-      "connectorsNext": "Kaydedildi. Eldeki iş bitince geçerli olur."
+      "connectorsNext": "Kaydedildi. Eldeki iş bitince geçerli olur.",
+      "projectSkillTag": "projeden",
+      "projectSkillsHint": "\"projeden\" etiketli yetenekler çalışma klasöründe (.claude/skills) durur ve orada çalışan herkese kendiliğinden yüklenir; bunları projenin içinden düzenleyin."
     },
     "models": {
       "claude-opus-5": {
@@ -947,7 +1002,62 @@
       "afterTag": "önce {ids}",
       "afterHint": "Ancak bu görevler bitince başlayabilir",
       "queuedTag": "sırada",
-      "queuedHint": "Başlatma onaylandı: sahibi boşalınca ve ön koşullar bitince kendiliğinden başlar"
+      "queuedHint": "Başlatma onaylandı: sahibi boşalınca ve ön koşullar bitince kendiliğinden başlar",
+      "tabIdeas": "Fikirler",
+      "ideasHint": "Ekibin ve sizin önerileriniz. Buradaki hiçbir şey, siz panoya taşıyana kadar iş değildir.",
+      "noIdeas": "Henüz fikir yok. Çalışanlar çalışırken buraya bırakır.",
+      "ideaMove": "Panoya taşı",
+      "ideaMoveStart": "Taşı ve başlat",
+      "ideaLater": "Sonra",
+      "ideaReject": "Reddet",
+      "ideaReopen": "Yeniden aç",
+      "ideaMoved": "panoda #{id}",
+      "ideaOwner": "Kim yapsın",
+      "ideaComment": "Bu fikre notunuz (isteğe bağlı)",
+      "ideaShowAll": "reddedilen ve taşınanları göster",
+      "ideaStatus": {
+        "new": "Yeni",
+        "later": "Sonra",
+        "rejected": "Reddedildi",
+        "moved": "Panoda"
+      },
+      "ideaEffort": {
+        "S": "küçük",
+        "M": "orta",
+        "L": "büyük"
+      },
+      "newIdea": "Kendi fikriniz",
+      "ideaTitle": "Ne yapılmalı",
+      "ideaText": "Neden (isteğe bağlı)",
+      "addIdea": "Fikir ekle",
+      "ideaMovedToast": "Fikir panoya görev #{id} olarak taşındı",
+      "ideaPickOwner": "Önce kimin yapacağını seçin",
+      "ideasCount": "{n} fikir sizi bekliyor",
+      "modeHint": {
+        "manual": "Siz başlatmadıkça hiçbir şey başlamaz.",
+        "cycle": "Pano boşalınca ekip etrafa bakar (sadece araştırma) ve fikir getirir; hangisinin işe dönüşeceğine siz karar verirsiniz.",
+        "auto": "Proje yöneticisi sizi beklemeden işi yürütür: hazır olanı başlatır, inceler, takılanı çözer, eksik olanı ekler; pano boşalınca ekibi etrafa bakmaya gönderir, küçük ve orta fikirleri bütçe içinde başlatır. Para, yayın, hukuk, büyük fikirler ve sabitlediğiniz her şey yine size gelir."
+      },
+      "budget": "Tur başına bütçe ($)",
+      "rounds": "Günde en fazla tur",
+      "discover": "Şimdi etrafa bakın",
+      "discoverTip": "Bir keşif turu başlat: sadece araştırma, sonuçlar buraya fikir olarak düşer",
+      "discoverStarted": "Keşif turu başladı",
+      "phase": {
+        "discovering": "Tur {no}: etrafa bakılıyor · ${spent}",
+        "waiting": "Tur {no}: kararınızı bekliyor"
+      },
+      "modeSaved": "Kaydedildi",
+      "kindDiscovery": "keşif",
+      "modeLabel": "Bu ofis nasıl çalışsın",
+      "modes": {
+        "manual": "Elle",
+        "cycle": "Onaylı döngü",
+        "auto": "Kendi kendine"
+      },
+      "ideaRank": "yöneticinin seçimi {n}",
+      "ideaRankHint": "Proje yöneticisinin yapılma sırası",
+      "ideaAdvice": "Proje yöneticisi"
     }
   }
 }

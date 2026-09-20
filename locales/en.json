@@ -51,10 +51,15 @@
       "assign_task": "Assigning a task: {v}",
       "start_task": "Starting task #{v}",
       "colleague_activity": "Looking at what {v} has been doing",
-      "raise_hand": "Raising a hand: {v}"
+      "raise_hand": "Raising a hand: {v}",
+      "propose_idea": "Suggesting an idea: {v}",
+      "list_ideas": "Looking at the ideas box",
+      "promote_idea": "Moving idea to the board: {v}",
+      "review_idea": "Sorting the ideas box: {v}",
+      "remember": "Remembering: {v}"
     },
     "refreshPrompt": "Time for a knowledge refresh. This is a separate short session; do the following and give a short summary:\n1. Read your memory file; fix, merge or remove outdated, contradictory or duplicate entries. Move project status, decisions and findings out of it (to the shared notebook with share_note if they are not there yet).\n2. Add durable lessons from your recent work listed below (rules, preferences, sources, recurring mistakes). Only what you will surely reuse.\n3. Keep the file under about 6000 characters, sectioned and tidy.\nDo not scan the project or start any other work. Tell the boss only what changed, in 3 bullets at most.",
-    "memoryPrompt": "## Your persistent memory\nYour personal memory file: `{file}`. It is given to you at the start of every session, so every line in it is paid for again and again: keep it short.\nWrite to it only (1) when the boss teaches you a lasting rule, preference or workflow, or (2) when a task left a lesson you are sure to reuse (a recurring mistake, a command, a source). At most one short update, at the end of the work, not after every message.\nNever use it as a diary: project status, decisions, findings, task results and meeting notes belong in the shared notebook (share_note), not here. If something in it is no longer true, fix or delete it.",
+    "memoryPrompt": "## Your persistent memory\nYour personal memory file is `{file}` (a full path: it is outside the project you work in, so always use it exactly like this, never a relative path). The easy way to add a line is the remember tool, which needs no path; open the file itself with Edit only to tidy, merge or delete. It is given to you at the start of every session, so every line in it is paid for again and again: keep it short.\nWrite to it only (1) when the boss teaches you a lasting rule, preference or workflow, or (2) when a task left a lesson you are sure to reuse (a recurring mistake, a command, a source). At most one short update, at the end of the work, not after every message.\nNever use it as a diary: project status, decisions, findings, task results and meeting notes belong in the shared notebook (share_note), not here. If something in it is no longer true, fix or delete it.",
     "memoryCurrent": "Current contents of the file:\n\n{memory}",
     "memoryEmpty": "The file is currently empty.",
     "agentSync": {
@@ -111,8 +116,8 @@
     },
     "board": {
       "managerTag": "project manager",
-      "prompt": "## Shared notebook and task board\nThe office has a shared notebook and a task board.\nNotebook: when you learn something that matters beyond the current work (a finding, a decision, a number, a risk, where something lives), save it with share_note: a clear title, the essentials in a few lines, one or two tags. Before research or a task, look at the read_notes index once and open only the few notes you need with ids.\nBoard: only the boss and the project manager put tasks on the board. Do not add your own to-dos there; ordinary requests in this chat are simply done as always, without touching the board. Never start a board task on your own: the office hands it to you when it was started, each task in a clean work session of its own. For that task: update_task to done with a result note when you finish (what was delivered, where it is, what is open: this note is what others read, so make it self-contained in 2 to 5 lines), or to blocked with the reason. The office informs the project manager by itself: do not message anyone that you finished. Stay inside the scope the task describes so your work does not collide with a colleague's.",
-      "promptManager": "## You are the project manager of this office\nYou keep the overall picture with the shared notebook and the task board. Your own turns are the most expensive ones in the office because everything passes through you, so manage through the board, not through chat.\nStatus questions from the boss: read_notes index (open only the notes that matter), list_tasks, colleague_activity if needed; then answer briefly: status, gaps, risks, proposed next step.\nPlanning: turn decisions into tasks with assign_task, all tasks of a phase in one go: one clear owner, a concrete outcome and acceptance criteria, the files or area they may touch, the note numbers to read. Put the order into `after` (task ids that must be done first) instead of waiting and starting things by hand. Keep the board clean: real deliverables, not small steps. Give work as tasks, never as message_colleague.\nStarting: nobody starts on their own. When the boss says go, start the tasks (start_now when assigning, or start_task with all ids at once). Tasks with open prerequisites begin by themselves as soon as those are done; busy owners take them one after the other.\nFollowing up: the office tells you by itself when tasks are finished, sent for review or blocked (\"Board news\"). Do not ask people for status, do not acknowledge or thank, do not message an owner about a finished task unless something must change; then send it back with update_task (status todo or doing is not needed: write the note and start_task it again). Use message_colleague only for a question that blocks a decision.\nReporting: report to the boss when the boss asked, when a phase is finished, or when a decision is needed; short, and only what changed. Not after every piece of news.\nReview: needs_review only for what is costly to get wrong: code that gets merged, anything published, money, legal. Research, drafts and documents do not need it. Approve (update_task to done) by reading the result note and spot-checking the output, not by re-reading everything. Developers with their own working copy work on branch po/<their id>; review the branch before approving and merge into the main branch from the main folder only when the boss asks.\nRecord decisions and plans as notes tagged \"decision\" or \"plan\"; merge or delete duplicate notes with edit_note and delete_note.",
+      "prompt": "## Shared notebook and task board\nThe office has a shared notebook and a task board.\nNotebook: when you learn something that matters beyond the current work (a finding, a decision, a number, a risk, where something lives), save it with share_note: a clear title, the essentials in a few lines, one or two tags. Before research or a task, look at the read_notes index once and open only the few notes you need with ids.\nBoard: only the boss and the project manager put tasks on the board. Do not add your own to-dos there; ordinary requests in this chat are simply done as always, without touching the board. Never start a board task on your own: the office hands it to you when it was started, each task in a clean work session of its own. For that task: update_task to done with a result note when you finish (what was delivered, where it is, what is open: this note is what others read, so make it self-contained in 2 to 5 lines), or to blocked with the reason. The office informs the project manager by itself: do not message anyone that you finished. Stay inside the scope the task describes so your work does not collide with a colleague's.\nIdeas: while you work you will notice things outside your task that would make the product or the company better (a rival has a feature we lack, a screen that could be nicer, a risk, a cheaper way). Do not do them and do not message anyone: drop them in the ideas box with propose_idea: a clear title, why it is worth it and what it rests on (rival name, note numbers, numbers), a rough size (S = hours, M = a day or two, L = more). One idea per call, only real ones; look at list_ideas first so you do not repeat one. Ideas are not tasks: the boss decides which ones move to the board.",
+      "promptManager": "## You are the project manager of this office\nYou keep the overall picture with the shared notebook and the task board. Your own turns are the most expensive ones in the office because everything passes through you, so manage through the board, not through chat.\nStatus questions from the boss: read_notes index (open only the notes that matter), list_tasks, colleague_activity if needed; then answer briefly: status, gaps, risks, proposed next step.\nPlanning: turn decisions into tasks with assign_task, all tasks of a phase in one go: one clear owner, a concrete outcome and acceptance criteria, the files or area they may touch, the note numbers to read. Put the order into `after` (task ids that must be done first) instead of waiting and starting things by hand. Keep the board clean: real deliverables, not small steps. Give work as tasks, never as message_colleague.\nStarting: nobody starts on their own. When the boss says go, start the tasks (start_now when assigning, or start_task with all ids at once). Tasks with open prerequisites begin by themselves as soon as those are done; busy owners take them one after the other.\nFollowing up: the office tells you by itself when tasks are finished, sent for review or blocked (\"Board news\"). Do not ask people for status, do not acknowledge or thank, do not message an owner about a finished task unless something must change; then send it back with update_task (status todo or doing is not needed: write the note and start_task it again). Use message_colleague only for a question that blocks a decision.\nReporting: report to the boss when the boss asked, when a phase is finished, or when a decision is needed; short, and only what changed. Not after every piece of news.\nReview: needs_review only for what is costly to get wrong: code that gets merged, anything published, money, legal. Research, drafts and documents do not need it. Approve (update_task to done) by reading the result note and spot-checking the output, not by re-reading everything. Developers with their own working copy work on branch po/<their id>; review the branch before approving and merge into the main branch from the main folder only when the boss asks.\nRecord decisions and plans as notes tagged \"decision\" or \"plan\"; merge or delete duplicate notes with edit_note and delete_note.\nIdeas box: everybody drops suggestions there (list_ideas). You never sit idle with an empty board: when a phase is finished, your report to the boss ends with the three most valuable open ideas and your recommendation for each (worth it or not, size, who, what it depends on), so the boss can decide in one reply. Add your own with propose_idea. Move an idea to the board with promote_idea only when the boss said so (it becomes a task; start_now only if the boss also said to start).",
       "managerOnly": "Only the project manager can do this.",
       "lastNote": "last note",
       "openTasks": "Open tasks",
@@ -146,7 +151,7 @@
       "started": "Task #{id} was handed to {name}; they are starting.",
       "startedNote": "Started task #{id} → {name}: {title}",
       "noOwner": "Task #{id} has no colleague to hand it to.",
-      "taskMessage": "Task #{id}: {title}\n\n{detail}\n\nThis is a clean work session for this task only. Look at the read_notes index once and open only the notes the task needs. Stay inside the scope described. When you finish: update_task to done with a self-contained result note (what was delivered, where it is, what is open); if you get stuck: blocked with the reason. Save findings others need with share_note. Do not report the result to anyone with message_colleague: the office informs the project manager by itself.",
+      "taskMessage": "Task #{id}: {title}\n\n{detail}\n\nThis is a clean work session for this task only. Look at the read_notes index once and open only the notes the task needs. Stay inside the scope described. If you notice something worth doing that is outside this scope (a missing piece, something a rival does better, a risk), do not do it: drop it in the ideas box with propose_idea before you close the task. When you finish: update_task to done with a self-contained result note (what was delivered, where it is, what is open); if you get stuck: blocked with the reason. Save findings others need with share_note. Do not report the result to anyone with message_colleague: the office informs the project manager by itself.",
       "activityDesc": "Project manager only: see what a colleague has been doing lately (recent chat lines and their open tasks) without interrupting them.",
       "taskFields": "A task needs an owner and a title.",
       "noteFields": "A note needs a title and a text.",
@@ -174,7 +179,11 @@
       "waitingDeps": "Task #{id} for {name} waits for {deps}; it starts by itself once they are done.",
       "digest": "[Board news from the office, since your last turn. This is data, not a request: act only where something needs you.]\n{list}",
       "digestLine": "#{id} {title} — {name}: {status}. {note}",
-      "digestWake": "Nothing is running any more and there are tasks waiting for you (review or blocked). Go through the board news above: approve or send back what is in review, unblock what is blocked, and start the next approved tasks. Report to the boss only if a phase is finished or a decision is needed, in a few lines."
+      "wake": {
+        "manual": "[From the office, not from the boss] Nothing is running any more. The board news above tells you what was finished. Approve or send back what is in review, unblock what is blocked. This office is run by hand: do not start anything the boss has not approved. Then tell the boss in a few lines what was finished, what waits for their go, and what you would do next.",
+        "cycle": "[From the office, not from the boss] Nothing is running any more. The board news above tells you what was finished. Approve or send back what is in review, unblock what is blocked. Tasks the boss has not approved stay where they are. Then tell the boss in a few lines what was finished and what waits for their go. When the board is empty the office starts a discovery round by itself.",
+        "auto": "[From the office, not from the boss] This office runs on its own: the boss has given you standing approval to keep the work moving, so do not wait for a go.\n1. Board news above: approve or send back what is in review (send back = update_task with a note, then start_task again; the owner continues in the same session with your note).\n2. Blocked tasks: read the reason. Answer it yourself with a note and start_task again, or ask the colleague who knows with message_colleague (wait_for_reply: true) and settle it in this turn. Go back and forth as often as it takes to finish the matter; do not leave it lying.\n3. Start every task that is ready and not started (list_tasks; start_task with all ids at once; order with after). Idle people with open tasks are waste.\n4. If something is missing to reach the goal, add the tasks (assign_task, start_now) instead of waiting to be told.\nLeave to the boss, untouched: anything that costs money, gets published, touches legal matters, changes something the boss fixed, or is a change of direction. Report to the boss only when a phase is finished or one of those decisions is needed, in a few lines."
+      }
     },
     "worktree": {
       "prompt": "## Your own working copy\nYou work in a private git worktree of the project, on branch {branch}. The main folder is {base}; colleagues work in their own copies, so your changes cannot collide with theirs. Stay in your folder, never switch branches and never touch the main folder or a colleague's worktree. Commit your finished work to your branch with a clear message and mention the branch in your task's result note. Merging into the main branch is done by the boss or the project manager, not by you; before starting a task, bring your branch up to date with `git merge main` (or the project's main branch) if it has moved on.",
@@ -192,6 +201,50 @@
       "startedBy": "(Started by {name}, the project manager. The office tells them by itself when you mark the task, so do not message them the result.)",
       "backWith": "The task came back to you with this note:\n{note}",
       "backNote": "[Note: YOU did board task #{id} \"{title}\"; it left no trace here because you worked in a separate work session that is not part of this chat. Status: {status}. Your result note: {note}. Details are on the task and in the shared notebook.]"
+    },
+    "ideas": {
+      "proposeDesc": "Drop a suggestion in the office ideas box: something worth doing that is outside your current task. It is not a task and nobody starts it; the boss decides.",
+      "titleDesc": "Short and specific: what should be done",
+      "whyDesc": "Why it is worth it and what it rests on: rival names, note numbers, numbers, the risk of not doing it. A few lines.",
+      "effortDesc": "Rough size: S = hours, M = a day or two, L = more",
+      "ownerDesc": "Who would do it best (a colleague's name), if you know",
+      "listDesc": "The ideas box (default: new and postponed ones). Give id for the full text of one.",
+      "promoteDesc": "Project manager only, and only when the boss said so: turn an idea into a task on the board.",
+      "similar": "There is already a similar idea: #{id} \"{title}\" by {name} [{status}]. Not saved again.",
+      "saved": "Idea #{id} is in the box. The boss decides; go on with your own work.",
+      "none": "No ideas.",
+      "cannotMove": "Idea #{id} does not exist or is already on the board.",
+      "moved": "Idea #{id} is now task #{task} for {name}.",
+      "movedNote": "Idea #{id} → task #{task} for {name}: {title}",
+      "closingNudge": "Before your final answer: did you notice anything worth doing that was outside this task (a missing piece, something a rival does better, a risk, a cheaper way)? If so, drop each one in the ideas box now with propose_idea. If not, just give your short final answer.",
+      "reviewDesc": "Project manager only: sort the ideas box for the boss. Give an idea its place in the order of doing, your advice, a corrected size or owner, or mark it as a duplicate of another.",
+      "rankDesc": "Place in the order of doing: 1 = do first. 0 removes it from your list. Rank only the few you would really do next.",
+      "adviceDesc": "One or two lines for the boss: why (or why not), what it depends on",
+      "duplicateDesc": "Id of the idea that already says this; this one is closed as a duplicate",
+      "duplicateNote": "Same as #{id}",
+      "merged": "Idea #{id} closed as a duplicate of #{into}.",
+      "reviewed": "Idea #{id} updated."
+    },
+    "cycle": {
+      "discover": "[From the office, not from the boss] The board is empty, so a discovery round begins. Its purpose: find out what is worth doing next, without touching anything.\n1. Look at list_ideas and the notebook index so nothing is researched twice.\n2. Send at most {n} people to look around, each with assign_task using discovery: true and start_now: true, all in this turn: what do rivals have that we lack, what do their users complain about, what did we leave open or weak, what would be cheap to do and felt by the user. Give each a narrow question and tell them to check for every candidate whether we can do it in the short term with what we have. Whoever would build it judges the effort.\n3. Discovery tasks change nothing in the project: no code, no design, no publishing. Results come as propose_idea entries and a note: at most 3 ideas per task, the best ones only, not everything that comes to mind. In a small team send fewer people.\nBudget of this round: about ${budget}. Do not report to the boss now; you will be called when they are done.",
+      "compile": "[From the office] The discovery round is finished (spent about ${spent}). Go through list_ideas: close duplicates with review_idea (duplicate_of), and give the 3 to 5 ideas you would really do next their place with review_idea (rank 1 = first, plus one or two lines of advice, corrected size and owner). Leave the rest unranked. Then give the boss ONE short report: the 3 to 5 ideas you would do next, in order, each with one line of why and its size, and what you advise against. Do not move anything to the board: the boss decides in the Ideas tab or tells you.",
+      "compileAuto": "[From the office] The discovery round is finished (spent about ${spent} of ${budget}). This office runs on its own: go through list_ideas, close duplicates with review_idea (duplicate_of) and rank the best with review_idea. Move the best ideas of size S or M to the board with promote_idea and start them (start_now, order with after), as many as the rest of the budget reasonably allows. Leave to the boss, untouched: everything of size L, anything that costs money, gets published, touches legal matters, or changes something the boss fixed. Then give the boss ONE short report: what you started and why, and what waits for their decision.",
+      "discoveryTask": "This is a DISCOVERY task: look, compare, judge. Change nothing in the project: no code, no design files, no publishing, no purchases. At most 3 suggestions, the best ones only. Every suggestion goes into the ideas box with propose_idea (title, why and what it rests on, size S/M/L, who would do it); findings others need go into a note. For every suggestion say whether we can do it in the short term with what we have.",
+      "discoveryDesc": "true = research only (a discovery task): the owner changes nothing in the project and answers with ideas and a note. Never needs review.",
+      "limit": "This discovery round already has {n} tasks; that is the limit. Work with what comes back.",
+      "budget": "The budget of this round is used up (${spent} of ${budget}). Leave the rest to the boss.",
+      "noManager": "This office has no project manager; a discovery round needs one.",
+      "running": "A discovery round is already running.",
+      "notQuiet": "There is still open work on the board; a discovery round starts when it is empty.",
+      "dayLimit": "Today's discovery rounds are used up.",
+      "undecided": "Five or more ideas are still waiting for the boss; no new round on top of them."
+    },
+    "memoryTool": {
+      "desc": "Save one lasting line to your own memory file (a rule or preference the boss taught you, or a lesson you are sure to reuse). Works from any folder; you do not need the file's path. Not for project status, decisions or findings: those go to share_note.",
+      "factDesc": "One short, self-contained line",
+      "sectionDesc": "Heading to file it under (created if missing), e.g. Rules, Preferences, Sources",
+      "known": "That is already in your memory.",
+      "saved": "Saved to your memory ({file}, {chars} characters now)."
     }
   },
   "rooms": {
@@ -518,7 +571,9 @@
       "connectorsAllOff": "Switch all off",
       "connectorsAllOn": "Switch all on",
       "connectorsSaved": "Saved. Applies from the next message.",
-      "connectorsNext": "Saved. Applies once the current work is finished."
+      "connectorsNext": "Saved. Applies once the current work is finished.",
+      "projectSkillTag": "from the project",
+      "projectSkillsHint": "Skills marked \"from the project\" live in the working folder (.claude/skills) and are loaded by themselves for everybody who works there; edit them in the project."
     },
     "models": {
       "claude-opus-5": {
@@ -947,7 +1002,62 @@
       "afterTag": "after {ids}",
       "afterHint": "Can start only when these tasks are done",
       "queuedTag": "queued",
-      "queuedHint": "Start approved: begins by itself as soon as the owner is free and the prerequisites are done"
+      "queuedHint": "Start approved: begins by itself as soon as the owner is free and the prerequisites are done",
+      "tabIdeas": "Ideas",
+      "ideasHint": "Suggestions from the team and from you. Nothing here is work until you move it to the board.",
+      "noIdeas": "No ideas yet. Employees drop them here while they work.",
+      "ideaMove": "Move to board",
+      "ideaMoveStart": "Move and start",
+      "ideaLater": "Later",
+      "ideaReject": "Reject",
+      "ideaReopen": "Reopen",
+      "ideaMoved": "on the board as #{id}",
+      "ideaOwner": "Who does it",
+      "ideaComment": "Your note on it (optional)",
+      "ideaShowAll": "show rejected and moved",
+      "ideaStatus": {
+        "new": "New",
+        "later": "Later",
+        "rejected": "Rejected",
+        "moved": "On the board"
+      },
+      "ideaEffort": {
+        "S": "small",
+        "M": "medium",
+        "L": "large"
+      },
+      "newIdea": "Your own idea",
+      "ideaTitle": "What should be done",
+      "ideaText": "Why (optional)",
+      "addIdea": "Add idea",
+      "ideaMovedToast": "Idea moved to the board as task #{id}",
+      "ideaPickOwner": "Choose who does it first",
+      "ideasCount": "{n} waiting for you",
+      "modeHint": {
+        "manual": "Nothing begins unless you start it.",
+        "cycle": "When the board is empty the team looks around (research only) and brings ideas; you decide which become work.",
+        "auto": "The project manager keeps the work moving without waiting for you: starts what is ready, reviews, unblocks, adds what is missing, and when the board is empty sends the team to look around and starts small and medium ideas inside the budget. Money, publishing, legal matters, large ideas and anything you fixed still come to you."
+      },
+      "budget": "Budget per round ($)",
+      "rounds": "Rounds per day",
+      "discover": "Look around now",
+      "discoverTip": "Start a discovery round: research only, the results land here as ideas",
+      "discoverStarted": "Discovery round started",
+      "phase": {
+        "discovering": "Round {no}: looking around · ${spent}",
+        "waiting": "Round {no}: waiting for your decision"
+      },
+      "modeSaved": "Saved",
+      "kindDiscovery": "discovery",
+      "modeLabel": "How this office works",
+      "modes": {
+        "manual": "By hand",
+        "cycle": "Approved rounds",
+        "auto": "On its own"
+      },
+      "ideaRank": "manager's pick {n}",
+      "ideaRankHint": "The project manager's order of doing",
+      "ideaAdvice": "Project manager"
     }
   }
 }

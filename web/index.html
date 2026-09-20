@@ -99,9 +99,16 @@
   <div class="modal" id="boardModal" hidden>
     <div class="modal-card board-card">
       <div class="modal-head">
-        <nav class="tabs" id="boardTabs"><button type="button" data-tab="tasks" data-i18n="ui.board.tabTasks"></button><button type="button" data-tab="notes" data-i18n="ui.board.tabNotes"></button></nav>
+        <nav class="tabs" id="boardTabs"><button type="button" data-tab="tasks" data-i18n="ui.board.tabTasks"></button><button type="button" data-tab="notes" data-i18n="ui.board.tabNotes"></button><button type="button" data-tab="ideas"><span data-i18n="ui.board.tabIdeas"></span><span class="badge" id="ideasBadge" hidden></span></button></nav>
         <small class="muted" id="boardManager"></small>
         <button class="icon-btn" id="boardClose" data-i18n-title="ui.board.close">×</button>
+      </div>
+      <div class="board-mode" id="boardMode">
+        <label><span data-i18n="ui.board.modeLabel"></span> <select id="officeMode"></select></label>
+        <label class="mode-extra"><span data-i18n="ui.board.budget"></span> <input id="officeBudget" type="number" min="1" max="500" step="1" /></label>
+        <label class="mode-extra"><span data-i18n="ui.board.rounds"></span> <input id="officeRounds" type="number" min="1" max="24" step="1" /></label>
+        <span class="tag" id="cyclePhase" hidden></span>
+        <small class="muted" id="officeModeHint"></small>
       </div>
       <section id="boardTasks">
         <div class="board-bar"><select id="taskOwnerFilter"></select><button class="btn small primary" type="button" id="taskStartAll" hidden></button><label class="check"><input type="checkbox" id="taskShowDone" /> <span data-i18n="ui.board.showDone"></span></label></div>
@@ -112,6 +119,16 @@
           <textarea id="newTaskDetail" rows="2" data-i18n-ph="ui.board.taskDetail"></textarea>
           <label class="check"><input type="checkbox" id="newTaskReview" /> <span data-i18n="ui.board.needsReviewLong"></span></label>
           <div class="actions"><small class="muted" data-i18n="ui.board.addHint"></small><button class="btn primary small" type="submit" data-i18n="ui.board.add"></button></div>
+        </form>
+      </section>
+      <section id="boardIdeas" hidden>
+        <div class="board-bar"><small class="muted" data-i18n="ui.board.ideasHint"></small><button class="btn small" type="button" id="ideaDiscover" data-i18n="ui.board.discover" data-i18n-title="ui.board.discoverTip"></button><label class="check"><input type="checkbox" id="ideaShowAll" /> <span data-i18n="ui.board.ideaShowAll"></span></label></div>
+        <div id="ideaList" class="board-list"></div>
+        <form id="newIdeaForm" class="board-new">
+          <h3 data-i18n="ui.board.newIdea"></h3>
+          <input id="newIdeaTitle" maxlength="160" required data-i18n-ph="ui.board.ideaTitle" />
+          <textarea id="newIdeaText" rows="2" data-i18n-ph="ui.board.ideaText"></textarea>
+          <div class="actions"><button class="btn primary small" type="submit" data-i18n="ui.board.addIdea"></button></div>
         </form>
       </section>
       <section id="boardNotes" hidden>

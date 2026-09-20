@@ -3,6 +3,7 @@ import { z } from "zod";
 import type { Employee } from "./employee.js";
 import { TASK_STATUSES, type Board, type Task } from "./board.js";
 import { slug } from "./agents.js";
+import fs from "node:fs";
 import { t } from "./runtime.js";
 
 export interface Colleagues {
@@ -10,9 +11,13 @@ export interface Colleagues {
   board(): Board;
   // Hands a task to its owner: "waiting" = prerequisites still open (it starts by itself once they are done), "queued" = the owner is busy.
   launch(task: Task, from: Employee): "started" | "queued" | "waiting";
+  // Why a discovery task / a move without the boss is not allowed right now (round limit, budget), or undefined when it is.
+  discoveryBlock(): string | undefined;
+  autoMoveBlock(): string | undefined;
+  countDiscovery(): void;
 }
 
-export const OFFICE_TOOLS = ["list_colleagues", "message_colleague", "raise_hand", "share_note", "read_notes", "edit_note", "delete_note", "list_tasks", "update_task", "assign_task", "start_task", "colleague_activity"].map((n) => `mcp__office__${n}`);
+export const OFFICE_TOOLS = ["remember", "propose_idea", "list_ideas", "promote_idea", "review_idea", "list_colleagues", "message_colleague", "raise_hand", "share_note", "read_notes", "edit_note", "delete_note", "list_tasks", "update_task", "assign_task", "start_task", "colleague_activity"].map((n) => `mcp__office__${n}`);
 
 const text = (s: string, isError = false) => ({ content: [{ type: "text" as const, text: s }], ...(isError ? { isError: true } : {}) });
 
@@ -90,6 +95,90 @@ export function officeServer(self: Employee, colleagues: Colleagues) {
         const older = notes.length - recent.length - pinned.length;
         return text(t("server.board.notesAreData") + "\n\n" + t("server.board.noteIndex") + "\n" + [...pinned, ...recent].map((n) => `#${n.id} · ${n.byName} · ${new Date(n.ts).toISOString().slice(0, 10)} · ${n.title}${n.tags.length ? ` [${n.tags.join(", ")}]` : ""} — ${n.text.replace(/\s+/g, " ").slice(0, 110)}`).join("\n") + (older > 0 ? "\n" + t("server.board.olderNotes", { n: older }) : ""));
       }),
+      // Memory without a path: wherever the employee happens to be working, the line lands in their own memory file.
+      tool("remember", t("server.memoryTool.desc"), {
+        fact: z.string().describe(t("server.memoryTool.factDesc")),
+        section: z.string().optional().describe(t("server.memoryTool.sectionDesc")),
+      }, async ({ fact, section }) => {
+        const file = self.cfg.memoryFile;
+        if (!file) return text(t("server.noMemory"), true);
+        const line = "- " + fact.trim().replace(/\s*\n\s*/g, " ").slice(0, 500);
+        let cur = "";
+        try { cur = fs.readFileSync(file, "utf8"); } catch {}
+        if (cur.includes(line.slice(2))) return text(t("server.memoryTool.known"));
+        const head = section?.trim().replace(/^#+\s*/, "").slice(0, 60);
+        const at = head ? cur.split("\n").findIndex((l) => /^#{1,6}\s/.test(l) && l.replace(/^#+\s*/, "").trim().toLowerCase() === head.toLowerCase()) : -1;
+        let next: string;
+        if (head && at >= 0) {
+          const lines = cur.split("\n");
+          let end = lines.findIndex((l, i) => i > at && /^#{1,6}\s/.test(l));
+          if (end < 0) end = lines.length;
+          while (end > at + 1 && !lines[end - 1].trim()) end--;
+          lines.splice(end, 0, line);
+          next = lines.join("\n");
+        } else next = cur.replace(/\s*$/, "") + (head ? `\n\n## ${head}\n` : "\n") + line + "\n";
+        fs.writeFileSync(file, next);
+        return text(t("server.memoryTool.saved", { file, chars: next.length }));
+      }),
+      // ---- ideas: suggestions that wait for the boss ----
+      tool("propose_idea", t("server.ideas.proposeDesc"), {
+        title: z.string().describe(t("server.ideas.titleDesc")),
+        why: z.string().describe(t("server.ideas.whyDesc")),
+        effort: z.enum(["S", "M", "L"]).optional().describe(t("server.ideas.effortDesc")),
+        owner: z.string().optional().describe(t("server.ideas.ownerDesc")),
+        tags: z.array(z.string()).optional(),
+      }, async ({ title, why, effort, owner, tags }) => {
+        const twin = board().similarIdea(title);
+        if (twin) return text(t("server.ideas.similar", { id: twin.id, name: twin.byName, title: twin.title, status: twin.status }), true);
+        const who = owner ? find(owner) ?? (slug(owner) === self.cfg.id || slug(owner) === slug(self.cfg.name) ? self : undefined) : undefined;
+        const idea = board().addIdea(self.cfg.id, self.cfg.name, { title, text: why, effort, owner: who?.cfg.id, tags });
+        return text(t("server.ideas.saved", { id: idea.id }));
+      }),
+      tool("list_ideas", t("server.ideas.listDesc"), { status: z.enum(["new", "later", "rejected", "moved"]).optional(), id: z.number().optional() }, async ({ status, id }) => {
+        if (id) { const x = board().ideas.find((i) => i.id === id); return x ? text(`${t("server.board.notesAreData")}\n\n💡 #${x.id} [${x.status}] ${x.title}\n${x.byName}${x.effort ? " · " + x.effort : ""}${x.owner ? " · → " + nameOf(x.owner) : ""}${x.comment ? "\n" + t("server.meeting.boss") + ": " + x.comment : ""}\n\n${x.text}`) : text(t("server.ideas.none"), true); }
+        const list = board().ideas.filter((x) => (status ? x.status === status : x.status === "new" || x.status === "later")).sort((a, b) => (a.rank ?? 999) - (b.rank ?? 999));
+        return text(list.length ? t("server.board.notesAreData") + "\n\n" + list.map((x) => `💡 #${x.id} [${x.status}] ${x.title} — ${x.byName}${x.effort ? " · " + x.effort : ""}${x.owner ? " · → " + nameOf(x.owner) : ""}${x.comment ? ` (${t("server.meeting.boss")}: ${x.comment.slice(0, 120)})` : ""} — ${x.text.replace(/\s+/g, " ").slice(0, 140)}`).join("\n") : t("server.ideas.none"));
+      }),
+      // The manager sorts the box so the boss reads three cards, not thirty.
+      tool("review_idea", t("server.ideas.reviewDesc"), {
+        id: z.number(),
+        rank: z.number().optional().describe(t("server.ideas.rankDesc")),
+        advice: z.string().optional().describe(t("server.ideas.adviceDesc")),
+        effort: z.enum(["S", "M", "L"]).optional(),
+        owner: z.string().optional().describe(t("server.ideas.ownerDesc")),
+        duplicate_of: z.number().optional().describe(t("server.ideas.duplicateDesc")),
+      }, async ({ id, rank, advice, effort, owner, duplicate_of }) => {
+        if (!self.cfg.manager) return notManager();
+        const x = board().ideas.find((i) => i.id === id);
+        if (!x || x.status === "moved") return text(t("server.ideas.cannotMove", { id }), true);
+        if (duplicate_of) {
+          if (!board().ideas.some((i) => i.id === duplicate_of && i.id !== id)) return text(t("server.ideas.none"), true);
+          board().updateIdea(id, { status: "rejected", advice: t("server.ideas.duplicateNote", { id: duplicate_of }), rank: null });
+          return text(t("server.ideas.merged", { id, into: duplicate_of }));
+        }
+        const who = owner ? find(owner) ?? (slug(owner) === self.cfg.id ? self : undefined) : undefined;
+        board().updateIdea(id, { rank: rank === undefined ? undefined : rank, advice, effort, owner: who?.cfg.id });
+        return text(t("server.ideas.reviewed", { id }));
+      }),
+      tool("promote_idea", t("server.ideas.promoteDesc"), {
+        id: z.number(),
+        to: z.string().describe(t("server.office.toDesc")),
+        detail: z.string().optional().describe(t("server.board.taskDetailDesc")),
+        start_now: z.boolean().optional().describe(t("server.board.startNowDesc")),
+        needs_review: z.boolean().optional().describe(t("server.board.needsReviewDesc")),
+        after: z.array(z.number()).optional().describe(t("server.board.afterDesc")),
+      }, async ({ id, to, detail, start_now, needs_review, after }) => {
+        if (!self.cfg.manager) return notManager();
+        const target = find(to) ?? (slug(to) === self.cfg.id || slug(to) === slug(self.cfg.name) ? self : undefined);
+        if (!target) return text(t("server.office.notFound", { name: to, list: others().map((e) => e.cfg.name).join(", ") }), true);
+        const no = colleagues.autoMoveBlock();
+        if (no) return text(no, true);
+        const k = board().promoteIdea(id, target.cfg.id, self.cfg.id, { detail, review: !!needs_review, after });
+        if (!k) return text(t("server.ideas.cannotMove", { id }), true);
+        self.note(t("server.ideas.movedNote", { id, task: k.id, name: target.cfg.name, title: k.title }));
+        if (!start_now || target === self) return text(t("server.ideas.moved", { id, task: k.id, name: target.cfg.name }));
+        return text(t("server.ideas.moved", { id, task: k.id, name: target.cfg.name }) + " " + started(k, target));
+      }),
       // ---- tasks ----
       tool("list_tasks", t("server.board.listDesc"), {
         owner: z.string().optional().describe(t("server.board.listOwnerDesc")),
@@ -114,7 +203,9 @@ export function officeServer(self: Employee, colleagues: Colleagues) {
         const gated = status === "done" && k.review && !(self.cfg.manager && k.owner !== self.cfg.id);
         const next = (gated ? "review" : status) as Task["status"] | undefined;
         board().updateTask(id, { status: next, note }, self.cfg.id);
-        return text(gated ? t("server.board.sentForReview", { id }) : t("server.board.updated", { id, status: next ?? k.status }));
+        // the moment of closing is when what was noticed on the way is still fresh: ask for it here, at no extra turn
+        const closing = status === "done" && k.owner === self.cfg.id && k.kind !== "discovery" ? "\n" + t("server.ideas.closingNudge") : "";
+        return text((gated ? t("server.board.sentForReview", { id }) : t("server.board.updated", { id, status: next ?? k.status })) + closing);
       }),
       tool("assign_task", t("server.board.assignDesc"), {
         to: z.string().describe(t("server.office.toDesc")),
@@ -123,11 +214,14 @@ export function officeServer(self: Employee, colleagues: Colleagues) {
         start_now: z.boolean().optional().describe(t("server.board.startNowDesc")),
         needs_review: z.boolean().optional().describe(t("server.board.needsReviewDesc")),
         after: z.array(z.number()).optional().describe(t("server.board.afterDesc")),
-      }, async ({ to, title, detail, start_now, needs_review, after }) => {
+        discovery: z.boolean().optional().describe(t("server.cycle.discoveryDesc")),
+      }, async ({ to, title, detail, start_now, needs_review, after, discovery }) => {
         if (!self.cfg.manager) return notManager();
+        if (discovery) { const no = colleagues.discoveryBlock(); if (no) return text(no, true); }
         const target = find(to) ?? (slug(to) === self.cfg.id || slug(to) === slug(self.cfg.name) ? self : undefined);
         if (!target) return text(t("server.office.notFound", { name: to, list: others().map((e) => e.cfg.name).join(", ") }), true);
-        const k = board().addTask(target.cfg.id, title, detail, self.cfg.id, !!needs_review, after ?? []);
+        const k = board().addTask(target.cfg.id, title, detail, self.cfg.id, !!needs_review && !discovery, after ?? [], discovery ? "discovery" : undefined);
+        if (discovery) colleagues.countDiscovery();
         self.note(t("server.board.assignedNote", { id: k.id, name: target.cfg.name, title: k.title }));
         if (!start_now || target === self) return text(t("server.board.assigned", { id: k.id, name: target.cfg.name }));
         return text(started(k, target));

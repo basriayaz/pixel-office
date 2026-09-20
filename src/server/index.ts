@@ -7,8 +7,8 @@ import { WebSocketServer, WebSocket } from "ws";
 import { Employee, listConnectors, IMAGE_TYPES, type EmployeeConfig, type ImageInput } from "./employee.js";
 import { Store } from "./store.js";
 import { Meeting } from "./meeting.js";
-import { Board, TASK_STATUSES, type TaskStatus, type Task } from "./board.js";
-import { expandHome, ensureWorktree, loadEmployees, loadEmployee, listSkills, writeAgentFile, createEmployeeDir, archiveEmployeeDir, writeSkill, readSkill, deleteSkill, syncClaudeAgents } from "./agents.js";
+import { Board, TASK_STATUSES, IDEA_STATUSES, type TaskStatus, type Task, type IdeaStatus, type Effort } from "./board.js";
+import { expandHome, ensureWorktree, loadEmployees, loadEmployee, listSkills, listProjectSkills, writeAgentFile, createEmployeeDir, archiveEmployeeDir, writeSkill, readSkill, deleteSkill, syncClaudeAgents } from "./agents.js";
 import { loadSettings, configPath, readRawConfig, writeRawConfig, officeDefFromRaw, officeIdOf, absPath, displayPath, rootFromEnv, initRoot, PKG_ROOT, THEMES, type OfficeDef, type Theme } from "./config.js";
 import { loadLocale, availableLocales, detectLocale, Translator } from "./i18n.js";
 import { initRuntime, t } from "./runtime.js";
@@ -44,11 +44,76 @@ function storeFor(def: OfficeDef): Store {
   return new Store(dir);
 }
 
-const colleaguesOf = (o: { employees: Map<string, Employee>; board: Board }) => ({ list: () => [...o.employees.values()], board: () => o.board, launch: (k: Task, from: Employee) => launch(o, k, from) });
+const colleaguesOf = (o: OfficeRt) => ({
+  list: () => [...o.employees.values()], board: () => o.board, launch: (k: Task, from: Employee) => launch(o, k, from),
+  discoveryBlock: () => {
+    const c = cycleOf(o);
+    if (c.phase !== "discovering") return undefined; // research the boss asked for is not counted
+    if (c.tasks >= MAX_DISCOVERY_TASKS) return t("server.cycle.limit", { n: MAX_DISCOVERY_TASKS });
+    return spent(o, c) > budgetOf(o) ? t("server.cycle.budget", { spent: spent(o, c).toFixed(2), budget: budgetOf(o) }) : undefined;
+  },
+  autoMoveBlock: () => { const c = cycleOf(o); return modeOf(o) === "auto" && c.phase !== "idle" && spent(o, c) > budgetOf(o) ? t("server.cycle.budget", { spent: spent(o, c).toFixed(2), budget: budgetOf(o) }) : undefined; },
+  countDiscovery: () => { const c = cycleOf(o); if (c.phase === "discovering") saveCycle(o, { ...c, tasks: c.tasks + 1 }); },
+});
+
+// ---- how an office works: by hand, in approved rounds, or on its own ----
+// manual: nothing begins unless the boss starts it. cycle: when the board is empty a discovery round runs (research only) and its
+// ideas wait for the boss. auto: the project manager also moves ideas to the board, inside the round's budget.
+export const MODES = ["manual", "cycle", "auto"] as const;
+type Mode = (typeof MODES)[number];
+interface Cycle { phase: "idle" | "discovering" | "waiting"; no: number; startedAt: number; costAtStart: number; tasks: number; day: string; today: number }
+const MAX_DISCOVERY_TASKS = 4;
+const modeOf = (o: OfficeRt): Mode => o.store.getMeta<Mode>("_office", "mode") ?? "manual";
+const budgetOf = (o: OfficeRt) => o.store.getMeta<number>("_office", "budget") ?? 10;
+const roundsPerDay = (o: OfficeRt) => o.store.getMeta<number>("_office", "roundsPerDay") ?? 3;
+const cycleOf = (o: OfficeRt): Cycle => o.store.getMeta<Cycle>("_office", "cycle") ?? { phase: "idle", no: 0, startedAt: 0, costAtStart: 0, tasks: 0, day: "", today: 0 };
+const totalCost = (o: OfficeRt) => [...o.employees.values()].reduce((a, e) => a + e.cost, 0);
+const spent = (o: OfficeRt, c: Cycle) => Math.max(0, totalCost(o) - c.costAtStart);
+const managerOf = (o: OfficeRt) => [...o.employees.values()].find((e) => e.cfg.manager);
+const quiet = (o: OfficeRt) => o.board.tasks.every((k) => k.status === "done");
+const boardPayload = (o: OfficeRt) => { const c = cycleOf(o); return { ...o.board.state(), mode: modeOf(o), budget: budgetOf(o), roundsPerDay: roundsPerDay(o), cycle: { phase: c.phase, no: c.no, spent: c.phase === "idle" ? 0 : spent(o, c), tasks: c.tasks } }; };
+function saveCycle(o: OfficeRt, c: Cycle) {
+  o.store.setMeta("_office", "cycle", c);
+  broadcast({ type: "board", office: o.def.id, board: boardPayload(o) });
+}
+
+// A discovery round: the project manager sends a few people to look around; nothing in the project is touched.
+function startDiscovery(o: OfficeRt, byBoss = false): string | undefined {
+  const pm = managerOf(o), c = cycleOf(o), day = new Date().toISOString().slice(0, 10);
+  if (!pm) return t("server.cycle.noManager");
+  if (c.phase === "discovering") return t("server.cycle.running");
+  if (!quiet(o)) return t("server.cycle.notQuiet");
+  const today = c.day === day ? c.today : 0;
+  if (!byBoss && today >= roundsPerDay(o)) return t("server.cycle.dayLimit");
+  // what already waits for the boss comes first: no new round on top of a pile of undecided ideas
+  const undecided = o.board.ideas.filter((x) => x.status === "new").length;
+  if (!byBoss && undecided >= 5) return t("server.cycle.undecided");
+  saveCycle(o, { phase: "discovering", no: c.no + 1, startedAt: Date.now(), costAtStart: totalCost(o), tasks: 0, day, today: today + 1 });
+  pm.sendWhenFree(t("server.cycle.discover", { n: MAX_DISCOVERY_TASKS, budget: budgetOf(o) }));
+  return undefined;
+}
+
+// Called whenever something ended: a task changed state, or the project manager finished a turn.
+function advanceCycle(o: OfficeRt, event: { task?: Task; managerTurn?: boolean; turnEnd?: boolean }) {
+  const c = cycleOf(o), mode = modeOf(o);
+  if (c.phase === "waiting" && event.task?.status === "doing" && event.task.kind !== "discovery") return saveCycle(o, { ...c, phase: "idle" });
+  if (c.phase === "discovering" && quiet(o)) {
+    const pm = managerOf(o);
+    // not at the moment the last task is ticked: its owner may still be writing ideas in the same turn
+    const looking = [...o.employees.values()].some((e) => e !== pm && e.busy);
+    if (c.tasks > 0 && !looking && pm) {
+      saveCycle(o, { ...c, phase: "waiting" });
+      pm.sendWhenFree(t(mode === "auto" ? "server.cycle.compileAuto" : "server.cycle.compile", { budget: budgetOf(o), spent: spent(o, c).toFixed(2) }));
+    } else if (event.managerTurn && c.tasks === 0 && pm && !pm.busy && !pm.hasOfficeMessages) saveCycle(o, { ...c, phase: "waiting" }); // the manager looked around alone and already reported
+    return;
+  }
+  if (mode !== "manual" && c.phase === "idle" && event.task?.status === "done" && event.task.kind !== "discovery" && quiet(o)) startDiscovery(o);
+}
+
 
 // A start that was approved (the Start button, or the project manager's start) goes through here. With open prerequisites the
 // approval is remembered on the task and it begins by itself when they are done; nothing starts that nobody approved.
-function launch(o: { employees: Map<string, Employee>; board: Board }, k: Task, from?: Employee): "started" | "queued" | "waiting" {
+function launch(o: OfficeRt, k: Task, from?: Employee): "started" | "queued" | "waiting" {
   const by = from?.cfg.id ?? "user";
   const owner = o.employees.get(k.owner);
   if (!owner || o.board.waitingOn(k).length) { o.board.markTask(k.id, { autoStart: by }); return "waiting"; }
@@ -58,19 +123,35 @@ function launch(o: { employees: Map<string, Employee>; board: Board }, k: Task, 
 }
 
 // What follows from a task changing state, without any model having to tell another one about it.
-function onTaskStatus(o: { employees: Map<string, Employee>; board: Board }, k: Task, by: string) {
+function onTaskStatus(o: OfficeRt, k: Task, by: string) {
   const owner = o.employees.get(k.owner);
   owner?.poke();
+  advanceCycle(o, { task: k });
   if (k.status === "done") for (const w of o.board.tasks) {
     if (w.status === "todo" && w.autoStart && w.after?.includes(k.id) && !o.board.waitingOn(w).length) launch(o, w, o.employees.get(w.autoStart));
   }
-  const pm = [...o.employees.values()].find((e) => e.cfg.manager);
+  const pm = managerOf(o);
   if (!pm || !owner || pm === owner || (by !== k.owner && by !== "system") || !["done", "review", "blocked"].includes(k.status)) return;
   const note = k.notes[k.notes.length - 1]?.text.replace(/\s+/g, " ").slice(0, 400) ?? "";
-  // one turn for the whole wave: the manager is woken only when nothing is running any more and something needs a decision
-  const running = o.board.tasks.some((x) => x.status === "doing");
-  const needsManager = o.board.tasks.some((x) => x.status === "review" || x.status === "blocked");
-  pm.addDigest(t("server.board.digestLine", { id: k.id, title: k.title, name: owner.cfg.name, status: k.status, note: note || "-" }), !running && needsManager);
+  pm.addDigest(t("server.board.digestLine", { id: k.id, title: k.title, name: owner.cfg.name, status: k.status, note: note || "-" }));
+  nudgeManager(o);
+}
+
+// The office calls the project manager when there is something for them to do. How eagerly depends on how the office works:
+// by hand / approved rounds: once per wave, when nothing runs any more (the promise "the office tells the manager" is kept, at one turn per wave);
+// on its own: also while others still work, whenever something waits for the manager (a review, a blocked task, approved work nobody started).
+// The call waits for a free moment and identical calls collapse, so news that pile up during a manager turn cost one turn, not one each.
+function managerNeeded(o: OfficeRt): boolean {
+  const pm = managerOf(o), mode = modeOf(o);
+  if (!pm || cycleOf(o).phase === "discovering") return false; // a discovery round has its own calls
+  const open = o.board.tasks.filter((x) => x.status !== "done");
+  const running = open.some((x) => x.status === "doing" || (x.status === "todo" && x.autoStart)); // approved and queued is as good as running
+  const waiting = open.some((x) => x.status === "review" || x.status === "blocked");
+  const unstarted = open.some((x) => x.status === "todo" && !x.autoStart && x.owner !== pm.cfg.id && !o.board.waitingOn(x).length);
+  return mode === "auto" ? waiting || unstarted || (!running && pm.hasNews) : !running && (waiting || pm.hasNews);
+}
+function nudgeManager(o: OfficeRt) {
+  if (managerNeeded(o)) managerOf(o)!.sendWhenFree(t(`server.board.wake.${modeOf(o)}`), () => managerNeeded(o));
 }
 
 function openOffice(def: OfficeDef): OfficeRt {
@@ -88,7 +169,7 @@ function openOffice(def: OfficeDef): OfficeRt {
   const board = new Board(store.dir);
   const o: OfficeRt = { def, store, employees, board };
   offices.set(def.id, o);
-  board.on("change", () => broadcast({ type: "board", office: def.id, board: board.state() }));
+  board.on("change", () => broadcast({ type: "board", office: def.id, board: boardPayload(o) }));
   board.on("status", (k: Task, _prev: TaskStatus, by: string) => onTaskStatus(o, k, by));
   for (const e of employees.values()) e.setColleagues(colleaguesOf(o));
   return o;
@@ -294,7 +375,29 @@ const empOf = (req: OReq) => officeOf(req)?.employees.get(req.params.id ?? "");
 r.get("/board", (req: OReq, res) => {
   const o = officeOf(req);
   if (!o) return res.status(404).json({ error: t("server.notFound") });
-  res.json(o.board.state());
+  res.json(boardPayload(o));
+});
+// How the office works (manual / cycle / auto), the budget of one round, and a discovery round on demand.
+r.put("/board/mode", (req: OReq, res) => {
+  const o = officeOf(req), b = req.body ?? {};
+  if (!o) return res.status(404).json({ error: t("server.notFound") });
+  const mode = pick(b.mode, MODES);
+  if (mode) o.store.setMeta("_office", "mode", mode);
+  if (b.budget !== undefined) o.store.setMeta("_office", "budget", Math.min(500, Math.max(1, Number(b.budget) || 10)));
+  if (b.roundsPerDay !== undefined) o.store.setMeta("_office", "roundsPerDay", Math.min(24, Math.max(1, Math.round(Number(b.roundsPerDay)) || 3)));
+  if (mode === "manual") { const c = cycleOf(o); if (c.phase !== "idle") o.store.setMeta("_office", "cycle", { ...c, phase: "idle" }); }
+  // switched to "on its own" with work lying around: the manager picks it up now, not at the next accident
+  if (mode === "auto" && o.board.tasks.some((x) => x.status !== "done")) nudgeManager(o);
+  else if (mode && mode !== "manual" && quiet(o) && o.board.tasks.length) startDiscovery(o);
+  broadcast({ type: "board", office: o.def.id, board: boardPayload(o) });
+  res.json(boardPayload(o));
+});
+r.post("/board/discover", (req: OReq, res) => {
+  const o = officeOf(req);
+  if (!o) return res.status(404).json({ error: t("server.notFound") });
+  const no = startDiscovery(o, true);
+  if (no) return res.status(409).json({ error: no });
+  res.json({ ok: true });
 });
 r.post("/board/tasks", (req: OReq, res) => {
   const o = officeOf(req), b = req.body ?? {};
@@ -303,6 +406,7 @@ r.post("/board/tasks", (req: OReq, res) => {
   if (!o || !owner || !title) return res.status(400).json({ error: t("server.board.taskFields") });
   // only listed: the owner starts when the boss (or the project manager) says so
   res.json(o.board.addTask(owner.cfg.id, title, clean(b.detail, 8000), "user", !!b.review, Array.isArray(b.after) ? b.after.map(Number).filter(Number.isFinite) : []));
+  if (modeOf(o) === "auto") nudgeManager(o); // in an office that runs on its own, a task the boss lists is a task to get going
 });
 // "Start": the task goes to its owner as an ordinary message from the boss, so it shows in the chat and can be answered.
 r.post("/board/tasks/:id/start", (req: OReq, res) => {
@@ -341,6 +445,39 @@ r.delete("/board/tasks/:id", (req: OReq, res) => {
   if (!officeOf(req)?.board.deleteTask(Number(req.params.id))) return res.status(404).json({ error: t("server.notFound") });
   res.json({ ok: true });
 });
+// Ideas: suggestions from employees (and the boss). Moving one to the board makes it a task; it never starts by that alone.
+const effortOf = (v: unknown) => (["S", "M", "L"].includes(String(v)) ? (String(v) as Effort) : undefined);
+r.post("/board/ideas", (req: OReq, res) => {
+  const o = officeOf(req), b = req.body ?? {};
+  const title = clean(b.title, 160);
+  if (!o || !title) return res.status(400).json({ error: t("server.board.noteFields") });
+  res.json(o.board.addIdea("user", t("server.meeting.boss"), { title, text: clean(b.text, 4000), effort: effortOf(b.effort), owner: o.employees.get(String(b.owner ?? ""))?.cfg.id, tags: Array.isArray(b.tags) ? b.tags.map(String) : [] }));
+});
+r.put("/board/ideas/:id", (req: OReq, res) => {
+  const o = officeOf(req), b = req.body ?? {};
+  const idea = o?.board.updateIdea(Number(req.params.id), {
+    title: b.title !== undefined ? clean(b.title, 160) : undefined, text: b.text !== undefined ? clean(b.text, 4000) : undefined,
+    effort: b.effort !== undefined ? effortOf(b.effort) ?? null : undefined,
+    owner: b.owner !== undefined ? o.employees.get(String(b.owner))?.cfg.id ?? null : undefined,
+    status: pick(b.status, IDEA_STATUSES) as IdeaStatus | undefined, comment: b.comment !== undefined ? clean(b.comment, 600) : undefined,
+  });
+  if (!idea) return res.status(404).json({ error: t("server.notFound") });
+  res.json(idea);
+});
+r.delete("/board/ideas/:id", (req: OReq, res) => {
+  if (!officeOf(req)?.board.deleteIdea(Number(req.params.id))) return res.status(404).json({ error: t("server.notFound") });
+  res.json({ ok: true });
+});
+r.post("/board/ideas/:id/promote", (req: OReq, res) => {
+  const o = officeOf(req), b = req.body ?? {};
+  const owner = o?.employees.get(String(b.owner ?? ""));
+  if (!o || !owner) return res.status(400).json({ error: t("server.board.taskFields") });
+  const k = o.board.promoteIdea(Number(req.params.id), owner.cfg.id, "user", { review: !!b.review });
+  if (!k) return res.status(404).json({ error: t("server.notFound") });
+  res.json({ ...k, launch: b.start ? launch(o, k) : null });
+  if (!b.start && modeOf(o) === "auto") nudgeManager(o);
+});
+
 r.post("/board/notes", (req: OReq, res) => {
   const o = officeOf(req), b = req.body ?? {};
   const title = clean(b.title, 140), text = clean(b.text, 12000);
@@ -398,6 +535,7 @@ r.get("/employees/:id/detail", (req: OReq, res) => {
     memoryFile: e.cfg.memoryFile ?? null,
     memory: readText(e.cfg.memoryFile),
     skills: listSkills(e.cfg.pluginDir),
+    projectSkills: listProjectSkills(e.cfg.cwd).map((s) => ({ ...s, dir: displayPath(s.dir) })),
     connectorsOff: e.cfg.connectorsOff ?? [],
     skillsDir: e.cfg.pluginDir ? path.join(e.cfg.pluginDir, "skills") : null,
     refreshHours: e.cfg.refreshHours ?? 0,
@@ -593,6 +731,7 @@ function wire(e: Employee) {
   e.on("ask_done", (requestId) => broadcast({ type: "ask_done", office, id, requestId }));
   e.on("result", (res) => broadcast({ type: "result", office, id, ...res, model: e.model }));
   e.on("status", () => broadcast({ type: "usage", office, id, context: e.context, task: e.currentTask ?? null }));
+  e.on("result", () => { const o = offices.get(office); if (o) setImmediate(() => advanceCycle(o, e.cfg.manager ? { managerTurn: true } : { turnEnd: true })); });
   e.on("reset", () => {
     broadcast({ type: "history", office, id, messages: [], pending: [] });
     broadcast({ type: "result", office, id, cost: 0, durationMs: 0 });
@@ -613,7 +752,7 @@ function startMeeting(o: OfficeRt, topic: string, ids: string[], interruptBusy: 
 }
 
 wss.on("connection", (ws) => {
-  ws.send(JSON.stringify({ type: "init", offices: [...offices.values()].map((o) => ({ ...officeInfo(o), employees: roster(o), meeting: o.meeting?.state() ?? null, board: o.board.state() })) }));
+  ws.send(JSON.stringify({ type: "init", offices: [...offices.values()].map((o) => ({ ...officeInfo(o), employees: roster(o), meeting: o.meeting?.state() ?? null, board: boardPayload(o) })) }));
   ws.on("message", async (raw) => {
     let msg: { type: string; office?: string; id?: string; text?: string; requestId?: string; allow?: boolean; always?: boolean; answers?: Record<string, unknown>; images?: unknown;
       topic?: string; ids?: unknown; to?: unknown; interrupt?: boolean; summary?: boolean; memory?: boolean };

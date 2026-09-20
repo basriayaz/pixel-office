@@ -115,7 +115,15 @@ async function renderConnectors() {
 
 function renderSkills() {
   const host = $("skillList");
-  host.innerHTML = detail.skills.length ? "" : `<div class="muted">${t("ui.profile.noSkills")}</div>`;
+  host.innerHTML = detail.skills.length || detail.projectSkills?.length ? "" : `<div class="muted">${t("ui.profile.noSkills")}</div>`;
+  // skills of the project the employee works in: loaded by Claude Code itself, shown read-only
+  for (const s of detail.projectSkills || []) {
+    const row = document.createElement("div");
+    row.className = "skill";
+    row.innerHTML = `<div><b>${escapeHtml(s.name)}</b> <span class="tag" title="${escapeHtml(s.dir)}">${escapeHtml(t("ui.profile.projectSkillTag"))}</span><div class="muted">${escapeHtml(s.description)}</div></div>`;
+    host.appendChild(row);
+  }
+  if (detail.projectSkills?.length) { const note = document.createElement("div"); note.className = "muted"; note.textContent = t("ui.profile.projectSkillsHint"); host.appendChild(note); }
   for (const s of detail.skills) {
     const row = document.createElement("div");
     row.className = "skill";

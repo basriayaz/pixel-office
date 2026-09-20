@@ -12,6 +12,11 @@ import { expandHome, ensureWorktree, loadEmployees, loadEmployee, listSkills, li
 import { loadSettings, configPath, readRawConfig, writeRawConfig, officeDefFromRaw, officeIdOf, absPath, displayPath, rootFromEnv, initRoot, PKG_ROOT, THEMES, type OfficeDef, type Theme } from "./config.js";
 import { loadLocale, availableLocales, detectLocale, Translator } from "./i18n.js";
 import { initRuntime, t } from "./runtime.js";
+import crypto from "node:crypto";
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
+import { officeToolDefs } from "./office-tools.js";
+import { codexModels, isCodexModel } from "./codex.js";
 
 const R = rootFromEnv();
 // Global mode sets itself up on first run; project mode expects `pixel-office init`.
@@ -54,7 +59,18 @@ const colleaguesOf = (o: OfficeRt) => ({
   },
   autoMoveBlock: () => { const c = cycleOf(o); return modeOf(o) === "auto" && c.phase !== "idle" && spent(o, c) > budgetOf(o) ? t("server.cycle.budget", { spent: spent(o, c).toFixed(2), budget: budgetOf(o) }) : undefined; },
   countDiscovery: () => { const c = cycleOf(o); if (c.phase === "discovering") saveCycle(o, { ...c, tasks: c.tasks + 1 }); },
+  mcpUrl: (self: Employee) => `http://127.0.0.1:${settings.port}/mcp/${mcpToken(self)}`,
 });
+
+// Office tools for engines that run as a separate program (Codex): the same definitions Claude gets in-process, served over
+// MCP streamable HTTP. One unguessable address per employee and server run, so a process can only ever act as the employee it serves.
+const mcpTokens = new Map<string, Employee>();
+function mcpToken(e: Employee): string {
+  for (const [tok, emp] of mcpTokens) if (emp === e) return tok;
+  const tok = crypto.randomBytes(24).toString("hex");
+  mcpTokens.set(tok, e);
+  return tok;
+}
 
 // ---- how an office works: by hand, in approved rounds, or on its own ----
 // manual: nothing begins unless the boss starts it. cycle: when the board is empty a discovery round runs (research only) and its
@@ -200,7 +216,7 @@ app.use(express.static(path.join(PKG_ROOT, "web")));
 
 function publicInfo(e: Employee) {
   const { id, name, role, color, look, officeId } = e.cfg;
-  return { id, office: officeId, name, role, color, look, status: e.status, cost: e.cost, context: e.context, task: e.currentTask ?? null, model: e.model ?? e.cfg.model ?? null, sickUntil: e.sickUntil || undefined, manager: !!e.cfg.manager };
+  return { id, office: officeId, name, role, color, look, engine: e.engine, status: e.status, cost: e.cost, context: e.context, task: e.currentTask ?? null, model: e.model ?? e.cfg.model ?? null, sickUntil: e.sickUntil || undefined, manager: !!e.cfg.manager };
 }
 
 const readText = (p?: string) => { try { return p ? fs.readFileSync(p, "utf8") : ""; } catch { return ""; } };
@@ -208,6 +224,7 @@ const MODELS = ["claude-opus-5", "claude-sonnet-5", "claude-haiku-4-5", "claude-
 const EFFORTS = ["low", "medium", "high", "xhigh", "max"] as const;
 const PERMS = ["default", "acceptEdits", "plan", "dontAsk", "bypassPermissions"] as const;
 const clean = (v: unknown, max = 200) => (typeof v === "string" ? v.trim().slice(0, max) : "");
+const pickModel = (v: unknown): string | undefined => pick(v, MODELS) ?? (typeof v === "string" && codexModels().some((m) => m.id === v) ? v : undefined);
 const pick = <T extends string>(v: unknown, list: readonly T[]): T | undefined => (list as readonly string[]).includes(v as string) ? (v as T) : undefined;
 
 const officeInfo = (o: OfficeRt) => ({ id: o.def.id, name: o.def.name, cwd: o.def.cwd, employeesDir: o.def.employeesDir, theme: o.def.theme });
@@ -219,10 +236,23 @@ const clientConfig = () => ({
   locale: locale.code,
   locales: availableLocales(),
   strings: { ui: locale.data.ui, rooms: locale.data.rooms, status: locale.data.status },
-  models: MODELS, efforts: EFFORTS, permissions: PERMS, themes: THEMES,
+  models: MODELS, codexModels: codexModels(), efforts: EFFORTS, permissions: PERMS, themes: THEMES,
   project: R.defaultCwd, projectDisplay: displayPath(R.defaultCwd), mode: R.mode, root: R.root, firstRun, memoryFile: settings.memoryFile, multiOffice: settings.multiOffice, defaultOffice: defaultOfficeId(),
   offices: [...offices.values()].map(officeInfo),
 });
+app.all("/mcp/:token", async (req, res) => {
+  const e = mcpTokens.get(String(req.params.token));
+  const o = e && offices.get(e.cfg.officeId);
+  if (!e || !o || o.employees.get(e.cfg.id) !== e) { res.status(404).end(); return; }
+  if (req.method !== "POST") { res.status(405).json({ jsonrpc: "2.0", error: { code: -32000, message: "Method not allowed" }, id: null }); return; }
+  const server = new McpServer({ name: "office", version: "1.0.0" }, { instructions: t("server.office.instructions") });
+  for (const d of officeToolDefs(e, colleaguesOf(o))) server.registerTool(d.name, { description: d.description, inputSchema: d.inputSchema }, d.handler as never);
+  const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined }); // stateless: every request stands alone
+  res.on("close", () => { void transport.close(); void server.close(); });
+  try { await server.connect(transport); await transport.handleRequest(req, res, req.body); }
+  catch (err) { if (!res.headersSent) res.status(500).json({ jsonrpc: "2.0", error: { code: -32603, message: (err as Error).message }, id: null }); }
+});
+
 app.get("/i18n.js", (_req, res) => { res.type("application/javascript").send(`window.PO = ${JSON.stringify(clientConfig())};`); });
 app.get("/api/options", (_req, res) => res.json(clientConfig()));
 // Images pasted into a chat, stored per office and employee.
@@ -602,7 +632,7 @@ r.post("/employees", (req: OReq, res) => {
   const dir = createEmployeeDir(o.def, {
     name, role, color, prompt: prompt || t("server.defaultPrompt", { name, role }),
     look: look ?? { skin: "#f1c9a5", hair: "#3b2a20", hairStyle: "short", top: color, bottom: "#2f3548", accessory: "none" },
-    model: pick(b.model, MODELS), effort: pick(b.effort, EFFORTS), permissionMode: pick(b.permissionMode, PERMS),
+    model: pickModel(b.model), effort: pick(b.effort, EFFORTS), permissionMode: pick(b.permissionMode, PERMS),
     cwd: clean(b.cwd, 500) || undefined,
   });
   const e = new Employee(loadEmployee(dir, o.employees.size, o.def), o.store);
@@ -624,7 +654,7 @@ r.put("/employees/:id", async (req: OReq, res) => {
   if (b.prompt !== undefined) cfg.systemPrompt = clean(b.prompt, 20000) || cfg.systemPrompt;
   if (b.color !== undefined && /^#[0-9a-f]{6}$/i.test(b.color)) cfg.color = b.color;
   if (b.look && typeof b.look === "object") cfg.look = b.look;
-  if (b.model !== undefined) cfg.model = pick(b.model, MODELS);
+  if (b.model !== undefined) cfg.model = pickModel(b.model);
   if (b.effort !== undefined) cfg.effort = pick(b.effort, EFFORTS);
   if (b.permissionMode !== undefined) cfg.permissionMode = pick(b.permissionMode, PERMS) ?? "default";
   if (b.refreshHours !== undefined) cfg.refreshHours = Math.max(0, Number(b.refreshHours) || 0);

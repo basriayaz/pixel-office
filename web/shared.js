@@ -108,7 +108,11 @@ function buildSegment(host, items, current, onChange) {
   return { set: (v) => btns.forEach((x) => x.classList.toggle("on", x.dataset.value === v)) };
 }
 
-const modelItems = () => PO.models.map((m) => ({ value: m, name: MODEL_INFO[m]?.name || m, desc: MODEL_INFO[m]?.desc || "", tag: MODEL_INFO[m]?.tier || "" }));
+// Claude models, then the models of the Codex account the machine is signed in to (another engine, another pool of limits).
+const modelItems = () => [
+  ...PO.models.map((m) => ({ value: m, name: MODEL_INFO[m]?.name || m, desc: MODEL_INFO[m]?.desc || "", tag: MODEL_INFO[m]?.tier || "" })),
+  ...(PO.codexModels || []).map((m) => ({ value: m.id, name: m.name, desc: m.desc, tag: "Codex" })),
+];
 const effortItems = () => PO.efforts.map((e) => ({ value: e, name: EFFORT_INFO[e]?.name || e }));
 const permItems = () => PO.permissions.map((p) => ({ value: p, name: PERM_INFO[p]?.name || p, desc: PERM_INFO[p]?.desc || "", tag: PERM_INFO[p]?.tag || "" }));
 

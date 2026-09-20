@@ -15,14 +15,26 @@ export interface Colleagues {
   discoveryBlock(): string | undefined;
   autoMoveBlock(): string | undefined;
   countDiscovery(): void;
+  mcpUrl(self: Employee): string; // where an engine that is a separate program reaches this employee's office tools
 }
 
 export const OFFICE_TOOLS = ["remember", "propose_idea", "list_ideas", "promote_idea", "review_idea", "list_colleagues", "message_colleague", "raise_hand", "share_note", "read_notes", "edit_note", "delete_note", "list_tasks", "update_task", "assign_task", "start_task", "colleague_activity"].map((n) => `mcp__office__${n}`);
 
 const text = (s: string, isError = false) => ({ content: [{ type: "text" as const, text: s }], ...(isError ? { isError: true } : {}) });
 
-// In-process MCP server giving one employee a view of, and a line to, the colleagues in the same office.
+// In-process MCP server giving one employee a view of, and a line to, the colleagues in the same office (Claude engine).
 export function officeServer(self: Employee, colleagues: Colleagues) {
+  return createSdkMcpServer({
+    name: "office",
+    version: "1.0.0",
+    instructions: t("server.office.instructions"),
+    alwaysLoad: true, // a dozen small tools: loading them up front is cheaper than a tool-search round trip on first use
+    tools: officeToolDefs(self, colleagues),
+  });
+}
+
+// The office tools of one employee. Served in-process to Claude, and over HTTP (mcp-http.ts) to engines that are separate programs.
+export function officeToolDefs(self: Employee, colleagues: Colleagues) {
   const others = () => colleagues.list().filter((e) => e !== self);
   const find = (to: string) => {
     const key = slug(to);
@@ -36,12 +48,7 @@ export function officeServer(self: Employee, colleagues: Colleagues) {
   };
   const taskLine = (k: Task) => `#${k.id} [${k.status}] ${k.title} — ${nameOf(k.owner)}${k.after?.length ? ` (${t("server.board.afterTag")} ${k.after.map((d) => "#" + d).join(", ")})` : ""}${k.notes.length ? ` (${t("server.board.lastNote")}: ${k.notes[k.notes.length - 1].text.slice(0, 160)})` : ""}`;
   const notManager = () => text(t("server.board.managerOnly"), true);
-  return createSdkMcpServer({
-    name: "office",
-    version: "1.0.0",
-    instructions: t("server.office.instructions"),
-    alwaysLoad: true, // a dozen small tools: loading them up front is cheaper than a tool-search round trip on first use
-    tools: [
+  return [
       tool("list_colleagues", t("server.office.listDesc"), {}, async () => {
         const rows = others().map((e) => `- ${e.cfg.name} (${e.cfg.role}) — ${e.status}`);
         return text(rows.length ? rows.join("\n") : t("server.office.none"));
@@ -276,6 +283,5 @@ export function officeServer(self: Employee, colleagues: Colleagues) {
           return text(t("server.office.replied", { name: target.cfg.name, text: answer }));
         },
       ),
-    ],
-  });
+  ];
 }

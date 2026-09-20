@@ -13,6 +13,8 @@ import {
 import type { Store } from "./store.js";
 import { t, getSettings } from "./runtime.js";
 import { officeServer, OFFICE_TOOLS, type Colleagues } from "./office-tools.js";
+import { isCodexModel, runCodexTurn, skillsIndex, skillFile, type CodexItem } from "./codex.js";
+import { listSkills, listProjectSkills } from "./agents.js";
 
 export type Status = "idle" | "working" | "waiting" | "error" | "sick";
 
@@ -134,6 +136,9 @@ export class Employee extends EventEmitter {
   private preamble = ""; // told to the model with the next ordinary message (e.g. "the meeting is over")
 
   private q?: Query;
+  private cx?: { kill: () => void };  // the Codex engine: one process per turn, present while its loop runs
+  private plain = new WeakMap<SDKUserMessage, { text: string; files: string[] }>(); // what a message is for an engine that takes text and image files
+  private cxTokens = new Map<string, number>(); // Codex reports usage summed over the whole thread: last total per thread
   private inbox: SDKUserMessage[] = [];
   private wake?: () => void;
   private generation = 0;
@@ -164,6 +169,8 @@ export class Employee extends EventEmitter {
     return [...this.pending.values()].map((p) => p.request);
   }
 
+  get engine(): "claude" | "codex" { return isCodexModel(this.cfg.model) ? "codex" : "claude"; }
+  private get running() { return !!this.q || !!this.cx; }
   get busy() { return this.status === "working" || this.status === "waiting"; }
   get currentTask() { return this.taskId; }
   get hasOfficeMessages() { return this.autoQueue.length > 0; }
@@ -178,9 +185,10 @@ export class Employee extends EventEmitter {
     this.push({ role: auto ? "auto" : "user", text, ts: Date.now(), ...(urls?.length ? { images: urls } : {}) });
     if (!this.sick) this.setStatus("working");
     const msg = userMsg(this.takePreamble() + text, images);
+    if (urls?.length) this.plain.set(msg, { text: "", files: urls.map((u) => this.store.attachmentPath(this.cfg.id, decodeURIComponent(u.split("/").pop() ?? "")) ?? "").filter(Boolean) });
     this.unanswered.push(msg);
     this.enqueue(msg);
-    if (!this.q && !this.sick) this.start();
+    if (!this.running && !this.sick) this.start();
   }
 
   setColleagues(c: Colleagues) {
@@ -218,7 +226,7 @@ export class Employee extends EventEmitter {
     const msg = userMsg(this.takePreamble() + body + "\n\n" + t("server.colleagueRules"));
     this.unanswered.push(msg);
     this.enqueue(msg);
-    if (!this.q && !this.sick) this.start();
+    if (!this.running && !this.sick) this.start();
     return true;
   }
 
@@ -349,7 +357,7 @@ export class Employee extends EventEmitter {
     const msg = userMsg(prompt, images);
     this.unanswered.push(msg);
     this.enqueue(msg);
-    if (!this.q) this.start();
+    if (!this.running) this.start();
     return new Promise<string>((resolve) => {
       const done = (reply: string) => { clearTimeout(timer); this.off("turn", done); this.meetingTurn = false; resolve(reply ?? ""); };
       const timer = setTimeout(() => done(""), 5 * 60e3);
@@ -386,7 +394,7 @@ export class Employee extends EventEmitter {
     this.push({ role: "system", text: t("server.recovered", { name: this.cfg.name }), ts: Date.now() });
     if (this.inbox.length) {
       this.setStatus("working");
-      if (this.q) { this.wake?.(); this.wake = undefined; } else this.start();
+      if (this.q) { this.wake?.(); this.wake = undefined; } else if (!this.cx) this.start();
     } else { this.setStatus("idle"); this.poke(); }
   }
 
@@ -397,6 +405,7 @@ export class Employee extends EventEmitter {
     try {
       await this.q?.interrupt();
     } catch {}
+    if (this.cx) { this.cx.kill(); this.inbox = []; }
     this.flushStream();
     this.unanswered = [];
     this.push({ role: "system", text: t("server.stopped"), ts: Date.now() });
@@ -428,6 +437,8 @@ export class Employee extends EventEmitter {
   // (model, effort, prompt, skills) while resuming the same conversation.
   async applyConfig(cfg: EmployeeConfig) {
     await this.interrupt();
+    // another engine cannot continue this one's conversation: the chat starts afresh, memory and notebook carry over
+    if (isCodexModel(cfg.model) !== isCodexModel(this.cfg.model)) { this.sessionId = undefined; this.store.setSession(this.cfg.id, undefined); this.context = 0; }
     this.cfg = cfg;
     this.stopQuery();
     this.emit("config");
@@ -490,6 +501,8 @@ export class Employee extends EventEmitter {
     this.wake?.();
     this.wake = undefined;
     this.q = undefined;
+    this.cx?.kill();
+    this.cx = undefined;
     this.inbox = [];
   }
 
@@ -523,6 +536,7 @@ export class Employee extends EventEmitter {
 
   private start() {
     const gen = this.generation;
+    if (this.engine === "codex") { void this.runCodex(gen); return; }
     this.costBase = this.cost; // a new Claude process counts its cost from zero
     this.context = 0;
     const compactAt = getSettings().compactAtTokens;
@@ -612,32 +626,91 @@ export class Employee extends EventEmitter {
         break;
       }
       case "result": {
-        this.flushStream();
-        const turn = this.turnTexts.join("\n\n");
-        this.turnTexts = [];
-        this.emit("turn", turn);
-        const wasInterrupted = this.interrupting;
-        this.interrupting = false;
-        if (m.subtype === "success") {
-          this.cost = this.costBase + m.total_cost_usd;
-          this.store.setMeta(this.cfg.id, "cost", this.cost);
-          this.recovered = false;
-          this.unanswered = [];
-        } else if (!wasInterrupted) {
-          const detail = "errors" in m && Array.isArray(m.errors) ? m.errors.join("; ") : m.subtype;
-          if (/No conversation found/i.test(detail) && !this.side && (this.taskId !== undefined || this.sessionId) && !this.recovered) {
-            this.recoverSession();
-            return;
-          }
-          this.push({ role: "system", text: t("server.turnError", { detail }), ts: Date.now() });
-        }
-        if (wasInterrupted) break;
-        this.emit("result", { cost: this.cost, durationMs: m.duration_ms, context: this.context });
-        if (this.pending.size === 0) this.setStatus("idle");
-        this.afterTurn();
+        if (m.subtype === "success") { this.cost = this.costBase + m.total_cost_usd; this.store.setMeta(this.cfg.id, "cost", this.cost); }
+        const detail = m.subtype === "success" ? undefined : "errors" in m && Array.isArray(m.errors) ? m.errors.join("; ") : m.subtype;
+        this.endTurn(detail, m.duration_ms, !!detail && /No conversation found/i.test(detail));
         break;
       }
     }
+  }
+
+  // The end of a turn, whichever engine ran it. `detail` = what went wrong, if anything.
+  private endTurn(detail: string | undefined, durationMs: number, sessionLost = false) {
+    this.flushStream();
+    const turn = this.turnTexts.join("\n\n");
+    this.turnTexts = [];
+    this.emit("turn", turn);
+    const wasInterrupted = this.interrupting;
+    this.interrupting = false;
+    if (!detail) {
+      this.recovered = false;
+      this.unanswered = [];
+    } else if (!wasInterrupted) {
+      if (sessionLost && !this.side && (this.taskId !== undefined || this.sessionId) && !this.recovered) {
+        this.recoverSession();
+        return;
+      }
+      this.push({ role: "system", text: t("server.turnError", { detail }), ts: Date.now() });
+    }
+    if (wasInterrupted) return;
+    this.emit("result", { cost: this.cost, durationMs, context: this.context });
+    if (this.pending.size === 0) this.setStatus("idle");
+    this.afterTurn();
+  }
+
+  // ---- Codex engine: a process per turn, the conversation kept by thread id ----
+  private async runCodex(gen: number) {
+    this.cx = { kill: () => {} };
+    while (this.generation === gen && !this.sick) {
+      const batch = this.inbox.splice(0); // what piled up is one turn, as it would be for a person
+      if (!batch.length) break;
+      const files = batch.flatMap((m) => this.plain.get(m)?.files ?? []);
+      const prompt = batch.map((m) => (typeof m.message.content === "string" ? m.message.content : m.message.content.map((b) => ("text" in b ? b.text : "")).join("\n"))).filter(Boolean).join("\n\n");
+      const task = this.taskId !== undefined ? this.colleagues?.board().tasks.find((x) => x.id === this.taskId) : undefined;
+      const thread = this.side ? undefined : this.taskId !== undefined ? task?.session : this.sessionId;
+      const mode = this.cfg.permissionMode ?? "default";
+      const started = Date.now();
+      const run = runCodexTurn({
+        cwd: this.cfg.cwd, prompt: prompt || "-", model: this.cfg.model!, effort: this.cfg.effort, thread, persist: !this.side, images: files,
+        instructions: this.buildPrompt() + this.codexExtras(),
+        sandbox: this.meetingTurn || mode === "plan" ? "read-only" : mode === "bypassPermissions" ? "full" : "workspace-write",
+        writableDirs: this.cfg.dir ? [this.cfg.dir] : [],
+        mcpUrl: this.colleagues?.mcpUrl(this),
+      }, {
+        onThread: (id) => {
+          if (this.generation !== gen) return;
+          this.model = this.cfg.model;
+          if (this.taskId !== undefined) this.colleagues?.board().markTask(this.taskId, { session: id });
+          else if (!this.side) { this.sessionId = id; this.store.setSession(this.cfg.id, id); }
+        },
+        onItemStarted: (item) => { if (this.generation === gen && item.type !== "agent_message" && item.type !== "reasoning") { const line = describeCodex(item); if (line) this.push({ role: "activity", text: line, ts: Date.now() }); } },
+        onItem: (item) => {
+          if (this.generation !== gen) return;
+          if (item.type === "agent_message" && item.text.trim()) { this.emit("chunk", item.text); this.emit("chunk_end"); this.push({ role: "assistant", text: item.text, ts: Date.now() }); }
+          else if (item.type === "error") this.push({ role: "system", text: t("server.turnError", { detail: item.message }), ts: Date.now() });
+        },
+      });
+      this.cx = { kill: run.kill };
+      const res = await run.done;
+      if (this.generation !== gen) return;
+      if (res.ok) {
+        // usage is summed over the thread: the difference is this turn, spread over its model calls
+        const key = (this.taskId !== undefined ? task?.session : this.sessionId) ?? "-";
+        const before = this.cxTokens.get(key) ?? 0;
+        this.cxTokens.set(key, res.inputTokens);
+        this.context = Math.round(Math.max(0, res.inputTokens - before) / Math.max(1, res.calls));
+      }
+      this.endTurn(res.ok ? undefined : res.error ?? "codex failed", Date.now() - started, !!res.notFound);
+    }
+    if (this.generation === gen) { this.cx = undefined; if (this.inbox.length && !this.sick) this.start(); }
+  }
+
+  // What Claude Code gives an employee by itself and Codex does not: their skills, by file.
+  private codexExtras(): string {
+    const own = this.cfg.pluginDir ? listSkills(this.cfg.pluginDir).map((s) => ({ ...s, file: skillFile(path.join(this.cfg.pluginDir!, "skills"), s.name) })) : [];
+    const project = listProjectSkills(this.cfg.cwd).map((s) => ({ name: s.name, description: s.description, file: path.join(s.dir, "SKILL.md") }));
+    const index = skillsIndex([...own, ...project]);
+    return index ? "\n\n" + t("server.codex.skills", { list: index }) : "";
   }
 
   private recoverSession() {
@@ -713,6 +786,14 @@ export class Employee extends EventEmitter {
     this.status = s;
     this.emit("status", s, reason);
   }
+}
+
+function describeCodex(item: CodexItem): string {
+  if (item.type === "command_execution") return t("server.tool.Bash", { v: item.command.replace(/^\/bin\/(ba|z)?sh -l?c /, "").replace(/^["']|["']$/g, "").slice(0, 120) });
+  if (item.type === "file_change") return (item.changes ?? []).map((c) => t(c.kind === "add" ? "server.tool.Write" : "server.tool.Edit", { v: c.path })).join("\n");
+  if (item.type === "web_search") return t("server.tool.WebSearch", { v: item.query ?? "" });
+  if (item.type === "mcp_tool_call") return item.server === "office" ? describeTool(`mcp__office__${item.tool}`, item.arguments ?? {}) : `${item.server}: ${item.tool}`;
+  return "";
 }
 
 function describeTool(name: string, input: Record<string, unknown>): string {

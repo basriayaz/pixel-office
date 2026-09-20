@@ -245,6 +245,9 @@
       "sectionDesc": "Altına yazılacak başlık (yoksa oluşturulur), ör. Kurallar, Tercihler, Kaynaklar",
       "known": "Bu zaten hafızanda var.",
       "saved": "Hafızana kaydedildi ({file}, şu an {chars} karakter)."
+    },
+    "codex": {
+      "skills": "## Yeteneklerin\nYetenek, belirli bir iş türü için talimatlar içeren bir dosyadır. Bir istek bunlardan birine uyuyorsa önce dosyasını oku (tam yolu verildi) ve ona uy:\n{list}"
     }
   },
   "rooms": {
@@ -573,7 +576,8 @@
       "connectorsSaved": "Kaydedildi. Bir sonraki mesajdan itibaren geçerli.",
       "connectorsNext": "Kaydedildi. Eldeki iş bitince geçerli olur.",
       "projectSkillTag": "projeden",
-      "projectSkillsHint": "\"projeden\" etiketli yetenekler çalışma klasöründe (.claude/skills) durur ve orada çalışan herkese kendiliğinden yüklenir; bunları projenin içinden düzenleyin."
+      "projectSkillsHint": "\"projeden\" etiketli yetenekler çalışma klasöründe (.claude/skills) durur ve orada çalışan herkese kendiliğinden yüklenir; bunları projenin içinden düzenleyin.",
+      "codexPermHint": "Codex modeli: durup size soramaz, bu yüzden buradaki seçim içinde çalıştığı çittir. \"Sadece plan\" = okur, hiçbir şeyi değiştirmez. \"Hiç sorma\" = çit yok. Diğerlerinin hepsi = çalışma klasöründe ve çalışanın kendi klasöründe dosya değiştirebilir, ağ erişimi vardır. Claude yetenekleri dosya olarak verilir, projenin CLAUDE.md'si okunur; claude.ai bağlayıcıları ve dolar maliyeti geçerli değildir (ChatGPT aboneliği kullanılır)."
     },
     "models": {
       "claude-opus-5": {

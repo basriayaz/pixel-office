@@ -245,6 +245,9 @@
       "sectionDesc": "Heading to file it under (created if missing), e.g. Rules, Preferences, Sources",
       "known": "That is already in your memory.",
       "saved": "Saved to your memory ({file}, {chars} characters now)."
+    },
+    "codex": {
+      "skills": "## Your skills\nA skill is a file with instructions for one kind of work. When a request matches one of these, read its file first (the full path is given) and follow it:\n{list}"
     }
   },
   "rooms": {
@@ -573,7 +576,8 @@
       "connectorsSaved": "Saved. Applies from the next message.",
       "connectorsNext": "Saved. Applies once the current work is finished.",
       "projectSkillTag": "from the project",
-      "projectSkillsHint": "Skills marked \"from the project\" live in the working folder (.claude/skills) and are loaded by themselves for everybody who works there; edit them in the project."
+      "projectSkillsHint": "Skills marked \"from the project\" live in the working folder (.claude/skills) and are loaded by themselves for everybody who works there; edit them in the project.",
+      "codexPermHint": "Codex model: it cannot stop and ask you, so this choice is the fence it works inside. \"Plan only\" = reads, changes nothing. \"Never ask\" = no fence at all. Everything else = may change files in the working folder and the employee's own folder, with network access. Claude skills are handed over as files, the project's CLAUDE.md is read; claude.ai connectors and the dollar cost do not apply (the ChatGPT plan is used)."
     },
     "models": {
       "claude-opus-5": {

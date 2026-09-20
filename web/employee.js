@@ -31,7 +31,8 @@ async function load() {
     settings.model = detail.configuredModel ?? "";
     settings.effort = detail.effort ?? "";
     settings.perm = detail.permissionMode;
-    buildChoiceCards($("fModel"), [{ value: "", name: t("ui.profile.modelDefault"), desc: t("ui.profile.modelDefaultDesc"), tag: "" }, ...modelItems()], settings.model, (v) => { settings.model = v; });
+    buildChoiceCards($("fModel"), [{ value: "", name: t("ui.profile.modelDefault"), desc: t("ui.profile.modelDefaultDesc"), tag: "" }, ...modelItems()], settings.model, (v) => { settings.model = v; codexHint(); });
+    codexHint();
     buildSegment($("fEffort"), [{ value: "", name: t("ui.profile.effortDefault") }, ...effortItems()], settings.effort, (v) => { settings.effort = v; $("effortHint").textContent = EFFORT_INFO[v]?.desc || ""; });
     $("effortHint").textContent = EFFORT_INFO[settings.effort]?.desc || "";
     buildChoiceCards($("fPerm"), permItems(), settings.perm, (v) => { settings.perm = v; });
@@ -80,6 +81,9 @@ function renderHead() {
     <div><b>$${(detail.cost || 0).toFixed(2)}</b><span>${t("ui.profile.stats.cost")}</span></div>
     <div><b>${detail.stats.lastActivity ? new Date(detail.stats.lastActivity).toLocaleDateString(LOCALE_TAG) : "—"}</b><span>${t("ui.profile.stats.last")}</span></div>`;
 }
+
+// A Codex model cannot stop and ask: the permission choice becomes the fence it works inside.
+function codexHint() { $("codexPermHint").hidden = !(PO.codexModels || []).some((m) => m.id === settings.model); }
 
 // claude.ai connectors: all come along by default; each switch keeps one out of this employee's sessions.
 let connectors = null;

@@ -2,6 +2,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { isObject, readJsonSafe, writeJsonAtomicSync } from "./fsutil.js";
 
 // Package root (where web/, locales/, templates/ live) — works from src/ (tsx) and dist/ (built).
 export const PKG_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
@@ -94,14 +95,14 @@ export const configPath = (R: Root) => path.join(R.root, "config.json");
 
 export type RawConfig = Record<string, unknown> & { offices?: Array<Record<string, unknown>> };
 
+// A config.json that does not parse (a typo while editing it by hand, a crash mid-write) never stops the server: the previous
+// version (config.json.bak) is used and the broken file is kept as config.json.corrupt-<time>, with a loud message in the log.
 export function readRawConfig(R: Root): RawConfig {
-  const file = configPath(R);
-  return fs.existsSync(file) ? JSON.parse(fs.readFileSync(file, "utf8")) : {};
+  return readJsonSafe<RawConfig>(configPath(R), () => ({}), { validate: isObject, label: "config" });
 }
 
 export function writeRawConfig(R: Root, raw: RawConfig) {
-  fs.mkdirSync(R.root, { recursive: true });
-  fs.writeFileSync(configPath(R), JSON.stringify(raw, null, 2) + "\n");
+  writeJsonAtomicSync(configPath(R), raw, { space: 2 });
 }
 
 export const expandHome = (p: string) => String(p).replace(/^~(?=$|[\\/])/, os.homedir());
@@ -156,6 +157,22 @@ export function loadSettings(R: Root): OfficeSettings {
   };
 }
 
+// Project mode keeps .pixel-office/ in git. The crash-safe writes leave files beside the ones they protect (config.json.bak,
+// short-lived *.tmp-*, and *.corrupt-* copies of a broken file): a .gitignore inside .pixel-office/ keeps them out of
+// `git status` without touching the project's own .gitignore. Also run at every start, for projects set up before it existed.
+const PROJECT_IGNORES = ["*.bak", "*.tmp-*", "*.corrupt-*"];
+export function ensureProjectIgnores(R: Root) {
+  if (R.mode !== "project" || !fs.existsSync(R.root)) return;
+  const gi = path.join(R.root, ".gitignore");
+  try {
+    const existing = fs.existsSync(gi) ? fs.readFileSync(gi, "utf8") : "";
+    const missing = PROJECT_IGNORES.filter((l) => !existing.split(/\r?\n/).includes(l));
+    if (!missing.length) return;
+    const head = existing ? "" : "# written by pixel-office: backup, temp and corrupt copies of its own files\n";
+    fs.writeFileSync(gi, existing + (existing && !existing.endsWith("\n") ? "\n" : "") + head + missing.join("\n") + "\n");
+  } catch {}
+}
+
 // Creates config.json + employees/_template under the root. Project mode also git-ignores the data dir.
 export function initRoot(R: Root, opts: { locale?: string; memoryInGit?: boolean } = {}) {
   const locale = opts.locale ?? "en";
@@ -177,6 +194,7 @@ export function initRoot(R: Root, opts: { locale?: string; memoryInGit?: boolean
     const existing = fs.existsSync(gi) ? fs.readFileSync(gi, "utf8") : "";
     const missing = lines.filter((l) => !existing.split(/\r?\n/).includes(l));
     if (missing.length) fs.writeFileSync(gi, existing + (existing && !existing.endsWith("\n") ? "\n" : "") + missing.join("\n") + "\n");
+    ensureProjectIgnores(R);
   }
   return { configFile: cfg, employeesDir: path.join(R.base, d.employeesDir) };
 }

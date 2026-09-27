@@ -9,9 +9,10 @@ import {
   type PermissionResult,
   type PermissionUpdate,
   type PermissionMode,
+  type HookJSONOutput,
 } from "@anthropic-ai/claude-agent-sdk";
 import type { Store } from "./store.js";
-import { t, getSettings } from "./runtime.js";
+import { t, tget, getSettings } from "./runtime.js";
 import { officeServer, OFFICE_TOOLS, type Colleagues } from "./office-tools.js";
 import { isCodexModel, runCodexTurn, skillsIndex, skillFile, type CodexItem } from "./codex.js";
 import { listSkills, listProjectSkills } from "./agents.js";
@@ -42,6 +43,7 @@ export interface EmployeeConfig {
   worktree?: boolean; // works in a private git worktree (branch po/<id>) so parallel code changes cannot collide
   baseCwd?: string;   // the configured working folder; `cwd` is the worktree inside it when `worktree` is on
   connectorsOff?: string[]; // claude.ai connectors (by server name) this employee does not get; all others come along by default
+  autoRefresh?: boolean;    // the timed knowledge refresh runs for this employee (off unless switched on: it spends tokens nobody asked for)
 }
 
 export interface Connector { name: string; status: string; tools: number | null }
@@ -72,6 +74,8 @@ export interface ChatMessage {
   ts: number;
   from?: string;
   images?: string[]; // URLs of pasted images shown with the message
+  id?: string;       // boss messages: lets the client refer to one (undo while it is queued)
+  queued?: boolean;  // a boss message waiting for the running turn to end; not seen by any model yet
 }
 
 export interface ImageInput {
@@ -118,8 +122,43 @@ const userMsg = (text: string, images?: ImageInput[]): SDKUserMessage => ({
   parent_tool_use_id: null,
 });
 
+// The text of a message, without its images.
+const plainText = (m: SDKUserMessage): string =>
+  typeof m.message.content === "string" ? m.message.content : m.message.content.map((b) => ("text" in b ? b.text : "")).filter(Boolean).join("\n");
+
+// A string that may not be in the locale files yet: the English text stands in until it is added.
+function tt(key: string, fallback: string, vars: Record<string, string | number> = {}): string {
+  if (typeof tget(key) === "string") return t(key, vars);
+  return fallback.replace(/\{(\w+)\}/g, (_, k) => (k in vars ? String(vars[k]) : `{${k}}`));
+}
+
+const clip = (s: string, n: number) => (s.length > n ? s.slice(0, n) + "…" : s);
+const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
+
 // A memory file is paid for in every session; past this size the employee is asked to condense it.
 const MEMORY_SOFT_LIMIT = 8000;
+
+// Where a message is delivered: the employee's chat session, the running board task's own session, or the throw-away refresh session.
+type Target = "chat" | "task" | "side";
+// A boss message waiting for the running turn to end. It is already in the chat history (flagged `queued`) so the boss sees it.
+interface QueuedBoss { id: string; text: string; ts: number; auto: boolean; images?: ImageInput[]; files?: string[]; entry: ChatMessage }
+// What the client is told about the queue.
+export interface QueuedInfo { id: string; text: string; ts: number; images?: string[]; task: number | null }
+
+// Pasted images read back from their attachment files (a queued message restored after a restart).
+const EXT_TYPES: Record<string, ImageInput["media_type"]> = { ".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".gif": "image/gif", ".webp": "image/webp" };
+function imagesFromFiles(files?: string[]): ImageInput[] | undefined {
+  const out: ImageInput[] = [];
+  for (const f of files ?? []) {
+    const media_type = EXT_TYPES[path.extname(f).toLowerCase()];
+    if (!media_type) continue;
+    try { out.push({ media_type, data: fs.readFileSync(f).toString("base64") }); } catch {}
+  }
+  return out.length ? out : undefined;
+}
+
+const newId = () => `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+const taskOf = (key?: string) => (key?.startsWith("task:") ? Number(key.slice(5)) : undefined);
 
 export class Employee extends EventEmitter {
   status: Status = "idle";
@@ -129,33 +168,51 @@ export class Employee extends EventEmitter {
   context = 0; // tokens in the model's window at its last call: what every further step of this conversation costs to re-read
   model?: string;
   lastActivity = 0;
+  lastBossAt = 0; // when the boss last wrote to this employee (for "do not refresh while the boss is around")
   sickUntil = 0;
   inMeeting = false;
   private sickTimer?: NodeJS.Timeout;
   private meetingTurn = false;
-  private preamble = ""; // told to the model with the next ordinary message (e.g. "the meeting is over")
+  private preamble = ""; // told to the model with the next chat message (e.g. "the meeting is over")
 
   private q?: Query;
   private cx?: { kill: () => void };  // the Codex engine: one process per turn, present while its loop runs
+  private runningFor?: string;        // the session the running process belongs to: "chat", "task:<id>" or "side"
   private plain = new WeakMap<SDKUserMessage, { text: string; files: string[] }>(); // what a message is for an engine that takes text and image files
   private cxTokens = new Map<string, number>(); // Codex reports usage summed over the whole thread: last total per thread
   private inbox: SDKUserMessage[] = [];
+  private carry: SDKUserMessage[] = []; // taken out of the inbox of a process that was closed: they go to the next one
   private wake?: () => void;
   private generation = 0;
   private pending = new Map<string, PendingAsk>();
   private streamText = "";
-  private unanswered: SDKUserMessage[] = [];
+  private unanswered: SDKUserMessage[] = []; // delivered in the turn that is running now and not answered yet
+  private turnOpen = false;                  // a delivered message has not had its result yet
+  private turnEndWaiters: Array<() => void> = [];
   private recovered = false;
   private interrupting = false;
+  private interruptJob?: { resume: boolean; done: Promise<void> };
+  private disposed = false;
   private colleagues?: Colleagues;
   private turnTexts: string[] = [];
   private costBase = 0;    // spent by earlier Claude processes of this employee
   private taskId?: number; // the board task being worked on, in a clean session of its own
   private taskQueue: Array<{ id: number; from?: Employee }> = [];
+  private taskNotesSeen = new Map<number, number>(); // task id -> how many notes it had when this employee last began it
+  private taskTalk: string[] = [];  // what the boss said inside the task session, and the answers: handed to the chat when the task ends
+  private taskTalkFor?: number;
+  private taskTurnHasBoss = false;
   private side?: "refresh"; // a throw-away session that leaves no trace in the chat session
+  private refreshPrev?: number; // lastRefresh before this refresh: put back when the boss cancels it, so it runs again later
+  private bossQueue: QueuedBoss[] = []; // boss messages held until the running turn ends (never dropped into the middle of a turn)
   private held: Array<{ from: Employee; text: string; resolve?: (reply: string) => void }> = []; // colleague messages waiting for the running turn to end
   private autoQueue: Array<{ text: string; still?: () => boolean }> = []; // office messages (e.g. "discovery round") that wait for a free moment instead of cutting into a turn
   private digest: string[] = []; // board news for the project manager, handed over with the next message instead of costing a turn each
+  private pendingRestart = false;       // new settings wait for the end of the running turn
+  private pendingEngineSwitch = false;
+  private recapNext?: string;           // the chat session is new: the next chat message carries a recap of the chat (the reason)
+  private compacting = false;
+  private announced: Status = "idle"; // the status listeners last heard
 
   constructor(public cfg: EmployeeConfig, private store: Store) {
     super();
@@ -163,6 +220,14 @@ export class Employee extends EventEmitter {
     this.sessionId = store.getSession(cfg.id);
     this.cost = store.getMeta<number>(cfg.id, "cost") ?? 0;
     this.lastActivity = [...this.history].reverse().find((m) => m.role === "user" || m.role === "assistant")?.ts ?? 0;
+    this.lastBossAt = [...this.history].reverse().find((m) => m.role === "user")?.ts ?? 0;
+    // boss messages that were still waiting when the office stopped: they wait again and go out with the next delivery
+    // (index.ts pokes every employee with a restored queue once the office is up). Pasted images are read back from their
+    // attachment files: the Claude engine takes them inline, Codex by file.
+    for (const m of this.history) if (m.queued && m.id) {
+      const files = this.filesOf(m.images);
+      this.bossQueue.push({ id: m.id, text: m.text, ts: m.ts, auto: m.role === "auto", entry: m, files, images: imagesFromFiles(files) });
+    }
   }
 
   get pendingAsks(): AskRequest[] {
@@ -173,26 +238,111 @@ export class Employee extends EventEmitter {
   private get running() { return !!this.q || !!this.cx; }
   get busy() { return this.status === "working" || this.status === "waiting"; }
   get currentTask() { return this.taskId; }
+  // This employee has the board task in hand: working on it (or holding its session between turns), or queued to begin it.
+  holdsTask(id: number) { return this.taskId === id || this.taskQueue.some((q) => q.id === id); }
   get hasOfficeMessages() { return this.autoQueue.length > 0; }
   get hasNews() { return this.digest.length > 0; }
+  get isCompacting() { return this.compacting; }
+  // Boss messages waiting for the running turn to end, oldest first.
+  get queue(): QueuedInfo[] {
+    return this.bossQueue.map((b) => ({ id: b.id, text: b.text, ts: b.ts, ...(b.entry.images?.length ? { images: b.entry.images } : {}), task: this.taskId ?? null }));
+  }
+
+  // The automatic refresh may start: nothing runs or waits, and the boss has been quiet for `quietMs`.
+  canAutoRefresh(quietMs: number, now = Date.now()): boolean {
+    return !this.busy && !this.sick && !this.inMeeting && !this.side && this.taskId === undefined && !this.bossQueue.length && now - this.lastBossAt >= quietMs;
+  }
+
+  // ---- routing: every decision about where a message goes is made here ----
+  // "hold" = wait for the end of the running turn (or the meeting, or the recovery); "task" = the board task's own session;
+  // "chat" = the chat session. A task session that is finished is closed on the way, so what follows goes to the chat.
+  private routeFor(kind: "boss" | "colleague" | "office" | "meeting"): "hold" | "chat" | "task" {
+    if (kind === "meeting") return this.busy ? "hold" : "chat"; // meetings always talk in the chat session
+    if (this.sick || this.inMeeting || this.busy) return "hold";
+    this.leaveFinishedTask();
+    if (this.taskId !== undefined) return kind === "office" ? "hold" : "task";
+    return "chat";
+  }
+
+  // The one place a message is handed to an engine. A process that belongs to another session is closed first
+  // (whatever it had not taken yet is carried over to the next one).
+  private dispatch(target: Target, text: string, o: { images?: ImageInput[]; files?: string[]; preamble?: boolean } = {}) {
+    const key = target === "task" ? `task:${this.taskId}` : target;
+    if (!this.turnOpen) this.applyPending();
+    if (this.running && this.runningFor !== key) this.stopQuery();
+    const msg = userMsg((o.preamble ? this.takePreamble() : "") + text, o.images);
+    if (o.files?.length) this.plain.set(msg, { text: "", files: o.files });
+    if (!this.sick) this.setStatus("working");
+    this.turnOpen = true;
+    this.unanswered.push(msg);
+    this.enqueue(msg);
+    if (!this.running) this.start(key);
+  }
 
   send(text: string, auto = false, images?: ImageInput[]) {
-    this.leaveFinishedTask();
     const urls = images?.map((im) => {
       const name = this.store.saveAttachment(this.cfg.id, Buffer.from(im.data, "base64"), im.media_type.split("/")[1].replace("jpeg", "jpg"));
       return `/attachments/${encodeURIComponent(this.cfg.officeId)}/${encodeURIComponent(this.cfg.id)}/${name}`;
     });
-    this.push({ role: auto ? "auto" : "user", text, ts: Date.now(), ...(urls?.length ? { images: urls } : {}) });
-    if (!this.sick) this.setStatus("working");
-    const msg = userMsg(this.takePreamble() + text, images);
-    if (urls?.length) this.plain.set(msg, { text: "", files: urls.map((u) => this.store.attachmentPath(this.cfg.id, decodeURIComponent(u.split("/").pop() ?? "")) ?? "").filter(Boolean) });
-    this.unanswered.push(msg);
-    this.enqueue(msg);
-    if (!this.running && !this.sick) this.start();
+    const entry: ChatMessage = { role: auto ? "auto" : "user", text, ts: Date.now(), id: newId(), ...(urls?.length ? { images: urls } : {}) };
+    const item: QueuedBoss = { id: entry.id!, text, ts: entry.ts, auto, images, files: this.filesOf(urls), entry };
+    if (!auto) {
+      this.lastBossAt = entry.ts;
+      // the boss comes first: a refresh can always be done again later, a lost message cannot
+      if (this.side) this.abandonSide();
+    }
+    const route = this.routeFor("boss");
+    if (route === "hold") entry.queued = true;
+    this.push(entry);
+    this.bossQueue.push(item);
+    if (route === "hold") { this.emitQueue(); return; }
+    this.deliverBoss(route);
+  }
+
+  // Undo: a queued boss message is taken back before it was delivered.
+  unqueue(msgId: string): boolean {
+    const i = this.bossQueue.findIndex((b) => b.id === msgId);
+    if (i < 0) return false;
+    const [b] = this.bossQueue.splice(i, 1);
+    const at = this.history.indexOf(b.entry);
+    if (at >= 0) { this.history.splice(at, 1); this.store.saveHistory(this.cfg.id, this.history); }
+    this.emit("message_removed", msgId);
+    this.emitQueue();
+    return true;
+  }
+
+  // Everything the boss queued goes out as one message, in the order it was written.
+  private deliverBoss(target: "chat" | "task") {
+    const items = this.bossQueue.splice(0);
+    if (!items.length) return;
+    let changed = false;
+    for (const b of items) if (b.entry.queued) { delete b.entry.queued; changed = true; }
+    if (changed) this.store.saveHistory(this.cfg.id, this.history);
+    this.emitQueue();
+    if (target === "task") {
+      this.noteTaskTalk();
+      for (const b of items) this.taskTalk.push(`${t("server.meeting.boss")}: ${b.text}`);
+      this.taskTurnHasBoss = true;
+    }
+    this.dispatch(target, items.map((b) => b.text).filter(Boolean).join("\n\n"), {
+      images: items.flatMap((b) => b.images ?? []), files: items.flatMap((b) => b.files ?? []), preamble: target === "chat",
+    });
+  }
+
+  private emitQueue() { this.emit("queue", this.queue); }
+
+  private filesOf(urls?: string[]): string[] | undefined {
+    const files = urls?.map((u) => this.store.attachmentPath(this.cfg.id, decodeURIComponent(u.split("/").pop() ?? "")) ?? "").filter(Boolean);
+    return files?.length ? files : undefined;
   }
 
   setColleagues(c: Colleagues) {
     this.colleagues = c;
+  }
+
+  // The office's data moved (e.g. one office became several): history, session and meta are written through the new store from now on.
+  setStore(store: Store) {
+    this.store = store;
   }
 
   // Activity line in this employee's chat (e.g. "forwarded to X").
@@ -204,7 +354,6 @@ export class Employee extends EventEmitter {
   // While a turn is running (or a meeting is on) it waits: a message dropped into the middle of a turn reaches the model
   // inside a tool result, where it looks like an injection and gets ignored. Everything that piled up arrives as one message.
   sendFromColleague(from: Employee, text: string, wait: boolean): Promise<string> {
-    this.leaveFinishedTask();
     this.push({ role: "colleague", text, ts: Date.now(), from: from.cfg.name });
     const reply = wait ? new Promise<string>((resolve) => {
       let open = true;
@@ -212,21 +361,19 @@ export class Employee extends EventEmitter {
       const timer = setTimeout(() => once(""), 10 * 60e3);
       this.held.push({ from, text, resolve: once });
     }) : (this.held.push({ from, text }), Promise.resolve(""));
-    if (!this.busy && !this.inMeeting) this.deliverHeld();
+    this.deliverHeld();
     return reply;
   }
 
   private deliverHeld(): boolean {
     if (!this.held.length) return false;
+    const route = this.routeFor("colleague");
+    if (route === "hold") return false;
     const batch = this.held.splice(0);
     const waiters = batch.filter((h) => h.resolve);
     if (waiters.length) this.once("turn", (reply: string) => { for (const w of waiters) w.resolve!(reply); });
     const body = batch.map((h) => t("server.colleagueMsg", { name: h.from.cfg.name, role: h.from.cfg.role, text: h.text })).join("\n\n");
-    if (!this.sick) this.setStatus("working");
-    const msg = userMsg(this.takePreamble() + body + "\n\n" + t("server.colleagueRules"));
-    this.unanswered.push(msg);
-    this.enqueue(msg);
-    if (!this.running && !this.sick) this.start();
+    this.dispatch(route, body + "\n\n" + t("server.colleagueRules"), { preamble: route === "chat" });
     return true;
   }
 
@@ -252,35 +399,80 @@ export class Employee extends EventEmitter {
     const board = this.colleagues?.board();
     const k = board?.tasks.find((x) => x.id === id);
     if (!board || !k || k.status === "done" || k.owner !== this.cfg.id) return false;
-    this.stopQuery();
     this.taskId = id;
+    if (this.taskTalkFor !== id) { this.taskTalk = []; this.taskTalkFor = id; }
     this.setStatus("working"); // before the board hears about it: its listeners must find this employee busy
-    const back = k.session ? k.notes[k.notes.length - 1]?.text : undefined; // sent back (e.g. from review): same session, plus what was said
+    const back = k.session ? this.sendBackNote(k) : undefined; // sent back (e.g. from review): same session, plus what was said
     board.updateTask(id, { status: "doing" }, from?.cfg.id ?? "user");
+    this.taskNotesSeen.set(id, k.notes.length);
     this.push({ role: "system", text: t(k.session ? "server.task.resumed" : "server.task.cleanSession", { id }), ts: Date.now() });
     const text = t("server.board.taskMessage", { id, title: k.title, detail: k.detail || "-" })
       + (k.kind === "discovery" ? "\n\n" + t("server.cycle.discoveryTask") : "")
       + (from ? "\n\n" + t("server.task.startedBy", { name: from.cfg.name }) : "")
       + (back ? "\n\n" + t("server.task.backWith", { note: back }) : "");
     this.push({ role: from ? "colleague" : "user", text, ts: Date.now(), ...(from ? { from: from.cfg.name } : {}) });
-    this.setStatus("working");
-    const msg = userMsg(text);
-    this.unanswered.push(msg);
-    this.enqueue(msg);
-    this.start();
+    this.dispatch("task", text);
     return true;
   }
 
-  // Back to the chat session once the task is no longer "doing"; the chat learns the outcome in two lines.
+  // The note a task came back with, if it really is one: written since this employee last began the task, by somebody else
+  // (a reviewer, the boss), and not the office's own "stopped" or error line. A stop or a meeting pause is not a send-back.
+  private sendBackNote(k: { id: number; notes: Array<{ by: string; text: string }> }): string | undefined {
+    const last = k.notes[k.notes.length - 1];
+    if (!last) return undefined;
+    const seen = this.taskNotesSeen.get(k.id);
+    if (seen !== undefined && k.notes.length <= seen) return undefined;
+    if (last.by === this.cfg.id || last.by === "system") return undefined;
+    if (last.text === tt("server.task.stoppedByBoss", "Stopped by the boss; back to todo.").trim()) return undefined;
+    return last.text;
+  }
+
+  private noteTaskTalk() {
+    if (this.taskId !== undefined && this.taskTalkFor !== this.taskId) { this.taskTalk = []; this.taskTalkFor = this.taskId; }
+  }
+
+  // The chat learns how the task went, and everything the boss said inside the task session, word for word.
+  private handBack(id: number) {
+    const k = this.colleagues?.board().tasks.find((x) => x.id === id);
+    let note = t("server.task.backNote", { id, title: k?.title ?? "", status: k?.status ?? "-", note: k?.notes[k.notes.length - 1]?.text.slice(0, 600) ?? "-" });
+    if (this.taskTalkFor === id && this.taskTalk.length) {
+      note += "\n" + tt("server.task.bossDuringTask", "[While you worked on task #{id} in its work session, this was said there. The boss expects you to remember it:]\n{talk}", { id, talk: this.taskTalk.join("\n\n") });
+    }
+    this.taskTalk = [];
+    this.taskTalkFor = undefined;
+    this.addPreamble(note);
+  }
+
+  // Back to the chat session once the task is no longer "doing".
   private leaveFinishedTask(): boolean {
     if (this.taskId === undefined || this.busy) return false;
     const k = this.colleagues?.board().tasks.find((x) => x.id === this.taskId);
     if (k && k.status === "doing" && k.owner === this.cfg.id) return false;
-    const note = t("server.task.backNote", { id: this.taskId, title: k?.title ?? "", status: k?.status ?? "-", note: k?.notes[k.notes.length - 1]?.text.slice(0, 600) ?? "-" });
-    this.preamble = this.preamble ? this.preamble + "\n" + note : note;
+    const id = this.taskId;
     this.taskId = undefined;
+    this.handBack(id);
     this.stopQuery();
     return true;
+  }
+
+  // The boss stopped the task's turn: the task goes back to "todo" (or, for a meeting, waits in the queue to be resumed).
+  private stopTask(mode: "todo" | "requeue") {
+    const id = this.taskId;
+    if (id === undefined) return;
+    this.taskId = undefined;
+    this.stopQuery();
+    if (mode === "requeue") {
+      if (!this.taskQueue.some((q) => q.id === id)) this.taskQueue.unshift({ id });
+      return;
+    }
+    this.taskQueue = this.taskQueue.filter((q) => q.id !== id);
+    const board = this.colleagues?.board();
+    const k = board?.tasks.find((x) => x.id === id);
+    if (board && k && k.status === "doing") {
+      board.markTask(id, { autoStart: null }); // stopped means stopped: it does not begin again by itself
+      board.updateTask(id, { status: "todo", note: tt("server.task.stoppedByBoss", "Stopped by the boss; back to todo.") }, "user");
+    }
+    this.handBack(id);
   }
 
   // Something changed while this employee sat idle (a task was closed from the panel, the meeting ended, they recovered).
@@ -290,10 +482,15 @@ export class Employee extends EventEmitter {
     this.afterTurn();
   }
 
+  // The turn is over: what waited goes out now, the boss first.
   private afterTurn() {
-    if (this.inMeeting || this.busy) return;
-    if (this.side) { this.side = undefined; this.stopQuery(); }
+    if (this.disposed || this.inMeeting || this.busy || this.sick) return;
+    if (this.side) { this.side = undefined; this.stopQuery(true); }
     this.leaveFinishedTask();
+    if (this.bossQueue.length) {
+      const route = this.routeFor("boss");
+      if (route !== "hold") { this.deliverBoss(route); return; }
+    }
     while (this.taskId === undefined && this.taskQueue.length) {
       const next = this.taskQueue.shift()!;
       if (this.beginTask(next.id, next.from)) return;
@@ -320,48 +517,101 @@ export class Employee extends EventEmitter {
 
   // Self-refresh in a throw-away session: tidying the memory file does not need the whole chat behind it.
   refresh(): boolean {
-    if (this.busy || this.sick || this.inMeeting || this.taskId !== undefined || this.side) return false;
-    this.stopQuery();
+    if (this.busy || this.sick || this.inMeeting || this.taskId !== undefined || this.side || this.bossQueue.length) return false;
+    this.refreshPrev = this.store.getMeta<number>(this.cfg.id, "lastRefresh") ?? 0;
     this.side = "refresh";
     const prompt = t("server.refreshPrompt");
     this.push({ role: "auto", text: prompt, ts: Date.now() });
-    this.setStatus("working");
     const mine = this.colleagues?.board().tasks.filter((k) => k.owner === this.cfg.id && k.notes.length).slice(-8)
       .map((k) => `- #${k.id} ${k.title} [${k.status}]: ${k.notes[k.notes.length - 1].text.replace(/\s+/g, " ").slice(0, 300)}`) ?? [];
     const chat = this.history.filter((m) => m.role === "user" || m.role === "assistant").slice(-12)
       .map((m) => `- ${m.role === "user" ? t("server.meeting.boss") : this.cfg.name}: ${m.text.replace(/\s+/g, " ").slice(0, 300)}`);
-    const msg = userMsg(prompt + "\n\n" + t("server.refreshRecent", { tasks: mine.join("\n") || "-", chat: chat.join("\n") || "-" }));
-    this.unanswered.push(msg);
-    this.enqueue(msg);
-    this.start();
+    this.dispatch("side", prompt + "\n\n" + t("server.refreshRecent", { tasks: mine.join("\n") || "-", chat: chat.join("\n") || "-" }));
     return true;
+  }
+
+  // The boss wrote during a refresh: the refresh is dropped (it runs again at a quieter moment) and the boss is answered in the chat.
+  private abandonSide() {
+    if (!this.side) return;
+    this.side = undefined;
+    this.stopQuery(true);
+    this.rejectPending(t("server.cancelled"));
+    this.unanswered = [];
+    this.turnTexts = [];
+    this.streamText = "";
+    this.emit("chunk_end");
+    this.closeTurn("");
+    this.store.setMeta(this.cfg.id, "lastRefresh", this.refreshPrev ?? 0);
+    this.push({ role: "activity", text: tt("server.refreshCancelled", "Knowledge refresh cancelled because the boss wrote; it will run again at a quieter moment."), ts: Date.now() });
+    this.setStatus("idle");
   }
 
   get sick() { return this.status === "sick"; }
   get inMeetingTurn() { return this.meetingTurn; }
 
-  // Notes for the chat session only: a task or refresh session has no use for them.
+  private addPreamble(note: string) {
+    this.preamble = this.preamble ? this.preamble + "\n" + note : note;
+  }
+
+  // Notes for the chat session, taken with the next chat message.
   private takePreamble(): string {
-    if (this.taskId !== undefined || this.side) return "";
-    const parts = [this.preamble, this.digest.length ? t("server.board.digest", { list: this.digest.map((x) => "- " + x).join("\n") }) : ""].filter(Boolean);
+    const parts = [
+      this.recapNext ? this.chatRecap(this.recapNext) : "",
+      this.preamble,
+      this.digest.length ? t("server.board.digest", { list: this.digest.map((x) => "- " + x).join("\n") }) : "",
+    ].filter(Boolean);
+    this.recapNext = undefined;
     this.preamble = "";
     this.digest = [];
     return parts.length ? parts.join("\n\n") + "\n\n" : "";
   }
 
+  // A new chat session knows nothing of the chat the boss sees: a short recap goes with its first message.
+  private chatRecap(why: string): string {
+    const who = (m: ChatMessage) => (m.role === "user" ? t("server.meeting.boss") : m.role === "colleague" ? m.from ?? "?" : this.cfg.name);
+    const chat = this.history.filter((m) => (m.role === "user" || m.role === "assistant" || m.role === "colleague") && !m.queued).slice(-20)
+      .map((m) => `- ${who(m)}: ${clip(m.text.replace(/\s+/g, " "), 400)}`);
+    const tasks = this.colleagues?.board().tasks.filter((k) => k.owner === this.cfg.id && k.status !== "done").slice(-10)
+      .map((k) => `- #${k.id} ${k.title} [${k.status}]`) ?? [];
+    return tt("server.recap", "[Note: this is a new work session; the previous one could not be continued ({why}). This is what came before, so you can go on without asking the boss again.\nRecent lines of the chat:\n{chat}\nYour open board tasks:\n{tasks}]",
+      { why, chat: chat.join("\n") || "-", tasks: tasks.join("\n") || "-" });
+  }
+
+  private taskRecap(id: number): string {
+    const k = this.colleagues?.board().tasks.find((x) => x.id === id);
+    const notes = k?.notes.slice(-6).map((n) => `- ${clip(n.text.replace(/\s+/g, " "), 500)}`) ?? [];
+    return tt("server.taskRecap", "[Note: the earlier work session of this task could not be continued, so this one starts fresh. Notes on the task so far:\n{notes}]", { notes: notes.join("\n") || "-" });
+  }
+
   // One turn of a meeting: the prompt and the answer stay out of this employee's own chat; resolves with what they said.
-  sendMeeting(prompt: string, images?: ImageInput[]): Promise<string> {
+  // A chat turn that is still running finishes first, so its reply is not taken for the meeting answer (and the other way round).
+  async sendMeeting(prompt: string, images?: ImageInput[]): Promise<string> {
+    await this.whenFree(10 * 60e3);
+    if (!this.inMeeting || this.routeFor("meeting") === "hold") return ""; // the meeting ended meanwhile, or the employee never got free
     this.meetingTurn = true;
     this.turnTexts = [];
-    this.setStatus("working");
-    const msg = userMsg(prompt, images);
-    this.unanswered.push(msg);
-    this.enqueue(msg);
-    if (!this.running) this.start();
-    return new Promise<string>((resolve) => {
-      const done = (reply: string) => { clearTimeout(timer); this.off("turn", done); this.meetingTurn = false; resolve(reply ?? ""); };
-      const timer = setTimeout(() => done(""), 5 * 60e3);
+    const reply = new Promise<string>((resolve) => {
+      let open = true;
+      const done = (text: string) => { if (!open) return; open = false; clearTimeout(timer); clearTimeout(backstop); this.off("turn", done); this.meetingTurn = false; resolve(text ?? ""); };
+      let backstop: NodeJS.Timeout | undefined;
+      // a turn that runs too long is stopped: its late answer must not land in the chat
+      const timer = setTimeout(() => {
+        if (this.meetingTurn && this.busy) { void this.interrupt({ task: "keep", resume: false }); backstop = setTimeout(() => done(""), 10e3); }
+        else done("");
+      }, 5 * 60e3);
       this.on("turn", done);
+    });
+    this.dispatch("chat", prompt, { images });
+    return reply;
+  }
+
+  private whenFree(maxMs: number): Promise<void> {
+    if (!this.busy) return Promise.resolve();
+    return new Promise<void>((resolve) => {
+      const finish = () => { clearTimeout(timer); this.off("status", on); resolve(); };
+      const on = () => { if (!this.busy) finish(); };
+      const timer = setTimeout(finish, maxMs);
+      this.on("status", on);
     });
   }
 
@@ -372,11 +622,10 @@ export class Employee extends EventEmitter {
   // After a meeting: a card in the chat, and the model learns it is over with the next message.
   meetingOver(topic: string, summary?: string) {
     this.push({ role: "meeting", text: summary ? t("server.meeting.chatSummary", { topic, summary }) : t("server.meeting.chatEnded", { topic }), ts: Date.now() });
-    const note = t("server.meeting.overNote", { topic });
-    this.preamble = this.preamble ? this.preamble + "\n" + note : note;
+    this.addPreamble(t("server.meeting.overNote", { topic }));
   }
 
-  // Falls ill for `ms`: messages are still accepted but wait in the inbox until recovery.
+  // Falls ill for `ms`: messages are still accepted but wait until recovery.
   fallIll(ms: number) {
     if (this.status !== "idle" || this.pending.size || this.inMeeting) return;
     this.sickUntil = Date.now() + ms;
@@ -394,29 +643,67 @@ export class Employee extends EventEmitter {
     this.push({ role: "system", text: t("server.recovered", { name: this.cfg.name }), ts: Date.now() });
     if (this.inbox.length) {
       this.setStatus("working");
-      if (this.q) { this.wake?.(); this.wake = undefined; } else if (!this.cx) this.start();
+      this.turnOpen = true;
+      if (this.q) { this.wake?.(); this.wake = undefined; } else if (!this.cx) this.start(this.runningFor ?? "chat");
     } else { this.setStatus("idle"); this.poke(); }
   }
 
-  async interrupt() {
-    if (this.status !== "working" && this.status !== "waiting") return;
+  // Stop. The running turn ends; a board task it was working on goes back to "todo" (task: "todo"), waits to be resumed
+  // (task: "requeue", used by meetings) or stays as it is (task: "keep", used on shutdown). Nothing waiting is thrown away:
+  // with `resume` the queued boss messages go out right after, then tasks, office and colleague messages.
+  // A second call while one is running (Stop pressed twice, a shutdown during a stop) joins the first one instead of stopping
+  // twice; `resume: false` from any caller wins.
+  interrupt(opts: { task?: "todo" | "requeue" | "keep"; resume?: boolean } = {}): Promise<void> {
+    if (this.interruptJob) {
+      if (opts.resume === false) this.interruptJob.resume = false;
+      return this.interruptJob.done;
+    }
+    if (this.status !== "working" && this.status !== "waiting") return Promise.resolve();
+    const job: { resume: boolean; done: Promise<void> } = { resume: opts.resume !== false, done: Promise.resolve() };
+    this.interruptJob = job;
+    job.done = this.doInterrupt(opts.task ?? "todo", job).finally(() => { if (this.interruptJob === job) this.interruptJob = undefined; });
+    return job.done;
+  }
+
+  private async doInterrupt(task: "todo" | "requeue" | "keep", job: { resume: boolean }) {
+    const key = this.runningFor;
     this.rejectPending(t("server.stoppedByUser"), true);
     this.interrupting = true;
-    try {
-      await this.q?.interrupt();
-    } catch {}
-    if (this.cx) { this.cx.kill(); this.inbox = []; }
+    const ended = this.turnOpen ? new Promise<void>((r) => this.turnEndWaiters.push(r)) : undefined;
+    if (this.cx) { this.carry.push(...this.inbox.splice(0)); this.cx.kill(); }
+    try { await this.q?.interrupt(); } catch {}
+    const endedInTime = ended ? await Promise.race([ended.then(() => true), sleep(5000).then(() => false)]) : true;
+    // no result within 5 s: the process may still deliver that turn's late result, which the next turn would take for its own
+    // end. It is closed instead of reused (whatever it had not taken yet moves to the next process).
+    if (!endedInTime) this.stopQuery();
+    this.interrupting = false;
     this.flushStream();
+    if (this.turnOpen) this.closeTurn(this.turnTexts.join("\n\n")); // nothing came back: close the turn by hand
     this.unanswered = [];
     this.push({ role: "system", text: t("server.stopped"), ts: Date.now() });
-    if (this.side) { this.side = undefined; this.stopQuery(); }
+    if (this.side) { this.side = undefined; this.stopQuery(true); }
+    if (task !== "keep" && this.taskId !== undefined && key === `task:${this.taskId}`) this.stopTask(task);
+    if (!this.disposed) this.applyPending();
     this.setStatus("idle", "interrupted");
+    // not in this tick: on shutdown the process exits right after the interrupts, before anything new could start
+    if (job.resume) setTimeout(() => this.afterTurn(), 0);
+  }
+
+  // "Interrupt" on a queued message: the running turn stops and the queue goes out at once, to the same session
+  // (a board task keeps running and gets the message). Without a running turn the queue simply goes out.
+  // In a meeting it does nothing (false): the running turn is the meeting answer, and the queue waits for the meeting to end anyway.
+  async deliverNow(): Promise<boolean> {
+    if (this.inMeeting) return false;
+    if (this.busy) await this.interrupt({ task: "keep" });
+    else this.poke();
+    return true;
   }
 
   async reset() {
     if (this.sick) { clearTimeout(this.sickTimer); this.sickUntil = 0; }
-    await this.interrupt();
-    this.stopQuery();
+    await this.interrupt({ resume: false });
+    this.stopQuery(true);
+    this.carry = [];
     this.sessionId = undefined;
     this.cost = this.costBase = this.context = 0;
     this.store.setMeta(this.cfg.id, "cost", 0);
@@ -424,8 +711,14 @@ export class Employee extends EventEmitter {
     this.unanswered = [];
     this.taskId = undefined;
     this.taskQueue = [];
+    this.taskTalk = [];
+    this.taskTalkFor = undefined;
     this.autoQueue = [];
     this.digest = [];
+    this.preamble = "";
+    this.recapNext = undefined;
+    this.bossQueue = [];
+    this.emitQueue();
     for (const h of this.held.splice(0)) h.resolve?.("");
     this.store.setSession(this.cfg.id, undefined);
     this.store.saveHistory(this.cfg.id, this.history);
@@ -433,27 +726,47 @@ export class Employee extends EventEmitter {
     this.setStatus("idle");
   }
 
-  // Applies a new config; the running Claude process is closed so the next message starts with the new options
-  // (model, effort, prompt, skills) while resuming the same conversation.
+  // Applies a new config. Nothing running is interrupted for it: the process is replaced at the next turn boundary, so the next
+  // message starts with the new options (model, effort, prompt, skills, folder) while resuming the same conversation.
+  // Colour, look and the refresh timer need no new process at all.
   async applyConfig(cfg: EmployeeConfig) {
-    await this.interrupt();
-    // another engine cannot continue this one's conversation: the chat starts afresh, memory and notebook carry over
-    if (isCodexModel(cfg.model) !== isCodexModel(this.cfg.model)) { this.sessionId = undefined; this.store.setSession(this.cfg.id, undefined); this.context = 0; }
+    const prev = this.cfg;
+    const cosmetic = cfg !== prev && sameExcept(prev, cfg, ["color", "look", "autoRefresh", "refreshHours"]);
+    if (isCodexModel(cfg.model) !== isCodexModel(prev.model)) this.pendingEngineSwitch = true;
     this.cfg = cfg;
-    this.stopQuery();
+    if (!cosmetic) this.pendingRestart = true;
+    if (!this.busy) this.applyPending();
     this.emit("config");
   }
 
-  // A change that can wait for the next Claude process: nothing running is interrupted for it.
+  // Same as applyConfig, for callers that cannot wait (e.g. the connector switches).
   setConfigQuietly(cfg: EmployeeConfig) {
-    this.cfg = cfg;
-    if (!this.busy) this.stopQuery();
-    this.emit("config");
+    void this.applyConfig(cfg);
+  }
+
+  // At a turn boundary: settings that waited take effect.
+  private applyPending() {
+    if (this.pendingEngineSwitch) {
+      // another engine cannot continue this one's conversation: the chat starts afresh with a recap; memory and notebook carry over
+      this.pendingEngineSwitch = false;
+      this.pendingRestart = true;
+      if (this.sessionId) {
+        this.sessionId = undefined;
+        this.store.setSession(this.cfg.id, undefined);
+        this.recapNext = tt("server.recapWhy.engine", "the engine was changed");
+        this.push({ role: "system", text: tt("server.engineSwitched", "Engine changed: the next message starts a new session and carries a summary of this chat."), ts: Date.now() });
+      }
+      this.context = 0;
+    }
+    if (!this.pendingRestart) return;
+    this.pendingRestart = false;
+    if (this.running) this.stopQuery();
   }
 
   async dispose() {
-    await this.interrupt();
-    this.stopQuery();
+    this.disposed = true;
+    await this.interrupt({ task: "keep", resume: false });
+    this.stopQuery(true);
   }
 
   reply(requestId: string, decision: ReplyDecision) {
@@ -479,7 +792,7 @@ export class Employee extends EventEmitter {
       });
     }
     this.emit("ask_done", requestId);
-    if (this.pending.size === 0) this.setStatus("working");
+    if (this.pending.size === 0 && this.turnOpen) this.setStatus("working");
   }
 
   private enqueue(msg: SDKUserMessage) {
@@ -496,14 +809,21 @@ export class Employee extends EventEmitter {
     }
   }
 
-  private stopQuery() {
+  // Closes the running process. What it had not taken yet is carried over to the next process, unless `discard`.
+  private stopQuery(discard = false) {
+    if (!discard && this.inbox.length) this.carry.push(...this.inbox);
+    if (discard) this.carry = [];
+    this.inbox = [];
     this.generation++;
     this.wake?.();
     this.wake = undefined;
+    const q = this.q;
     this.q = undefined;
+    try { q?.close(); } catch {}
     this.cx?.kill();
     this.cx = undefined;
-    this.inbox = [];
+    this.runningFor = undefined;
+    if (this.compacting) { this.compacting = false; this.emit("compacting", false); }
   }
 
   private async *input(gen: number): AsyncIterable<SDKUserMessage> {
@@ -534,13 +854,17 @@ export class Employee extends EventEmitter {
     return parts.join("\n\n");
   }
 
-  private start() {
+  // Starts a process for one session (`key`): "chat", "task:<id>" or "side".
+  private start(key: string) {
+    this.runningFor = key;
+    if (this.carry.length) this.inbox.unshift(...this.carry.splice(0));
     const gen = this.generation;
-    if (this.engine === "codex") { void this.runCodex(gen); return; }
+    if (this.engine === "codex") { void this.runCodex(gen, key); return; }
     this.costBase = this.cost; // a new Claude process counts its cost from zero
     this.context = 0;
     const compactAt = getSettings().compactAtTokens;
-    const task = this.taskId !== undefined ? this.colleagues?.board().tasks.find((x) => x.id === this.taskId) : undefined;
+    const taskId = taskOf(key);
+    const task = taskId !== undefined ? this.colleagues?.board().tasks.find((x) => x.id === taskId) : undefined;
     this.q = query({
       prompt: this.input(gen),
       options: {
@@ -549,13 +873,15 @@ export class Employee extends EventEmitter {
         additionalDirectories: this.cfg.dir ? [this.cfg.dir] : undefined,
         systemPrompt: { type: "preset", preset: "claude_code", append: this.buildPrompt() },
         plugins: this.cfg.pluginDir ? [{ type: "local", path: this.cfg.pluginDir }] : undefined,
-        resume: this.side ? undefined : this.taskId !== undefined ? task?.session : this.sessionId,
-        persistSession: this.side ? false : undefined,
+        resume: key === "side" ? undefined : taskId !== undefined ? task?.session : this.sessionId,
+        persistSession: key === "side" ? false : undefined,
         // summarize in place long before the model's own limit: on a 1M-token model a chat otherwise grows until every step re-reads a book
         // one memory, the one the boss sees on the profile page: Claude Code's own hidden per-folder memory would be a second place to look
         settings: { autoMemoryEnabled: false, ...(compactAt ? { autoCompactWindow: compactAt } : {}), ...(this.cfg.connectorsOff?.length ? { deniedMcpServers: this.cfg.connectorsOff.map((serverName) => ({ serverName })) } : {}) },
         env: compactAt ? { ...process.env, CLAUDE_CODE_AUTO_COMPACT_WINDOW: String(compactAt) } : undefined,
-        title: this.taskId !== undefined ? `${this.cfg.name} — #${this.taskId} ${task?.title ?? ""}`.slice(0, 120) : `${this.cfg.name} — ${this.cfg.role}`,
+        // compaction summarizes everything, the newest boss message included: it is handed back word for word right after the summary
+        hooks: { SessionStart: [{ matcher: "compact", hooks: [async () => this.afterCompact()] }] },
+        title: taskId !== undefined ? `${this.cfg.name} — #${taskId} ${task?.title ?? ""}`.slice(0, 120) : `${this.cfg.name} — ${this.cfg.role}`,
         includePartialMessages: true,
         permissionMode: this.cfg.permissionMode ?? "default",
         allowedTools: [...(this.cfg.allowedTools ?? []), ...OFFICE_TOOLS],
@@ -566,39 +892,59 @@ export class Employee extends EventEmitter {
         canUseTool: (toolName, input, opts) => this.canUseTool(toolName, input, opts),
       },
     });
-    this.consume(gen);
+    this.consume(gen, key);
   }
 
-  private async consume(gen: number) {
+  private afterCompact(): HookJSONOutput {
+    const open = this.unanswered.map(plainText).map((s) => s.trim()).filter(Boolean);
+    if (!open.length) return { continue: true };
+    return {
+      hookSpecificOutput: {
+        hookEventName: "SessionStart",
+        additionalContext: tt("server.compactReinject", "[pixel-office: the conversation was just summarized. These are the messages you have not answered yet, word for word. They are the current request: answer them first and do not go back to older work unless they ask for it.]\n\n{messages}",
+          { messages: open.map((s) => clip(s, 6000)).join("\n\n---\n\n") }),
+      },
+    };
+  }
+
+  private async consume(gen: number, key: string) {
     try {
       for await (const m of this.q!) {
         if (this.generation !== gen) break;
-        this.handle(m);
+        this.handle(m, key);
       }
     } catch (err) {
       if (this.generation !== gen) return;
       this.flushStream();
       this.rejectPending(t("server.sessionError"));
       this.push({ role: "system", text: t("server.error", { message: (err as Error).message }), ts: Date.now() });
+      this.closeTurn(this.turnTexts.join("\n\n"));
       this.setStatus("error");
+      setTimeout(() => this.afterTurn(), 0); // what waited for this turn is not stuck behind the error
     } finally {
       if (this.generation === gen) {
         this.q = undefined;
-        if (this.status === "working" || this.status === "waiting") this.setStatus("idle");
+        this.runningFor = undefined;
+        if (this.turnOpen) this.closeTurn(this.turnTexts.join("\n\n"));
+        if (this.status === "working" || this.status === "waiting") { this.setStatus("idle"); setTimeout(() => this.afterTurn(), 0); }
       }
     }
   }
 
-  private handle(m: SDKMessage) {
+  private handle(m: SDKMessage, key: string) {
     switch (m.type) {
       case "system":
         if (m.subtype === "init") {
           this.model = m.model;
-          if (this.taskId !== undefined) this.colleagues?.board().markTask(this.taskId, { session: m.session_id });
-          else if (!this.side) { this.sessionId = m.session_id; this.store.setSession(this.cfg.id, m.session_id); }
+          const taskId = taskOf(key);
+          if (taskId !== undefined) this.colleagues?.board().markTask(taskId, { session: m.session_id });
+          else if (key === "chat") { this.sessionId = m.session_id; this.store.setSession(this.cfg.id, m.session_id); }
           console.log(t("server.sessionOpened", { name: this.cfg.name, model: m.model }));
         } else if (m.subtype === "compact_boundary") {
           this.push({ role: "activity", text: t("server.compacted", { tokens: Math.round(m.compact_metadata.pre_tokens / 1000) }), ts: Date.now() });
+        } else if (m.subtype === "status") {
+          const on = m.status === "compacting";
+          if (on !== this.compacting) { this.compacting = on; this.emit("compacting", on); }
         }
         break;
       case "stream_event": {
@@ -628,81 +974,136 @@ export class Employee extends EventEmitter {
       case "result": {
         if (m.subtype === "success") { this.cost = this.costBase + m.total_cost_usd; this.store.setMeta(this.cfg.id, "cost", this.cost); }
         const detail = m.subtype === "success" ? undefined : "errors" in m && Array.isArray(m.errors) ? m.errors.join("; ") : m.subtype;
-        this.endTurn(detail, m.duration_ms, !!detail && /No conversation found/i.test(detail));
+        // more turns queued inside the CLI follow without further input: the employee is not free yet
+        const more = (m.queued_turn_count ?? 0) > 0 && !this.interrupting;
+        this.endTurn(detail, m.duration_ms, !!detail && /No conversation found/i.test(detail), more);
         break;
       }
     }
   }
 
-  // The end of a turn, whichever engine ran it. `detail` = what went wrong, if anything.
-  private endTurn(detail: string | undefined, durationMs: number, sessionLost = false) {
-    this.flushStream();
-    const turn = this.turnTexts.join("\n\n");
+  // Emits the turn's text for whoever waits on it (meetings, colleagues) and releases interrupt().
+  private closeTurn(text: string) {
     this.turnTexts = [];
-    this.emit("turn", turn);
+    this.turnOpen = false;
+    this.emit("turn", text);
+    for (const w of this.turnEndWaiters.splice(0)) w();
+  }
+
+  // The end of a turn, whichever engine ran it. `detail` = what went wrong, if anything; `more` = another turn follows at once.
+  private endTurn(detail: string | undefined, durationMs: number, sessionLost = false, more = false) {
+    this.flushStream();
+    const key = this.runningFor;
     const wasInterrupted = this.interrupting;
-    this.interrupting = false;
-    if (!detail) {
-      this.recovered = false;
-      this.unanswered = [];
-    } else if (!wasInterrupted) {
-      if (sessionLost && !this.side && (this.taskId !== undefined || this.sessionId) && !this.recovered) {
-        this.recoverSession();
-        return;
-      }
-      this.push({ role: "system", text: t("server.turnError", { detail }), ts: Date.now() });
+    if (more) {
+      if (detail && !wasInterrupted) this.push({ role: "system", text: t("server.turnError", { detail }), ts: Date.now() });
+      return;
     }
-    if (wasInterrupted) return;
+    this.interrupting = false;
+    if (detail && !wasInterrupted && sessionLost && key !== "side" && !this.recovered && (taskOf(key) !== undefined || this.sessionId)) {
+      this.turnTexts = [];
+      this.recoverSession(key!);
+      return;
+    }
+    const turn = this.turnTexts.join("\n\n");
+    if (taskOf(key) !== undefined && this.taskTurnHasBoss) {
+      this.taskTurnHasBoss = false;
+      if (turn.trim()) this.taskTalk.push(`${tt("server.task.talkYou", "You")}: ${clip(turn, 1500)}`);
+    }
+    // the chat session learns what the refresh changed, instead of hearing nothing of it
+    if (key === "side" && !detail && turn.trim()) this.addPreamble(tt("server.refreshNote", "[Note: in a separate short session you tidied your memory file. What you reported: {summary}]", { summary: clip(turn.replace(/\s+/g, " "), 800) }));
+    this.closeTurn(turn);
+    this.unanswered = []; // answered, or failed in plain sight: either way not something to replay later
+    if (!detail) this.recovered = false;
+    else if (!wasInterrupted) this.push({ role: "system", text: t("server.turnError", { detail }), ts: Date.now() });
+    if (wasInterrupted) return; // interrupt() does the rest
     this.emit("result", { cost: this.cost, durationMs, context: this.context });
-    if (this.pending.size === 0) this.setStatus("idle");
+    this.applyPending();
+    if (this.pending.size === 0) this.settle();
+  }
+
+  // Idle, unless something that waited starts right away: then the employee never shows as free in between
+  // (a meeting, the refresh timer or a task start would otherwise take that moment).
+  private settle() {
+    this.status = "idle"; // not announced yet
     this.afterTurn();
+    if (this.status === "idle") this.setStatus("idle");
   }
 
   // ---- Codex engine: a process per turn, the conversation kept by thread id ----
-  private async runCodex(gen: number) {
+  private async runCodex(gen: number, key: string) {
     this.cx = { kill: () => {} };
-    while (this.generation === gen && !this.sick) {
-      const batch = this.inbox.splice(0); // what piled up is one turn, as it would be for a person
-      if (!batch.length) break;
-      const files = batch.flatMap((m) => this.plain.get(m)?.files ?? []);
-      const prompt = batch.map((m) => (typeof m.message.content === "string" ? m.message.content : m.message.content.map((b) => ("text" in b ? b.text : "")).join("\n"))).filter(Boolean).join("\n\n");
-      const task = this.taskId !== undefined ? this.colleagues?.board().tasks.find((x) => x.id === this.taskId) : undefined;
-      const thread = this.side ? undefined : this.taskId !== undefined ? task?.session : this.sessionId;
-      const mode = this.cfg.permissionMode ?? "default";
-      const started = Date.now();
-      const run = runCodexTurn({
-        cwd: this.cfg.cwd, prompt: prompt || "-", model: this.cfg.model!, effort: this.cfg.effort, thread, persist: !this.side, images: files,
-        instructions: this.buildPrompt() + this.codexExtras(),
-        sandbox: this.meetingTurn || mode === "plan" ? "read-only" : mode === "bypassPermissions" ? "full" : "workspace-write",
-        writableDirs: this.cfg.dir ? [this.cfg.dir] : [],
-        mcpUrl: this.colleagues?.mcpUrl(this),
-      }, {
-        onThread: (id) => {
-          if (this.generation !== gen) return;
-          this.model = this.cfg.model;
-          if (this.taskId !== undefined) this.colleagues?.board().markTask(this.taskId, { session: id });
-          else if (!this.side) { this.sessionId = id; this.store.setSession(this.cfg.id, id); }
-        },
-        onItemStarted: (item) => { if (this.generation === gen && item.type !== "agent_message" && item.type !== "reasoning") { const line = describeCodex(item); if (line) this.push({ role: "activity", text: line, ts: Date.now() }); } },
-        onItem: (item) => {
-          if (this.generation !== gen) return;
-          if (item.type === "agent_message" && item.text.trim()) { this.emit("chunk", item.text); this.emit("chunk_end"); this.push({ role: "assistant", text: item.text, ts: Date.now() }); }
-          else if (item.type === "error") this.push({ role: "system", text: t("server.turnError", { detail: item.message }), ts: Date.now() });
-        },
-      });
-      this.cx = { kill: run.kill };
-      const res = await run.done;
-      if (this.generation !== gen) return;
-      if (res.ok) {
-        // usage is summed over the thread: the difference is this turn, spread over its model calls
-        const key = (this.taskId !== undefined ? task?.session : this.sessionId) ?? "-";
-        const before = this.cxTokens.get(key) ?? 0;
-        this.cxTokens.set(key, res.inputTokens);
-        this.context = Math.round(Math.max(0, res.inputTokens - before) / Math.max(1, res.calls));
+    let failed = false;
+    try {
+      while (this.generation === gen && !this.sick && this.engine === "codex") {
+        const batch = this.inbox.splice(0); // what piled up is one turn, as it would be for a person
+        if (!batch.length) break;
+        const files = batch.flatMap((m) => this.plain.get(m)?.files ?? []);
+        const prompt = batch.map(plainText).filter(Boolean).join("\n\n");
+        const taskId = taskOf(key);
+        const task = taskId !== undefined ? this.colleagues?.board().tasks.find((x) => x.id === taskId) : undefined;
+        const thread = key === "side" ? undefined : taskId !== undefined ? task?.session : this.sessionId;
+        const mode = this.cfg.permissionMode ?? "default";
+        const started = Date.now();
+        const run = runCodexTurn({
+          cwd: this.cfg.cwd, prompt: prompt || "-", model: this.cfg.model!, effort: this.cfg.effort, thread, persist: key !== "side", images: files,
+          instructions: this.buildPrompt() + this.codexExtras(),
+          sandbox: this.meetingTurn || mode === "plan" ? "read-only" : mode === "bypassPermissions" ? "full" : "workspace-write",
+          writableDirs: this.cfg.dir ? [this.cfg.dir] : [],
+          mcpUrl: this.colleagues?.mcpUrl(this),
+        }, {
+          onThread: (id) => {
+            if (this.generation !== gen) return;
+            this.model = this.cfg.model;
+            if (taskId !== undefined) this.colleagues?.board().markTask(taskId, { session: id });
+            else if (key === "chat") { this.sessionId = id; this.store.setSession(this.cfg.id, id); }
+          },
+          onItemStarted: (item) => { if (this.generation === gen && item.type !== "agent_message" && item.type !== "reasoning") { const line = describeCodex(item); if (line) this.push({ role: "activity", text: line, ts: Date.now() }); } },
+          onItem: (item) => {
+            if (this.generation !== gen) return;
+            if (item.type === "agent_message" && item.text.trim()) { this.emit("chunk", item.text); this.emit("chunk_end"); this.push({ role: "assistant", text: item.text, ts: Date.now() }); }
+            // an error item does not end the turn (a failed turn ends with turn.failed): a warning line, not "the turn ended with an error"
+            else if (item.type === "error") this.push({ role: "activity", text: tt("server.codex.notice", "Codex: {detail}", { detail: item.message }), ts: Date.now() });
+          },
+        });
+        this.cx = { kill: run.kill };
+        const res = await run.done;
+        if (this.generation !== gen) return;
+        if (res.ok) {
+          // usage is summed over the thread: the difference is this turn, spread over its model calls
+          const tk = (taskId !== undefined ? this.colleagues?.board().tasks.find((x) => x.id === taskId)?.session : this.sessionId) ?? "-";
+          const before = this.cxTokens.get(tk) ?? 0;
+          this.cxTokens.set(tk, res.inputTokens);
+          this.context = Math.round(Math.max(0, res.inputTokens - before) / Math.max(1, res.calls));
+        }
+        // messages that came in during the turn run next, in the same session, before the employee counts as free
+        const more = res.ok && this.inbox.length > 0 && !this.interrupting;
+        this.endTurn(res.ok ? undefined : res.error ?? "codex failed", Date.now() - started, !!res.notFound, more);
       }
-      this.endTurn(res.ok ? undefined : res.error ?? "codex failed", Date.now() - started, !!res.notFound);
+    } catch (err) {
+      // e.g. a history save failing (disk full): the employee must not stay "working" with nobody reading its inbox
+      failed = true;
+      if (this.generation === gen) this.failTurn(err);
+    } finally {
+      if (this.generation === gen) {
+        this.cx = undefined;
+        this.runningFor = undefined;
+        if (!failed && this.inbox.length && !this.sick) this.start(key);
+      }
     }
-    if (this.generation === gen) { this.cx = undefined; if (this.inbox.length && !this.sick) this.start(); }
+  }
+
+  // A turn loop threw: the turn is closed, the employee shows the error, and what waited is not stuck behind it.
+  private failTurn(err: unknown) {
+    console.error(`[error] turn of ${this.cfg.id}:`, err instanceof Error ? err.stack ?? err.message : err);
+    this.interrupting = false;
+    try { this.flushStream(); } catch {}
+    this.rejectPending(t("server.sessionError"));
+    try { this.push({ role: "system", text: t("server.error", { message: (err as Error)?.message ?? String(err) }), ts: Date.now() }); } catch {}
+    this.unanswered = [];
+    this.closeTurn(this.turnTexts.join("\n\n"));
+    this.setStatus("error");
+    setTimeout(() => { try { this.afterTurn(); } catch (e) { console.error(`[error] after the turn of ${this.cfg.id}:`, e); } }, 0);
   }
 
   // What Claude Code gives an employee by itself and Codex does not: their skills, by file.
@@ -713,16 +1114,32 @@ export class Employee extends EventEmitter {
     return index ? "\n\n" + t("server.codex.skills", { list: index }) : "";
   }
 
-  private recoverSession() {
+  // The session to resume was not found: a new one starts, with a recap in front of the messages it had not answered.
+  private recoverSession(key: string) {
     const replay = this.unanswered.slice();
-    this.stopQuery();
+    this.stopQuery(true);
     this.recovered = true;
-    if (this.taskId !== undefined) this.colleagues?.board().markTask(this.taskId, { session: null });
+    const taskId = taskOf(key);
+    if (taskId !== undefined) this.colleagues?.board().markTask(taskId, { session: null });
     else { this.sessionId = undefined; this.store.setSession(this.cfg.id, undefined); }
     this.push({ role: "system", text: t("server.sessionRecovered"), ts: Date.now() });
-    for (const msg of replay) this.enqueue(msg);
-    if (replay.length) this.start();
-    else this.setStatus("idle");
+    const recap = taskId !== undefined ? this.taskRecap(taskId) : this.chatRecap(tt("server.recapWhy.lost", "the previous session was not found"));
+    if (!replay.length) {
+      if (taskId === undefined) this.recapNext = tt("server.recapWhy.lost", "the previous session was not found");
+      this.closeTurn("");
+      this.setStatus("idle");
+      this.afterTurn();
+      return;
+    }
+    const [first, ...rest] = replay;
+    const lead = userMsg(recap + "\n\n" + plainText(first), Array.isArray(first.message.content)
+      ? first.message.content.flatMap((b) => (b.type === "image" && b.source.type === "base64" ? [{ media_type: b.source.media_type as ImageInput["media_type"], data: b.source.data }] : []))
+      : undefined);
+    const files = this.plain.get(first);
+    if (files) this.plain.set(lead, files);
+    this.unanswered = [lead, ...rest];
+    for (const msg of this.unanswered) this.enqueue(msg);
+    this.start(key);
   }
 
   private canUseTool(
@@ -782,10 +1199,22 @@ export class Employee extends EventEmitter {
   }
 
   private setStatus(s: Status, reason?: string) {
-    if (this.status === s) return;
     this.status = s;
+    if (this.announced === s) return;
+    this.announced = s;
     this.emit("status", s, reason);
   }
+}
+
+// Two configs differ only in the listed fields.
+function sameExcept(a: EmployeeConfig, b: EmployeeConfig, fields: Array<keyof EmployeeConfig>): boolean {
+  const skip = new Set<string>(fields);
+  const keys = new Set([...Object.keys(a), ...Object.keys(b)]);
+  for (const k of keys) {
+    if (skip.has(k)) continue;
+    if (JSON.stringify((a as unknown as Record<string, unknown>)[k]) !== JSON.stringify((b as unknown as Record<string, unknown>)[k])) return false;
+  }
+  return true;
 }
 
 function describeCodex(item: CodexItem): string {

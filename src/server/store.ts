@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import type { ChatMessage } from "./employee.js";
+import { isObject, readJsonSafe, removeWithBackup, writeJsonAtomicSync } from "./fsutil.js";
 
 interface State {
   sessions: Record<string, string>;
@@ -19,14 +20,15 @@ export class Store {
     this.historyDir = path.join(dataDir, "history");
     fs.mkdirSync(this.historyDir, { recursive: true });
     this.attachmentsDir = path.join(dataDir, "attachments");
-    const loaded = fs.existsSync(this.statePath) ? JSON.parse(fs.readFileSync(this.statePath, "utf8")) : {};
-    this.state = { sessions: loaded.sessions ?? {}, meta: loaded.meta ?? {} };
+    // A broken state.json is restored from its .bak, or moved aside, and never stops the server from starting.
+    const loaded = readJsonSafe<Partial<State>>(this.statePath, () => ({}), { validate: isObject, label: "office state" });
+    this.state = { sessions: isObject(loaded.sessions) ? loaded.sessions! : {}, meta: isObject(loaded.meta) ? loaded.meta! : {} };
   }
 
   get dir() { return this.dataDir; }
 
   private save() {
-    fs.writeFileSync(this.statePath, JSON.stringify(this.state, null, 2));
+    writeJsonAtomicSync(this.statePath, this.state, { space: 2 });
   }
 
   getSession(id: string): string | undefined {
@@ -49,7 +51,7 @@ export class Store {
   }
 
   deleteHistory(id: string) {
-    try { fs.unlinkSync(path.join(this.historyDir, `${id}.json`)); } catch {}
+    removeWithBackup(path.join(this.historyDir, `${id}.json`));
     fs.rmSync(path.join(this.attachmentsDir, id), { recursive: true, force: true });
   }
 
@@ -66,7 +68,8 @@ export class Store {
   saveMeeting(id: string, data: unknown) {
     const dir = path.join(this.dataDir, "meetings");
     fs.mkdirSync(dir, { recursive: true });
-    fs.writeFileSync(path.join(dir, `${id}.json`), JSON.stringify(data));
+    // Rewritten on every entry, so no .bak: the worst a crash can cost is the last line, and the folder listing stays clean.
+    writeJsonAtomicSync(path.join(dir, `${id}.json`), data, { backup: false });
   }
 
   listMeetings(): Array<{ id: string; topic: string; startedAt: number; endedAt?: number }> {
@@ -93,10 +96,13 @@ export class Store {
 
   loadHistory(id: string): ChatMessage[] {
     const p = path.join(this.historyDir, `${id}.json`);
-    return fs.existsSync(p) ? JSON.parse(fs.readFileSync(p, "utf8")) : [];
+    // One broken history file must not stop the server: it is restored from its .bak, or moved aside and started empty.
+    return readJsonSafe<ChatMessage[]>(p, () => [], { validate: Array.isArray, label: `chat history of ${id}` });
   }
 
+  // Saved on every chat line, so without fsync (still atomic, with a .bak): an fsync here blocked the office for ~10 ms per
+  // line while employees streamed. Board, state and config keep their fsync.
   saveHistory(id: string, history: ChatMessage[]) {
-    fs.writeFileSync(path.join(this.historyDir, `${id}.json`), JSON.stringify(history));
+    writeJsonAtomicSync(path.join(this.historyDir, `${id}.json`), history, { durable: false });
   }
 }

@@ -49,9 +49,8 @@
       <a class="chat-avatar" id="chatAvatar" href="#" data-i18n-title="ui.chat.profile"></a>
       <div class="chat-title">
         <div class="chat-name"><span id="chatName">—</span><span class="model-badge" id="chatModel"></span></div>
-        <div class="chat-role" id="chatRole">—</div>
+        <div class="chat-role"><span id="chatRole">—</span><span class="chip" id="chatStatus"></span><span class="task-badge" id="chatTask" hidden></span></div>
       </div>
-      <span class="chip" id="chatStatus"></span>
       <a class="icon-btn" id="btnProfile" href="#" data-i18n-title="ui.chat.profile">☰</a>
       <button class="icon-btn" id="btnCure" hidden data-i18n-title="ui.chat.cure">💊</button>
       <button class="icon-btn" id="btnStop" data-i18n-title="ui.chat.stop">■</button>
@@ -61,6 +60,7 @@
     <div class="chat-body" id="chatBody"></div>
     <button class="jump-down" id="jumpDown" hidden data-i18n="ui.chat.newMessages"></button>
     <div class="chat-attach" id="chatAttach" hidden></div>
+    <div class="offline-note" data-i18n="ui.chat.offlineNote"></div>
     <form class="chat-foot" id="chatForm">
       <textarea id="chatInput" rows="1" data-i18n-ph="ui.chat.placeholder"></textarea>
       <button type="submit" id="btnSend" title="Enter">➤</button>
@@ -88,6 +88,7 @@
       <div class="meet-hands" id="meetHands"></div>
       <div class="meet-mentions" id="meetMentions" hidden></div>
       <div class="chat-attach" id="meetAttach" hidden></div>
+      <div class="offline-note" data-i18n="ui.chat.offlineNote"></div>
       <form class="chat-foot" id="meetForm">
         <textarea id="meetInput" rows="1" data-i18n-ph="ui.meeting.placeholder"></textarea>
         <button type="submit" title="Enter">➤</button>

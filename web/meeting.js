@@ -58,9 +58,15 @@ const meetingUI = (() => {
     renderTyping(m);
     renderHands(m);
     const over = !!m.endedAt;
+    // ended by the boss, the answers being written are still coming in: nothing new can be said
+    const closing = !over && !!m.closing;
     $("meetForm").hidden = over;
+    $("meetForm").classList.toggle("closing", closing);
+    input.disabled = closing;
+    $("meetForm").querySelector("button[type=submit]").disabled = closing;
+    input.placeholder = closing ? t("ui.meeting.closing") : t("ui.meeting.placeholder");
     $("meetHint").hidden = over;
-    $("meetEnd").hidden = over;
+    $("meetEnd").hidden = over || closing;
     $("meetClose").hidden = !over || !!m.summarizing;
     $("meetHistory").hidden = !over;
     toBottom();
@@ -70,7 +76,7 @@ const meetingUI = (() => {
     $("meetTopic").textContent = m.topic || t("ui.meeting.title");
     const mins = Math.max(1, Math.round(((m.endedAt || Date.now()) - m.startedAt) / 60e3));
     const n = m.participants.filter((p) => p.joined).length;
-    $("meetSub").textContent = m.endedAt ? `${t("ui.meeting.ended")} · ${t("ui.meeting.minutes", { n: mins })}` : `${t("ui.meeting.cost", { n })} · ${t("ui.meeting.minutes", { n: mins })}`;
+    $("meetSub").textContent = m.endedAt ? `${t("ui.meeting.ended")} · ${t("ui.meeting.minutes", { n: mins })}` : m.closing ? t("ui.meeting.closing") : `${t("ui.meeting.cost", { n })} · ${t("ui.meeting.minutes", { n: mins })}`;
   }
 
   function renderPeople(m) {
@@ -136,6 +142,7 @@ const meetingUI = (() => {
       if (m.summarizing) body.appendChild(sysRow(t("ui.meeting.summarizing"), "typing-note"));
       return;
     }
+    if (m.closing) { body.appendChild(sysRow(t("ui.meeting.closing"), "typing-note")); return; }
     const names = m.participants.filter((p) => p.joined && emp(p.id)?.status === "working").map((p) => p.name);
     if (names.length) body.appendChild(sysRow(t("ui.meeting.typing", { names: names.join(", ") }), "typing-note"));
     else if (!m.participants.some((p) => p.joined)) body.appendChild(sysRow(t("ui.meeting.nobodyYet"), "typing-note"));
@@ -144,7 +151,7 @@ const meetingUI = (() => {
   function renderHands(m) {
     const host = $("meetHands");
     host.innerHTML = "";
-    if (m.endedAt) return;
+    if (m.endedAt || m.closing) return; // closing: the floor can no longer be given
     for (const h of m.hands) {
       const card = document.createElement("div");
       card.className = "hand-card";
@@ -323,20 +330,21 @@ const meetingUI = (() => {
   input.addEventListener("keydown", (ev) => {
     if (mention) {
       if (ev.key === "ArrowDown" || ev.key === "ArrowUp") { ev.preventDefault(); mention.index = (mention.index + (ev.key === "ArrowDown" ? 1 : -1) + mention.items.length) % mention.items.length; updateMentions(); return; }
-      if (ev.key === "Enter" || ev.key === "Tab") { ev.preventDefault(); insertMention(mention.items[mention.index].name); return; }
+      if ((ev.key === "Enter" && !ev.isComposing) || ev.key === "Tab") { ev.preventDefault(); insertMention(mention.items[mention.index].name); return; }
       if (ev.key === "Escape") { ev.preventDefault(); ev.stopPropagation(); hideMentions(); return; }
     }
-    if (ev.key === "Enter" && !ev.shiftKey) { ev.preventDefault(); $("meetForm").requestSubmit(); }
+    if (ev.key === "Enter" && !ev.shiftKey && !ev.isComposing) { ev.preventDefault(); $("meetForm").requestSubmit(); }
   });
   $("meetForm").onsubmit = (ev) => {
     ev.preventDefault();
     const m = active();
     const text = input.value.trim();
-    if (!m || (!text && !atts.length)) return;
+    if (!m || m.closing || (!text && !atts.length)) return;
     if (!m.participants.some((p) => p.joined)) { toast(t("ui.meeting.nobodyYet")); return; }
+    if (!isOnline()) { toast(t("ui.toast.noConnection")); return; } // keep the text and the images until the server is back
     const images = atts.take();
     const to = mentioned(m, text);
-    send({ type: "meeting_say", text, ...(to.length ? { to } : {}), ...(images.length ? { images } : {}) });
+    if (!send({ type: "meeting_say", text, ...(to.length ? { to } : {}), ...(images.length ? { images } : {}) })) return;
     input.value = "";
     grow();
     hideMentions();
@@ -379,8 +387,7 @@ const meetingUI = (() => {
     const ids = picked().map((c) => c.value);
     if (!ids.length) { toast(t("ui.meeting.noOne")); return; }
     const interrupt = document.querySelector('input[name="meetBusy"]:checked')?.value === "interrupt";
-    send({ type: "meeting_start", topic: $("meetTopicInput").value.trim(), ids, interrupt });
-    closeStart();
+    if (send({ type: "meeting_start", topic: $("meetTopicInput").value.trim(), ids, interrupt })) closeStart();
   };
 
   // ---------- end card, close, history ----------
@@ -389,7 +396,7 @@ const meetingUI = (() => {
   $("meetEndClose").onclick = closeEnd;
   $("meetEndCancel").onclick = closeEnd;
   $("meetOptSummary").onchange = () => { $("meetOptMemory").disabled = !$("meetOptSummary").checked; if (!$("meetOptSummary").checked) $("meetOptMemory").checked = false; };
-  $("meetEndConfirm").onclick = () => { send({ type: "meeting_end", summary: $("meetOptSummary").checked, memory: $("meetOptMemory").checked }); closeEnd(); };
+  $("meetEndConfirm").onclick = () => { if (send({ type: "meeting_end", summary: $("meetOptSummary").checked, memory: $("meetOptMemory").checked })) closeEnd(); };
   $("meetClose").onclick = () => {
     if (past) { past = null; if (!meetingOf()) close(); else render(); return; }
     send({ type: "meeting_close" });

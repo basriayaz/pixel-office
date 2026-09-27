@@ -6,8 +6,12 @@ function tget(key) {
   return key.split(".").reduce((o, k) => (o && typeof o === "object" ? o[k] : undefined), PO.strings);
 }
 const GLOBAL_VARS = { project: PO.projectDisplay || "." };
+// Plurals: when vars.n is a number and the language calls it "one" (English 1, not Turkish), a sibling key
+// `<key>_one` is used if the locale has it ("1 action", not "1 actions").
+const PLURALS = (() => { try { return new Intl.PluralRules(PO.locale); } catch { return null; } })();
 function t(key, vars = {}) {
-  const v = tget(key);
+  let v = tget(key);
+  if (typeof vars.n === "number" && PLURALS && PLURALS.select(vars.n) === "one") { const one = tget(key + "_one"); if (typeof one === "string") v = one; }
   const s = typeof v === "string" ? v : key;
   return s.replace(/\{(\w+)\}/g, (_, k) => (k in vars ? String(vars[k]) : k in GLOBAL_VARS ? GLOBAL_VARS[k] : `{${k}}`));
 }
@@ -113,6 +117,28 @@ const modelItems = () => [
   ...PO.models.map((m) => ({ value: m, name: MODEL_INFO[m]?.name || m, desc: MODEL_INFO[m]?.desc || "", tag: MODEL_INFO[m]?.tier || "" })),
   ...(PO.codexModels || []).map((m) => ({ value: m.id, name: m.name, desc: m.desc, tag: "Codex" })),
 ];
+// A model id as the boss should read it: "Opus 5.5", not "claude-opus-5-5" (or a dated / "[1m]" variant of it).
+function modelName(id) {
+  if (!id) return "";
+  const known = (m) => MODEL_INFO[m]?.name || (PO.codexModels || []).find((c) => c.id === m)?.name;
+  const base = String(id).replace(/\[[^\]]*\]$/, "").replace(/-\d{8}$/, "");
+  const hit = known(id) || known(base);
+  if (hit) return hit;
+  if (/^(opus|sonnet|haiku|fable)$/.test(base)) return base[0].toUpperCase() + base.slice(1); // Claude Code aliases
+  if (!/^claude-/.test(base)) return base;
+  // unknown Claude model: claude-opus-6-1 → Opus 6.1
+  const parts = base.replace(/^claude-/, "").split("-");
+  const words = parts.filter((p) => !/^\d+$/.test(p)).map((w) => w[0].toUpperCase() + w.slice(1));
+  const nums = parts.filter((p) => /^\d+$/.test(p));
+  return [words.join(" "), nums.join(".")].filter(Boolean).join(" ");
+}
+const effortName = (e) => EFFORT_INFO[e]?.name || e;
+// Same name, ignoring case the way the reader's language does it (Turkish İ/i and I/ı included).
+function sameName(a, b) {
+  const x = String(a ?? "").trim(), y = String(b ?? "").trim();
+  if (!x || !y) return false;
+  return [PO.locale, "tr", "en"].some((l) => { try { return x.toLocaleLowerCase(l).replace(/\u0307/g, "") === y.toLocaleLowerCase(l).replace(/\u0307/g, ""); } catch { return false; } });
+}
 const effortItems = () => PO.efforts.map((e) => ({ value: e, name: EFFORT_INFO[e]?.name || e }));
 const permItems = () => PO.permissions.map((p) => ({ value: p, name: PERM_INFO[p]?.name || p, desc: PERM_INFO[p]?.desc || "", tag: PERM_INFO[p]?.tag || "" }));
 

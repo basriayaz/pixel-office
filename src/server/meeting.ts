@@ -28,9 +28,11 @@ export interface MeetingState {
   summary?: string;
   tasks?: MeetingTask[];
   summarizing?: boolean;
+  closing?: boolean; // ended by the boss, waiting for the answers in progress
 }
 
 const PASS_RE = /^\W*pass\W*$/i;
+const END_GRACE_MS = 30e3;
 
 // One meeting in one office: the boss talks to everybody at once, each employee answers briefly or passes,
 // and whoever raised a hand can be given the floor. Employees take part through their own sessions, so they remember it.
@@ -42,6 +44,7 @@ export class Meeting extends EventEmitter {
   summary?: string;
   tasks?: MeetingTask[];
   summarizing = false;
+  private closing = false; // the boss ended it: no new turns, the answers in progress may still come in
   private joined = new Set<string>();
   private hands = new Map<string, string>();
   private seen = new Map<string, number>(); // per employee: how much of the transcript they have heard
@@ -60,7 +63,7 @@ export class Meeting extends EventEmitter {
       id: this.id, topic: this.topic, startedAt: this.startedAt, endedAt: this.endedAt,
       participants: this.people.map((e) => ({ id: e.cfg.id, name: e.cfg.name, joined: this.joined.has(e.cfg.id) })),
       hands: [...this.hands].map(([id, reason]) => ({ id, reason })),
-      transcript: this.transcript, summary: this.summary, tasks: this.tasks, summarizing: this.summarizing,
+      transcript: this.transcript, summary: this.summary, tasks: this.tasks, summarizing: this.summarizing, closing: this.closing && !this.endedAt,
     };
   }
 
@@ -74,7 +77,8 @@ export class Meeting extends EventEmitter {
       e.on("status", onStatus);
       this.unhook.set(e.cfg.id, () => { e.off("raise_hand", onHand); e.off("status", onStatus); });
       if (e.sick) e.recover();
-      if (interruptBusy && (e.status === "working" || e.status === "waiting")) await e.interrupt();
+      // a board task they were on is not lost: it waits in their queue and resumes after the meeting
+      if (interruptBusy && (e.status === "working" || e.status === "waiting")) await e.interrupt({ task: "requeue" });
       this.tryJoin(e);
     }
     this.emit("state");
@@ -103,7 +107,7 @@ export class Meeting extends EventEmitter {
 
   // The boss speaks: to everybody who has joined, or only to `to`.
   say(text: string, images: ImageInput[] | undefined, imageUrls: string[] | undefined, to?: string[]) {
-    if (!this.active) return;
+    if (!this.active || this.closing) return;
     const targets = this.people.filter((e) => this.joined.has(e.cfg.id) && (!to?.length || to.includes(e.cfg.id)));
     const entry: MeetingEntry = { ts: Date.now(), from: "user", kind: "say", text, ...(to?.length ? { to } : {}), ...(imageUrls?.length ? { images: imageUrls } : {}) };
     this.add(entry);
@@ -114,7 +118,7 @@ export class Meeting extends EventEmitter {
   // Gives the floor to somebody (usually one who raised a hand): they may answer at length.
   grant(id: string) {
     const e = this.people.find((x) => x.cfg.id === id);
-    if (!this.active || !e || !this.joined.has(id)) return;
+    if (!this.active || this.closing || !e || !this.joined.has(id)) return;
     const reason = this.hands.get(id) ?? "";
     this.hands.delete(id);
     this.add({ ts: Date.now(), from: "user", kind: "floor", text: e.cfg.name, to: [id] });
@@ -130,7 +134,7 @@ export class Meeting extends EventEmitter {
   private turn(e: Employee, upTo: number, prompt: (heard: string) => string, images?: ImageInput[], floor = false) {
     const prev = this.chain.get(e.cfg.id) ?? Promise.resolve();
     const next = prev.then(async () => {
-      if (!this.active) return;
+      if (!this.active || this.closing) return;
       const from = this.seen.get(e.cfg.id) ?? 0;
       const heard = this.transcript.slice(from, upTo)
         .filter((m) => m.from !== e.cfg.id && (m.kind === "say" || m.kind === "floor") && (!m.to || m.to.includes(e.cfg.id) || m.from !== "user"))
@@ -152,11 +156,15 @@ export class Meeting extends EventEmitter {
 
   // Ends the meeting: everybody is released, optionally a summary is written, posted to each chat and appended to memory.
   async end(opts: { summary: boolean; memory: boolean }) {
-    if (!this.active) return;
+    if (!this.active || this.closing) return;
+    // answers being written right now still belong to the meeting: wait a little for them before closing
+    this.closing = true;
+    this.emit("state");
+    await Promise.race([Promise.allSettled([...this.chain.values()]), new Promise((r) => setTimeout(r, END_GRACE_MS))]);
     this.endedAt = Date.now();
     for (const e of this.people) {
       this.unhook.get(e.cfg.id)?.();
-      if (e.status === "working" && e.inMeetingTurn) await e.interrupt();
+      if (e.status === "working" && e.inMeetingTurn) await e.interrupt({ task: "keep", resume: false });
       e.inMeeting = false;
     }
     this.hands.clear();

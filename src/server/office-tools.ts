@@ -4,6 +4,7 @@ import type { Employee } from "./employee.js";
 import { TASK_STATUSES, type Board, type Task } from "./board.js";
 import { slug } from "./agents.js";
 import fs from "node:fs";
+import { writeFileAtomicSync } from "./fsutil.js";
 import { t } from "./runtime.js";
 
 export interface Colleagues {
@@ -124,7 +125,7 @@ export function officeToolDefs(self: Employee, colleagues: Colleagues) {
           lines.splice(end, 0, line);
           next = lines.join("\n");
         } else next = cur.replace(/\s*$/, "") + (head ? `\n\n## ${head}\n` : "\n") + line + "\n";
-        fs.writeFileSync(file, next);
+        writeFileAtomicSync(file, next, { backup: false }); // whole or not at all: a crash mid-write must not cut the memory file short
         return text(t("server.memoryTool.saved", { file, chars: next.length }));
       }),
       // ---- ideas: suggestions that wait for the boss ----

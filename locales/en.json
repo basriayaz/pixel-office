@@ -200,7 +200,10 @@
       "resumed": "Task #{id}: continuing in the task's own session",
       "startedBy": "(Started by {name}, the project manager. The office tells them by itself when you mark the task, so do not message them the result.)",
       "backWith": "The task came back to you with this note:\n{note}",
-      "backNote": "[Note: YOU did board task #{id} \"{title}\"; it left no trace here because you worked in a separate work session that is not part of this chat. Status: {status}. Your result note: {note}. Details are on the task and in the shared notebook.]"
+      "backNote": "[Note: YOU did board task #{id} \"{title}\"; it left no trace here because you worked in a separate work session that is not part of this chat. Status: {status}. Your result note: {note}. Details are on the task and in the shared notebook.]",
+      "stoppedByBoss": "Stopped by the boss; back to todo.",
+      "bossDuringTask": "[While you worked on task #{id} in its work session, this was said there. The boss expects you to remember it:]\n{talk}",
+      "talkYou": "You"
     },
     "ideas": {
       "proposeDesc": "Drop a suggestion in the office ideas box: something worth doing that is outside your current task. It is not a task and nobody starts it; the boss decides.",
@@ -225,6 +228,18 @@
       "merged": "Idea #{id} closed as a duplicate of #{into}.",
       "reviewed": "Idea #{id} updated."
     },
+    "stuck": {
+      "by": "Office",
+      "restartManual": "The server restarted and this work was left unfinished. Press Start and it continues where it stopped.",
+      "restartResumed": "The server restarted while this was running; the owner continues in the task's own session.",
+      "restartQueued": "The server restarted before this queued task began. Press Start to begin it.",
+      "stuckManual": "This showed as \"doing\" but nobody was working on it. Press Start and it continues where it stopped.",
+      "stuckResumed": "This showed as \"doing\" but nobody was working on it; the owner continues in the task's own session.",
+      "noOwner": "Its owner is no longer in the office, so nobody works on this; back to todo. Give it an owner and press Start.",
+      "discoveryTitle": "Discovery round {no} closed",
+      "discoveryText": "Discovery round {no} was still marked as running after {min} minutes, with nobody working on it. The office closed it so the project manager can be called again. Ideas it produced stay in the Ideas tab.",
+      "discoveryDigest": "Discovery round {no} was closed by the office: nothing had run in it for a while ({min} min). What it produced is in list_ideas."
+    },
     "cycle": {
       "discover": "[From the office, not from the boss] The board is empty, so a discovery round begins. Its purpose: find out what is worth doing next, without touching anything.\n1. Look at list_ideas and the notebook index so nothing is researched twice.\n2. Send at most {n} people to look around, each with assign_task using discovery: true and start_now: true, all in this turn: what do rivals have that we lack, what do their users complain about, what did we leave open or weak, what would be cheap to do and felt by the user. Give each a narrow question and tell them to check for every candidate whether we can do it in the short term with what we have. Whoever would build it judges the effort.\n3. Discovery tasks change nothing in the project: no code, no design, no publishing. Results come as propose_idea entries and a note: at most 3 ideas per task, the best ones only, not everything that comes to mind. In a small team send fewer people.\nBudget of this round: about ${budget}. Do not report to the boss now; you will be called when they are done.",
       "compile": "[From the office] The discovery round is finished (spent about ${spent}). Go through list_ideas: close duplicates with review_idea (duplicate_of), and give the 3 to 5 ideas you would really do next their place with review_idea (rank 1 = first, plus one or two lines of advice, corrected size and owner). Leave the rest unranked. Then give the boss ONE short report: the 3 to 5 ideas you would do next, in order, each with one line of why and its size, and what you advise against. Do not move anything to the board: the boss decides in the Ideas tab or tells you.",
@@ -247,8 +262,19 @@
       "saved": "Saved to your memory ({file}, {chars} characters now)."
     },
     "codex": {
-      "skills": "## Your skills\nA skill is a file with instructions for one kind of work. When a request matches one of these, read its file first (the full path is given) and follow it:\n{list}"
-    }
+      "skills": "## Your skills\nA skill is a file with instructions for one kind of work. When a request matches one of these, read its file first (the full path is given) and follow it:\n{list}",
+      "notice": "Codex: {detail}"
+    },
+    "refreshCancelled": "Knowledge refresh cancelled because the boss wrote; it will run again at a quieter moment.",
+    "refreshNote": "[Note: in a separate short session you tidied your memory file. What you reported: {summary}]",
+    "recap": "[Note: this is a new work session; the previous one could not be continued ({why}). This is what came before, so you can go on without asking the boss again.\nRecent lines of the chat:\n{chat}\nYour open board tasks:\n{tasks}]",
+    "recapWhy": {
+      "engine": "the engine was changed",
+      "lost": "the previous session was not found"
+    },
+    "taskRecap": "[Note: the earlier work session of this task could not be continued, so this one starts fresh. Notes on the task so far:\n{notes}]",
+    "engineSwitched": "Engine changed: the next message starts a new session and carries a summary of this chat.",
+    "compactReinject": "[pixel-office: the conversation was just summarized. These are the messages you have not answered yet, word for word. They are the current request: answer them first and do not go back to older work unless they ask for it.]\n\n{messages}"
   },
   "rooms": {
     "kitchen": "KITCHEN",
@@ -321,6 +347,7 @@
     "chat": {
       "placeholder": "Give a task or ask a question…",
       "hint": "Enter sends · Shift+Enter new line · Ctrl+V pastes an image · Esc closes",
+      "offlineNote": "Not connected to the server. What you type stays here; send it once the connection is back.",
       "profile": "Profile, memory, skills",
       "stop": "Stop the task",
       "reset": "Reset the chat (memory stays) — click twice",
@@ -328,6 +355,7 @@
       "empty": "<b>{name}</b> is ready.<br>Give a task, ask a question or teach something — what you teach goes into permanent memory.",
       "today": "Today",
       "actions": "{n} actions",
+      "actions_one": "{n} action",
       "autoRefresh": "🔄 Automatic knowledge refresh",
       "asks": "{name} asks you",
       "answer": "Answer",
@@ -343,7 +371,22 @@
       "attachRemove": "Remove image",
       "cure": "Send back to work",
       "sickChip": "sick · {min} min",
-      "contextTip": "Conversation size: {k}k tokens are re-read at every step. It is summarized by itself when it grows too large; board tasks run in clean sessions."
+      "contextTip": "Conversation size: {k}k tokens are re-read at every step. It is summarized by itself when it grows too large; board tasks run in clean sessions.",
+      "compacting": "summarizing…",
+      "compactingTip": "The conversation has grown large and is being summarized in place. It takes a moment; nothing is lost.",
+      "taskSession": "📋 task #{id} session",
+      "taskSessionTip": "Task #{id} runs in a clean session of its own. What you write now goes to that session; when the task ends, the chat is told what was said.",
+      "queued": "queued",
+      "queuedTask": "queued · goes to task #{id}",
+      "queuedTip": "Not delivered yet: it goes out as soon as the current turn ends, never in the middle of it.",
+      "queuedCount": "{n} queued",
+      "queuedCount_one": "{n} queued",
+      "unqueue": "Take back",
+      "unqueueTip": "Nobody has read it yet: take it back and it counts as never sent (the text returns to the input box).",
+      "deliverNow": "Interrupt",
+      "deliverNowTip": "Stop the current turn and deliver the waiting messages now. A board task keeps running and gets them.",
+      "alreadySent": "Could not take it back: the message was already delivered.",
+      "nowInMeeting": "{name} is in a meeting: the waiting messages go out when it ends."
     },
     "toast": {
       "disconnected": "Lost the server connection, retrying…",
@@ -352,7 +395,8 @@
       "done": "{name} finished the task",
       "reset": "Chat reset; persistent memory kept",
       "resetArm": "Click again to delete the chat and session (memory stays)",
-      "hired": "{name} joined the team 🎉"
+      "hired": "{name} joined the team 🎉",
+      "error": "Error: {message}"
     },
     "editor": {
       "tabs": {
@@ -468,8 +512,10 @@
       "presetsHint": "— picking one fills the position and job description; edit freely",
       "prompt": "Job description (system prompt)",
       "promptPh": "You are Alex, an SEO specialist. You own technical SEO, keyword strategy and the content plan. Every recommendation comes with a measurable target.",
+      "namePlaceholder": "[Name]",
       "promptHint": "A good job description: who they are · what they own · how they work · which project docs they read · how they talk. Persistent memory and skills are added automatically.",
       "chars": "— {n} characters",
+      "chars_one": "— {n} character",
       "model": "Model",
       "effort": "Effort — how hard to think",
       "perm": "Permission mode",
@@ -496,10 +542,12 @@
       "hiredOn": "Hired: <b>{date}</b>",
       "startedToday": "started today",
       "withUs": "{n} days with us",
+      "withUs_one": "{n} day with us",
       "workdir": "Working directory:",
       "defaultModel": "default model",
       "effortBadge": "effort: {v}",
       "skillsBadge": "{n} skills",
+      "skillsBadge_one": "{n} skill",
       "stats": {
         "tasks": "tasks",
         "messages": "messages",
@@ -547,7 +595,7 @@
       "modelDefault": "Default",
       "modelDefaultDesc": "Claude Code's global model setting.",
       "effortDefault": "Default",
-      "refreshHours": "Automatic knowledge refresh interval (hours, 0 = off)",
+      "refreshHours": "Refresh interval (hours, 0 = office default)",
       "danger": "Danger zone",
       "fireHint": "Firing removes the employee from the office; their folder is moved to <code>{archive}</code> (memory and skills are kept, chat history is deleted).",
       "fireConfirmPh": "Type their name to confirm",
@@ -569,6 +617,7 @@
       "connectorsLoading": "Asking your account for its connectors…",
       "connectorsNone": "No connectors on this account.",
       "connectorTools": "{n} tools",
+      "connectorTools_one": "{n} tool",
       "connectorNeedsAuth": "not signed in on claude.ai (adds nothing until you sign in)",
       "connectorOffline": "not available right now",
       "connectorsAllOff": "Switch all off",
@@ -577,12 +626,19 @@
       "connectorsNext": "Saved. Applies once the current work is finished.",
       "projectSkillTag": "from the project",
       "projectSkillsHint": "Skills marked \"from the project\" live in the working folder (.claude/skills) and are loaded by themselves for everybody who works there; edit them in the project.",
-      "codexPermHint": "Codex model: it cannot stop and ask you, so this choice is the fence it works inside. \"Plan only\" = reads, changes nothing. \"Never ask\" = no fence at all. Everything else = may change files in the working folder and the employee's own folder, with network access. Claude skills are handed over as files, the project's CLAUDE.md is read; claude.ai connectors and the dollar cost do not apply (the ChatGPT plan is used)."
+      "codexPermHint": "Codex model: it cannot stop and ask you, so this choice is the fence it works inside. \"Plan only\" = reads, changes nothing. \"Never ask\" = no fence at all. Everything else = may change files in the working folder and the employee's own folder, with network access. Claude skills are handed over as files, the project's CLAUDE.md is read; claude.ai connectors and the dollar cost do not apply (the ChatGPT plan is used).",
+      "autoRefresh": "Automatic knowledge refresh",
+      "autoRefreshHint": "Off by default, because it spends tokens nobody asked for. When on, the employee tidies their memory in a short, separate session every few hours (set below), only if they worked since the last time, and skipped if you wrote to them in the last 30 minutes."
     },
     "models": {
+      "claude-opus-5-5": {
+        "name": "Opus 5.5",
+        "desc": "The newest Opus; stronger and a little cheaper than Opus 5. The default for most work.",
+        "tier": "$$"
+      },
       "claude-opus-5": {
         "name": "Opus 5",
-        "desc": "Balanced and strong; the default for most work.",
+        "desc": "Previous Opus; balanced and strong.",
         "tier": "$$"
       },
       "claude-sonnet-5": {
@@ -818,6 +874,7 @@
       "cwdPh": "e.g. ~/Projects/my-app — empty = {project}",
       "cwdHint": "Employees hired into this office work in this folder by default.",
       "employees": "{n} employees",
+      "employees_one": "{n} employee",
       "delete": "Delete",
       "cannotDelete": "Has employees",
       "save": "Save",
@@ -919,6 +976,7 @@
       "hint": "Enter sends to everyone · @name addresses one person · click a name below to mention · Ctrl+V pastes an image",
       "toOnly": "to {names}",
       "cost": "{n} in the room — every message runs {n} sessions",
+      "cost_one": "{n} in the room — every message runs {n} session",
       "nobodyYet": "Waiting for people to arrive…",
       "empty": "Everyone is taking a seat. Say what this meeting is about.",
       "end": "End",
@@ -938,7 +996,8 @@
       "back": "Back",
       "inMeeting": "{name} is in the meeting — write @{name} in the meeting panel",
       "you": "You",
-      "minutes": "{n} min"
+      "minutes": "{n} min",
+      "closing": "the meeting is closing…"
     },
     "board": {
       "button": "Board",
@@ -980,6 +1039,7 @@
       "filterAll": "Everyone",
       "showDone": "Show done",
       "notesCount": "{n} notes",
+      "notesCount_one": "{n} note",
       "close": "Close",
       "saved": "Saved",
       "started": "Task #{id} handed to {name}",
@@ -1061,7 +1121,9 @@
       },
       "ideaRank": "manager's pick {n}",
       "ideaRankHint": "The project manager's order of doing",
-      "ideaAdvice": "Project manager"
+      "ideaAdvice": "Project manager",
+      "sendBackPh": "Why? What should change (optional)",
+      "sentBack": "#{id} went back to its owner"
     }
   }
 }

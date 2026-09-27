@@ -1,6 +1,6 @@
-import fs from "node:fs";
 import path from "node:path";
 import { EventEmitter } from "node:events";
+import { isObject, readJsonSafe, writeJsonAtomicSync } from "./fsutil.js";
 
 export type TaskStatus = "todo" | "doing" | "review" | "done" | "blocked";
 export const TASK_STATUSES: readonly TaskStatus[] = ["todo", "doing", "review", "done", "blocked"];
@@ -79,14 +79,15 @@ export class Board extends EventEmitter {
   constructor(dataDir: string) {
     super();
     this.file = path.join(dataDir, "board.json");
-    let loaded: Partial<BoardData> = {};
-    try { loaded = JSON.parse(fs.readFileSync(this.file, "utf8")); } catch {}
-    this.data = { nextTask: loaded.nextTask ?? 1, nextNote: loaded.nextNote ?? 1, nextIdea: loaded.nextIdea ?? 1, tasks: loaded.tasks ?? [], notes: loaded.notes ?? [], ideas: loaded.ideas ?? [] };
+    // Never start empty over a board that merely failed to parse: the .bak is tried first, and a file that cannot be
+    // read at all is moved aside (board.json.corrupt-<ts>) before an empty board is started, so no save can overwrite it.
+    const loaded = readJsonSafe<Partial<BoardData>>(this.file, () => ({}), { validate: isObject, label: "board" });
+    const list = <T>(v: T[] | undefined): T[] => (Array.isArray(v) ? v : []);
+    this.data = { nextTask: loaded.nextTask ?? 1, nextNote: loaded.nextNote ?? 1, nextIdea: loaded.nextIdea ?? 1, tasks: list(loaded.tasks), notes: list(loaded.notes), ideas: list(loaded.ideas) };
   }
 
   private save() {
-    fs.mkdirSync(path.dirname(this.file), { recursive: true });
-    fs.writeFileSync(this.file, JSON.stringify(this.data));
+    writeJsonAtomicSync(this.file, this.data);
     this.emit("change");
   }
 

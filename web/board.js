@@ -5,6 +5,7 @@ const boardUI = (() => {
   let tab = "tasks", ownerFilter = "", showDone = false, noteFilter = "", ideaShowAll = false;
   const open = new Set();      // expanded task / note ids ("t3", "n7")
   const editing = new Set();   // note ids being edited
+  const sendingBack = new Set(); // review tasks whose "send back" reason box is open
 
   const board = () => ({ tasks: [], notes: [], ideas: [], ...(cur()?.board || {}) });
   const emps = () => [...(cur()?.employees.values() || [])];
@@ -35,18 +36,53 @@ const boardUI = (() => {
     $("ideasBadge").hidden = !fresh; $("ideasBadge").textContent = fresh;
   }
 
+  // Employee status only shows on the board through task alerts; this fingerprint tells whether a status change matters.
+  const alertSig = () => board().tasks.map((k) => `${k.id}:${alertOf(k) || ""}`).join(",");
+  let shownSig = "";
+
   let deepLink = params.get("board"); // /?board=tasks or /?board=notes opens the panel straight away
-  function refresh(officeId) {
+  // reason "status": an employee's status changed (or the clock ticked), which only matters for alerts on the task list
+  function refresh(officeId, reason) {
     if (officeId && officeId !== state.office) return;
     badge();
     if (deepLink && cur()?.board) { tab = ["notes", "ideas"].includes(deepLink) ? deepLink : "tasks"; deepLink = null; show(); return; }
-    if (!$("boardModal").hidden) render();
+    if ($("boardModal").hidden) return; // closed: show() renders fresh when it opens
+    if (reason === "status" && (tab !== "tasks" || alertSig() === shownSig)) return;
+    softRender();
   }
 
-  function show() { $("boardModal").hidden = false; render(); }
+  // Background updates wait while the boss is typing or choosing in the board, so half-typed text and open selects survive;
+  // what was typed into a card is also kept in `drafts` across re-renders.
+  const drafts = new Map(); // "i-comment:4" → text
+  let pending = false, pointerDown = 0;
+  const busy = () => {
+    if (pointerDown && Date.now() - pointerDown < 2000) return true; // mid-click: do not pull the button away
+    const a = document.activeElement;
+    if (!a || !(a.closest("#taskList, #ideaList, #noteList") || a.id === "taskOwnerFilter" || a.id === "noteAuthorFilter")) return false;
+    if (a.tagName === "SELECT") return !a.dataset.changed; // an open dropdown; once a choice is made the update may land
+    return (a.tagName === "INPUT" && a.type !== "checkbox") || a.tagName === "TEXTAREA";
+  };
+  function softRender() {
+    if (busy()) { pending = true; return; }
+    pending = false;
+    render();
+  }
+  const flush = () => { if (pending && !$("boardModal").hidden) softRender(); };
+  const modal = $("boardModal");
+  modal.addEventListener("pointerdown", () => { pointerDown = Date.now(); });
+  for (const ev of ["pointerup", "pointercancel"]) document.addEventListener(ev, () => { if (pointerDown) { pointerDown = 0; setTimeout(flush, 300); } });
+  modal.addEventListener("focusin", (ev) => { if (ev.target.tagName === "SELECT") delete ev.target.dataset.changed; });
+  modal.addEventListener("change", (ev) => { if (ev.target.tagName === "SELECT") { ev.target.dataset.changed = "1"; setTimeout(flush, 0); } });
+  modal.addEventListener("focusout", () => setTimeout(flush, 300));
+  modal.addEventListener("input", (ev) => { const k = ev.target.dataset?.draft; if (k) drafts.set(k, ev.target.value); });
+  setInterval(flush, 2000); // failsafe for a lost pointerup
+  const draft = (k, fallback) => (drafts.has(k) ? drafts.get(k) : fallback);
+
+  function show() { $("boardModal").hidden = false; pending = false; render(); }
   function hide() { $("boardModal").hidden = true; }
 
   function render() {
+    shownSig = alertSig();
     document.querySelectorAll("#boardTabs button").forEach((b) => b.classList.toggle("on", b.dataset.tab === tab));
     $("boardTasks").hidden = tab !== "tasks";
     $("boardNotes").hidden = tab !== "notes";
@@ -101,10 +137,11 @@ const boardUI = (() => {
     card.innerHTML = `
       <div class="task-head">
         ${owner ? `<img src="${office.portrait(k.owner)}" alt="" />` : ""}
-        <div class="task-main"><div class="task-title"><b>#${k.id}</b> ${escapeHtml(k.title)}${k.review ? ` <span class="tag" title="${escapeHtml(t("ui.board.reviewHint"))}">${escapeHtml(t("ui.board.reviewTag"))}</span>` : ""}${k.kind === "discovery" ? ` <span class="tag">${escapeHtml(t("ui.board.kindDiscovery"))}</span>` : ""}${k.after?.length ? ` <span class="tag" title=""${escapeHtml(t("ui.board.afterHint"))}">${escapeHtml(t("ui.board.afterTag", { ids: k.after.map((d) => "#" + d).join(", ") }))}</span>` : ""}${k.autoStart && k.status === "todo" ? ` <span class="tag" title="${escapeHtml(t("ui.board.queuedHint"))}">${escapeHtml(t("ui.board.queuedTag"))}</span>` : ""}${alert ? ` <span class="tag alert">${escapeHtml(t(`ui.board.alert.${alert}`))}</span>` : ""}</div>
+        <div class="task-main"><div class="task-title"><b>#${k.id}</b> ${escapeHtml(k.title)}${k.review ? ` <span class="tag" title="${escapeHtml(t("ui.board.reviewHint"))}">${escapeHtml(t("ui.board.reviewTag"))}</span>` : ""}${k.kind === "discovery" ? ` <span class="tag">${escapeHtml(t("ui.board.kindDiscovery"))}</span>` : ""}${k.after?.length ? ` <span class="tag" title="${escapeHtml(t("ui.board.afterHint"))}">${escapeHtml(t("ui.board.afterTag", { ids: k.after.map((d) => "#" + d).join(", ") }))}</span>` : ""}${k.autoStart && k.status === "todo" ? ` <span class="tag" title="${escapeHtml(t("ui.board.queuedHint"))}">${escapeHtml(t("ui.board.queuedTag"))}</span>` : ""}${alert ? ` <span class="tag alert">${escapeHtml(t(`ui.board.alert.${alert}`))}</span>` : ""}</div>
           <div class="task-meta">${escapeHtml(owner?.name || t("ui.board.noOwner"))} · ${escapeHtml(t("ui.board.by", { name: who(k.createdBy) }))} · ${when(k.updated)}${last && !isOpen ? ` · <i>${escapeHtml(last.text.slice(0, 90))}</i>` : ""}</div></div>
         <div class="task-actions"></div>
       </div>
+      ${k.status === "review" && sendingBack.has(k.id) ? `<div class="send-back"><input class="t-back-reason" data-draft="t-back:${k.id}" maxlength="2000" placeholder="${escapeHtml(t("ui.board.sendBackPh"))}" value="${escapeHtml(draft(`t-back:${k.id}`, ""))}" /><button class="btn small ghost t-back-cancel" type="button">${escapeHtml(t("ui.board.cancel"))}</button><button class="btn small primary t-back-go" type="button">${escapeHtml(t("ui.board.sendBack"))}</button></div>` : ""}
       <div class="task-body"${isOpen ? "" : " hidden"}>
         ${k.detail ? `<div class="task-detail">${md(k.detail)}</div>` : ""}
         ${k.notes.map((n) => `<div class="task-note"><span>${escapeHtml(who(n.by))} · ${when(n.ts)}</span>${escapeHtml(n.text)}</div>`).join("")}
@@ -120,8 +157,21 @@ const boardUI = (() => {
     const btn = (label, cls, fn, tip) => { const b = document.createElement("button"); b.type = "button"; b.className = "btn small " + cls; b.textContent = label; if (tip) b.title = tip; b.onclick = (ev) => { ev.stopPropagation(); fn(); }; actions.appendChild(b); };
     if (alert === "waiting" || alert === "error") btn(t("ui.board.openChat"), "always", () => { hide(); openChat(k.owner); });
     if (alert === "stalled") btn(t("ui.board.restart"), "ghost", async () => { if (await call("POST", `${API()}/tasks/${k.id}/start`)) toast(t("ui.board.started", { id: k.id, name: owner?.name || k.owner })); }, t("ui.board.startTip"));
-    if (owner && (k.status === "todo" || k.status === "blocked")) btn(t("ui.board.start"), "primary", async () => { if (await call("POST", `${API()}/tasks/${k.id}/start`)) toast(t("ui.board.started", { id: k.id, name: owner?.name || k.owner })); }, t("ui.board.startTip"));
-    if (k.status === "review") btn(t("ui.board.sendBack"), "ghost", () => call("PUT", `${API()}/tasks/${k.id}`, { status: "todo" }));
+    // a task that waits for others is not started by hand while they are open (the status select still can)
+    const waitsFor = (k.after || []).filter((d) => board().tasks.some((x) => x.id === d && x.status !== "done"));
+    if (owner && (k.status === "todo" || k.status === "blocked")) btn(t("ui.board.start"), "primary", async () => { if (await call("POST", `${API()}/tasks/${k.id}/start`)) toast(t("ui.board.started", { id: k.id, name: owner?.name || k.owner })); }, waitsFor.length ? t("ui.board.afterHint") : t("ui.board.startTip"));
+    if (waitsFor.length) { const b = actions.lastElementChild; if (b) b.disabled = true; }
+    // "send back" asks why first (optional): the reason becomes a note on the task, and the owner gets it when they resume
+    if (k.status === "review" && !sendingBack.has(k.id)) btn(t("ui.board.sendBack"), "ghost", () => { sendingBack.add(k.id); renderTasks(); setTimeout(() => document.querySelector(`[data-draft="t-back:${k.id}"]`)?.focus(), 0); });
+    const backBox = card.querySelector(".send-back");
+    if (backBox) {
+      const reason = backBox.querySelector(".t-back-reason");
+      const close = () => { sendingBack.delete(k.id); drafts.delete(`t-back:${k.id}`); renderTasks(); };
+      const go = async () => { if (await call("PUT", `${API()}/tasks/${k.id}`, { status: "todo", ...(reason.value.trim() ? { note: reason.value.trim() } : {}) })) { toast(t("ui.board.sentBack", { id: k.id })); close(); } };
+      backBox.querySelector(".t-back-cancel").onclick = close;
+      backBox.querySelector(".t-back-go").onclick = go;
+      reason.onkeydown = (ev) => { if (ev.key === "Enter" && !ev.isComposing) { ev.preventDefault(); go(); } else if (ev.key === "Escape") { ev.stopPropagation(); close(); } };
+    }
     if (k.status === "review" || k.status === "doing") btn(t(k.status === "review" ? "ui.board.approve" : "ui.board.markDone"), "ok", () => call("PUT", `${API()}/tasks/${k.id}`, { status: "done" }));
     if (k.status === "done") btn(t("ui.board.reopen"), "ghost", () => call("PUT", `${API()}/tasks/${k.id}`, { status: "todo" }));
     card.querySelector(".t-status").onchange = (ev) => call("PUT", `${API()}/tasks/${k.id}`, { status: ev.target.value });
@@ -171,24 +221,25 @@ const boardUI = (() => {
     card.innerHTML = `<div class="note-head">${avatar}<div class="task-main"><div class="task-title">💡 <b>#${x.id}</b> ${escapeHtml(x.title)} <span class="tag">${escapeHtml(t(`ui.board.ideaStatus.${x.status}`))}</span>${x.rank && x.status !== "moved" ? ` <span class="tag alert" title="${escapeHtml(t("ui.board.ideaRankHint"))}">${escapeHtml(t("ui.board.ideaRank", { n: x.rank }))}</span>` : ""}${x.effort ? ` <span class="tag">${escapeHtml(t(`ui.board.ideaEffort.${x.effort}`))}</span>` : ""}${x.taskId ? ` <span class="tag">${escapeHtml(t("ui.board.ideaMoved", { id: x.taskId }))}</span>` : ""}</div><div class="task-meta">${escapeHtml(x.byName)} · ${when(x.ts)}${x.tags.map((g) => ` <span class="tag">${escapeHtml(g)}</span>`).join("")}${x.comment ? ` · <i>${escapeHtml(x.comment)}</i>` : ""}</div></div></div>
       <div class="note-text${isOpen ? "" : " clamp"}">${md(x.text || "")}</div>
       ${x.advice ? `<div class="task-note"><span>${escapeHtml(t("ui.board.ideaAdvice"))}</span>${escapeHtml(x.advice)}</div>` : ""}
-      <div class="note-actions"${isOpen ? "" : " hidden"}>${live ? `<select class="i-owner"><option value="">${escapeHtml(t("ui.board.ideaOwner"))}…</option>${ownerOptions(chosen, false)}</select><input class="i-comment" maxlength="600" placeholder="${escapeHtml(t("ui.board.ideaComment"))}" value="${escapeHtml(x.comment || "")}" />` : ""}<span class="i-buttons"></span></div>`;
+      <div class="note-actions"${isOpen ? "" : " hidden"}>${live ? `<select class="i-owner"><option value="">${escapeHtml(t("ui.board.ideaOwner"))}…</option>${ownerOptions(chosen, false)}</select><input class="i-comment" data-draft="i-comment:${x.id}" maxlength="600" placeholder="${escapeHtml(t("ui.board.ideaComment"))}" value="${escapeHtml(draft(`i-comment:${x.id}`, x.comment || ""))}" />` : ""}<span class="i-buttons"></span></div>`;
     card.querySelector(".note-head").onclick = () => { open.has(key) ? open.delete(key) : open.add(key); renderIdeas(); };
     const buttons = card.querySelector(".i-buttons");
     const btn = (label, cls, fn) => { const b = document.createElement("button"); b.type = "button"; b.className = "btn small " + cls; b.textContent = label; b.onclick = fn; buttons.appendChild(b); };
     const comment = () => card.querySelector(".i-comment")?.value.trim() ?? "";
+    const act = async (fn) => { const r = await fn(); if (r) drafts.delete(`i-comment:${x.id}`); return r; };
     if (live) {
       card.querySelector(".i-owner").onchange = (ev) => ideaOwner.set(x.id, ev.target.value);
       const move = async (start) => {
         const owner = card.querySelector(".i-owner").value;
         if (!owner) { toast(t("ui.board.ideaPickOwner")); return; }
         if (comment() !== (x.comment || "")) await call("PUT", `${API()}/ideas/${x.id}`, { comment: comment() });
-        const k = await call("POST", `${API()}/ideas/${x.id}/promote`, { owner, start });
+        const k = await act(() => call("POST", `${API()}/ideas/${x.id}/promote`, { owner, start }));
         if (k) toast(t("ui.board.ideaMovedToast", { id: k.id }));
       };
       btn(t("ui.board.ideaMove"), "primary", () => move(false));
       btn(t("ui.board.ideaMoveStart"), "ok", () => move(true));
-      if (x.status === "new") btn(t("ui.board.ideaLater"), "ghost", () => call("PUT", `${API()}/ideas/${x.id}`, { status: "later", comment: comment() }));
-      btn(t("ui.board.ideaReject"), "danger", () => call("PUT", `${API()}/ideas/${x.id}`, { status: "rejected", comment: comment() }));
+      if (x.status === "new") btn(t("ui.board.ideaLater"), "ghost", () => act(() => call("PUT", `${API()}/ideas/${x.id}`, { status: "later", comment: comment() })));
+      btn(t("ui.board.ideaReject"), "danger", () => act(() => call("PUT", `${API()}/ideas/${x.id}`, { status: "rejected", comment: comment() })));
     } else {
       if (x.status === "rejected") btn(t("ui.board.ideaReopen"), "ghost", () => call("PUT", `${API()}/ideas/${x.id}`, { status: "new" }));
       btn(t("ui.board.delete"), "danger", () => call("DELETE", `${API()}/ideas/${x.id}`));
@@ -214,9 +265,10 @@ const boardUI = (() => {
     card.className = "note-card" + (isOpen ? " open" : "");
     const avatar = n.by !== "user" && emp(n.by) ? `<img src="${office.portrait(n.by)}" alt="" />` : `<span class="note-you">★</span>`;
     if (isEdit) {
-      card.innerHTML = `<input class="n-title" maxlength="140" value="${escapeHtml(n.title)}" /><textarea class="n-text" rows="6">${escapeHtml(n.text)}</textarea><input class="n-tags" value="${escapeHtml(n.tags.join(", "))}" placeholder="${escapeHtml(t("ui.board.noteTags"))}" /><div class="actions right"><button class="btn small ghost n-cancel" type="button">${escapeHtml(t("ui.board.cancel"))}</button><button class="btn small primary n-save" type="button">${escapeHtml(t("ui.board.save"))}</button></div>`;
-      card.querySelector(".n-cancel").onclick = () => { editing.delete(n.id); renderNotes(); };
-      card.querySelector(".n-save").onclick = async () => { if (await call("PUT", `${API()}/notes/${n.id}`, { title: card.querySelector(".n-title").value, text: card.querySelector(".n-text").value, tags: card.querySelector(".n-tags").value.split(",") })) { editing.delete(n.id); renderNotes(); } };
+      card.innerHTML = `<input class="n-title" data-draft="n-title:${n.id}" maxlength="140" value="${escapeHtml(draft(`n-title:${n.id}`, n.title))}" /><textarea class="n-text" data-draft="n-text:${n.id}" rows="6">${escapeHtml(draft(`n-text:${n.id}`, n.text))}</textarea><input class="n-tags" data-draft="n-tags:${n.id}" value="${escapeHtml(draft(`n-tags:${n.id}`, n.tags.join(", ")))}" placeholder="${escapeHtml(t("ui.board.noteTags"))}" /><div class="actions right"><button class="btn small ghost n-cancel" type="button">${escapeHtml(t("ui.board.cancel"))}</button><button class="btn small primary n-save" type="button">${escapeHtml(t("ui.board.save"))}</button></div>`;
+      const forget = () => ["n-title", "n-text", "n-tags"].forEach((f) => drafts.delete(`${f}:${n.id}`));
+      card.querySelector(".n-cancel").onclick = () => { editing.delete(n.id); forget(); renderNotes(); };
+      card.querySelector(".n-save").onclick = async () => { if (await call("PUT", `${API()}/notes/${n.id}`, { title: card.querySelector(".n-title").value, text: card.querySelector(".n-text").value, tags: card.querySelector(".n-tags").value.split(",") })) { editing.delete(n.id); forget(); renderNotes(); } };
       return card;
     }
     card.innerHTML = `<div class="note-head">${avatar}<div class="task-main"><div class="task-title"><b>#${n.id}</b> ${escapeHtml(n.title)}</div><div class="task-meta">${escapeHtml(n.byName)} · ${when(n.ts)}${n.tags.map((x) => ` <span class="tag">${escapeHtml(x)}</span>`).join("")}</div></div></div>
@@ -259,7 +311,7 @@ const boardUI = (() => {
   };
   document.addEventListener("keydown", (ev) => { if (ev.key === "Escape" && !$("boardModal").hidden) hide(); });
 
-  setInterval(() => refresh(), 30e3); // "stalled" depends on the clock
+  setInterval(() => refresh(undefined, "status"), 30e3); // "stalled" depends on the clock
 
   return { refresh, show };
 })();

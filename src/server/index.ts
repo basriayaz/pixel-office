@@ -9,7 +9,7 @@ import { Store } from "./store.js";
 import { Meeting } from "./meeting.js";
 import { Board, TASK_STATUSES, IDEA_STATUSES, type TaskStatus, type Task, type IdeaStatus, type Effort } from "./board.js";
 import { expandHome, ensureWorktree, loadEmployees, loadEmployee, listSkills, listProjectSkills, writeAgentFile, createEmployeeDir, archiveEmployeeDir, writeSkill, readSkill, deleteSkill, syncClaudeAgents } from "./agents.js";
-import { loadSettings, configPath, readRawConfig, writeRawConfig, officeDefFromRaw, officeIdOf, absPath, displayPath, rootFromEnv, initRoot, PKG_ROOT, THEMES, type OfficeDef, type Theme } from "./config.js";
+import { loadSettings, ensureProjectIgnores, configPath, readRawConfig, writeRawConfig, officeDefFromRaw, officeIdOf, absPath, displayPath, rootFromEnv, initRoot, PKG_ROOT, THEMES, type OfficeDef, type Theme } from "./config.js";
 import { loadLocale, availableLocales, detectLocale, Translator } from "./i18n.js";
 import { initRuntime, t } from "./runtime.js";
 import crypto from "node:crypto";
@@ -17,6 +17,9 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { officeToolDefs } from "./office-tools.js";
 import { codexModels, isCodexModel } from "./codex.js";
+import { createGuard, isLoopbackHost } from "./security.js";
+import { acquireLock } from "./lock.js";
+import { writeFileAtomicSync } from "./fsutil.js";
 
 const R = rootFromEnv();
 // Global mode sets itself up on first run; project mode expects `pixel-office init`.
@@ -25,9 +28,57 @@ if (!fs.existsSync(configPath(R))) {
   if (R.mode === "global") { initRoot(R, { locale: detectLocale() }); console.log(`Created ${configPath(R)}`); firstRun = true; }
   else console.log(`No ${configPath(R)} — using defaults (run "pixel-office init" to create one).`);
 }
+ensureProjectIgnores(R);
 const settings = loadSettings(R);
 let locale = loadLocale(settings.locale);
 initRuntime(settings, new Translator(locale.data));
+
+// No login exists, so listening beyond this machine would hand every employee's shell to the whole network.
+if (!isLoopbackHost(settings.host) && process.env.PIXEL_OFFICE_ALLOW_REMOTE !== "1") {
+  console.error(`Refusing to listen on ${settings.host}: the office has no login, so anyone on the network could command your employees.\n` +
+    `Use host 127.0.0.1 (the default), or set PIXEL_OFFICE_ALLOW_REMOTE=1 if you really mean it.`);
+  process.exit(1);
+}
+
+// One server per data folder: taken before anything below reads or moves data (see lock.ts).
+const PID_FILE = path.join(settings.dataDir, "server.pid");
+const lock = (() => {
+  try { return acquireLock(PID_FILE, settings.port); }
+  catch (err) { console.warn(`Could not create ${PID_FILE} (${(err as Error).message}); starting without the one-server-per-folder lock.`); return null; }
+})();
+if (lock && !lock.ok) {
+  console.error(`Another Pixel Office server (pid ${lock.pid}${lock.port ? `, http://localhost:${lock.port}` : ""}) already uses ${settings.dataDir}.\n` +
+    `Only one server may run per data folder. Stop it first ("pixel-office stop"), or use another PIXEL_OFFICE_HOME.`);
+  process.exit(1);
+}
+const releaseLock = () => { if (lock?.ok) lock.release(); };
+process.on("exit", releaseLock);
+
+// ---- errors must not take the office down ----
+// One bad message, route or timer used to end the process, and with it every employee's running session. Before the
+// server listens, a crash is a real startup failure and still exits; afterwards it is logged and the office keeps going,
+// unless errors pile up so fast that something is clearly broken for good.
+let listening = false, stopping = false;
+const crashTimes: number[] = [];
+function logError(where: string, err: unknown) {
+  console.error(`[error] ${where}:`, err instanceof Error ? err.stack ?? err.message : err);
+}
+function onFatal(kind: string, err: unknown) {
+  logError(kind, err);
+  if (!listening || stopping) { releaseLock(); process.exit(1); }
+  const now = Date.now();
+  crashTimes.push(now);
+  while (crashTimes.length && now - crashTimes[0] > 60e3) crashTimes.shift();
+  if (crashTimes.length > 20) { console.error("[error] more than 20 uncaught errors in a minute; shutting down."); void shutdown(1); }
+}
+process.on("unhandledRejection", (reason) => onFatal("unhandled promise rejection", reason));
+process.on("uncaughtException", (err) => onFatal("uncaught exception", err));
+// Wraps a callback so a throw inside it is logged instead of travelling into whoever called it (an Employee's turn loop,
+// the Board's save, a timer).
+const safe = <A extends unknown[]>(where: string, fn: (...a: A) => unknown) => (...a: A) => {
+  try { const r = fn(...a); if (r instanceof Promise) r.catch((err) => logError(where, err)); }
+  catch (err) { logError(where, err); }
+};
 
 interface OfficeRt {
   def: OfficeDef;
@@ -38,14 +89,37 @@ interface OfficeRt {
 }
 const offices = new Map<string, OfficeRt>();
 
-// Store folder per office. A single-office setup that later became multi-office keeps its data by moving it under dataDir/<id>.
+// Store folder per office: dataDir itself for a single office, dataDir/<id> once there are several.
+// A single office that became one of several keeps its data at dataDir until the next start (employees, the board and
+// meetings hold on to their folder, so nothing may move under them while they run); at that start, before anything is
+// opened, the first office's data is moved under dataDir/<id>: chat histories, state, board, meetings and attachments.
+const LEGACY_DATA = /^(history|meetings|attachments|(state|board)\.json(\.bak|\.corrupt-.+)?)$/;
+const RESERVED_OFFICE_IDS = new Set(["history", "meetings", "attachments"]);
+function migrateSingleOfficeData(dir: string) {
+  const root = settings.dataDir;
+  let entries: string[] = [];
+  try { entries = fs.readdirSync(root).filter((f) => LEGACY_DATA.test(f)); } catch { return; }
+  if (!entries.length) return;
+  if (fs.existsSync(path.join(dir, "state.json")) || fs.existsSync(path.join(dir, "board.json"))) {
+    console.warn(`[data] ${root} still has single-office data (${entries.join(", ")}), but ${dir} already has its own; leaving both untouched. Merge them by hand.`);
+    return;
+  }
+  fs.mkdirSync(dir, { recursive: true });
+  for (const f of entries) {
+    const src = path.join(root, f), dst = path.join(dir, f);
+    if (!fs.existsSync(dst)) { fs.renameSync(src, dst); continue; }
+    // a folder the office already has (usually an empty history/ a Store created): move what it does not have yet
+    if (fs.statSync(src).isDirectory() && fs.statSync(dst).isDirectory()) {
+      for (const c of fs.readdirSync(src)) if (!fs.existsSync(path.join(dst, c))) fs.renameSync(path.join(src, c), path.join(dst, c));
+      try { fs.rmdirSync(src); } catch { console.warn(`[data] left ${src} in place: ${dir} already had some of the same files.`); }
+    } else console.warn(`[data] left ${src} in place: ${dst} already exists.`);
+  }
+  console.log(`[data] moved the first office's data into ${dir}`);
+}
 function storeFor(def: OfficeDef): Store {
   if (!settings.multiOffice) return new Store(settings.dataDir);
   const dir = path.join(settings.dataDir, def.id);
-  if (!fs.existsSync(dir) && fs.existsSync(path.join(settings.dataDir, "history"))) {
-    fs.mkdirSync(dir, { recursive: true });
-    for (const f of ["history", "state.json"]) { const src = path.join(settings.dataDir, f); if (fs.existsSync(src)) fs.renameSync(src, path.join(dir, f)); }
-  }
+  if (def.id === settings.offices[0].id) migrateSingleOfficeData(dir);
   return new Store(dir);
 }
 
@@ -161,13 +235,102 @@ function managerNeeded(o: OfficeRt): boolean {
   const pm = managerOf(o), mode = modeOf(o);
   if (!pm || cycleOf(o).phase === "discovering") return false; // a discovery round has its own calls
   const open = o.board.tasks.filter((x) => x.status !== "done");
-  const running = open.some((x) => x.status === "doing" || (x.status === "todo" && x.autoStart)); // approved and queued is as good as running
+  const running = open.some((x) => taskRunning(o, x)); // approved and queued is as good as running; a "doing" nobody works on is not
   const waiting = open.some((x) => x.status === "review" || x.status === "blocked");
   const unstarted = open.some((x) => x.status === "todo" && !x.autoStart && x.owner !== pm.cfg.id && !o.board.waitingOn(x).length);
   return mode === "auto" ? waiting || unstarted || (!running && pm.hasNews) : !running && (waiting || pm.hasNews);
 }
 function nudgeManager(o: OfficeRt) {
   if (managerNeeded(o)) managerOf(o)!.sendWhenFree(t(`server.board.wake.${modeOf(o)}`), () => managerNeeded(o));
+}
+
+// ---- stuck work ----
+// "doing" on the board is only a label. After a restart (shutdown keeps running tasks "doing"), a reset, or a queue that was only
+// in memory, nobody works on such a task, yet it used to count as running forever: the manager was never called and no round began.
+// The one answer to "is it running": its owner has it in hand (its turn, its session between turns, or its queue); an approved task
+// also while it waits for its prerequisites; and a "doing" task while its owner works in the chat (task sessions off).
+function taskRunning(o: OfficeRt, k: Task): boolean {
+  const owner = o.employees.get(k.owner);
+  if (!owner || (k.status !== "doing" && k.status !== "todo")) return false;
+  if (owner.holdsTask(k.id)) return true;
+  if (k.status === "todo") return !!k.autoStart && o.board.waitingOn(k).length > 0;
+  return owner.busy && owner.currentTask === undefined;
+}
+const STUCK_TASK_MS = Number(process.env.PIXEL_OFFICE_STUCK_MS) || 5 * 60e3; // "doing", nobody holds it and its owner sits idle for this long: picked up again
+const STUCK_DISCOVERY_MS = 30 * 60e3;                                       // a discovery round with nothing running in it is closed after this long
+const STUCK_CHECK_MS = Number(process.env.PIXEL_OFFICE_STUCK_CHECK_MS) || 60e3; // looks at the board and the employees in memory only; never calls a model
+
+// A "doing" task nobody works on. By hand, nothing begins by itself: it goes back to "todo" and Start continues it in its own
+// session (the session stays on the task). In approved rounds and on its own, the owner continues it in that session right away.
+function reviveTask(o: OfficeRt, k: Task, why: "restart" | "stuck") {
+  const owner = o.employees.get(k.owner), mode = modeOf(o);
+  const log = (what: string) => console.log(`[stuck] [${o.def.name}] #${k.id} "${k.title.slice(0, 60)}" (${why}, ${mode}): ${what}`);
+  if (!owner) {
+    o.board.updateTask(k.id, { status: "todo", note: t("server.stuck.noOwner") }, "system");
+    return log(`owner ${k.owner} is gone; back to todo`);
+  }
+  if (mode === "manual") {
+    o.board.updateTask(k.id, { status: "todo", note: t(`server.stuck.${why}Manual`) }, "system");
+    return log("back to todo; Start continues it");
+  }
+  const note = t(`server.stuck.${why}Resumed`);
+  if (o.board.waitingOn(k).length) { // prerequisites still open: approved, it begins by itself when they are done
+    o.board.updateTask(k.id, { status: "todo", note }, "system");
+    return log(`waits for #${o.board.waitingOn(k).join(", #")}, then continues (${launch(o, k)})`);
+  }
+  o.board.updateTask(k.id, { note }, "system");
+  log(`continues in its own session (${owner.startTask(k.id)})`);
+}
+
+// Once after start: nothing runs yet, so every "doing" task was left behind by the last run, and an approved task that sat in an
+// owner's queue (memory only) was forgotten. Then, every minute, the same for work that got stuck while the server ran.
+function reconcileAtStart(o: OfficeRt) {
+  let changed = false;
+  for (const k of [...o.board.tasks]) {
+    if (taskRunning(o, k)) continue;
+    if (k.status === "doing") { reviveTask(o, k, "restart"); changed = true; }
+    else if (k.status === "todo" && k.autoStart && o.employees.has(k.owner)) {
+      changed = true;
+      if (modeOf(o) === "manual") {
+        o.board.markTask(k.id, { autoStart: null });
+        o.board.updateTask(k.id, { note: t("server.stuck.restartQueued") }, "system");
+        console.log(`[stuck] [${o.def.name}] #${k.id} "${k.title.slice(0, 60)}" (restart, manual): queued start forgotten; waits for Start`);
+      } else console.log(`[stuck] [${o.def.name}] #${k.id} "${k.title.slice(0, 60)}" (restart): queued start begins again (${launch(o, k, o.employees.get(k.autoStart))})`);
+    }
+  }
+  closeStuckDiscovery(o);
+  if (changed) nudgeManager(o); // the wave these tasks held up is over: the manager hears of it once, as after any wave
+}
+
+const stuckSince = new Map<string, number>(); // office:task -> first seen "doing" with nobody on it
+function checkStuck(o: OfficeRt, now = Date.now()) {
+  // without task sessions a task is worked on in the chat and nobody "holds" it between turns: only the start check applies there
+  if (settings.taskSessions) for (const k of [...o.board.tasks]) {
+    const key = `${o.def.id}:${k.id}`;
+    const owner = o.employees.get(k.owner);
+    if (k.status !== "doing" || taskRunning(o, k) || owner?.busy) { stuckSince.delete(key); continue; }
+    const since = stuckSince.get(key);
+    if (since === undefined) { stuckSince.set(key, now); continue; }
+    if (now - since < STUCK_TASK_MS) continue;
+    stuckSince.delete(key);
+    reviveTask(o, k, "stuck");
+  }
+  for (const key of stuckSince.keys()) if (key.startsWith(`${o.def.id}:`) && !o.board.tasks.some((k) => `${o.def.id}:${k.id}` === key && k.status === "doing")) stuckSince.delete(key);
+  closeStuckDiscovery(o, now);
+}
+
+// A discovery round nobody works on any more (its tasks were lost, the manager's call went down with a restart) would keep the
+// office in "discovering" for good, and the manager is never called then. It is closed, with a note in the notebook and a line for the manager.
+function closeStuckDiscovery(o: OfficeRt, now = Date.now()) {
+  const c = cycleOf(o);
+  if (c.phase !== "discovering" || now - c.startedAt < STUCK_DISCOVERY_MS) return;
+  if (o.board.tasks.some((k) => taskRunning(o, k)) || [...o.employees.values()].some((e) => e.busy || e.hasOfficeMessages)) return;
+  const min = Math.round((now - c.startedAt) / 60e3);
+  saveCycle(o, { ...c, phase: "waiting" });
+  o.board.addNote("system", t("server.stuck.by"), t("server.stuck.discoveryTitle", { no: c.no }), t("server.stuck.discoveryText", { no: c.no, min }), [t("server.stuck.by")]);
+  managerOf(o)?.addDigest(t("server.stuck.discoveryDigest", { no: c.no, min }));
+  console.log(`[stuck] [${o.def.name}] discovery round ${c.no} closed after ${min} min with nothing running`);
+  nudgeManager(o);
 }
 
 function openOffice(def: OfficeDef): OfficeRt {
@@ -185,8 +348,8 @@ function openOffice(def: OfficeDef): OfficeRt {
   const board = new Board(store.dir);
   const o: OfficeRt = { def, store, employees, board };
   offices.set(def.id, o);
-  board.on("change", () => broadcast({ type: "board", office: def.id, board: boardPayload(o) }));
-  board.on("status", (k: Task, _prev: TaskStatus, by: string) => onTaskStatus(o, k, by));
+  board.on("change", safe("board change", () => broadcast({ type: "board", office: def.id, board: boardPayload(o) })));
+  board.on("status", safe("task status", (k: Task, _prev: TaskStatus, by: string) => onTaskStatus(o, k, by)));
   for (const e of employees.values()) e.setColleagues(colleaguesOf(o));
   return o;
 }
@@ -211,16 +374,19 @@ for (const def of settings.offices) openOffice(def);
 const defaultOfficeId = () => settings.offices[0].id;
 
 const app = express();
+// Refuses foreign pages (Origin) and DNS rebinding (Host) before anything is served; see security.ts.
+const guard = createGuard({ port: settings.port, host: settings.host, extraHosts: (process.env.PIXEL_OFFICE_ALLOWED_HOSTS ?? "").split(",") });
+app.use(guard.middleware);
 app.use(express.json({ limit: "1mb" }));
 app.use(express.static(path.join(PKG_ROOT, "web")));
 
 function publicInfo(e: Employee) {
   const { id, name, role, color, look, officeId } = e.cfg;
-  return { id, office: officeId, name, role, color, look, engine: e.engine, status: e.status, cost: e.cost, context: e.context, task: e.currentTask ?? null, model: e.model ?? e.cfg.model ?? null, sickUntil: e.sickUntil || undefined, manager: !!e.cfg.manager };
+  return { id, office: officeId, name, role, color, look, engine: e.engine, status: e.status, cost: e.cost, context: e.context, task: e.currentTask ?? null, model: e.model ?? e.cfg.model ?? null, sickUntil: e.sickUntil || undefined, manager: !!e.cfg.manager, queued: e.queue.length, compacting: e.isCompacting };
 }
 
 const readText = (p?: string) => { try { return p ? fs.readFileSync(p, "utf8") : ""; } catch { return ""; } };
-const MODELS = ["claude-opus-5", "claude-sonnet-5", "claude-haiku-4-5", "claude-fable-5-1", "claude-opus-4-8", "claude-opus-4-7", "claude-sonnet-4-6"] as const;
+const MODELS = ["claude-opus-5-5", "claude-opus-5", "claude-sonnet-5", "claude-haiku-4-5", "claude-fable-5-1", "claude-opus-4-8", "claude-opus-4-7", "claude-sonnet-4-6"] as const;
 const EFFORTS = ["low", "medium", "high", "xhigh", "max"] as const;
 const PERMS = ["default", "acceptEdits", "plan", "dontAsk", "bypassPermissions"] as const;
 const clean = (v: unknown, max = 200) => (typeof v === "string" ? v.trim().slice(0, max) : "");
@@ -342,17 +508,12 @@ app.post("/api/offices", (req, res) => {
   if (!name) return res.status(400).json({ error: t("server.nameRoleRequired") });
   const base = path.dirname(settings.offices[0].employeesDir);
   let id = officeIdOf(name, "office");
-  for (let n = 2; offices.has(id); n++) id = `${officeIdOf(name, "office")}-${n}`;
+  // office folders sit next to the first office's data until it is moved: an id must not be one of those names
+  for (let n = 2; offices.has(id) || RESERVED_OFFICE_IDS.has(id); n++) id = `${officeIdOf(name, "office")}-${n}`;
   const cwdRaw = clean(req.body?.cwd, 500);
-  if (!settings.multiOffice) {
-    // Convert the single office into a named first office so both live side by side.
-    settings.multiOffice = true;
-    const first = settings.offices[0];
-    const rt = offices.get(first.id)!;
-    const dir = path.join(settings.dataDir, first.id);
-    if (!fs.existsSync(dir)) { fs.mkdirSync(dir, { recursive: true }); for (const f of ["history", "state.json"]) { const src = path.join(settings.dataDir, f); if (fs.existsSync(src)) fs.renameSync(src, path.join(dir, f)); } }
-    rt.store = new Store(dir);
-  }
+  // Converting the single office into a named first office: its data stays at dataDir for now and is moved under
+  // dataDir/<id> at the next start (storeFor), because its employees, board and meeting keep writing to the folder they have.
+  if (!settings.multiOffice) settings.multiOffice = true;
   const def = officeDefFromRaw(R, { id, name, employeesDir: path.join(base, id), theme: pick(req.body?.theme, THEMES) ?? "default", ...(cwdRaw ? { cwd: cwdRaw } : {}) }, settings.offices.length, settings.offices[0].cwd);
   settings.offices.push(def);
   const o = openOffice(def);
@@ -569,6 +730,7 @@ r.get("/employees/:id/detail", (req: OReq, res) => {
     connectorsOff: e.cfg.connectorsOff ?? [],
     skillsDir: e.cfg.pluginDir ? path.join(e.cfg.pluginDir, "skills") : null,
     refreshHours: e.cfg.refreshHours ?? 0,
+    autoRefresh: autoRefreshOf(e),
     lastRefresh: o.store.getMeta<number>(e.cfg.id, "lastRefresh") ?? null,
     currentManager: [...o.employees.values()].find((x) => x.cfg.manager && x !== e)?.cfg.name ?? null,
     stats: { messages: e.history.length, tasks: userMsgs, lastActivity: e.lastActivity || null },
@@ -597,7 +759,7 @@ r.put("/employees/:id/memory", (req: OReq, res) => {
   if (!e?.cfg.memoryFile) return res.status(404).json({ error: t("server.noMemory") });
   const text = typeof req.body?.text === "string" ? req.body.text : null;
   if (text === null) return res.status(400).json({ error: t("server.textRequired") });
-  fs.writeFileSync(e.cfg.memoryFile, text.endsWith("\n") ? text : text + "\n");
+  writeFileAtomicSync(e.cfg.memoryFile, text.endsWith("\n") ? text : text + "\n", { backup: false });
   res.json({ ok: true });
 });
 
@@ -654,10 +816,12 @@ r.put("/employees/:id", async (req: OReq, res) => {
   if (b.prompt !== undefined) cfg.systemPrompt = clean(b.prompt, 20000) || cfg.systemPrompt;
   if (b.color !== undefined && /^#[0-9a-f]{6}$/i.test(b.color)) cfg.color = b.color;
   if (b.look && typeof b.look === "object") cfg.look = b.look;
-  if (b.model !== undefined) cfg.model = pickModel(b.model);
+  // unchanged stays as it is: a model missing from today's list (Codex not signed in, a hidden model) must not be wiped by saving other settings
+  if (b.model !== undefined) cfg.model = b.model && b.model === e.cfg.model ? e.cfg.model : pickModel(b.model);
   if (b.effort !== undefined) cfg.effort = pick(b.effort, EFFORTS);
   if (b.permissionMode !== undefined) cfg.permissionMode = pick(b.permissionMode, PERMS) ?? "default";
   if (b.refreshHours !== undefined) cfg.refreshHours = Math.max(0, Number(b.refreshHours) || 0);
+  if (b.autoRefresh !== undefined) cfg.autoRefresh = b.autoRefresh === true || undefined;
   if (b.cwd !== undefined) { const c = clean(b.cwd, 500); cfg.baseCwd = c ? expandHome(c) : o.def.cwd; }
   if (b.worktree !== undefined) cfg.worktree = !!b.worktree;
   if (b.cwd !== undefined || b.worktree !== undefined) {
@@ -721,8 +885,17 @@ r.delete("/employees/:id/skills/:skill", async (req: OReq, res) => {
 app.use("/api/offices/:office", r);
 app.use("/api", r);
 
+// Last stop for a route that threw (Express 5 also brings rejected async handlers here): log it, answer, keep running.
+app.use((err: unknown, req: Request, res: express.Response, _next: express.NextFunction) => {
+  const status = Number((err as { status?: number; statusCode?: number })?.status ?? (err as { statusCode?: number })?.statusCode);
+  if (!(status >= 400 && status < 500)) logError(`${req.method} ${req.originalUrl}`, err);
+  if (res.headersSent) return;
+  res.status(status >= 400 && status < 600 ? status : 500).json({ error: err instanceof Error ? err.message : String(err) });
+});
+
 const server = http.createServer(app);
-const wss = new WebSocketServer({ server });
+const wss = new WebSocketServer({ server, verifyClient: (info, cb) => guard.verifyClient(info, cb) });
+wss.on("error", (err) => logError("websocket server", err));
 
 // Keeps only well-formed image blocks of a supported type; at most 10 images and ~20 MB of base64 per message.
 function sanitizeImages(raw: unknown): ImageInput[] {
@@ -747,22 +920,28 @@ function broadcast(payload: unknown) {
 
 function wire(e: Employee) {
   const id = e.cfg.id, office = e.cfg.officeId;
-  e.on("status", (status, reason) => broadcast({ type: "status", office, id, status, reason, sickUntil: e.sickUntil || undefined }));
-  e.on("message", (message) => broadcast({ type: "message", office, id, message }));
+  // a listener that throws must not break the employee's turn loop that emitted the event
+  const onE = ((ev: string, fn: (...a: never[]) => unknown) => e.on(ev, safe(`${ev} of ${id}`, fn as (...a: unknown[]) => unknown))) as Employee["on"];
+  onE("status", (status, reason) => broadcast({ type: "status", office, id, status, reason, sickUntil: e.sickUntil || undefined }));
+  onE("message", (message) => broadcast({ type: "message", office, id, message }));
   // a session that fell over cannot be "doing" anything: its tasks show as blocked instead of looking busy forever
-  e.on("status", (status) => {
+  onE("status", (status) => {
     if (status !== "error") return;
     const o = offices.get(office);
     for (const k of o?.board.tasks.filter((x) => x.owner === id && x.status === "doing") ?? []) o!.board.updateTask(k.id, { status: "blocked", note: t("server.board.sessionError") }, "system");
   });
-  e.on("chunk", (text) => broadcast({ type: "chunk", office, id, text }));
-  e.on("chunk_end", () => broadcast({ type: "chunk_end", office, id }));
-  e.on("ask", (request) => broadcast({ type: "ask", office, id, request }));
-  e.on("ask_done", (requestId) => broadcast({ type: "ask_done", office, id, requestId }));
-  e.on("result", (res) => broadcast({ type: "result", office, id, ...res, model: e.model }));
-  e.on("status", () => broadcast({ type: "usage", office, id, context: e.context, task: e.currentTask ?? null }));
-  e.on("result", () => { const o = offices.get(office); if (o) setImmediate(() => advanceCycle(o, e.cfg.manager ? { managerTurn: true } : { turnEnd: true })); });
-  e.on("reset", () => {
+  onE("chunk", (text) => broadcast({ type: "chunk", office, id, text }));
+  // boss messages held until the running turn ends: the chat shows them as queued, with undo and "interrupt"
+  onE("queue", (queue) => broadcast({ type: "queue", office, id, queue }));
+  onE("message_removed", (msgId) => broadcast({ type: "message_removed", office, id, msgId }));
+  onE("compacting", (on) => broadcast({ type: "compacting", office, id, on }));
+  onE("chunk_end", () => broadcast({ type: "chunk_end", office, id }));
+  onE("ask", (request) => broadcast({ type: "ask", office, id, request }));
+  onE("ask_done", (requestId) => broadcast({ type: "ask_done", office, id, requestId }));
+  onE("result", (res) => broadcast({ type: "result", office, id, ...res, model: e.model }));
+  onE("status", () => broadcast({ type: "usage", office, id, context: e.context, task: e.currentTask ?? null }));
+  onE("result", () => { const o = offices.get(office); if (o) setImmediate(() => advanceCycle(o, e.cfg.manager ? { managerTurn: true } : { turnEnd: true })); });
+  onE("reset", () => {
     broadcast({ type: "history", office, id, messages: [], pending: [] });
     broadcast({ type: "result", office, id, cost: 0, durationMs: 0 });
   });
@@ -782,11 +961,26 @@ function startMeeting(o: OfficeRt, topic: string, ids: string[], interruptBusy: 
 }
 
 wss.on("connection", (ws) => {
+  ws.on("error", (err) => logError("websocket client", err));
   ws.send(JSON.stringify({ type: "init", offices: [...offices.values()].map((o) => ({ ...officeInfo(o), employees: roster(o), meeting: o.meeting?.state() ?? null, board: boardPayload(o) })) }));
   ws.on("message", async (raw) => {
-    let msg: { type: string; office?: string; id?: string; text?: string; requestId?: string; allow?: boolean; always?: boolean; answers?: Record<string, unknown>; images?: unknown;
-      topic?: string; ids?: unknown; to?: unknown; interrupt?: boolean; summary?: boolean; memory?: boolean };
+    let msg: ClientMessage;
     try { msg = JSON.parse(raw.toString()); } catch { return; }
+    if (!msg || typeof msg !== "object") return;
+    try { await handleClientMessage(ws, msg); }
+    catch (err) {
+      logError(`websocket message "${String(msg.type)}"`, err);
+      try { ws.send(JSON.stringify({ type: "error", office: msg.office, id: msg.id, error: err instanceof Error ? err.message : String(err) })); } catch {}
+    }
+  });
+});
+
+interface ClientMessage {
+  type: string; office?: string; id?: string; text?: string; requestId?: string; allow?: boolean; always?: boolean; answers?: Record<string, unknown>; images?: unknown;
+  topic?: string; ids?: unknown; to?: unknown; interrupt?: boolean; summary?: boolean; memory?: boolean; msgId?: string;
+}
+
+async function handleClientMessage(ws: WebSocket, msg: ClientMessage) {
     const o = offices.get(msg.office ?? defaultOfficeId());
     if (!o) return;
     const idList = (v: unknown) => (Array.isArray(v) ? v.filter((x): x is string => typeof x === "string").slice(0, 50) : []);
@@ -808,49 +1002,59 @@ wss.on("connection", (ws) => {
     const e = msg.id ? o.employees.get(msg.id) : undefined;
     if (!e) return;
     switch (msg.type) {
-      case "open": ws.send(JSON.stringify({ type: "history", office: o.def.id, id: e.cfg.id, messages: e.history, pending: e.pendingAsks })); break;
+      case "open": ws.send(JSON.stringify({ type: "history", office: o.def.id, id: e.cfg.id, messages: e.history, pending: e.pendingAsks, queue: e.queue })); break;
       case "send": {
         const images = sanitizeImages(msg.images);
         if (msg.text?.trim() || images.length) e.send((msg.text ?? "").trim(), false, images);
         break;
       }
       case "reply": if (msg.requestId) e.reply(msg.requestId, { allow: !!msg.allow, always: !!msg.always, answers: msg.answers }); break;
-      case "interrupt": await e.interrupt(); break;
+      case "interrupt": await e.interrupt(); break; // Stop: the turn ends, a task it ran goes back to "todo"
+      // undo a message that is still waiting; if it already went out, the client is told so (it keeps the text out of the input box)
+      case "unqueue": if (typeof msg.msgId === "string" && !e.unqueue(msg.msgId)) ws.send(JSON.stringify({ type: "queue_ack", office: o.def.id, id: e.cfg.id, op: "unqueue", ok: false, msgId: msg.msgId })); break;
+      // "interrupt": the running turn stops and the waiting messages go out now (not during a meeting: the queue waits for its end)
+      case "deliver_now": if (!(await e.deliverNow())) ws.send(JSON.stringify({ type: "queue_ack", office: o.def.id, id: e.cfg.id, op: "deliver_now", ok: false, reason: "meeting" })); break;
       case "cure": e.recover(); break;
       case "reset": await e.reset(); break;
       case "refresh": if (e.status === "idle" || e.status === "error") startRefresh(o, e); break;
     }
-  });
-});
+}
 
-// Self-refresh: idle employees revisit their memory and project docs every `refreshHours` (only if they worked since last time).
+// Self-refresh: off unless switched on per employee (`autoRefresh: true` on the profile), because it spends tokens nobody
+// asked for. When on, an idle employee revisits memory and project docs every `refreshHours` (default: the office setting),
+// only if they worked since last time, and never within 30 minutes of the boss writing to them.
+const autoRefreshOf = (e: Employee) => e.cfg.autoRefresh === true;
+const BOSS_QUIET_MS = 30 * 60e3;
 setInterval(() => {
   const now = Date.now();
-  for (const o of offices.values()) for (const e of o.employees.values()) {
-    const hours = e.cfg.refreshHours ?? 0;
-    if (hours <= 0 || e.status !== "idle" || e.inMeeting) continue;
+  for (const o of offices.values()) for (const e of o.employees.values()) safe(`auto refresh of ${e.cfg.id}`, () => {
+    if (!autoRefreshOf(e) || e.status !== "idle") return;
+    // nothing runs, waits or is queued, no task or meeting, and the boss has been quiet for 30 minutes
+    if (!e.canAutoRefresh(BOSS_QUIET_MS, now)) return;
+    const hours = (e.cfg.refreshHours ?? 0) > 0 ? e.cfg.refreshHours! : settings.refreshHours > 0 ? settings.refreshHours : 24;
     const last = o.store.getMeta<number>(e.cfg.id, "lastRefresh") ?? 0;
-    if (now - last < hours * 3600e3 || e.lastActivity <= last) continue;
+    if (now - last < hours * 3600e3 || e.lastActivity <= last) return;
     startRefresh(o, e);
-  }
+  })();
 }, 10 * 60e3);
 
 // Now and then an idle employee catches something and rests on the sofa for a few minutes (config `sickness: false` turns it off).
 const SICK_CHANCE = Number(process.env.PIXEL_OFFICE_SICK_CHANCE ?? 1 / 1000); // per employee per check → roughly once per 8 hours of idling
-if (settings.sickness) setInterval(() => {
+if (settings.sickness) setInterval(safe("sickness", () => {
   for (const o of offices.values()) for (const e of o.employees.values()) {
     if (e.status === "idle" && Math.random() < SICK_CHANCE) e.fallIll(Math.round(3 * 60e3 + Math.random() * 2 * 60e3));
   }
-}, 30e3);
+}), 30e3);
 
 server.on("error", (err: NodeJS.ErrnoException) => {
-  if (err.code === "EADDRINUSE") { console.error(t("server.portInUse", { port: settings.port })); process.exit(1); }
-  throw err;
+  if (err.code === "EADDRINUSE") console.error(t("server.portInUse", { port: settings.port }));
+  else logError("http server", err);
+  if (!listening) process.exit(1); // could not start at all; the lock is released on exit
 });
 
 server.listen(settings.port, settings.host, () => {
+  listening = true;
   const url = `http://localhost:${settings.port}`;
-  try { fs.mkdirSync(path.dirname(PID_FILE), { recursive: true }); fs.writeFileSync(PID_FILE, `${process.pid}\n${settings.port}\n`); } catch {}
   console.log(t("server.open", { port: settings.port }));
   if (settings.host !== "127.0.0.1") console.log(t("server.hostWarning", { host: settings.host }));
   console.log(`  ${R.mode === "global" ? "home" : "project"}: ${R.mode === "global" ? R.root : R.base}`);
@@ -858,20 +1062,27 @@ server.listen(settings.port, settings.host, () => {
     console.log(`  [${o.def.name}] ${o.def.employeesDir} → ${o.def.cwd}`);
     for (const e of o.employees.values()) console.log(`    - ${e.cfg.name} (${e.cfg.role})`);
   }
+  // work the last run left "doing" (or queued in memory) is put right before anything else starts
+  for (const o of offices.values()) safe(`stuck tasks of ${o.def.id}`, () => reconcileAtStart(o))();
+  setInterval(() => { for (const o of offices.values()) safe(`stuck check of ${o.def.id}`, () => checkStuck(o))(); }, STUCK_CHECK_MS).unref();
+  // boss messages still queued when the office last stopped go out now, instead of waiting for some later event
+  for (const o of offices.values()) for (const e of o.employees.values()) if (e.queue.length) safe(`queued messages of ${e.cfg.id}`, () => e.poke())();
   if (process.env.PIXEL_OFFICE_OPEN === "1") {
     const cmd = process.platform === "darwin" ? "open" : process.platform === "win32" ? "start" : "xdg-open";
     try { spawn(cmd, [url], { stdio: "ignore", detached: true, shell: process.platform === "win32" }).unref(); } catch {}
   }
 });
 
-const PID_FILE = path.join(settings.dataDir, "server.pid");
-let stopping = false;
-async function shutdown() {
+async function shutdown(code = 0) {
   if (stopping) return;
   stopping = true;
-  await Promise.all([...offices.values()].flatMap((o) => [...o.employees.values()].map((e) => e.interrupt().catch(() => {}))));
-  try { fs.rmSync(PID_FILE, { force: true }); } catch {}
-  process.exit(0);
+  setTimeout(() => { releaseLock(); process.exit(code); }, 10e3).unref(); // an interrupt that hangs must not keep the lock forever
+  // "keep": a board task that was running stays "doing" instead of falling back to "todo". At the next start reconcileAtStart finds
+  // it with nobody on it: by hand it goes back to "todo" (Start continues it in its own saved session), otherwise its owner
+  // continues it in that session right away.
+  await Promise.all([...offices.values()].flatMap((o) => [...o.employees.values()].map((e) => e.interrupt({ task: "keep", resume: false }).catch(() => {}))));
+  releaseLock();
+  process.exit(code);
 }
-process.on("SIGINT", shutdown);
-process.on("SIGTERM", shutdown);
+process.on("SIGINT", () => void shutdown());
+process.on("SIGTERM", () => void shutdown());

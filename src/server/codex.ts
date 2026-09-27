@@ -103,7 +103,7 @@ export function runCodexTurn(turn: CodexTurn, h: CodexHandlers): { done: Promise
         else if (ev.type === "item.started" && ev.item) h.onItemStarted(ev.item);
         else if (ev.type === "item.completed" && ev.item) {
           if (ev.item.type === "command_execution" || ev.item.type === "mcp_tool_call" || ev.item.type === "file_change" || ev.item.type === "web_search") res.calls++;
-          if (ev.item.type === "error" && /metadata .* not found/i.test(ev.item.message)) continue; // harmless notice about an unknown model name
+          if (ev.item.type === "error" && isCodexNotice(ev.item.message)) continue; // a harmless notice, not a failure
           h.onItem(ev.item);
         } else if (ev.type === "turn.completed") { res.ok = true; res.inputTokens = ev.usage?.input_tokens ?? 0; res.outputTokens = ev.usage?.output_tokens ?? 0; }
         else if (ev.type === "turn.failed" || ev.type === "error") res.error = readable(ev.error?.message ?? ev.message ?? "turn failed");
@@ -112,12 +112,24 @@ export function runCodexTurn(turn: CodexTurn, h: CodexHandlers): { done: Promise
     child.on("close", (code) => {
       if (killed) return resolve({ ...res, ok: false, error: "interrupted" });
       if (!res.ok && !res.error) res.error = err.trim().split("\n").pop() || `codex exited with ${code}`;
-      if (!res.ok && turn.thread && /no (rollout|session|thread|conversation)|not found|could not find/i.test(`${res.error} ${err}`)) res.notFound = true;
+      // only the resume failure itself counts: "not found" anywhere in stderr (a file, a tool, model metadata) is not a lost thread
+      if (!res.ok && turn.thread && (RESUME_FAILED.test(res.error ?? "") || RESUME_FAILED.test(err))) res.notFound = true;
       resolve(res);
     });
   });
   return { done, kill: () => { killed = true; try { child?.kill("SIGTERM"); } catch {} } };
 }
+
+// What `codex exec resume <id>` prints when the thread does not exist (verified with codex-cli 0.155.1):
+//   Error: thread/resume: thread/resume failed: no rollout found for thread id <id> (code -32600)
+const RESUME_FAILED = /thread\/resume failed|no rollout found for thread/i;
+
+// Error items Codex emits while the turn goes on normally: shown to nobody.
+const NOTICES = [
+  /metadata .* not found/i,                    // unknown model name
+  /skill descriptions were shortened/i,        // skills context budget
+];
+export const isCodexNotice = (message: string) => NOTICES.some((re) => re.test(message));
 
 // API errors arrive as JSON inside a string; show the sentence, not the envelope.
 function readable(message: string): string {

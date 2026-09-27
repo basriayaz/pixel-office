@@ -37,6 +37,9 @@ async function load() {
     $("effortHint").textContent = EFFORT_INFO[settings.effort]?.desc || "";
     buildChoiceCards($("fPerm"), permItems(), settings.perm, (v) => { settings.perm = v; });
     $("fRefresh").value = detail.refreshHours;
+    $("fAutoRefresh").checked = !!detail.autoRefresh;
+    $("fRefreshField").classList.toggle("dim", !detail.autoRefresh);
+    $("fAutoRefresh").onchange = () => $("fRefreshField").classList.toggle("dim", !$("fAutoRefresh").checked);
     $("fManager").checked = !!detail.manager;
     $("fManagerInfo").textContent = detail.currentManager ? t("ui.profile.managerTakeover", { name: detail.currentManager }) : "";
     $("fWorktree").checked = !!detail.worktree;
@@ -70,8 +73,8 @@ function renderHead() {
   ].filter(Boolean).join("<br>");
   const model = detail.model || detail.configuredModel;
   $("pBadges").innerHTML = [
-    `<span class="badge">${escapeHtml(model ? model.replace("claude-", "") : t("ui.profile.defaultModel"))}</span>`,
-    detail.effort ? `<span class="badge">${escapeHtml(t("ui.profile.effortBadge", { v: detail.effort }))}</span>` : "",
+    `<span class="badge"${model ? ` title="${escapeHtml(model)}"` : ""}>${escapeHtml(model ? modelName(model) : t("ui.profile.defaultModel"))}</span>`,
+    detail.effort ? `<span class="badge">${escapeHtml(t("ui.profile.effortBadge", { v: effortName(detail.effort) }))}</span>` : "",
     `<span class="badge">${escapeHtml(PERM_INFO[detail.permissionMode]?.name || detail.permissionMode)}</span>`,
     detail.skills.length ? `<span class="badge">${escapeHtml(t("ui.profile.skillsBadge", { n: detail.skills.length }))}</span>` : "",
   ].join("");
@@ -177,7 +180,7 @@ function renderRecent() {
   for (const m of [...detail.recent].reverse()) {
     const row = document.createElement("div");
     row.className = "recent-row " + m.role;
-    row.innerHTML = `<div class="recent-meta">${escapeHtml(who[m.role] || m.role)} · ${fmtDate(m.ts)}</div><div class="recent-text">${escapeHtml(m.text).slice(0, 600)}</div>`;
+    row.innerHTML = `<div class="recent-meta">${escapeHtml(who[m.role] || m.role)} · ${fmtDate(m.ts)}</div><div class="recent-text">${escapeHtml(String(m.text ?? "").slice(0, 600))}</div>`;
     host.appendChild(row);
   }
 }
@@ -192,7 +195,7 @@ $("saveProfile").onclick = async () => {
 
 $("saveSettings").onclick = async () => {
   try {
-    await api("PUT", `${API}/employees/${encodeURIComponent(id)}`, { model: settings.model, effort: settings.effort, permissionMode: settings.perm, refreshHours: Number($("fRefresh").value), cwd: $("fCwd").value.trim(), manager: $("fManager").checked, worktree: $("fWorktree").checked });
+    await api("PUT", `${API}/employees/${encodeURIComponent(id)}`, { model: settings.model, effort: settings.effort, permissionMode: settings.perm, refreshHours: Number($("fRefresh").value), autoRefresh: $("fAutoRefresh").checked, cwd: $("fCwd").value.trim(), manager: $("fManager").checked, worktree: $("fWorktree").checked });
     toast(t("ui.profile.settingsSaved"));
     load();
   } catch (err) { toast(t("ui.profile.error", { message: err.message })); }
@@ -213,7 +216,7 @@ $("refreshBtn").onclick = async () => {
   } catch (err) { toast(t("ui.profile.error", { message: err.message })); }
 };
 
-$("fireConfirm").oninput = () => { $("fireBtn").disabled = $("fireConfirm").value.trim().toLowerCase() !== detail?.name.toLowerCase(); };
+$("fireConfirm").oninput = () => { $("fireBtn").disabled = !sameName($("fireConfirm").value, detail?.name); }; // İsmail = ismail, Işık = ışık
 $("fireBtn").onclick = async () => {
   try {
     await api("DELETE", `${API}/employees/${encodeURIComponent(id)}`);

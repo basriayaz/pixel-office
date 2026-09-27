@@ -200,7 +200,10 @@
       "resumed": "Görev #{id}: görevin kendi oturumunda devam ediliyor",
       "startedBy": "(Başlatan: proje yöneticisi {name}. Görevi işaretlediğinde ofis ona kendiliğinden haber verir; sonucu ona mesajla gönderme.)",
       "backWith": "Görev sana şu notla geri geldi:\n{note}",
-      "backNote": "[Not: #{id} \"{title}\" pano görevini SEN yaptın; bu sohbetin parçası olmayan ayrı bir çalışma oturumunda çalıştığın için burada izi yok. Durum: {status}. Sonuç notun: {note}. Ayrıntılar görevde ve ortak defterde.]"
+      "backNote": "[Not: #{id} \"{title}\" pano görevini SEN yaptın; bu sohbetin parçası olmayan ayrı bir çalışma oturumunda çalıştığın için burada izi yok. Durum: {status}. Sonuç notun: {note}. Ayrıntılar görevde ve ortak defterde.]",
+      "stoppedByBoss": "Patron durdurdu; yapılacaklara geri alındı.",
+      "bossDuringTask": "[#{id} numaralı görev üzerinde kendi oturumunda çalışırken orada şunlar konuşuldu. Patron bunları hatırlamanı bekliyor:]\n{talk}",
+      "talkYou": "Sen"
     },
     "ideas": {
       "proposeDesc": "Ofisin fikir kutusuna bir öneri bırak: şu anki görevinin dışında kalan, yapılmaya değer bir şey. Görev değildir ve kimse başlamaz; patron karar verir.",
@@ -225,6 +228,18 @@
       "merged": "Fikir #{id}, #{into} fikrinin tekrarı olarak kapatıldı.",
       "reviewed": "Fikir #{id} güncellendi."
     },
+    "stuck": {
+      "by": "Ofis",
+      "restartManual": "Sunucu yeniden başladı, iş yarım kaldı — Başlat'a basınca kaldığı yerden devam eder.",
+      "restartResumed": "Sunucu yeniden başladığında bu iş yarım kalmıştı; sahibi görevin kendi oturumunda kaldığı yerden devam ediyor.",
+      "restartQueued": "Sunucu yeniden başladı; sırada bekleyen bu iş henüz başlamamıştı. Başlat'a basınca başlar.",
+      "stuckManual": "Bu iş \"yapılıyor\" görünüyordu ama kimse üzerinde çalışmıyordu. Başlat'a basınca kaldığı yerden devam eder.",
+      "stuckResumed": "Bu iş \"yapılıyor\" görünüyordu ama kimse üzerinde çalışmıyordu; sahibi görevin kendi oturumunda kaldığı yerden devam ediyor.",
+      "noOwner": "Bu işin sahibi artık ofiste yok, kimse üzerinde çalışmıyor; yapılacaklara geri alındı. Bir sahip verip Başlat'a bas.",
+      "discoveryTitle": "{no}. keşif turu kapatıldı",
+      "discoveryText": "{no}. keşif turu {min} dakika sonra hâlâ sürüyor görünüyordu ama kimse üzerinde çalışmıyordu. Proje yöneticisi yeniden çağrılabilsin diye ofis turu kapattı. Turda çıkan fikirler Fikirler sekmesinde duruyor.",
+      "discoveryDigest": "{no}. keşif turunu ofis kapattı: bir süredir ({min} dk) turda hiçbir şey çalışmıyordu. Ne çıktıysa list_ideas'ta."
+    },
     "cycle": {
       "discover": "[Ofisten, patrondan değil] Pano boşaldı, bir keşif turu başlıyor. Amacı: hiçbir şeye dokunmadan, sırada neyin yapılmaya değer olduğunu bulmak.\n1. Hiçbir şey iki kez araştırılmasın diye list_ideas'a ve defter dizinine bak.\n2. En fazla {n} kişiyi etrafa bakmaya gönder; her birine assign_task ile, discovery: true ve start_now: true vererek, hepsini bu turda: rakiplerde olup bizde olmayan ne var, kullanıcıları neden şikâyet ediyor, bizde açık ya da zayıf kalan ne, ucuza yapılıp kullanıcının hissedeceği ne olur. Her birine dar bir soru ver ve her aday için eldekilerle kısa vadede yapıp yapamayacağımıza bakmalarını söyle. Eforu, o işi yapacak kişi değerlendirir.\n3. Keşif görevleri projede hiçbir şeyi değiştirmez: kod yok, tasarım yok, yayın yok. Sonuçlar propose_idea kayıtları ve bir not olarak gelir: görev başına en fazla 3 fikir, sadece en iyileri, akla gelen her şey değil. Küçük ekipte daha az kişi gönder.\nBu turun bütçesi: yaklaşık ${budget}. Şimdi patrona rapor verme; bittiklerinde çağrılacaksın.",
       "compile": "[Ofisten] Keşif turu bitti (yaklaşık ${spent} harcandı). list_ideas'ın üzerinden geç: tekrarları review_idea (duplicate_of) ile kapat; sırada gerçekten yapacağın 3 ile 5 fikre review_idea ile yerini ver (rank 1 = ilk; bir iki satır tavsiye, düzeltilmiş büyüklük ve sahip). Kalanları sırasız bırak. Sonra patrona TEK ve kısa bir rapor ver: sırada yapacağın 3 ile 5 fikir, öncelik sırasıyla, her biri için bir satır gerekçe ve büyüklüğü; bir de yapılmamasını önerdiklerin. Panoya hiçbir şey taşıma: kararı patron Fikirler sekmesinden verir ya da sana söyler.",
@@ -247,8 +262,19 @@
       "saved": "Hafızana kaydedildi ({file}, şu an {chars} karakter)."
     },
     "codex": {
-      "skills": "## Yeteneklerin\nYetenek, belirli bir iş türü için talimatlar içeren bir dosyadır. Bir istek bunlardan birine uyuyorsa önce dosyasını oku (tam yolu verildi) ve ona uy:\n{list}"
-    }
+      "skills": "## Yeteneklerin\nYetenek, belirli bir iş türü için talimatlar içeren bir dosyadır. Bir istek bunlardan birine uyuyorsa önce dosyasını oku (tam yolu verildi) ve ona uy:\n{list}",
+      "notice": "Codex: {detail}"
+    },
+    "refreshCancelled": "Patron yazdığı için bilgi tazeleme iptal edildi; daha sakin bir anda yeniden yapılacak.",
+    "refreshNote": "[Not: ayrı, kısa bir oturumda hafıza dosyanı düzenledin. Bildirdiğin: {summary}]",
+    "recap": "[Not: bu yeni bir çalışma oturumu; öncekine devam edilemedi ({why}). Patrona tekrar sormadan devam edebilmen için öncesi:\nSohbetin son satırları:\n{chat}\nPanodaki açık görevlerin:\n{tasks}]",
+    "recapWhy": {
+      "engine": "motor değiştirildi",
+      "lost": "önceki oturum bulunamadı"
+    },
+    "taskRecap": "[Not: bu görevin önceki çalışma oturumuna devam edilemedi, bu yüzden yeni başlıyor. Görevdeki notlar:\n{notes}]",
+    "engineSwitched": "Motor değişti: sonraki mesaj yeni bir oturum başlatacak ve bu sohbetin özetini taşıyacak.",
+    "compactReinject": "[pixel-office: konuşma az önce özetlendi. Henüz cevaplamadığın mesajlar aşağıda, kelimesi kelimesine. Güncel istek bunlar: önce bunlara cevap ver, istemedikçe eski işe dönme.]\n\n{messages}"
   },
   "rooms": {
     "kitchen": "MUTFAK",
@@ -321,6 +347,7 @@
     "chat": {
       "placeholder": "Görev ver ya da soru sor…",
       "hint": "Enter gönderir · Shift+Enter yeni satır · Ctrl+V görsel yapıştırır · Esc kapatır",
+      "offlineNote": "Sunucuya bağlı değilsin. Yazdıkların burada kalır; bağlantı gelince gönderebilirsin.",
       "profile": "Profil, hafıza, yetenekler",
       "stop": "İşi durdur",
       "reset": "Sohbeti sıfırla (hafıza kalır) — iki kez tıkla",
@@ -328,6 +355,7 @@
       "empty": "<b>{name}</b> hazır.<br>Görev ver, soru sor ya da bir şey öğret — öğrettiklerin kalıcı hafızasına yazılır.",
       "today": "Bugün",
       "actions": "{n} işlem",
+      "actions_one": "{n} işlem",
       "autoRefresh": "🔄 Otomatik bilgi tazeleme",
       "asks": "{name} sana soruyor",
       "answer": "Cevapla",
@@ -343,7 +371,22 @@
       "attachRemove": "Görseli kaldır",
       "cure": "İşe geri gönder",
       "sickChip": "hasta · {min} dk",
-      "contextTip": "Konuşma boyutu: her adımda {k}k token yeniden okunuyor. Fazla büyüyünce kendiliğinden özetlenir; pano görevleri temiz oturumlarda çalışır."
+      "contextTip": "Konuşma boyutu: her adımda {k}k token yeniden okunuyor. Fazla büyüyünce kendiliğinden özetlenir; pano görevleri temiz oturumlarda çalışır.",
+      "compacting": "özetleniyor…",
+      "compactingTip": "Konuşma büyüdü ve yerinde özetleniyor. Biraz sürer; hiçbir şey kaybolmaz.",
+      "taskSession": "📋 #{id} görev oturumu",
+      "taskSessionTip": "#{id} numaralı görev kendi temiz oturumunda çalışıyor. Şimdi yazdıkların o oturuma gider; görev bitince konuşulanlar sohbete aktarılır.",
+      "queued": "sırada",
+      "queuedTask": "sırada · #{id} görevine gidecek",
+      "queuedTip": "Henüz iletilmedi: şu anki iş biter bitmez gider, asla yarıda araya girmez.",
+      "queuedCount": "{n} sırada",
+      "queuedCount_one": "{n} sırada",
+      "unqueue": "Geri al",
+      "unqueueTip": "Henüz kimse okumadı: geri alırsan hiç gönderilmemiş sayılır (metin yazı kutusuna geri gelir).",
+      "deliverNow": "Araya gir",
+      "deliverNowTip": "Şu anki işi durdurup bekleyen mesajları hemen ilet. Pano görevi sürer ve mesajları o alır.",
+      "alreadySent": "Geri alınamadı: mesaj zaten gönderildi.",
+      "nowInMeeting": "{name} toplantıda: bekleyen mesajlar toplantı bitince gider."
     },
     "toast": {
       "disconnected": "Sunucu bağlantısı koptu, yeniden deneniyor…",
@@ -352,7 +395,8 @@
       "done": "{name} işi bitirdi",
       "reset": "Sohbet sıfırlandı; kalıcı hafıza duruyor",
       "resetArm": "Sohbeti ve oturumu silmek için tekrar tıkla (hafıza kalır)",
-      "hired": "{name} aramıza katıldı 🎉"
+      "hired": "{name} aramıza katıldı 🎉",
+      "error": "Hata: {message}"
     },
     "editor": {
       "tabs": {
@@ -468,10 +512,12 @@
       "presetsHint": "— seçince pozisyon ve görev tanımı dolar, üstünde oynayabilirsin",
       "prompt": "Görev tanımı (sistem promptu)",
       "promptPh": "Sen Kerem'sin, SEO uzmanısın. Sitenin teknik SEO'sunu, anahtar kelime stratejisini ve içerik planını yönetirsin. Her öneride ölçülebilir hedef koyarsın. Türkçe konuşursun.",
+      "namePlaceholder": "[İsim]",
       "promptHint": "İyi bir görev tanımı: kim olduğu · neyden sorumlu olduğu · nasıl çalıştığı · hangi proje dokümanlarına baktığı · nasıl konuştuğu. Kalıcı hafıza ve yetenekler otomatik eklenir.",
       "chars": "— {n} karakter",
+      "chars_one": "— {n} karakter",
       "model": "Model",
-      "effort": "Effort — ne kadar düşünsün",
+      "effort": "Efor — ne kadar düşünsün",
       "perm": "İzin modu",
       "needNameRole": "İsim ve pozisyon gerekli",
       "submit": "İşe al",
@@ -496,10 +542,12 @@
       "hiredOn": "İşe giriş: <b>{date}</b>",
       "startedToday": "bugün başladı",
       "withUs": "{n} gündür bizimle",
+      "withUs_one": "{n} gündür bizimle",
       "workdir": "Çalışma klasörü:",
       "defaultModel": "varsayılan model",
-      "effortBadge": "effort: {v}",
+      "effortBadge": "efor: {v}",
       "skillsBadge": "{n} yetenek",
+      "skillsBadge_one": "{n} yetenek",
       "stats": {
         "tasks": "görev",
         "messages": "mesaj",
@@ -547,7 +595,7 @@
       "modelDefault": "Varsayılan",
       "modelDefaultDesc": "Claude Code'un genel model ayarı.",
       "effortDefault": "Varsayılan",
-      "refreshHours": "Otomatik bilgi tazeleme sıklığı (saat, 0 = kapalı)",
+      "refreshHours": "Tazeleme sıklığı (saat, 0 = ofis varsayılanı)",
       "danger": "Tehlikeli bölge",
       "fireHint": "İşten çıkarınca çalışan ofisten kaldırılır; klasörü <code>{archive}</code> altına taşınır (hafıza ve yetenekler silinmez, sohbet geçmişi silinir).",
       "fireConfirmPh": "Onay için ismini yaz",
@@ -569,6 +617,7 @@
       "connectorsLoading": "Hesabınızdaki bağlayıcılar soruluyor…",
       "connectorsNone": "Bu hesapta bağlayıcı yok.",
       "connectorTools": "{n} araç",
+      "connectorTools_one": "{n} araç",
       "connectorNeedsAuth": "claude.ai'de oturum açılmamış (açılana kadar hiçbir şey eklemez)",
       "connectorOffline": "şu an kullanılamıyor",
       "connectorsAllOff": "Hepsini kapat",
@@ -577,12 +626,19 @@
       "connectorsNext": "Kaydedildi. Eldeki iş bitince geçerli olur.",
       "projectSkillTag": "projeden",
       "projectSkillsHint": "\"projeden\" etiketli yetenekler çalışma klasöründe (.claude/skills) durur ve orada çalışan herkese kendiliğinden yüklenir; bunları projenin içinden düzenleyin.",
-      "codexPermHint": "Codex modeli: durup size soramaz, bu yüzden buradaki seçim içinde çalıştığı çittir. \"Sadece plan\" = okur, hiçbir şeyi değiştirmez. \"Hiç sorma\" = çit yok. Diğerlerinin hepsi = çalışma klasöründe ve çalışanın kendi klasöründe dosya değiştirebilir, ağ erişimi vardır. Claude yetenekleri dosya olarak verilir, projenin CLAUDE.md'si okunur; claude.ai bağlayıcıları ve dolar maliyeti geçerli değildir (ChatGPT aboneliği kullanılır)."
+      "codexPermHint": "Codex modeli: durup size soramaz, bu yüzden buradaki seçim içinde çalıştığı çittir. \"Sadece plan\" = okur, hiçbir şeyi değiştirmez. \"Hiç sorma\" = çit yok. Diğerlerinin hepsi = çalışma klasöründe ve çalışanın kendi klasöründe dosya değiştirebilir, ağ erişimi vardır. Claude yetenekleri dosya olarak verilir, projenin CLAUDE.md'si okunur; claude.ai bağlayıcıları ve dolar maliyeti geçerli değildir (ChatGPT aboneliği kullanılır).",
+      "autoRefresh": "Otomatik bilgi tazeleme",
+      "autoRefreshHint": "Varsayılan olarak kapalı, çünkü kimsenin istemediği token harcar. Açıkken çalışan, son tazelemeden beri iş yaptıysa birkaç saatte bir (aşağıda) kısa ve ayrı bir oturumda hafızasını düzenler; son 30 dakikada ona yazdıysan atlanır."
     },
     "models": {
+      "claude-opus-5-5": {
+        "name": "Opus 5.5",
+        "desc": "En yeni Opus; Opus 5'ten güçlü ve biraz daha ucuz. Çoğu iş için varsayılan.",
+        "tier": "$$"
+      },
       "claude-opus-5": {
         "name": "Opus 5",
-        "desc": "Dengeli ve güçlü; çoğu iş için varsayılan.",
+        "desc": "Önceki Opus; dengeli ve güçlü.",
         "tier": "$$"
       },
       "claude-sonnet-5": {
@@ -818,6 +874,7 @@
       "cwdPh": "örn. ~/Projects/uygulama — boş = {project}",
       "cwdHint": "Bu ofiste işe alınan çalışanlar varsayılan olarak bu klasörde çalışır.",
       "employees": "{n} çalışan",
+      "employees_one": "{n} çalışan",
       "delete": "Sil",
       "cannotDelete": "Çalışanı var",
       "save": "Kaydet",
@@ -919,6 +976,7 @@
       "hint": "Enter herkese gönderir · @isim tek kişiye hitap eder · aşağıda isme tıkla, etiketle · Ctrl+V görsel yapıştırır",
       "toOnly": "{names} için",
       "cost": "Odada {n} kişi — her mesaj {n} oturum çalıştırır",
+      "cost_one": "Odada {n} kişi — her mesaj {n} oturum çalıştırır",
       "nobodyYet": "İnsanların gelmesi bekleniyor…",
       "empty": "Herkes yerine oturuyor. Toplantının konusunu söyle.",
       "end": "Bitir",
@@ -938,7 +996,8 @@
       "back": "Geri",
       "inMeeting": "{name} toplantıda — toplantı paneline @{name} yaz",
       "you": "Sen",
-      "minutes": "{n} dk"
+      "minutes": "{n} dk",
+      "closing": "toplantı kapanıyor…"
     },
     "board": {
       "button": "Pano",
@@ -980,6 +1039,7 @@
       "filterAll": "Herkes",
       "showDone": "Bitenleri göster",
       "notesCount": "{n} not",
+      "notesCount_one": "{n} not",
       "close": "Kapat",
       "saved": "Kaydedildi",
       "started": "Görev #{id} {name} adlı kişiye iletildi",
@@ -1061,7 +1121,9 @@
       },
       "ideaRank": "yöneticinin seçimi {n}",
       "ideaRankHint": "Proje yöneticisinin yapılma sırası",
-      "ideaAdvice": "Proje yöneticisi"
+      "ideaAdvice": "Proje yöneticisi",
+      "sendBackPh": "Neden? Neyin değişmesi gerekiyor (isteğe bağlı)",
+      "sentBack": "#{id} sahibine geri gönderildi"
     }
   }
 }

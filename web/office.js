@@ -222,7 +222,10 @@ class Office {
     for (const e of this.emps) {
       const el = document.createElement("div");
       el.className = "label";
-      el.innerHTML = `${e.name}<small>${e.role}</small>`;
+      el.textContent = e.name; // names and roles are the boss's free text: never markup
+      const small = document.createElement("small");
+      small.textContent = e.role;
+      el.appendChild(small);
       this.labelsEl.appendChild(el);
       this.labelEls.set(e.id, el);
     }
@@ -2520,8 +2523,20 @@ function lum(hex) {
 }
 
 // Head-and-shoulders portrait as a data URL; `full` renders the whole standing figure.
+// Drawing one costs ~2 ms and the roster, chat rows, board cards and meeting chips ask again on every render,
+// so the result is kept per look (a changed look is a new key); the oldest entries go once the cache is full.
+const portraitCache = new Map();
 function portraitOf(e, scale = 3, full = false, dir = "down", anim = "stand", frame = 0) {
   const emp = { look: e.look || { skin: "#f1c9a5", hair: "#3b2a20", hairStyle: "short", top: e.color, bottom: "#2f3548" }, color: e.color || (e.look && e.look.top) || "#61afef", seed: 0 };
+  const key = JSON.stringify([emp.look, emp.color, scale, full, dir, anim, frame]);
+  const hit = portraitCache.get(key);
+  if (hit) return hit;
+  const url = drawPortrait(emp, scale, full, dir, anim, frame);
+  portraitCache.set(key, url);
+  if (portraitCache.size > 300) portraitCache.delete(portraitCache.keys().next().value);
+  return url;
+}
+function drawPortrait(emp, scale, full, dir, anim, frame) {
   const w = 34, h = full ? 55 : 27; // 5px of headroom for tall hair and hats
   const c = document.createElement("canvas");
   c.width = w * scale; c.height = h * scale;

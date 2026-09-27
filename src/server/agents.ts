@@ -6,6 +6,10 @@ import { expandHome as expandHomeRaw } from "./config.js";
 import type { EmployeeConfig } from "./employee.js";
 import { getSettings, getOffice, t } from "./runtime.js";
 import type { OfficeDef } from "./config.js";
+import { writeFileAtomicSync } from "./fsutil.js";
+
+// Files people read and edit by hand (agent.md, memory, SKILL.md): written whole or not at all, without a .bak next to them.
+const writeWhole = (file: string, text: string) => writeFileAtomicSync(file, text, { backup: false });
 
 export const expandHome = (p: string) => path.resolve(expandHomeRaw(p));
 
@@ -122,6 +126,7 @@ export function loadEmployee(dir: string, index: number, office: OfficeDef): Emp
     manager: meta.manager === "true",
     worktree, baseCwd,
     connectorsOff: meta.connectorsOff ? meta.connectorsOff.split(",").map((x) => x.trim()).filter(Boolean) : undefined,
+    autoRefresh: meta.autoRefresh === "true" || undefined,
   };
   ensureDirs(cfg);
   return cfg;
@@ -133,8 +138,7 @@ function ensureDirs(cfg: EmployeeConfig) {
   // Claude Code loads a folder as a plugin only with a manifest; create a minimal one.
   const manifest = path.join(cfg.dir!, ".claude-plugin", "plugin.json");
   if (!fs.existsSync(manifest)) {
-    fs.mkdirSync(path.dirname(manifest), { recursive: true });
-    fs.writeFileSync(manifest, JSON.stringify({ name: cfg.id, description: `${cfg.name} — ${cfg.role}`, version: "1.0.0" }, null, 2));
+    writeWhole(manifest, JSON.stringify({ name: cfg.id, description: `${cfg.name} — ${cfg.role}`, version: "1.0.0" }, null, 2));
   }
 }
 
@@ -164,9 +168,10 @@ export function writeAgentFile(cfg: EmployeeConfig) {
   if (cfg.allowedTools?.length) lines.push(`tools: ${cfg.allowedTools.join(", ")}`);
   if (cfg.connectorsOff?.length) lines.push(`connectorsOff: ${cfg.connectorsOff.join(", ")}`);
   if (cfg.refreshHours !== undefined && cfg.refreshHours !== getSettings().refreshHours) lines.push(`refreshHours: ${cfg.refreshHours}`);
+  if (cfg.autoRefresh) lines.push(`autoRefresh: true`);
   if ((cfg.baseCwd ?? cfg.cwd) !== getOffice(cfg.officeId).cwd) lines.push(`cwd: ${cfg.baseCwd ?? cfg.cwd}`);
   lines.push(`look: ${JSON.stringify(cfg.look)}`, "---", cfg.systemPrompt.trim(), "");
-  fs.writeFileSync(cfg.agentFile, lines.join("\n"));
+  writeWhole(cfg.agentFile, lines.join("\n"));
 }
 
 // Creates <employeesDir>/<id>/ with agent.md, memory and skills/ for a newly hired employee.
@@ -178,7 +183,7 @@ export function createEmployeeDir(office: OfficeDef, input: { name: string; role
   let dir = path.join(employeesDir, id);
   for (let n = 2; fs.existsSync(dir); n++) { id = `${slug(input.name) || "employee"}-${n}`; dir = path.join(employeesDir, id); }
   fs.mkdirSync(path.join(dir, "skills"), { recursive: true });
-  fs.writeFileSync(path.join(dir, memoryFile), t("server.memoryHeader", { name: input.name }));
+  writeWhole(path.join(dir, memoryFile), t("server.memoryHeader", { name: input.name }));
   const cfg: EmployeeConfig = {
     id, name: input.name, role: input.role, color: input.color, look: input.look,
     systemPrompt: input.prompt, cwd, dir, agentFile: path.join(dir, "agent.md"), officeId: office.id,
@@ -235,7 +240,7 @@ export function listProjectSkills(cwd: string): Array<{ name: string; descriptio
 export function writeSkill(pluginDir: string, name: string, description: string, body: string) {
   const dir = path.join(pluginDir, "skills", slug(name));
   fs.mkdirSync(dir, { recursive: true });
-  fs.writeFileSync(path.join(dir, "SKILL.md"), `---\nname: ${slug(name)}\ndescription: ${description.replace(/\n/g, " ")}\n---\n${body.trim()}\n`);
+  writeWhole(path.join(dir, "SKILL.md"), `---\nname: ${slug(name)}\ndescription: ${description.replace(/\n/g, " ")}\n---\n${body.trim()}\n`);
   return slug(name);
 }
 
@@ -289,6 +294,6 @@ export function syncClaudeAgents(office: OfficeDef, emps: EmployeeConfig[]) {
       mem ? "\n" + t("server.agentSync.memory", { file: mem }) : null,
       skills ? "\n" + t("server.agentSync.skills", { dir: skills }) : null,
     ].filter((l) => l !== null).join("\n");
-    fs.writeFileSync(path.join(dir, fileName(e)), body + "\n");
+    writeWhole(path.join(dir, fileName(e)), body + "\n");
   }
 }

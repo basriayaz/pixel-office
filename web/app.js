@@ -11,6 +11,9 @@ const state = {
 const chatBody = $("chatBody");
 let streamEl = null;
 let typingEl = null;
+// "Take back" clicked in this tab, by message id: the words return to the input box only once the server confirms the
+// message was still waiting (message_removed). If it already went out, they stay out, so nothing is sent twice.
+const undoing = new Map();
 
 const cur = () => state.offices.get(state.office);
 const employeesOf = (officeId) => state.offices.get(officeId)?.employees;
@@ -33,9 +36,12 @@ function connect() {
   ws.onmessage = (ev) => handle(JSON.parse(ev.data));
 }
 
+// true when the message went out; false (with a toast) while the server is unreachable, so callers keep what was typed
+const isOnline = () => state.ws?.readyState === WebSocket.OPEN;
 function send(payload) {
-  if (state.ws?.readyState === WebSocket.OPEN) state.ws.send(JSON.stringify({ office: state.office, ...payload }));
-  else toast(t("ui.toast.noConnection"));
+  if (isOnline()) { state.ws.send(JSON.stringify({ office: state.office, ...payload })); return true; }
+  toast(t("ui.toast.noConnection"));
+  return false;
 }
 
 function mergeRoster(officeId, list, info) {
@@ -43,7 +49,7 @@ function mergeRoster(officeId, list, info) {
   const employees = new Map();
   for (const e of list) {
     const old = prev?.employees.get(e.id);
-    employees.set(e.id, { ...e, messages: old?.messages ?? [], pending: old?.pending ?? [], loaded: old?.loaded ?? false, unread: old?.unread ?? 0 });
+    employees.set(e.id, { ...e, messages: old?.messages ?? [], pending: old?.pending ?? [], queue: old?.queue ?? [], loaded: old?.loaded ?? false, unread: old?.unread ?? 0 });
   }
   state.offices.set(officeId, { info: info ?? prev?.info ?? { id: officeId, name: officeId }, employees, meeting: prev?.meeting ?? null, board: prev?.board ?? null });
 }
@@ -89,6 +95,8 @@ function handle(m) {
   if (m.type === "shutdown") { markClosed(); return; }
   if (m.type === "reload") { setTimeout(() => location.reload(), 300); return; }
   if (m.type === "init") {
+    // a reconnect: whatever happened while we were away is missing from the chats already loaded, so fetch them again when opened
+    if (state.inited) for (const o of state.offices.values()) for (const e of o.employees.values()) e.loaded = false;
     for (const o of m.offices) { mergeRoster(o.id, o.employees, { id: o.id, name: o.name, cwd: o.cwd, theme: o.theme }); state.offices.get(o.id).meeting = o.meeting ?? null; state.offices.get(o.id).board = o.board ?? null; }
     const hired = params.get("hired");
     if (hired && !state.inited) { state.entering = new Set([hired]); history.replaceState(null, "", `/?office=${encodeURIComponent(state.office)}`); }
@@ -116,6 +124,8 @@ function handle(m) {
   }
   if (m.type === "meeting" || m.type === "meeting_entry") { meetingUI.onMessage(m); return; }
   if (m.type === "board") { const o = state.offices.get(m.office); if (o) { o.board = m.board; boardUI.refresh(m.office); } return; }
+  // something the server could not do for us (a websocket request that failed): say so instead of failing silently
+  if (m.type === "error") { toast(t("ui.toast.error", { message: m.error || "?" })); return; }
   const e = employeesOf(m.office)?.get(m.id);
   if (!e) return;
   const current = m.office === state.office;
@@ -124,7 +134,7 @@ function handle(m) {
     case "status":
       e.status = m.status;
       e.sickUntil = m.sickUntil || 0;
-      if (current) { meetingUI.onStatus(); boardUI.refresh(); }
+      if (current) { meetingUI.onStatus(); boardUI.refresh(undefined, "status"); }
       if (current) { office.setStatus(m.id, m.status, m.reason); renderRoster(); }
       renderOfficeTabs();
       if (selected) { renderHead(e); updateTyping(e); }
@@ -133,7 +143,34 @@ function handle(m) {
       e.messages = m.messages;
       e.pending = m.pending;
       e.loaded = true;
+      if (m.queue) setQueue(e, m.queue);
       if (selected) renderChat(e);
+      break;
+    // boss messages waiting for the running turn to end; whatever is no longer listed went out (or was taken back)
+    case "queue":
+      setQueue(e, m.queue || []);
+      if (selected) { refreshQueued(e); renderHead(e); }
+      if (current) renderRoster();
+      break;
+    case "message_removed": {
+      e.messages = e.messages.filter((x) => x.id !== m.msgId);
+      if (selected) chatBody.querySelector(`[data-msg="${CSS.escape(m.msgId)}"]`)?.remove();
+      // the words come back to the input box, so taking a message back to fix it costs no retyping
+      const text = undoing.get(m.msgId);
+      undoing.delete(m.msgId);
+      if (selected && text && !input.value.trim()) { input.value = text; autoGrow(); input.focus(); }
+      break;
+    }
+    // the server could not do what a queue button asked: the message already went out, or the employee is in a meeting
+    case "queue_ack":
+      if (m.op === "unqueue") { undoing.delete(m.msgId); toast(t("ui.chat.alreadySent")); }
+      else if (m.op === "deliver_now") toast(t("ui.chat.nowInMeeting", { name: e.name }));
+      if (selected) refreshQueued(e);
+      break;
+    case "compacting":
+      e.compacting = !!m.on;
+      if (selected) renderHead(e);
+      if (current) renderRoster();
       break;
     case "message":
       e.messages.push(m.message);
@@ -190,6 +227,23 @@ function handle(m) {
       break;
   }
 }
+
+// The queue is the truth: a message is shown as queued only while the server still holds it.
+function setQueue(e, queue) {
+  e.queue = queue;
+  e.queued = queue.length;
+  const ids = new Set(queue.map((q) => q.id));
+  for (const msg of e.messages) if (msg.queued && !ids.has(msg.id)) delete msg.queued;
+}
+function refreshQueued(e) {
+  for (const row of chatBody.querySelectorAll(".row.user[data-msg]")) {
+    const msg = e.messages.find((x) => x.id === row.dataset.msg);
+    if (!msg) continue;
+    if (!!msg.queued !== row.classList.contains("queued") || msg.queued) row.replaceWith(buildRow(e, msg));
+  }
+}
+// Where a queued message will go: the running board task's own session, or the chat.
+const queueTask = (e) => e.queue?.find((q) => q.task != null)?.task ?? null;
 
 function endStream() {
   if (streamEl) { streamEl.remove(); streamEl = null; }
@@ -279,14 +333,20 @@ function renderHead(e) {
   $("chatAvatar").href = profileUrl(e.id);
   $("btnProfile").href = profileUrl(e.id);
   $("chatName").textContent = e.name;
-  $("chatModel").textContent = e.model ? e.model.replace("claude-", "") : "";
+  $("chatModel").textContent = modelName(e.model);
+  $("chatModel").title = e.model || "";
   $("chatRole").textContent = e.role;
+  // a board task runs in a clean session of its own: what the boss writes now goes there, and comes back to the chat when it ends
+  const task = e.task ?? queueTask(e);
+  $("chatTask").hidden = task == null;
+  if (task != null) { $("chatTask").textContent = t("ui.chat.taskSession", { id: task }); $("chatTask").title = t("ui.chat.taskSessionTip", { id: task }); }
   const chip = $("chatStatus");
-  chip.className = "chip " + e.status;
-  const label = e.status === "sick" ? t("ui.chat.sickChip", { min: Math.max(1, Math.ceil(((e.sickUntil || 0) - Date.now()) / 60e3)) }) : STATUS_T[e.status] || e.status;
+  // while the conversation is summarized in place, that is what the employee is doing
+  chip.className = "chip " + (e.compacting ? "compacting" : e.status);
+  const label = e.compacting ? t("ui.chat.compacting") : e.status === "sick" ? t("ui.chat.sickChip", { min: Math.max(1, Math.ceil(((e.sickUntil || 0) - Date.now()) / 60e3)) }) : STATUS_T[e.status] || e.status;
   // context = how much the model re-reads at every step; it is what makes an employee slow and expensive
-  chip.textContent = label + (e.task ? ` · #${e.task}` : "") + (e.context >= 1000 ? ` · ${Math.round(e.context / 1000)}k` : "") + (e.cost ? ` · $${e.cost.toFixed(2)}` : "");
-  chip.title = e.context >= 1000 ? t("ui.chat.contextTip", { k: Math.round(e.context / 1000) }) : "";
+  chip.textContent = label + (e.context >= 1000 ? ` · ${Math.round(e.context / 1000)}k` : "") + (e.cost ? ` · $${e.cost.toFixed(2)}` : "");
+  chip.title = e.compacting ? t("ui.chat.compactingTip") : e.context >= 1000 ? t("ui.chat.contextTip", { k: Math.round(e.context / 1000) }) : "";
   $("btnCure").hidden = e.status !== "sick";
   $("btnStop").classList.toggle("active", e.status === "working" || e.status === "waiting");
 }
@@ -299,7 +359,8 @@ function renderRoster() {
   for (const e of o.employees.values()) {
     const chip = document.createElement("button");
     chip.className = "roster-chip" + (e.id === state.selected ? " selected" : "");
-    chip.innerHTML = `<img src="${office.portrait(e.id)}" alt="" /><i class="dot ${e.status}"></i><span class="rn">${escapeHtml(e.name)}</span><span class="rs">${STATUS_T[e.status] || e.status}</span>${e.unread ? `<span class="badge">${e.unread}</span>` : ""}`;
+    const rs = e.compacting ? t("ui.chat.compacting") : (STATUS_T[e.status] || e.status) + (e.queued ? ` · ${t("ui.chat.queuedCount", { n: e.queued })}` : "");
+    chip.innerHTML = `<img src="${office.portrait(e.id)}" alt="" /><i class="dot ${e.status}"></i><span class="rn">${escapeHtml(e.name)}</span><span class="rs">${escapeHtml(rs)}</span>${e.unread ? `<span class="badge">${e.unread}</span>` : ""}`;
     chip.onclick = () => openChat(e.id);
     el.appendChild(chip);
   }
@@ -372,7 +433,24 @@ function buildRow(e, msg) {
     row.innerHTML = `<img class="row-avatar" src="${office.portrait(e.id)}" alt="" /><div class="row-main"><div class="row-meta">${escapeHtml(e.name)} · ${timeStr(msg.ts)}</div><div class="bubble">${md(msg.text)}</div></div>`;
   } else if (msg.role === "user") {
     const imgs = msg.images?.length ? `<div class="images">${msg.images.map((u) => `<a href="${escapeHtml(u)}" target="_blank" rel="noopener"><img src="${escapeHtml(u)}" alt="" /></a>`).join("")}</div>` : "";
-    row.innerHTML = `<div class="row-main"><div class="bubble">${imgs}${escapeHtml(msg.text)}</div><div class="row-meta">${timeStr(msg.ts)}</div></div>`;
+    if (msg.id) row.dataset.msg = msg.id;
+    if (msg.queued) {
+      // held until the running turn ends; no model has seen it yet, so it can still be taken back
+      row.classList.add("queued");
+      const task = e.queue?.find((q) => q.id === msg.id)?.task ?? null;
+      const where = task != null ? t("ui.chat.queuedTask", { id: task }) : t("ui.chat.queued");
+      // no "interrupt" while the employee sits in a meeting: that turn is the meeting answer, and the queue waits for the end anyway
+      const meeting = typeof meetingUI !== "undefined" && meetingUI.has(e.id);
+      const now = meeting ? "" : `<button type="button" class="queue-btn now" title="${escapeHtml(t("ui.chat.deliverNowTip"))}">${escapeHtml(t("ui.chat.deliverNow"))}</button>`;
+      row.innerHTML = `<div class="row-main"><div class="bubble">${imgs}${escapeHtml(msg.text)}</div><div class="row-meta queue-meta"><span class="queue-label" title="${escapeHtml(t("ui.chat.queuedTip"))}">⏳ ${escapeHtml(where)}</span><button type="button" class="queue-btn undo" title="${escapeHtml(t("ui.chat.unqueueTip"))}">${escapeHtml(t("ui.chat.unqueue"))}</button>${now}</div></div>`;
+      row.querySelector(".undo").onclick = (ev) => {
+        ev.currentTarget.disabled = true;
+        if (msg.text) undoing.set(msg.id, msg.text);
+        if (!send({ type: "unqueue", id: e.id, msgId: msg.id })) { undoing.delete(msg.id); ev.currentTarget.disabled = false; }
+      };
+      const nowBtn = row.querySelector(".now");
+      if (nowBtn) nowBtn.onclick = (ev) => { ev.currentTarget.disabled = true; if (!send({ type: "deliver_now", id: e.id })) ev.currentTarget.disabled = false; };
+    } else row.innerHTML = `<div class="row-main"><div class="bubble">${imgs}${escapeHtml(msg.text)}</div><div class="row-meta">${timeStr(msg.ts)}</div></div>`;
   } else if (msg.role === "colleague") {
     row.innerHTML = `<div class="row-main"><div class="row-meta">💬 ${escapeHtml(t("ui.chat.fromColleague", { name: msg.from || "" }))} · ${timeStr(msg.ts)}</div><div class="bubble">${md(msg.text)}</div></div>`;
   } else if (msg.role === "meeting") {
@@ -638,20 +716,22 @@ $("chatForm").onsubmit = (ev) => {
   ev.preventDefault();
   const text = input.value.trim();
   if ((!text && !chatAttachments.length) || !state.selected) return;
+  if (!isOnline()) { toast(t("ui.toast.noConnection")); return; } // keep the text and the images until the server is back
   const images = chatAttachments.take();
-  send({ type: "send", id: state.selected, text, ...(images.length ? { images } : {}) });
+  if (!send({ type: "send", id: state.selected, text, ...(images.length ? { images } : {}) })) return;
   input.value = "";
   autoGrow();
 };
 input.addEventListener("keydown", (ev) => {
-  if (ev.key === "Enter" && !ev.shiftKey) {
+  if (ev.key === "Enter" && !ev.shiftKey && !ev.isComposing) { // Enter that confirms an IME composition is not a send
     ev.preventDefault();
     $("chatForm").requestSubmit();
   }
 });
 document.addEventListener("keydown", (ev) => {
   if (ev.key === "Escape" && !$("officesModal").hidden) { $("officesModal").hidden = true; return; }
-  if (ev.key === "Escape" && state.selected && document.activeElement?.tagName !== "INPUT") closeChat();
+  // Esc closes the top-most thing only: an open modal (board, meeting cards…) handles it, the chat behind it stays
+  if (ev.key === "Escape" && state.selected && document.activeElement?.tagName !== "INPUT" && !document.querySelector(".modal:not([hidden])")) closeChat();
 });
 
 function tickClock() {

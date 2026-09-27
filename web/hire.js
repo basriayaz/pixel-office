@@ -16,13 +16,13 @@ function updateCard() {
   $("pvName").textContent = name || t("ui.hire.noName");
   $("pvRole").textContent = role || t("ui.hire.noRole");
   $("pvBadges").innerHTML = [
-    `<span class="badge">${escapeHtml(MODEL_INFO[sel.model]?.name || sel.model)}</span>`,
-    `<span class="badge">effort: ${sel.effort}</span>`,
+    `<span class="badge">${escapeHtml(modelName(sel.model))}</span>`,
+    `<span class="badge">${escapeHtml(t("ui.profile.effortBadge", { v: effortName(sel.effort) }))}</span>`,
     `<span class="badge">${escapeHtml(PERM_INFO[sel.perm]?.name || sel.perm)}</span>`,
     $("cwd").value.trim() ? `<span class="badge">${escapeHtml(t("ui.hire.cwdBadge", { v: $("cwd").value.trim() }))}</span>` : "",
   ].join("");
   $("summary").innerHTML = name && role
-    ? `<b>${escapeHtml(name)}</b> · ${escapeHtml(role)} · ${escapeHtml(MODEL_INFO[sel.model]?.name || sel.model)} · ${sel.effort} · ${escapeHtml(PERM_INFO[sel.perm]?.name || sel.perm)}`
+    ? `<b>${escapeHtml(name)}</b> · ${escapeHtml(role)} · ${escapeHtml(modelName(sel.model))} · ${escapeHtml(t("ui.profile.effortBadge", { v: effortName(sel.effort) }))} · ${escapeHtml(PERM_INFO[sel.perm]?.name || sel.perm)}`
     : `<span class="muted">${t("ui.hire.needNameRole")}</span>`;
   $("hireBtn").disabled = !(name && role);
   const n = $("prompt").value.length;
@@ -42,7 +42,7 @@ for (const p of PRESETS) {
   b.onclick = () => {
     document.querySelectorAll(".preset").forEach((x) => x.classList.toggle("on", x === b));
     $("role").value = p.role;
-    const name = $("name").value.trim() || "[Name]";
+    const name = $("name").value.trim() || t("ui.hire.namePlaceholder");
     $("prompt").value = p.prompt.replace(/\{name\}/g, name);
     updateCard();
   };

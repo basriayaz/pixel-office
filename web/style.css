@@ -24,7 +24,7 @@ body {
   font-size: 13px;
   display: grid;
   grid-template-rows: 48px 1fr;
-  grid-template-columns: 1fr;
+  grid-template-columns: minmax(0, 1fr); /* a wide top bar must not widen the stage (and push the canvas off screen) */
   overflow: hidden;
 }
 body.page { overflow: auto; display: block; }
@@ -231,14 +231,28 @@ body.resizing .chat, body.resizing .stage { transition: none; }
 .chat-title { flex: 1; min-width: 0; }
 .chat-name { font-weight: 600; font-size: 14px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .chat-name > span:first-child { white-space: nowrap; }
-.model-badge { font-size: 10px; color: var(--muted); border: 1px solid var(--line); padding: 1px 6px; border-radius: 999px; font-weight: 400; }
+.model-badge { white-space: nowrap; font-size: 10px; color: var(--muted); border: 1px solid var(--line); padding: 1px 6px; border-radius: 999px; font-weight: 400; }
 .model-badge:empty { display: none; }
 .chat-role { color: var(--muted); font-size: 11px; }
+#chat .chat-role { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-top: 2px; }
 .chip { font-size: 10px; padding: 3px 8px; border-radius: 999px; background: var(--bg); color: var(--muted); border: 1px solid var(--line); white-space: nowrap; }
 .chip.working { color: var(--working); border-color: var(--working); }
 .chip.waiting { color: var(--waiting); border-color: var(--waiting); }
 .chip.error { color: var(--error); border-color: var(--error); }
 .chip.sick { color: #fda4af; border-color: #e11d48; }
+.chip.compacting { color: var(--working); border-color: var(--working); }
+/* a board task running in its own session: what the boss writes now goes there (same look as the model badge) */
+.task-badge { font-size: 10px; color: var(--muted); border: 1px solid var(--line); padding: 1px 6px; border-radius: 999px; font-weight: 400; white-space: nowrap; cursor: help; }
+.task-badge[hidden] { display: none; }
+/* boss messages held until the running turn ends: the usual bubble, dimmed */
+.row.user.queued .bubble { opacity: .6; }
+.queue-meta { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+.queue-label { color: var(--waiting); cursor: help; }
+.queue-btn { font: inherit; font-size: 10px; background: none; border: 1px solid var(--line); color: var(--text); border-radius: 999px; padding: 1px 8px; cursor: pointer; }
+.queue-btn:hover { border-color: var(--accent); color: var(--accent); }
+.queue-btn.now:hover { border-color: var(--working); color: var(--working); }
+.queue-btn:disabled { opacity: .45; cursor: default; }
+#meetForm.closing { opacity: .6; }
 
 .chat-body { overflow-y: auto; padding: 14px 14px 8px; display: flex; flex-direction: column; gap: 10px; }
 .empty { display: flex; gap: 12px; align-items: center; color: var(--muted); padding: 20px 8px; line-height: 1.6; }
@@ -317,6 +331,11 @@ body.resizing .chat, body.resizing .stage { transition: none; }
 .chat-foot textarea:focus { outline: none; border-color: var(--accent); }
 .chat-foot button { border: none; background: var(--accent); color: #1a1a1a; width: 40px; height: 40px; border-radius: 10px; cursor: pointer; font-size: 16px; flex: none; }
 .chat-hint { color: var(--muted); font-size: 10px; padding: 0 16px 8px; }
+/* server unreachable: typing still works, the text waits in the box until the connection is back */
+.offline-note { display: none; margin: 8px 14px 0; padding: 6px 10px; border: 1px solid var(--error); border-radius: 8px; background: #3a1a1a; color: #ffd6d6; font-size: 11px; }
+body.offline:not(.closed) .offline-note { display: block; }
+body.offline .chat-foot textarea { border-color: var(--error); }
+body.offline .chat-foot button { background: var(--line); color: var(--muted); cursor: not-allowed; }
 
 .toast {
   position: fixed; left: 50%; bottom: 20px; transform: translate(-50%, 20px);
@@ -444,6 +463,13 @@ body.resizing .chat, body.resizing .stage { transition: none; }
 @media (max-width: 900px) { .legend { display: none; } .tools { margin-left: auto; } }
 @media (max-width: 760px) { .clock { display: none; } .brand-name { display: none; } .topbar { gap: 8px; padding: 0 10px; } .stage { padding: 8px; } .roster { gap: 6px; margin-top: 8px; } .roster-chip .rs { display: none; } }
 @media (max-height: 640px) { .roster { display: none; } }
+/* narrow screens: Board and Meeting keep their icon (and badge), the top bar never pushes past the viewport */
+@media (max-width: 760px) {
+  #btnBoard > span[data-i18n], #btnMeeting > span[data-i18n] { display: none; }
+  .topbar { min-width: 0; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; }
+  .topbar::-webkit-scrollbar { display: none; }
+}
+@media (max-width: 480px) { .topbar { gap: 6px; padding: 0 8px; } .lang-select { max-width: 64px; } .tools { gap: 4px; } }
 @media (max-width: 900px) {
   :root { --chat-w: 100vw; }
   body.chat-open .stage, body.meeting-open .stage { padding-right: 16px; }
@@ -512,6 +538,9 @@ body.resizing .chat, body.resizing .stage { transition: none; }
 .task-note { background: var(--card); border-radius: 8px; padding: 6px 8px; }
 .task-note span { display: block; font-size: 10px; color: var(--muted); }
 .task-edit { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.send-back { display: flex; gap: 6px; margin-top: 8px; align-items: center; }
+.send-back input { flex: 1; min-width: 0; background: var(--bg); color: var(--text); border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px; font: inherit; font-size: 12.5px; }
+.send-back input:focus { outline: none; border-color: var(--accent); }
 .task-edit .t-del { margin-left: auto; }
 .note-text { font-size: 12.5px; line-height: 1.55; margin-top: 6px; cursor: pointer; overflow-wrap: anywhere; }
 .note-text.clamp { max-height: 4.6em; overflow: hidden; -webkit-mask-image: linear-gradient(#000 60%, transparent); mask-image: linear-gradient(#000 60%, transparent); }
@@ -547,3 +576,4 @@ body.resizing .chat, body.resizing .stage { transition: none; }
 .board-mode select, .board-mode input { background: var(--bg); color: var(--text); border: 1px solid var(--line); border-radius: 8px; padding: 5px 8px; font: inherit; font-size: 12.5px; }
 .board-mode input { width: 64px; }
 .board-mode small { flex: 1 1 100%; }
+.field.dim { opacity: .5; }

@@ -414,6 +414,60 @@
     "sick": "sick"
   },
   "ui": {
+    "life": {
+      "laugh": [
+        "haha",
+        "hehe",
+        "ha ha!"
+      ],
+      "comfort": [
+        "Hey, it's ok",
+        "Coffee later?",
+        "I'm here"
+      ],
+      "thanks": [
+        "Thanks...",
+        "Ugh, thanks",
+        "Cheers"
+      ],
+      "click": [
+        "Hi!",
+        "Hey there!",
+        "Need me?"
+      ],
+      "lines": {
+        "coffee": [
+          "Need coffee...",
+          "Coffee first!",
+          "One more cup?"
+        ],
+        "nightowl": [
+          "Too early...",
+          "*yawn*",
+          "Night shift soul"
+        ],
+        "social": [
+          "Hey! Chat?",
+          "Fancy a break?",
+          "Come, sit!"
+        ],
+        "perfectionist": [
+          "Let me recheck",
+          "Almost perfect",
+          "Details matter"
+        ],
+        "green": [
+          "Plants say hi",
+          "Watered today?",
+          "Fresh leaves!"
+        ],
+        "dreamer": [
+          "Nice view...",
+          "Just thinking",
+          "Daydreaming"
+        ]
+      }
+    },
     "strip": {
       "modeTip": "How the office works — click to change it on the board",
       "today": "today",

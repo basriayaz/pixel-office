@@ -41,6 +41,11 @@ const SPOTS = [
   { key: "printer", tx: 27, ty: 14, dir: "up", anim: "think" },
   { key: "water", tx: 24, ty: 14, dir: "left", anim: "drink" },
   { key: "window", tx: 20, ty: 2, dir: "up", anim: "stand" },
+  // idle-life spots (see the "idle life" block below): coffee-machine wait, second window, plant watering
+  { key: "brew", tx: 8, ty: 3, dir: "up", anim: "brew" },
+  { key: "window2", tx: 16, ty: 2, dir: "up", anim: "gaze" },
+  { key: "plantK", tx: 6, ty: 7, dir: "down", anim: "water" },
+  { key: "plantM", tx: 23, ty: 7, dir: "down", anim: "water" },
 ];
 
 // Where people go during a meeting: the four chairs first, then standing places around the table.
@@ -151,6 +156,7 @@ class Office {
     canvas.addEventListener("mouseleave", () => { this.hovered = null; canvas.classList.remove("hover"); });
     canvas.addEventListener("click", (e) => {
       const id = this.hitTest(e);
+      if (id) this.react(id); // little hop / wave + balloon; never blocks the panel below
       if (id && this.clickHandler) this.clickHandler(id);
     });
     window.addEventListener("resize", () => this.fit());
@@ -270,6 +276,7 @@ class Office {
     const prev = e.status;
     e.status = status;
     e.tool = null;
+    this.endAct(e, performance.now(), false);
     e.pulse = { t0: performance.now(), col: status === "working" ? "#4ade80" : status === "error" ? "#f87171" : status === "waiting" ? "#ffd166" : "#ffffff" };
     const now = performance.now();
     if (e.meet) { e.bubble = null; return; } // in a meeting: stays in the room whatever the status
@@ -286,7 +293,9 @@ class Office {
     } else if (status === "idle" && (prev === "working" || prev === "waiting")) {
       e.bubble = { kind: "done", until: now + 4000 };
       e.restUntil = now + rand(9000, 22000);
+      this.celebrateDone(e, now);
     }
+    if (status === "error") this.comfort(e, now);
   }
 
   // Off to the lounge sofa (or any free seat) to rest until it passes; stays at the desk if nothing is free.
@@ -411,7 +420,7 @@ class Office {
   freeSpot(e) {
     const taken = new Set(this.emps.filter((o) => o !== e && o.spot).map((o) => o.spot.key));
     const options = SPOTS.filter((s) => !taken.has(s.key) && !(this.meetingOn && s.key.startsWith("meet")));
-    return options.length ? options[Math.floor(Math.random() * options.length)] : null;
+    return options.length ? this.pickSpot(e, options) : null;
   }
 
   update(dt, now) {
@@ -420,8 +429,10 @@ class Office {
       for (const p of this.particles) { p.vy += 260 * dt; p.x += p.vx * dt; p.y += p.vy * dt; p.vx *= 0.98; p.life -= dt; p.rot += p.vr * dt; }
       this.particles = this.particles.filter((p) => p.life > 0 && p.y < LH + 8);
     }
+    this.updateLife(now);
     for (const e of this.emps) {
       if (e.bubble && now > e.bubble.until) e.bubble = null;
+      if (this.lifeTick(e, now)) continue;
       if (e.path.length) {
         const next = e.path[0];
         const gx = next.tx * TILE, gy = next.ty * TILE;
@@ -457,6 +468,7 @@ class Office {
       } else {
         e.anim = "stand";
       }
+      this.lifeApply(e, now);
       if (e.meet) continue;
       if (e.status === "idle" && now > e.restUntil) this.decideIdle(e, now);
       if (e.status !== "idle" && e.status !== "sick" && !this.atSeat(e)) this.goTo(e, e.seat.tx, e.seat.ty);
@@ -541,9 +553,10 @@ class Office {
       items.push({ y: seatFeet - 24, draw: () => drawChair(b, e.seat.tx * TILE, seatFeet) });
       items.push({ y: seatFeet + TILE + 6, draw: () => drawDesk(b, e, t) });
       const frame = Math.floor(e.walkDist / 9) % 4;
-      const seated = e.anim === "sit" || e.anim === "type" || e.anim === "wave" || e.anim === "slump" || e.anim === "sip";
-      const sitFree = e.anim === "sitfree";
-      const oy = e.y - 16 + (seated ? 14 : sitFree ? 6 : 0);
+      const seated = e.anim === "sit" || e.anim === "type" || e.anim === "wave" || e.anim === "slump" || e.anim === "sip" || LIFE_SEATED.includes(e.anim);
+      const sitFree = e.anim === "sitfree" || e.anim === "dozefree";
+      const lv = this.lifeVis(e, t);
+      const oy = e.y - 16 + (seated ? 14 : sitFree ? 6 : 0) + lv.lift;
       items.push({
         y: e.y + TILE + (seated ? -4 : sitFree ? 4 : 1),
         draw: () => {
@@ -554,7 +567,7 @@ class Office {
             if (p >= 1 || REDUCED_MOTION.matches) e.pulse = null;
             else { b.save(); b.globalAlpha = 1 - p; b.strokeStyle = e.pulse.col; b.lineWidth = 2; b.beginPath(); b.ellipse(e.x + 16, e.y + TILE - 1, 12 + p * 14, 4 + p * 6, 0, 0, Math.PI * 2); b.stroke(); b.restore(); }
           }
-          drawPerson(b, e.x, oy, e, { dir: e.dir, anim: e.anim, frame, t, seed: e.seed, sipT: e.sipping ? performance.now() - e.sipping : 0, ...deskLifeOpts(e, t) });
+          drawPerson(b, e.x, oy, e, { dir: e.dir, anim: e.anim, frame, t, seed: e.seed, sipT: e.sipping ? performance.now() - e.sipping : 0, ...deskLifeOpts(e, t), talk: lv.talk, laugh: lv.laugh });
         },
       });
     }
@@ -562,7 +575,7 @@ class Office {
     items.sort((a, c) => a.y - c.y);
     for (const it of items) it.draw();
     const occupied = new Set(this.emps.filter((e) => e.spot && !e.path.length).map((e) => e.spot.key));
-    for (const e of this.emps) drawOverhead(b, e, t, occupied);
+    for (const e of this.emps) { drawOverhead(b, e, t, occupied); drawLifeOverhead(b, e, t); }
     for (const e of this.emps) if (this.isNapping(e)) drawZzz(b, e, t);
     drawDayNight(b, t, this.evt);
     for (const p of this.particles) { b.save(); b.translate(p.x, p.y); b.rotate(p.rot); b.globalAlpha = Math.min(1, p.life); b.fillStyle = p.col; b.fillRect(-p.w / 2, -p.h / 2, p.w, p.h); b.restore(); }
@@ -575,6 +588,305 @@ class Office {
       el.style.top = (e.y + TILE + (this.atSeat(e) ? 30 : 2)) * this.scale + "px";
       el.classList.toggle("selected", e.id === this.selected);
     }
+  }
+}
+
+// ---------- idle life: personalities, small acts, chats, reactions ----------
+// e.act = { kind, anim, hold, t0, until, ... }: `hold` acts take the character over (chat, hop, cheer, clap, pat);
+// the others (stretch, yawn, doze, paper) only override the pose while the character stays put.
+const LIFE_SEATED = ["stretch", "yawn", "doze", "clapsit"]; // seated poses at the desk
+const TRAITS = ["coffee", "nightowl", "social", "perfectionist", "green", "dreamer"];
+// spots: spot-weight multipliers; chat / doze: probability multipliers
+const TRAIT_LIFE = {
+  coffee: { spots: { coffee: 4, brew: 5, fridge: 1.5 }, chat: 1, doze: 0.7 },
+  nightowl: { spots: { sofaL: 2, sofaR: 2, window: 1.5 }, chat: 0.9, doze: 2.5 },
+  social: { spots: { coffee: 2, fridge: 2, water: 2.5, stoolL: 1.5, stoolR: 1.5 }, chat: 2.5, doze: 0.6 },
+  perfectionist: { spots: { printer: 4, books: 3 }, chat: 0.7, doze: 0.3 },
+  green: { spots: { plantK: 5, plantM: 5 }, chat: 1.1, doze: 1 },
+  dreamer: { spots: { window: 4, window2: 4, books: 2 }, chat: 0.6, doze: 1.4 },
+};
+const STAND_ANIMS = ["stand", "drink", "think", "read", "brew", "gaze", "water"];
+
+// Deterministic trait from the employee id (FNV-1a), cached on the object.
+function traitOf(e) {
+  if (!e.trait) {
+    let h = 2166136261;
+    const s = String(e.id ?? e.name ?? "");
+    for (let i = 0; i < s.length; i++) h = Math.imul(h ^ s.charCodeAt(i), 16777619) >>> 0;
+    e.trait = TRAITS[h % TRAITS.length];
+  }
+  return e.trait;
+}
+const lifeStrings = () => (window.PO && window.PO.strings && window.PO.strings.ui && window.PO.strings.ui.life) || {};
+function lifePick(arr, fallback = "") { return Array.isArray(arr) && arr.length ? arr[Math.floor(Math.random() * arr.length)] : fallback; }
+function faceDir(a, b) {
+  const dx = b.x - a.x, dy = b.y - a.y;
+  return Math.abs(dx) > 6 ? (dx > 0 ? "right" : "left") : dy > 0 ? "down" : "up";
+}
+const lifeNight = () => { const h = new Date().getHours(); return h >= 20 || h < 6; };
+function dozeChance(e) {
+  const k = TRAIT_LIFE[traitOf(e)].doze;
+  return traitOf(e) === "nightowl" ? k * (lifeNight() ? 0.15 : 1) : k * (lifeNight() ? 1.3 : 1);
+}
+
+Object.assign(Office.prototype, {
+  // weighted pick: the personality decides where somebody likes to hang out
+  pickSpot(e, options) {
+    const w = TRAIT_LIFE[traitOf(e)].spots;
+    const ws = options.map((s) => w[s.key] || 1);
+    let r = Math.random() * ws.reduce((a, c) => a + c, 0);
+    for (let i = 0; i < options.length; i++) { r -= ws[i]; if (r <= 0) return options[i]; }
+    return options[options.length - 1];
+  },
+
+  say(e, text, ms = 2200) { if (text) e.say = { text, until: performance.now() + ms }; },
+
+  endAct(e, now, restore = true) {
+    e.errand = null;
+    const a = e.act;
+    if (!a) return;
+    e.act = null;
+    if (a.kind === "chat") {
+      e.chatCool = now + rand(15000, 30000);
+      if (restore && a.path && a.path.length && !e.path.length) e.path = a.path;
+      else if (!e.path.length && !e.spot && !this.atSeat(e)) e.restUntil = now + rand(1200, 4500);
+      const p = this.emps.find((x) => x.id === a.partner);
+      if (p && p.act && p.act.kind === "chat" && p.act.partner === e.id) this.endAct(p, now, restore);
+    } else if (a.kind === "pat") {
+      const v = this.emps.find((x) => x.id === a.victim);
+      if (v && v.status === "error") this.say(v, lifePick(lifeStrings().thanks), 2200);
+      if (!e.path.length && !e.spot && !this.atSeat(e)) e.restUntil = now + rand(800, 2500);
+    }
+  },
+
+  // Two idle colleagues who end up near each other stop for a standing chat.
+  updateLife(now) {
+    if (now - (this.lifeCheck || 0) < 350) return;
+    this.lifeCheck = now;
+    const ready = this.emps.filter((e) => this.chatReady(e, now));
+    for (let i = 0; i < ready.length; i++) {
+      for (let j = i + 1; j < ready.length; j++) {
+        const a = ready[i], b = ready[j];
+        if (a.act || b.act || Math.hypot(a.x - b.x, a.y - b.y) > 64) continue;
+        const p = Math.min(0.9, 0.35 * TRAIT_LIFE[traitOf(a)].chat * TRAIT_LIFE[traitOf(b)].chat);
+        if (Math.random() < p) this.startChat(a, b, now);
+      }
+    }
+  },
+
+  chatReady(e, now) {
+    if (e.status !== "idle" || e.meet || e.entering || e.act || e.errand || e.sipping || (e.chatCool || 0) > now) return false;
+    if (e.path.length) return true;
+    if (this.atSeat(e)) return false;
+    return !e.spot || STAND_ANIMS.includes(e.spot.anim);
+  },
+
+  startChat(a, b, now) {
+    const dur = rand(6500, 11000) * Math.sqrt(Math.max(TRAIT_LIFE[traitOf(a)].chat, TRAIT_LIFE[traitOf(b)].chat));
+    const line = Math.floor(Math.random() * 3);
+    for (const [x, y, lead] of [[a, b, true], [b, a, false]]) {
+      x.act = { kind: "chat", anim: "chat", hold: true, t0: now, until: now + dur, partner: y.id, path: x.path, lead, line };
+      x.path = [];
+      x.dir = faceDir(x, y);
+    }
+  },
+
+  // Runs before movement. Returns true when an act fully controls the character this frame.
+  lifeTick(e, now) {
+    if (e.errand) {
+      const er = e.errand, v = this.emps.find((x) => x.id === er.victim);
+      if (!v || v.status !== "error" || e.status !== "idle" || now > er.until || e.act) { e.errand = null; e.restUntil = now + rand(800, 2500); }
+      else if (!e.path.length) {
+        e.errand = null;
+        if (e.tx === er.tx && e.ty === er.ty) {
+          e.act = { kind: "pat", anim: "pat", hold: true, t0: now, until: now + 3000, victim: v.id, dir: faceDir(e, v) };
+          this.say(e, lifePick(lifeStrings().comfort), 2800);
+        } else e.restUntil = now + rand(800, 2500);
+      }
+    }
+    const a = e.act;
+    if (!a) return false;
+    if (!a.hold) {
+      if (e.path.length || now > a.until) this.endAct(e, now);
+      return false;
+    }
+    if (now < a.t0) return false;
+    if (now > a.until) { this.endAct(e, now); return false; }
+    if (a.kind === "chat") {
+      const p = this.emps.find((x) => x.id === a.partner);
+      if (!p || !p.act || p.act.kind !== "chat" || p.status !== "idle") { this.endAct(e, now); return false; }
+      e.dir = faceDir(e, p);
+    } else if (a.dir) e.dir = a.dir;
+    e.anim = a.anim;
+    return true;
+  },
+
+  // Runs after the normal pose was chosen: ambient acts at the desk / sofa / printer.
+  lifeApply(e, now) {
+    if (e.status !== "idle" || e.meet) { if (e.act && !e.act.hold) this.endAct(e, now); return; }
+    let a = e.act;
+    if (a && !a.hold) {
+      if (e.sipping || a.spot !== (e.spot || null) || now > a.until) { this.endAct(e, now); a = null; }
+      else { if (a.dir) e.dir = a.dir; e.anim = a.anim === "doze" && e.anim === "sitfree" ? "dozefree" : a.anim; return; }
+    }
+    if (a || e.errand) return;
+    const trait = traitOf(e);
+    if (trait === "coffee" && e.anim === "sit" && e.sipAt - now > 18000) e.sipAt = now + rand(5000, 15000);
+    // printer: pick up the page and read it
+    if (e.spot && e.spot.key === "printer" && e.lifeSpot !== e.spot) {
+      e.lifeSpot = e.spot;
+      if (Math.random() < (trait === "perfectionist" ? 1 : 0.7)) { e.act = { kind: "paper", anim: "paper", dir: "down", t0: now, until: now + rand(5000, 8500), spot: e.spot }; return; }
+    }
+    if (e.spot === null || e.spot === undefined) e.lifeSpot = null;
+    if (e.lifeAt == null) e.lifeAt = now + rand(6000, 18000);
+    if (now < e.lifeAt || e.sipping) return;
+    e.lifeAt = now + rand(9000, 24000);
+    let kind = null;
+    if (e.anim === "sit") {
+      const opts = [["stretch", 3], ["yawn", 3], ["doze", 2 * dozeChance(e)]];
+      let r = Math.random() * opts.reduce((s, o) => s + o[1], 0);
+      for (const [k, w] of opts) { r -= w; if (r <= 0) { kind = k; break; } }
+    } else if (e.anim === "sitfree" && Math.random() < 0.6 * dozeChance(e)) kind = "doze";
+    if (!kind) return;
+    const dur = kind === "doze" ? rand(7000, 12000) : kind === "yawn" ? 1900 : 2300;
+    e.act = { kind, anim: kind === "doze" && e.anim === "sitfree" ? "dozefree" : kind, t0: now, until: now + dur, spot: e.spot || null };
+    e.anim = e.act.anim;
+  },
+
+  // per-frame visual modifiers for drawing: hop offset, who is talking / laughing
+  lifeVis(e, t) {
+    const a = e.act, v = { lift: 0, talk: false, laugh: false };
+    if (!a || t < a.t0) return v;
+    const el = t - a.t0;
+    if (a.kind === "chat") {
+      const ph = el % 4800;
+      v.laugh = ph > 3600 && ph < 4500;
+      v.talk = !v.laugh && (Math.floor(el / 1700) + (a.lead ? 0 : 1)) % 2 === 0;
+      if (v.laugh && !REDUCED_MOTION.matches) v.lift = -(Math.floor(t / 110) % 2);
+    } else if (!REDUCED_MOTION.matches) {
+      if (a.kind === "hop" && a.anim === "hop") v.lift = -Math.round(Math.abs(Math.sin(el / 130)) * 7);
+      else if (a.kind === "cheer") v.lift = -Math.round(Math.abs(Math.sin(el / 160)) * 6);
+    }
+    return v;
+  },
+
+  // Somebody clicked a character: a hop / wave and a short line in the personality's voice.
+  react(id) {
+    const e = this.emps.find((x) => x.id === id);
+    if (!e) return;
+    const now = performance.now();
+    const S = lifeStrings();
+    this.say(e, lifePick((S.lines || {})[traitOf(e)], lifePick(S.click)), 2400);
+    if (e.status !== "idle" || e.meet || e.path.length || e.act || e.errand) return;
+    const seat = this.atSeat(e);
+    if (seat) { e.sipping = 0; e.act = { kind: "hop", anim: "wave", hold: true, t0: now, until: now + 1500, dir: "down" }; }
+    else if (!e.spot || e.spot.anim !== "sitfree") e.act = { kind: "hop", anim: "hop", hold: true, t0: now, until: now + 1500, dir: "down" };
+  },
+
+  // Job finished: victory pose at the desk, nearby idle colleagues applaud.
+  celebrateDone(e, now) {
+    if (e.path.length || !this.atSeat(e) || e.act) return;
+    e.act = { kind: "cheer", anim: "cheer", hold: true, t0: now, until: now + 2400, dir: "down" };
+    e.restUntil = Math.max(e.restUntil, now + 3000);
+    this.burst(e.x + 16, e.y - 4, 14);
+    for (const o of this.emps) {
+      if (o === e || o.status !== "idle" || o.meet || o.act || o.errand || o.path.length || o.sipping) continue;
+      if (Math.hypot(o.x - e.x, o.y - e.y) > 230) continue;
+      const seat = this.atSeat(o);
+      if (!seat && o.spot && o.spot.anim === "sitfree") continue;
+      const start = now + rand(200, 800), until = start + 2000 + rand(0, 600);
+      o.act = { kind: "clap", anim: seat ? "clapsit" : "clap", hold: true, t0: start, until, dir: seat ? "down" : faceDir(o, e) };
+      o.restUntil = Math.max(o.restUntil, until + 500);
+    }
+  },
+
+  // A task failed: the nearest idle colleague walks over and puts a hand on the shoulder.
+  comfort(e, now) {
+    let best = null, bd = 1e9;
+    for (const o of this.emps) {
+      if (o === e || o.status !== "idle" || o.meet || o.entering || o.act || o.errand || o.path.length || o.sipping) continue;
+      const d = Math.hypot(o.x - e.x, o.y - e.y);
+      if (d < bd) { best = o; bd = d; }
+    }
+    if (!best) return;
+    for (const dx of [1, -1]) {
+      const tx = e.seat.tx + dx, ty = e.seat.ty;
+      if (this.isBlocked(tx, ty, best)) continue;
+      const spot = best.spot;
+      if (this.goTo(best, tx, ty)) { best.spot = null; best.errand = { victim: e.id, tx, ty, until: now + 30000 }; return; }
+      best.spot = spot;
+    }
+  },
+});
+
+// Small pixel "Z" for the snoring overlay.
+function pixelZ(b, x, y, s) {
+  b.fillRect(x, y, s, 1); b.fillRect(x, y + s - 1, s, 1);
+  for (let i = 1; i < s - 1; i++) b.fillRect(x + s - 1 - i, y + i, 1, 1);
+}
+function lifeBubble(b, cx, top, w, h, fill = "#fff") {
+  b.fillStyle = OUTLINE; b.fillRect(cx - w / 2 - 1, top - h - 1, w + 2, h + 2); b.fillRect(cx - 3, top, 6, 3);
+  b.fillStyle = fill; b.fillRect(cx - w / 2, top - h, w, h); b.fillRect(cx - 2, top, 4, 2);
+}
+function lifeBalloon(b, cx, top, text) {
+  b.save();
+  b.font = "bold 8px monospace"; b.textBaseline = "middle"; b.textAlign = "center";
+  const w = Math.min(124, Math.ceil(b.measureText(text).width) + 8), h = 13;
+  const x = Math.max(w / 2 + 1, Math.min(LW - w / 2 - 1, cx));
+  const tail = Math.max(x - w / 2 + 4, Math.min(x + w / 2 - 4, cx));
+  b.fillStyle = OUTLINE; b.fillRect(x - w / 2 - 1, top - h - 1, w + 2, h + 2); b.fillRect(tail - 3, top, 6, 3);
+  b.fillStyle = "#fff"; b.fillRect(x - w / 2, top - h, w, h); b.fillRect(tail - 2, top, 4, 2);
+  b.fillStyle = "#2b2b2b"; b.fillText(text, x, top - h / 2 + 0.5, w - 6);
+  b.restore();
+}
+
+// Overlays for the idle-life acts: Zzz, brewing / gazing icons, chat balloons, click lines, applause sparks.
+function drawLifeOverhead(b, e, t) {
+  const cx = e.x + 16;
+  let top = e.y - 22;
+  if (e.unread > 0) top -= 26;
+  const bob = Math.floor(t / 300) % 2 ? -1 : 0;
+  const a = e.act;
+  const busy = e.status !== "idle" || e.bubble || e.unread > 0 || e.meet;
+  if (a && t >= a.t0) {
+    if (a.kind === "doze") {
+      const by = top + (a.anim === "dozefree" ? 12 : 10);
+      b.save();
+      for (let i = 0; i < 3; i++) {
+        const p = REDUCED_MOTION.matches ? i / 3 : ((t / 1100 + i / 3) % 1);
+        b.globalAlpha = 1 - p * 0.7; b.fillStyle = OUTLINE; pixelZ(b, cx + 7 + p * 8 + i, by - p * 16 - 1, 5 + (i > 1 ? 1 : 0));
+        b.fillStyle = "#e8f1ff"; pixelZ(b, cx + 8 + p * 8 + i, by - p * 16, 4 + (i > 1 ? 1 : 0));
+      }
+      b.restore();
+    } else if (a.kind === "chat" && !busy) {
+      const v = e.act && t - a.t0;
+      const ph = v % 4800;
+      if (ph > 3600 && ph < 4500) lifeBalloon(b, cx, top, lifePick(lifeStrings().laugh, "haha")); // both laugh together
+      else if ((Math.floor(v / 1700) + (a.lead ? 0 : 1)) % 2 === 0) {
+        lifeBubble(b, cx, top, 24, 12);
+        b.fillStyle = "#2b2b2b"; const n = Math.floor(t / 300) % 4;
+        for (let i = 0; i < 3; i++) b.fillRect(cx - 8 + i * 6, top - 8 + bob + (i < n ? -1 : 0), 3, 3);
+      }
+    } else if (a.kind === "clap") {
+      if (Math.floor(t / 150) % 2) {
+        const y = e.y + (a.anim === "clapsit" ? 6 : -6);
+        b.fillStyle = "#ffd166"; b.fillRect(cx - 10, y, 2, 2); b.fillRect(cx + 9, y + 3, 2, 2); b.fillRect(cx - 12, y + 6, 1, 1);
+      }
+    }
+  } else if (!e.act && !busy && e.spot && !e.path.length) {
+    if (e.anim === "brew") {
+      lifeBubble(b, cx, top, 20, 16);
+      b.fillStyle = "#7b4a2a"; b.fillRect(cx - 5, top - 9, 8, 7); b.fillRect(cx + 3, top - 8, 2, 4);
+      b.fillStyle = "#c9a074"; b.fillRect(cx - 4, top - 9, 6, 1);
+      b.fillStyle = "#9aa"; const w = Math.floor(t / 400) % 2; b.fillRect(cx - 3 + w, top - 13, 1, 3); b.fillRect(cx + w, top - 14, 1, 3);
+    } else if (e.anim === "gaze" && Math.floor(t / 1200) % 3 !== 0) {
+      lifeBubble(b, cx, top, 20, 14, "#cfe8fa");
+      b.fillStyle = "#fff"; b.fillRect(cx - 6, top - 6, 12, 4); b.fillRect(cx - 4, top - 9, 6, 3); b.fillRect(cx, top - 8, 5, 3);
+    }
+  }
+  if (e.say) {
+    if (t > e.say.until) e.say = null;
+    else lifeBalloon(b, cx, top - (busy ? 20 : 0) - (a && a.kind === "chat" ? 16 : 0), e.say.text);
   }
 }
 
@@ -1286,7 +1598,7 @@ function drawOverhead(b, e, t, occupied) {
     b.fillStyle = "#0b3a1e";
     for (let i = 0; i < 4; i++) b.fillRect(cx - 7 + i, top - 11 + bob + i, 2, 2);
     for (let i = 0; i < 7; i++) b.fillRect(cx - 3 + i, top - 8 + bob - i, 2, 2);
-  } else if (e.anim === "chat" || (e.anim === "sitfree" && e.spot && (e.spot.key.startsWith("meet") || e.spot.key.startsWith("sofa") || e.spot.key.startsWith("stool")) && e.napSpot !== e.spot)) {
+  } else if ((e.anim === "chat" && e.spot && !e.act) || (e.anim === "sitfree" && e.spot && (e.spot.key.startsWith("meet") || e.spot.key.startsWith("sofa") || e.spot.key.startsWith("stool")) && e.napSpot !== e.spot)) {
     const group = e.spot.key.replace(/[A-Z]$/, "");
     const others = [...occupied].filter((k) => k !== e.spot.key && k.replace(/[A-Z]$/, "") === group);
     if (others.length) {
@@ -2177,14 +2489,15 @@ function personShapes(b, ox, oy, e, o, mono) {
   const sleeveC = F.topStyle === "tank" ? skin : top;
   const pantsLike = PANTS_LIKE.includes(F.bottomStyle);
   const legCloth = pantsLike || F.bottomStyle === "bermuda";
-  const sitting = ["sit", "type", "wave", "slump", "sip"].includes(o.anim);
-  const sitFree = o.anim === "sitfree";
+  const sitting = ["sit", "type", "wave", "slump", "sip", ...LIFE_SEATED].includes(o.anim);
+  const sitFree = o.anim === "sitfree" || o.anim === "dozefree";
+  const dozing = o.anim === "doze" || o.anim === "dozefree";
   const walking = o.anim === "walk";
   const f = walking ? o.frame : 0;
   const bob = walking ? (f === 1 || f === 3 ? 1 : 0) : (Math.floor(o.t / 1200) % 2 === 0 ? 1 : 0);
-  const blink = Math.floor((o.t + (o.seed || 0)) / 3400) % 18 === 0;
+  const blink = dozing || o.laugh || o.anim === "yawn" || Math.floor((o.t + (o.seed || 0)) / 3400) % 18 === 0;
   const slump = o.anim === "slump" ? 3 : 0;
-  const H = bob + slump + headNod(o); // head offset
+  const H = bob + slump + headNod(o) + (dozing ? 2 : 0); // head offset
   const T = bob;         // torso offset
   const clothColor = F.bottomStyle === "dress" ? top : bottom;
   const clothDark = F.bottomStyle === "dress" ? topDark : bottomDark;
@@ -2458,7 +2771,58 @@ function personShapes(b, ox, oy, e, o, mono) {
         if (k === 1) { C("rgba(255,255,255,.5)"); R(mx + 2, my - 3 - (Math.floor(o.t / 300) % 2), 1, 2); }
         break;
       }
-      case "sitfree": arm(axL, 17 + T, 7, true); arm(axR, 17 + T, 7, true); break;
+      case "sitfree": case "dozefree": arm(axL, 17 + T, 7, true); arm(axR, 17 + T, 7, true); break;
+      case "stretch": case "cheer": {
+        // both arms thrown up (stretch = lazy, cheer = victory V)
+        const up = Math.floor(o.t / (o.anim === "cheer" ? 180 : 500)) % 2;
+        const sp = o.anim === "cheer" ? 2 : 0;
+        C(sleeveC); R(axL - 2 - sp, 3 + H, aw, 15); R(axR + 1 + sp, 3 + H, aw, 15);
+        C(skin); R(axL - 2 - sp, -1 + H + up, aw, 4); R(axR + 1 + sp, -1 + H + up, aw, 4);
+        break;
+      }
+      case "yawn": arm(axL, 17 + T, 7, true); C(sleeveC); R(axR, 15 + T, aw, 4); C(skin); R(14, 12 + H, 9, 3); break;
+      case "hop": {
+        arm(axL, 17 + T, 7, true);
+        C(sleeveC); R(axR, 6 + H, aw, 12);
+        C(skin); R(axR + (Math.floor(o.t / 250) % 2), 2 + H, aw + 1, 4);
+        break;
+      }
+      case "paper": {
+        const lift = Math.floor(o.t / 900) % 2;
+        C(sleeveC); R(axL, 17 + T, aw, 5); R(axR, 17 + T, aw, 5);
+        C(OUTLINE); R(cx - 8, 15 + T - lift, 16, 12);
+        C("#f5f5f5"); R(cx - 7, 16 + T - lift, 14, 10);
+        C("#9aa"); for (let i = 0; i < 4; i++) R(cx - 5, 18 + T - lift + i * 2, 10 - (i === 3 ? 4 : 0), 1);
+        C(skin); R(axL, 21 + T, aw, 3); R(axR, 21 + T, aw, 3);
+        break;
+      }
+      case "brew": {
+        arm(axL, 17 + T, 6, false); arm(axR, 17 + T, 6, false);
+        C(sleeveC); R(cx - 6, 23 + T, 12, 3); C(skin); R(cx - 6, 23 + T, 3, 3); R(cx + 3, 23 + T, 3, 3);
+        break;
+      }
+      case "water": {
+        arm(axL, 17 + T, 7, true);
+        C(sleeveC); R(axR, 17 + T, aw, 5); C(skin); R(axR, 22 + T, 4, 3);
+        C("#4a90b8"); R(axR - 3, 19 + T, 9, 6); C("#7bbbe0"); R(axR - 2, 20 + T, 3, 1); C("#4a90b8"); R(axR - 8, 20 + T, 5, 2); R(axR - 9, 19 + T, 2, 2);
+        C("#7dd3fc"); for (let i = 0; i < 3; i++) R(axR - 9 + (i % 2), 22 + T + ((Math.floor(o.t / 110) + i * 3) % 9), 1, 2);
+        break;
+      }
+      case "chat": {
+        // one talks with a raised, gesturing hand; the other listens
+        arm(axL, 17 + T, 7, true);
+        if (o.talk || o.laugh) {
+          const ph = Math.floor(o.t / 220 + (o.seed || 0)) % 2;
+          C(sleeveC); R(axR, 11 + T + ph, aw, 7); C(skin); R(axR - 1, 8 + T + ph, 5, 4);
+        } else arm(axR, 17 + T, 7, true);
+        break;
+      }
+      case "clap": case "clapsit": {
+        const p = Math.floor(o.t / 140) % 2;
+        C(sleeveC); R(axL, 17 + T, aw, 6); R(axR, 17 + T, aw, 6);
+        C(skin); R(cx - 5 + p * 2, 21 + T, 4, 4); R(cx + 1 - p * 2, 21 + T, 4, 4);
+        break;
+      }
       default: arm(axL, 17 + T + swing, 7, true); arm(axR, 17 + T - swing, 7, true);
     }
   };
@@ -2700,8 +3064,14 @@ function personShapes(b, ox, oy, e, o, mono) {
       C("#f5f5f5"); R(ax + 4, 18 + T, 7, 8); C(e.color); R(ax + 6, 20 + T, 3, 4);
     } else if (o.anim === "read") {
       C(sleeveC); R(ax + 1, 17 + T, aw, 4); C("#f5f5f5"); R(ax + 2, 21 + T, 10, 8); C("#9aa"); R(ax + 4, 24 + T, 5, 1); R(ax + 4, 27 + T, 4, 1); C(skin); R(ax + 1, 24 + T, aw, 4);
-    } else if (o.anim === "sitfree") {
+    } else if (o.anim === "sitfree" || o.anim === "dozefree") {
       C(sleeveC); R(ax + 1, 17 + T, aw, 6); C(skin); R(ax + 2, 23 + T, aw, 4);
+    } else if (o.anim === "pat") {
+      // reaching out to a colleague's shoulder
+      C(sleeveC); R(ax + 1, 18 + T, 11, 4); C(skin); R(ax + 12 + (Math.floor(o.t / 320) % 2), 17 + T, 4, 4);
+    } else if (["cheer", "hop", "stretch", "clap", "clapsit"].includes(o.anim) || (o.anim === "chat" && (o.talk || o.laugh))) {
+      const w = Math.floor(o.t / 200) % 2;
+      C(sleeveC); R(ax + 1, 8 + H, aw, 10); C(skin); R(ax + 1 + w, 4 + H, aw + 1, 4);
     } else {
       C(sleeveC); R(ax + step, 17 + T, aw, 7); if (suit) { C("#f7f7f7"); R(ax + step, 23 + T, aw, 1); } C(skin); R(ax + step, 24 + T, aw, 4);
     }

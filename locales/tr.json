@@ -414,6 +414,60 @@
     "sick": "hasta"
   },
   "ui": {
+    "life": {
+      "laugh": [
+        "haha",
+        "hehe",
+        "ha ha!"
+      ],
+      "comfort": [
+        "Sorun yok",
+        "Sonra kahve?",
+        "Yanındayım"
+      ],
+      "thanks": [
+        "Sağ ol...",
+        "Off, sağ ol",
+        "Eyvallah"
+      ],
+      "click": [
+        "Selam!",
+        "Merhaba!",
+        "Bana mı?"
+      ],
+      "lines": {
+        "coffee": [
+          "Kahve lazım...",
+          "Önce kahve!",
+          "Bir fincan daha?"
+        ],
+        "nightowl": [
+          "Çok erken...",
+          "*esneme*",
+          "Gece kuşuyum"
+        ],
+        "social": [
+          "Hey! Sohbet?",
+          "Mola verelim?",
+          "Gel otur!"
+        ],
+        "perfectionist": [
+          "Bir daha bakayım",
+          "Neredeyse kusursuz",
+          "Detay önemli"
+        ],
+        "green": [
+          "Çiçekler selam der",
+          "Sulandı mı?",
+          "Taze yapraklar!"
+        ],
+        "dreamer": [
+          "Manzara güzel...",
+          "Sadece düşünüyorum",
+          "Hayal kuruyorum"
+        ]
+      }
+    },
     "strip": {
       "modeTip": "Ofis nasıl çalışıyor — değiştirmek için tıkla, panoda açılır",
       "today": "bugün",

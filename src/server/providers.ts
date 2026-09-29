@@ -292,6 +292,9 @@ export function openrouterEnv(model: string): Record<string, string> {
 export interface OrModel { id: string; name: string; context: number; prompt: number; completion: number; tools: boolean }
 let orCatalog: { at: number; list: OrModel[] } | null = null;
 const orNames = new Map<string, string>();
+// USD per token, as OpenRouter bills it; the cache prices only where the model has them
+interface OrPrice { prompt: number; completion: number; cacheRead?: number; cacheWrite?: number }
+const orPrices = new Map<string, OrPrice>();
 export async function openrouterCatalog(): Promise<OrModel[]> {
   if (orCatalog && Date.now() - orCatalog.at < 3600e3) return orCatalog.list;
   const r = await fetch(`${OPENROUTER_BASE}/v1/models`, { signal: AbortSignal.timeout(15000) });
@@ -303,8 +306,31 @@ export async function openrouterCatalog(): Promise<OrModel[]> {
     return { id: String(m.id), name: String(m.name ?? m.id), context: Number(m.context_length) || 0, prompt: Number(pricing.prompt) || 0, completion: Number(pricing.completion) || 0, tools: params.includes("tools") };
   });
   for (const m of list) orNames.set(m.id, m.name);
+  for (const m of j.data ?? []) {
+    const p = (m.pricing ?? {}) as Record<string, string>;
+    const num = (v: unknown) => { const n = Number(v); return v !== undefined && v !== "" && Number.isFinite(n) && n >= 0 ? n : undefined; };
+    const prompt = num(p.prompt), completion = num(p.completion);
+    // "-1" marks a router whose price depends on the model it picks: no fixed price to count with
+    if (prompt !== undefined && completion !== undefined) orPrices.set(String(m.id), { prompt, completion, cacheRead: num(p.input_cache_read), cacheWrite: num(p.input_cache_write) });
+  }
   orCatalog = { at: Date.now(), list };
   return list;
+}
+
+export interface OrUsage { inputTokens: number; outputTokens: number; cacheReadInputTokens?: number; cacheCreationInputTokens?: number; costUSD?: number }
+/** What an OpenRouter session has cost, from its per-model token totals and OpenRouter's own prices. Claude Code prices
+ *  tokens as if they were Claude's, which is wrong (often 0) for other models; it is used only for a model whose price is
+ *  not known yet (the catalog not loaded, or a router without a fixed price). */
+export function openrouterCostOf(usage: Record<string, OrUsage>, slug: string): number {
+  if (!orCatalog || Date.now() - orCatalog.at >= 3600e3) void openrouterCatalog().catch(() => {}); // for the next turn
+  let usd = 0;
+  for (const [model, u] of Object.entries(usage ?? {})) {
+    const p = orPrices.get(model) ?? orPrices.get(slug);
+    if (!p) { usd += Number(u.costUSD) || 0; continue; }
+    usd += (u.inputTokens || 0) * p.prompt + (u.outputTokens || 0) * p.completion
+      + (u.cacheReadInputTokens || 0) * (p.cacheRead ?? p.prompt) + (u.cacheCreationInputTokens || 0) * (p.cacheWrite ?? p.prompt);
+  }
+  return usd;
 }
 
 // ---- install and sign-in from the panel ----

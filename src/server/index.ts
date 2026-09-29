@@ -24,6 +24,7 @@ import { Ledger, dayKey, type Cap } from "./ledger.js";
 import { initPrices, pricesFile, customPrices, parsePrices, saveCustomPrices, DEFAULT_PRICES } from "./prices.js";
 import { EventLog, type OfficeEvent } from "./events.js";
 import { Progress } from "./progress.js";
+import { OfficeLayout } from "./layout.js";
 import { RunLog, sessionTranscript, type RunStatus } from "./runs.js";
 import { getQuota, onQuota } from "./quota.js";
 import type { Spend } from "./employee.js";
@@ -99,6 +100,7 @@ interface OfficeRt {
   runs: RunLog;      // runs.jsonl: one line per finished task run
   openRuns: Map<number, OpenRun>;
   progress: Progress; // progress.json: XP per employee, office unlocks, daily badge
+  layout: OfficeLayout; // layout.json: where the furniture stands (null = the classic layout)
 }
 const offices = new Map<string, OfficeRt>();
 
@@ -449,8 +451,9 @@ function openOffice(def: OfficeDef): OfficeRt {
     employees.set(cfg.id, new Employee(cfg, store));
   }
   const board = new Board(store.dir);
-  const o: OfficeRt = { def, store, employees, board, ledger: new Ledger(store.dir), events: new EventLog(store.dir), runs: new RunLog(store.dir), openRuns: new Map(), progress: new Progress(store.dir, board.tasks) };
+  const o: OfficeRt = { def, store, employees, board, ledger: new Ledger(store.dir), events: new EventLog(store.dir), runs: new RunLog(store.dir), openRuns: new Map(), progress: new Progress(store.dir, board.tasks), layout: new OfficeLayout(store.dir) };
   offices.set(def.id, o);
+  o.layout.ensure([...employees.keys()]); // a saved layout gets a desk for everybody (and remembers who sits where)
   board.on("change", safe("board change", () => broadcast({ type: "board", office: def.id, board: boardPayload(o) })));
   board.on("status", safe("task status", (k: Task, _prev: TaskStatus, by: string) => onTaskStatus(o, k, by)));
   // the activity feed and the run log hear of every change to the board, whoever made it
@@ -930,6 +933,26 @@ r.get("/progress", (req: OReq, res) => {
   if (!o) return res.status(404).json({ error: t("server.notFound") });
   res.json(o.progress.state());
 });
+// Furniture layout: GET the saved one (null = the classic layout); PUT a new one ({layout: {...}}) or null to go back to the classic one.
+// Everything is checked here again: schema, walls / doors / overlaps, and that every desk, hangout spot and doorway can be walked to.
+r.get("/layout", (req: OReq, res) => {
+  const o = officeOf(req);
+  if (!o) return res.status(404).json({ error: t("server.notFound") });
+  res.json({ layout: o.layout.doc });
+});
+r.put("/layout", (req: OReq, res) => {
+  const o = officeOf(req);
+  if (!o) return res.status(404).json({ error: t("server.notFound") });
+  const input = req.body?.layout;
+  if (input === null) o.layout.set(null);
+  else {
+    const r = o.layout.check(input, [...o.employees.keys()]);
+    if (!r.ok) return res.status(400).json({ error: t("server.layout.invalid", { reason: r.error }), codes: r.codes });
+    try { o.layout.set(r.doc); } catch (err) { return res.status(500).json({ error: (err as Error).message }); }
+  }
+  broadcast({ type: "layout", office: o.def.id, layout: o.layout.doc });
+  res.json({ layout: o.layout.doc });
+});
 r.get("/quota", (_req, res) => res.json(getQuota()));
 r.get("/activity", (req: OReq, res) => {
   const o = officeOf(req);
@@ -1159,6 +1182,7 @@ r.post("/employees", (req: OReq, res) => {
   wire(e);
   syncAgents(o);
   logEvent(o, { kind: "hired", emp: e.cfg.id, by: "user", data: {} });
+  if (o.layout.ensure([...o.employees.keys()])) broadcast({ type: "layout", office: o.def.id, layout: o.layout.doc }); // a new desk for the new hire
   broadcast({ type: "roster", office: o.def.id, employees: roster(o) });
   res.json(publicInfo(e));
 });
@@ -1355,7 +1379,7 @@ function startMeeting(o: OfficeRt, topic: string, ids: string[], interruptBusy: 
 
 wss.on("connection", (ws) => {
   ws.on("error", (err) => logError("websocket client", err));
-  ws.send(JSON.stringify({ type: "init", quota: getQuota(), offices: [...offices.values()].map((o) => ({ ...officeInfo(o), employees: roster(o), meeting: o.meeting?.state() ?? null, board: boardPayload(o), costs: costsBrief(o), progress: o.progress.state(), lastSeen: o.store.getMeta<number>("_office", "lastSeen") ?? 0 })) }));
+  ws.send(JSON.stringify({ type: "init", quota: getQuota(), offices: [...offices.values()].map((o) => ({ ...officeInfo(o), employees: roster(o), meeting: o.meeting?.state() ?? null, board: boardPayload(o), costs: costsBrief(o), progress: o.progress.state(), layout: o.layout.doc, lastSeen: o.store.getMeta<number>("_office", "lastSeen") ?? 0 })) }));
   ws.on("message", async (raw) => {
     let msg: ClientMessage;
     try { msg = JSON.parse(raw.toString()); } catch { return; }

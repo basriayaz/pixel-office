@@ -97,6 +97,7 @@
     },
     "officeNotEmpty": "Önce çalışanlarını taşı ya da işten çıkar",
     "lastOffice": "Son ofis silinemez",
+    "layout": { "invalid": "Yerleşim kabul edilmedi ({reason})" },
     "shutdown": "Kapatılıyor (arayüz/CLI'den istendi)…",
     "settings": {
       "invalid": "{key} açık ya da kapalı (true/false) olmalı",

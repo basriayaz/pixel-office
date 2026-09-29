@@ -49,3 +49,47 @@ runValidation(globalThis.POLayout);
 runFuzz(globalThis.POLayout);
 const { runOffice } = await import("./lib/office-checks.mjs");
 runOffice(h, globalThis.POLayout);
+
+// ---------- 4. the server side: saved per office, checked again on the way in ----------
+const distLayout = path.join(ROOT, "dist/server/layout.js");
+if (fs.existsSync(distLayout)) {
+  const { default: os } = await import("node:os");
+  const { OfficeLayout } = await import(pathToFileURL(distLayout).href);
+  const P = globalThis.POLayout;
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "po-layout-"));
+  const ids = ["a", "b", "c"];
+  let store = new OfficeLayout(dir);
+  assert.equal(store.doc, null, "no file: the classic layout");
+  const good = P.toDoc(P.scene(null, ids).items.filter((i) => i.id !== "fridge"));
+  const okd = store.check(good, ids);
+  assert.equal(okd.ok, true);
+  store.set(okd.doc);
+  assert.deepEqual(J(new OfficeLayout(dir).doc), J(okd.doc), "saved and read back");
+  assert.ok(fs.existsSync(path.join(dir, "layout.json")));
+  // invalid input is refused with the reasons, and nothing is written
+  const bad = (doc, code) => { const r = store.check(doc, ids); assert.equal(r.ok, false); if (code) assert.ok(r.codes.includes(code), `${code}: ${r.error} ${r.codes}`); };
+  bad(P.toDoc(P.scene(null, ids).items.map((i) => (i.id === "sofa" ? { ...i, tx: 5 } : i))), "outside");
+  bad(P.toDoc([...good.items, { id: "x", type: "plant", tx: 6, ty: 5, v: 1 }, { id: "y", type: "plant", tx: 6, ty: 6, v: 1 }]), "door");
+  bad(P.toDoc(good.items.filter((i) => i.id !== "desk2")), "desks");
+  bad({ v: 1, items: [{ id: "x", type: "<script>", tx: 1, ty: 1 }] });
+  bad("nope"); bad(null);
+  bad({ v: 1, items: Array.from({ length: 500 }, (_, i) => ({ id: "p" + i, type: "plant", tx: 1, ty: 1 })) });
+  assert.deepEqual(J(new OfficeLayout(dir).doc), J(okd.doc), "refused layouts leave the saved one alone");
+  // a hire: a desk appears for them and is remembered
+  assert.equal(store.ensure([...ids, "d"]), true);
+  assert.equal(store.doc.items.filter((i) => i.type === "desk").length, 4);
+  assert.equal(new OfficeLayout(dir).doc.items.filter((i) => i.type === "desk").length, 4, "the new desk was saved");
+  assert.equal(store.ensure([...ids, "d"]), false, "nothing more to do");
+  // a broken file: the classic layout, never a crash
+  fs.writeFileSync(path.join(dir, "layout.json"), "{oops");
+  fs.rmSync(path.join(dir, "layout.json.bak"), { force: true });
+  assert.equal(new OfficeLayout(dir).doc, null);
+  // a file that parses but is not a valid layout (edited by hand) is ignored
+  fs.writeFileSync(path.join(dir, "layout.json"), JSON.stringify({ v: 1, items: [{ id: "f", type: "fridge", tx: 7, ty: 5 }] }));
+  assert.equal(new OfficeLayout(dir).doc, null);
+  store = new OfficeLayout(dir);
+  store.set(okd.doc);
+  store.set(null);
+  assert.equal(new OfficeLayout(dir).doc, null, "reset goes back to the classic layout");
+  console.log("layout server side ok");
+} else console.log("(dist not built: skipping the server-side layout checks)");

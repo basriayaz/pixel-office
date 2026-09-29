@@ -97,6 +97,7 @@
     },
     "officeNotEmpty": "Move or fire its employees first",
     "lastOffice": "The last office can't be deleted",
+    "layout": { "invalid": "Layout not accepted ({reason})" },
     "shutdown": "Shutting down (requested from the UI/CLI)…",
     "settings": {
       "invalid": "{key} must be true or false",

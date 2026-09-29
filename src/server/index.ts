@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import http from "node:http";
-import { spawn } from "node:child_process";
+import { spawn, execFile } from "node:child_process";
 import express, { type Request } from "express";
 import { WebSocketServer, WebSocket } from "ws";
 import { Employee, listConnectors, IMAGE_TYPES, type EmployeeConfig, type ImageInput } from "./employee.js";
@@ -20,6 +20,11 @@ import { codexModels, isCodexModel } from "./codex.js";
 import { createGuard, isLoopbackHost } from "./security.js";
 import { acquireLock } from "./lock.js";
 import { writeFileAtomicSync } from "./fsutil.js";
+import { Ledger, dayKey, type Cap } from "./ledger.js";
+import { EventLog, type OfficeEvent } from "./events.js";
+import { RunLog, sessionTranscript, type RunStatus } from "./runs.js";
+import { getQuota, onQuota } from "./quota.js";
+import type { Spend } from "./employee.js";
 
 const R = rootFromEnv();
 // Global mode sets itself up on first run; project mode expects `pixel-office init`.
@@ -86,8 +91,81 @@ interface OfficeRt {
   employees: Map<string, Employee>;
   meeting?: Meeting; // the running meeting, or the one that just ended (kept until the panel is closed)
   board: Board;      // shared notebook + task list
+  ledger: Ledger;    // costs.jsonl: what every turn spent, never reset
+  events: EventLog;  // events.jsonl: the activity feed
+  runs: RunLog;      // runs.jsonl: one line per finished task run
+  openRuns: Map<number, OpenRun>;
 }
 const offices = new Map<string, OfficeRt>();
+
+// ---- activity log ----
+const whoName = (o: OfficeRt, id?: string) => (!id ? undefined : id === "user" ? t("server.meeting.boss") : id === "office" ? t("server.events.office") : o.employees.get(id)?.cfg.name ?? id);
+function logEvent(o: OfficeRt, ev: Omit<OfficeEvent, "id" | "ts">): OfficeEvent {
+  const by = ev.by === "system" ? "office" : ev.by;
+  const k = ev.task !== undefined ? o.board.tasks.find((x) => x.id === ev.task) : undefined;
+  const event = o.events.add({
+    ...ev, by, byName: ev.byName ?? whoName(o, by),
+    empName: ev.empName ?? whoName(o, ev.emp), taskTitle: ev.taskTitle ?? k?.title,
+  });
+  broadcast({ type: "activity", office: o.def.id, event });
+  return event;
+}
+
+// ---- daily cap: stops what the office starts by itself, never what the boss starts ----
+const capOf = (o: OfficeRt): Cap => ({ daily: 0, codexTokens: 0, ...(o.store.getMeta<Partial<Cap>>("_office", "cap") ?? {}) });
+function capState(o: OfficeRt) {
+  const c = capOf(o), today = o.ledger.today();
+  const daily = c.daily > 0 && today.cost >= c.daily, codex = c.codexTokens > 0 && today.codexTokens >= c.codexTokens;
+  return { daily: c.daily, codexTokens: c.codexTokens, reached: daily || codex, reason: daily ? "daily" : codex ? "codex" : null } as const;
+}
+const capReached = (o: OfficeRt) => capState(o).reached;
+const capText = (o: OfficeRt) => { const c = capState(o); return c.reason === "codex" ? t("server.cap.codex", { limit: c.codexTokens }) : t("server.cap.daily", { limit: c.daily }); };
+const costsBrief = (o: OfficeRt) => { const td = o.ledger.today(); return { today: td.cost, todayTokens: { codex: td.codexTokens }, cap: capState(o) }; };
+const costsPayload = (o: OfficeRt, days: number) => ({ ...o.ledger.summary(days, (id) => o.board.tasks.find((x) => x.id === id)?.title), cap: capState(o) });
+// cap_reached once per day and kind
+function checkCap(o: OfficeRt) {
+  const c = capOf(o), today = o.ledger.today(), day = dayKey(Date.now());
+  const seen = o.store.getMeta<{ day: string; kinds: string[] }>("_office", "capNotified");
+  const kinds = seen?.day === day ? [...seen.kinds] : [];
+  const hit: Array<["daily" | "codex", number]> = [];
+  if (c.daily > 0 && today.cost >= c.daily && !kinds.includes("daily")) hit.push(["daily", c.daily]);
+  if (c.codexTokens > 0 && today.codexTokens >= c.codexTokens && !kinds.includes("codex")) hit.push(["codex", c.codexTokens]);
+  if (!hit.length) return;
+  o.store.setMeta("_office", "capNotified", { day, kinds: [...kinds, ...hit.map((h) => h[0])] });
+  for (const [what, limit] of hit) {
+    logEvent(o, { kind: "cap_reached", by: "office", data: { what, limit } });
+    console.log(`[cap] [${o.def.name}] daily ${what === "daily" ? "spend" : "Codex token"} cap reached (${limit}): the office starts nothing by itself until tomorrow`);
+  }
+}
+function recordSpend(o: OfficeRt, e: Employee, s: Spend) {
+  o.ledger.add({ ts: Date.now(), emp: e.cfg.id, empName: e.cfg.name, engine: s.engine, model: s.model, kind: s.kind, ...(s.task !== undefined ? { task: s.task } : {}), cost: s.cost, ...(s.tokens ? { tokens: s.tokens } : {}) });
+  if (s.task !== undefined && !o.openRuns.has(s.task)) { const k = o.board.tasks.find((x) => x.id === s.task); if (k?.status === "doing") openRun(o, k); }
+  broadcast({ type: "costs", office: o.def.id, ...costsBrief(o) });
+  checkCap(o);
+}
+
+// ---- task runs: from "doing" until it left "doing" and the owner's turn ended (the last turn's cost belongs to the run) ----
+interface OpenRun { task: number; emp: string; startedAt: number; closing?: RunStatus }
+function openRun(o: OfficeRt, k: Task) { o.openRuns.set(k.id, { task: k.id, emp: k.owner, startedAt: Date.now() }); }
+function closeRun(o: OfficeRt, run: OpenRun, status: RunStatus) {
+  o.openRuns.delete(run.task);
+  const endedAt = Date.now(), spent = o.ledger.forTask(run.task, run.startedAt, endedAt);
+  const e = o.employees.get(run.emp), k = o.board.tasks.find((x) => x.id === run.task);
+  o.runs.add({ task: run.task, emp: run.emp, empName: e?.cfg.name ?? run.emp, startedAt: run.startedAt, endedAt, durationMs: endedAt - run.startedAt, cost: spent.cost, ...(spent.codexTokens ? { codexTokens: spent.codexTokens } : {}), status, ...(k?.session ? { session: k.session } : {}) });
+  logEvent(o, { kind: "run_end", emp: run.emp, task: run.task, data: { status, durationMs: endedAt - run.startedAt, cost: spent.cost } });
+}
+// runs of this employee that already left "doing" end with the turn that is ending now
+function settleRuns(o: OfficeRt, emp: string, all = false) {
+  for (const run of [...o.openRuns.values()]) if (run.emp === emp && (run.closing || all)) closeRun(o, run, run.closing ?? "stopped");
+}
+function trackRun(o: OfficeRt, k: Task, prev: TaskStatus, by: string) {
+  if (k.status === "doing") { if (!o.openRuns.has(k.id)) openRun(o, k); return; }
+  const run = o.openRuns.get(k.id);
+  if (!run || prev !== "doing") return;
+  const last = k.notes[k.notes.length - 1]?.text;
+  run.closing = k.status === "todo" && by === "user" ? "stopped" : k.status === "blocked" && last === t("server.board.sessionError") ? "error" : k.status;
+  if (!o.employees.get(run.emp)?.busy) closeRun(o, run, run.closing);
+}
 
 // Store folder per office: dataDir itself for a single office, dataDir/<id> once there are several.
 // A single office that became one of several keeps its data at dataDir until the next start (employees, the board and
@@ -125,7 +203,9 @@ function storeFor(def: OfficeDef): Store {
 
 const colleaguesOf = (o: OfficeRt) => ({
   list: () => [...o.employees.values()], board: () => o.board, launch: (k: Task, from: Employee) => launch(o, k, from),
+  capBlock: () => (capReached(o) ? capText(o) : undefined),
   discoveryBlock: () => {
+    if (capReached(o)) return capText(o);
     const c = cycleOf(o);
     if (c.phase !== "discovering") return undefined; // research the boss asked for is not counted
     if (c.tasks >= MAX_DISCOVERY_TASKS) return t("server.cycle.limit", { n: MAX_DISCOVERY_TASKS });
@@ -163,7 +243,10 @@ const managerOf = (o: OfficeRt) => [...o.employees.values()].find((e) => e.cfg.m
 const quiet = (o: OfficeRt) => o.board.tasks.every((k) => k.status === "done");
 const boardPayload = (o: OfficeRt) => { const c = cycleOf(o); return { ...o.board.state(), mode: modeOf(o), budget: budgetOf(o), roundsPerDay: roundsPerDay(o), cycle: { phase: c.phase, no: c.no, spent: c.phase === "idle" ? 0 : spent(o, c), tasks: c.tasks } }; };
 function saveCycle(o: OfficeRt, c: Cycle) {
+  const prev = cycleOf(o);
   o.store.setMeta("_office", "cycle", c);
+  if (c.phase === "discovering" && prev.phase !== "discovering") logEvent(o, { kind: "discovery_start", emp: managerOf(o)?.cfg.id, by: "office", data: { no: c.no } });
+  else if (prev.phase === "discovering" && c.phase !== "discovering") logEvent(o, { kind: "discovery_end", emp: managerOf(o)?.cfg.id, by: "office", data: { no: prev.no } });
   broadcast({ type: "board", office: o.def.id, board: boardPayload(o) });
 }
 
@@ -175,6 +258,7 @@ function startDiscovery(o: OfficeRt, byBoss = false): string | undefined {
   if (!quiet(o)) return t("server.cycle.notQuiet");
   const today = c.day === day ? c.today : 0;
   if (!byBoss && today >= roundsPerDay(o)) return t("server.cycle.dayLimit");
+  if (!byBoss && capReached(o)) return capText(o);
   // what already waits for the boss comes first: no new round on top of a pile of undecided ideas
   const undecided = o.board.ideas.filter((x) => x.status === "new").length;
   if (!byBoss && undecided >= 5) return t("server.cycle.undecided");
@@ -193,6 +277,8 @@ function advanceCycle(o: OfficeRt, event: { task?: Task; managerTurn?: boolean; 
     const looking = [...o.employees.values()].some((e) => e !== pm && e.busy);
     if (c.tasks > 0 && !looking && pm) {
       saveCycle(o, { ...c, phase: "waiting" });
+      if (capReached(o)) return; // the findings wait on the board; the manager is not called past the cap
+      wokeManager(o, t("server.events.wake.compile"));
       pm.sendWhenFree(t(mode === "auto" ? "server.cycle.compileAuto" : "server.cycle.compile", { budget: budgetOf(o), spent: spent(o, c).toFixed(2) }));
     } else if (event.managerTurn && c.tasks === 0 && pm && !pm.busy && !pm.hasOfficeMessages) saveCycle(o, { ...c, phase: "waiting" }); // the manager looked around alone and already reported
     return;
@@ -205,6 +291,7 @@ function advanceCycle(o: OfficeRt, event: { task?: Task; managerTurn?: boolean; 
 // approval is remembered on the task and it begins by itself when they are done; nothing starts that nobody approved.
 function launch(o: OfficeRt, k: Task, from?: Employee): "started" | "queued" | "waiting" {
   const by = from?.cfg.id ?? "user";
+  logEvent(o, { kind: "task_started", emp: k.owner, task: k.id, by, data: { by } });
   const owner = o.employees.get(k.owner);
   if (!owner || o.board.waitingOn(k).length) { o.board.markTask(k.id, { autoStart: by }); return "waiting"; }
   const r = owner.startTask(k.id, from);
@@ -218,7 +305,8 @@ function onTaskStatus(o: OfficeRt, k: Task, by: string) {
   owner?.poke();
   advanceCycle(o, { task: k });
   if (k.status === "done") for (const w of o.board.tasks) {
-    if (w.status === "todo" && w.autoStart && w.after?.includes(k.id) && !o.board.waitingOn(w).length) launch(o, w, o.employees.get(w.autoStart));
+    // a start the boss approved goes ahead; one the office approved waits past the cap
+    if (w.status === "todo" && w.autoStart && w.after?.includes(k.id) && !o.board.waitingOn(w).length && (w.autoStart === "user" || !capReached(o))) launch(o, w, o.employees.get(w.autoStart));
   }
   const pm = managerOf(o);
   if (!pm || !owner || pm === owner || (by !== k.owner && by !== "system") || !["done", "review", "blocked"].includes(k.status)) return;
@@ -234,6 +322,7 @@ function onTaskStatus(o: OfficeRt, k: Task, by: string) {
 function managerNeeded(o: OfficeRt): boolean {
   const pm = managerOf(o), mode = modeOf(o);
   if (!pm || cycleOf(o).phase === "discovering") return false; // a discovery round has its own calls
+  if (capReached(o)) return false; // past the daily cap the office starts nothing by itself
   const open = o.board.tasks.filter((x) => x.status !== "done");
   const running = open.some((x) => taskRunning(o, x)); // approved and queued is as good as running; a "doing" nobody works on is not
   const waiting = open.some((x) => x.status === "review" || x.status === "blocked");
@@ -241,7 +330,17 @@ function managerNeeded(o: OfficeRt): boolean {
   return mode === "auto" ? waiting || unstarted || (!running && pm.hasNews) : !running && (waiting || pm.hasNews);
 }
 function nudgeManager(o: OfficeRt) {
-  if (managerNeeded(o)) managerOf(o)!.sendWhenFree(t(`server.board.wake.${modeOf(o)}`), () => managerNeeded(o));
+  if (!managerNeeded(o)) return;
+  wokeManager(o, t(`server.events.wake.${modeOf(o)}`));
+  managerOf(o)!.sendWhenFree(t(`server.board.wake.${modeOf(o)}`), () => managerNeeded(o));
+}
+// one line in the feed per wave, not one per nudge (identical calls collapse into one turn anyway)
+const lastWoken = new Map<string, number>();
+function wokeManager(o: OfficeRt, reason: string) {
+  const now = Date.now();
+  if (now - (lastWoken.get(o.def.id) ?? 0) < 60e3) return;
+  lastWoken.set(o.def.id, now);
+  logEvent(o, { kind: "pm_woken", emp: managerOf(o)?.cfg.id, by: "office", data: { reason } });
 }
 
 // ---- stuck work ----
@@ -269,7 +368,7 @@ function reviveTask(o: OfficeRt, k: Task, why: "restart" | "stuck") {
     o.board.updateTask(k.id, { status: "todo", note: t("server.stuck.noOwner") }, "system");
     return log(`owner ${k.owner} is gone; back to todo`);
   }
-  if (mode === "manual") {
+  if (mode === "manual" || capReached(o)) { // past the cap nothing is picked up again by itself either
     o.board.updateTask(k.id, { status: "todo", note: t(`server.stuck.${why}Manual`) }, "system");
     return log("back to todo; Start continues it");
   }
@@ -291,7 +390,7 @@ function reconcileAtStart(o: OfficeRt) {
     if (k.status === "doing") { reviveTask(o, k, "restart"); changed = true; }
     else if (k.status === "todo" && k.autoStart && o.employees.has(k.owner)) {
       changed = true;
-      if (modeOf(o) === "manual") {
+      if (modeOf(o) === "manual" || (k.autoStart !== "user" && capReached(o))) {
         o.board.markTask(k.id, { autoStart: null });
         o.board.updateTask(k.id, { note: t("server.stuck.restartQueued") }, "system");
         console.log(`[stuck] [${o.def.name}] #${k.id} "${k.title.slice(0, 60)}" (restart, manual): queued start forgotten; waits for Start`);
@@ -346,10 +445,24 @@ function openOffice(def: OfficeDef): OfficeRt {
     employees.set(cfg.id, new Employee(cfg, store));
   }
   const board = new Board(store.dir);
-  const o: OfficeRt = { def, store, employees, board };
+  const o: OfficeRt = { def, store, employees, board, ledger: new Ledger(store.dir), events: new EventLog(store.dir), runs: new RunLog(store.dir), openRuns: new Map() };
   offices.set(def.id, o);
   board.on("change", safe("board change", () => broadcast({ type: "board", office: def.id, board: boardPayload(o) })));
   board.on("status", safe("task status", (k: Task, _prev: TaskStatus, by: string) => onTaskStatus(o, k, by)));
+  // the activity feed and the run log hear of every change to the board, whoever made it
+  board.on("status", safe("task status log", (k: Task, prev: TaskStatus, by: string) => {
+    const last = k.notes[k.notes.length - 1];
+    const note = last && last.by === by && Date.now() - last.ts < 2000 ? last.text.replace(/\s+/g, " ").slice(0, 300) : undefined;
+    logEvent(o, { kind: "task_status", emp: k.owner, task: k.id, by, data: { from: prev, to: k.status, ...(note ? { note } : {}) } });
+    trackRun(o, k, prev, by);
+  }));
+  board.on("added", safe("task added log", (k: Task) => logEvent(o, { kind: "task_created", emp: k.owner, task: k.id, by: k.createdBy, data: {} })));
+  board.on("edited", safe("task edited log", (k: Task, ch: { owner?: string; edited: boolean }, by: string) => {
+    if (ch.owner !== undefined) logEvent(o, { kind: "task_owner", emp: k.owner, task: k.id, by, data: { from: ch.owner, to: k.owner, fromName: whoName(o, ch.owner), toName: whoName(o, k.owner) } });
+    if (ch.edited) logEvent(o, { kind: "task_edited", emp: k.owner, task: k.id, by, data: {} });
+  }));
+  board.on("idea", safe("idea log", (x: { id: number; by: string; title: string }) => logEvent(o, { kind: "idea_new", emp: x.by === "user" ? undefined : x.by, idea: x.id, by: x.by, data: { title: x.title } })));
+  board.on("promoted", safe("idea promoted log", (x: { id: number; title: string }, k: Task, by: string) => logEvent(o, { kind: "idea_promoted", emp: k.owner, idea: x.id, task: k.id, by, data: { title: x.title } })));
   for (const e of employees.values()) e.setColleagues(colleaguesOf(o));
   return o;
 }
@@ -382,7 +495,16 @@ app.use(express.static(path.join(PKG_ROOT, "web")));
 
 function publicInfo(e: Employee) {
   const { id, name, role, color, look, officeId } = e.cfg;
-  return { id, office: officeId, name, role, color, look, engine: e.engine, status: e.status, cost: e.cost, context: e.context, task: e.currentTask ?? null, model: e.model ?? e.cfg.model ?? null, sickUntil: e.sickUntil || undefined, manager: !!e.cfg.manager, queued: e.queue.length, compacting: e.isCompacting };
+  return { id, office: officeId, name, role, color, look, engine: e.engine, status: e.status, cost: e.cost, context: e.context, task: e.currentTask ?? null, model: e.model ?? e.cfg.model ?? null, sickUntil: e.sickUntil || undefined, manager: !!e.cfg.manager, queued: e.queue.length, compacting: e.isCompacting,
+    pendingAsks: e.pendingAsks, unread: unreadOf(e) };
+}
+// Answers of an employee the boss has not seen yet; kept in the office state so a reload does not forget them.
+const unreadOf = (e: Employee) => offices.get(e.cfg.officeId)?.store.getMeta<number>(e.cfg.id, "unread") ?? 0;
+function setUnread(e: Employee, n: number) {
+  const o = offices.get(e.cfg.officeId);
+  if (!o || unreadOf(e) === n) return false;
+  o.store.setMeta(e.cfg.id, "unread", n);
+  return true;
 }
 
 const readText = (p?: string) => { try { return p ? fs.readFileSync(p, "utf8") : ""; } catch { return ""; } };
@@ -481,6 +603,78 @@ app.put("/api/locale", async (req, res) => {
   res.json({ ok: true, locale: code });
 });
 
+// ---- settings panel: the global switches of config.json, read and changed from the UI ----
+// Only this whitelist can be changed here; port, host and the data folder are shown read-only (they need a restart).
+const PKG_VERSION = (() => { try { return String(JSON.parse(fs.readFileSync(path.join(PKG_ROOT, "package.json"), "utf8")).version ?? ""); } catch { return ""; } })();
+// Is the Codex CLI there, and signed in? Two local commands, no model call; asked again at most once a minute.
+let codexInfo: { at: number; value: Promise<{ installed: boolean; version: string; loggedIn: boolean; status: string }> } | null = null;
+function codexStatus() {
+  if (codexInfo && Date.now() - codexInfo.at < 60e3) return codexInfo.value;
+  const run = (args: string[]) => new Promise<{ ok: boolean; out: string }>((resolve) => {
+    execFile("codex", args, { timeout: 8000, encoding: "utf8" }, (err, stdout, stderr) => resolve({ ok: !err, out: `${stdout ?? ""}${stderr ?? ""}`.trim() }));
+  });
+  const value = (async () => {
+    const v = await run(["--version"]);
+    if (!v.ok) return { installed: false, version: "", loggedIn: false, status: "" };
+    const s = await run(["login", "status"]);
+    return { installed: true, version: v.out.split("\n")[0].replace(/^codex(-cli)?\s*/i, ""), loggedIn: s.ok && !/not logged in/i.test(s.out), status: s.out.split("\n")[0].slice(0, 120) };
+  })();
+  codexInfo = { at: Date.now(), value };
+  return value;
+}
+const SETTING_KEYS = ["sickness", "compactAtTokens", "taskSessions", "refreshHours", "syncClaudeAgents"] as const;
+const settingsPayload = async () => ({
+  locale: locale.code, locales: availableLocales(),
+  sickness: settings.sickness, compactAtTokens: settings.compactAtTokens, taskSessions: settings.taskSessions,
+  refreshHours: settings.refreshHours, syncClaudeAgents: settings.syncClaudeAgents, multiOffice: settings.multiOffice,
+  // an environment variable wins over config.json: the panel shows those switches locked
+  envLocked: { sickness: process.env.PIXEL_OFFICE_SICKNESS === "0", compactAtTokens: process.env.PIXEL_OFFICE_COMPACT_AT !== undefined },
+  server: {
+    port: settings.port, host: settings.host, mode: R.mode, root: displayPath(R.mode === "global" ? R.root : R.base),
+    dataDir: displayPath(settings.dataDir), configFile: displayPath(configPath(R)), version: PKG_VERSION, node: process.versions.node,
+  },
+  codex: { ...(await codexStatus()), models: codexModels().length },
+});
+app.get("/api/settings", async (_req, res) => res.json(await settingsPayload()));
+app.put("/api/settings", async (req, res) => {
+  const b = (req.body ?? {}) as Record<string, unknown>;
+  const next: Partial<Record<(typeof SETTING_KEYS)[number], boolean | number>> = {};
+  for (const k of ["sickness", "taskSessions", "syncClaudeAgents"] as const) if (b[k] !== undefined) {
+    if (typeof b[k] !== "boolean") return res.status(400).json({ error: t("server.settings.invalid", { key: k }) });
+    next[k] = b[k];
+  }
+  if (b.compactAtTokens !== undefined) {
+    const n = Math.round(Number(b.compactAtTokens));
+    // 0 = the model's own limit; Claude Code ignores anything under 100k
+    if (!Number.isFinite(n) || (n !== 0 && (n < 100000 || n > 1000000))) return res.status(400).json({ error: t("server.settings.compact") });
+    next.compactAtTokens = n;
+  }
+  if (b.refreshHours !== undefined) {
+    const n = Number(b.refreshHours);
+    if (!Number.isFinite(n) || n < 1 || n > 168) return res.status(400).json({ error: t("server.settings.refresh") });
+    next.refreshHours = Math.round(n * 10) / 10;
+  }
+  if (!Object.keys(next).length) return res.status(400).json({ error: t("server.settings.nothing") });
+  const raw = readRawConfig(R);
+  Object.assign(raw, next);
+  writeRawConfig(R, raw);
+  // applied live: getSettings() hands out this same object, so new sessions, task starts and the sickness check see it at once
+  const prevRefresh = settings.refreshHours;
+  if (next.sickness !== undefined && process.env.PIXEL_OFFICE_SICKNESS !== "0") settings.sickness = next.sickness as boolean;
+  if (next.compactAtTokens !== undefined && process.env.PIXEL_OFFICE_COMPACT_AT === undefined) settings.compactAtTokens = next.compactAtTokens as number;
+  if (next.taskSessions !== undefined) settings.taskSessions = next.taskSessions as boolean;
+  if (next.refreshHours !== undefined) {
+    settings.refreshHours = next.refreshHours as number;
+    // employees who never had a value of their own carry the old office default (agent.md leaves it out): they follow the new one
+    for (const o of offices.values()) for (const e of o.employees.values()) if (e.cfg.refreshHours === prevRefresh) e.cfg.refreshHours = settings.refreshHours;
+  }
+  if (next.syncClaudeAgents !== undefined) {
+    settings.syncClaudeAgents = next.syncClaudeAgents as boolean;
+    if (settings.syncClaudeAgents) for (const o of offices.values()) safe(`agent sync of ${o.def.id}`, () => syncAgents(o))();
+  }
+  res.json(await settingsPayload());
+});
+
 // Shut the server down from the UI / CLI (localhost only, so no auth): interrupts running turns, tells clients, exits.
 app.post("/api/shutdown", (_req, res) => {
   res.json({ ok: true });
@@ -572,8 +766,9 @@ r.get("/board", (req: OReq, res) => {
 r.put("/board/mode", (req: OReq, res) => {
   const o = officeOf(req), b = req.body ?? {};
   if (!o) return res.status(404).json({ error: t("server.notFound") });
-  const mode = pick(b.mode, MODES);
+  const mode = pick(b.mode, MODES), prevMode = modeOf(o);
   if (mode) o.store.setMeta("_office", "mode", mode);
+  if (mode && mode !== prevMode) logEvent(o, { kind: "mode_change", by: "user", data: { from: prevMode, to: mode } });
   if (b.budget !== undefined) o.store.setMeta("_office", "budget", Math.min(500, Math.max(1, Number(b.budget) || 10)));
   if (b.roundsPerDay !== undefined) o.store.setMeta("_office", "roundsPerDay", Math.min(24, Math.max(1, Math.round(Number(b.roundsPerDay)) || 3)));
   if (mode === "manual") { const c = cycleOf(o); if (c.phase !== "idle") o.store.setMeta("_office", "cycle", { ...c, phase: "idle" }); }
@@ -610,8 +805,26 @@ r.post("/board/tasks/:id/start", (req: OReq, res) => {
 });
 r.put("/board/tasks/:id", (req: OReq, res) => {
   const o = officeOf(req), b = req.body ?? {};
-  const owner = b.owner !== undefined ? o?.employees.get(String(b.owner)) : undefined;
-  const k = o?.board.updateTask(Number(req.params.id), {
+  const cur = o?.board.tasks.find((x) => x.id === Number(req.params.id));
+  if (!o || !cur) return res.status(404).json({ error: t("server.notFound") });
+  const owner = b.owner !== undefined ? o.employees.get(String(b.owner)) : undefined;
+  if (b.owner !== undefined && !owner) return res.status(400).json({ error: t("server.board.taskFields") });
+  // a running task keeps its owner: its session, turn and queue belong to them
+  if (owner && owner.cfg.id !== cur.owner && (taskRunning(o, cur) || o.employees.get(cur.owner)?.currentTask === cur.id)) return res.status(409).json({ error: t("server.board.ownerRunning", { id: cur.id }) });
+  if (Array.isArray(b.after)) {
+    const after: number[] = b.after.map(Number).filter(Number.isFinite);
+    if (after.includes(cur.id)) return res.status(400).json({ error: t("server.board.depSelf") });
+    // a prerequisite that (through its own prerequisites) waits for this task would hold both up forever
+    const reaches = (from: number, seen = new Set<number>()): boolean => {
+      if (from === cur.id) return true;
+      if (seen.has(from)) return false;
+      seen.add(from);
+      return (o.board.tasks.find((x) => x.id === from)?.after ?? []).some((d) => reaches(d, seen));
+    };
+    const loop = after.find((d) => reaches(d));
+    if (loop !== undefined) return res.status(400).json({ error: t("server.board.depCycle", { id: loop }) });
+  }
+  const k = o.board.updateTask(Number(req.params.id), {
     status: pick(b.status, TASK_STATUSES) as TaskStatus | undefined, owner: owner?.cfg.id,
     title: b.title !== undefined ? clean(b.title, 160) : undefined, detail: b.detail !== undefined ? clean(b.detail, 8000) : undefined, note: clean(b.note, 2000) || undefined,
     review: b.review !== undefined ? !!b.review : undefined,
@@ -634,7 +847,61 @@ r.post("/board/start-all", (req: OReq, res) => {
 });
 r.delete("/board/tasks/:id", (req: OReq, res) => {
   if (!officeOf(req)?.board.deleteTask(Number(req.params.id))) return res.status(404).json({ error: t("server.notFound") });
+  officeOf(req)!.openRuns.delete(Number(req.params.id));
   res.json({ ok: true });
+});
+// Past runs of a task (time, cost, how each ended) and what was said in its session.
+r.get("/board/tasks/:id/runs", (req: OReq, res) => {
+  const o = officeOf(req);
+  if (!o) return res.status(404).json({ error: t("server.notFound") });
+  res.json(o.runs.forTask(Number(req.params.id)));
+});
+r.get("/board/tasks/:id/transcript", async (req: OReq, res) => {
+  const o = officeOf(req);
+  const k = o?.board.tasks.find((x) => x.id === Number(req.params.id));
+  if (!o || !k) return res.status(404).json({ error: t("server.notFound") });
+  const owner = o.employees.get(k.owner);
+  if (!k.session) return res.json({ available: false, reason: t("server.runs.noSession"), messages: [] });
+  if (owner?.engine === "codex" || /^[0-9a-f]{8}-[0-9a-f]{4}-7/i.test(k.session)) return res.json({ available: false, reason: t("server.runs.codex"), messages: [] });
+  const messages = await sessionTranscript(k.session, owner?.cfg.cwd ?? o.def.cwd).catch(() => []);
+  if (!messages.length) return res.json({ available: false, reason: t("server.runs.notFound"), messages: [] });
+  res.json({ available: true, messages });
+});
+
+// ---- costs, daily cap, plan quota, activity ----
+r.get("/costs", (req: OReq, res) => {
+  const o = officeOf(req);
+  if (!o) return res.status(404).json({ error: t("server.notFound") });
+  res.json(costsPayload(o, Math.min(90, Math.max(1, Math.round(Number(req.query.days)) || 7))));
+});
+r.put("/costs/cap", (req: OReq, res) => {
+  const o = officeOf(req), b = req.body ?? {};
+  if (!o) return res.status(404).json({ error: t("server.notFound") });
+  const cap = capOf(o), num = (v: unknown, max: number) => Math.min(max, Math.max(0, Number(v) || 0));
+  if (b.daily !== undefined) cap.daily = Math.round(num(b.daily, 100000) * 100) / 100;
+  if (b.codexTokens !== undefined) cap.codexTokens = Math.round(num(b.codexTokens, 1e12));
+  const was = capReached(o);
+  o.store.setMeta("_office", "cap", cap);
+  logEvent(o, { kind: "cap_changed", by: "user", data: { daily: cap.daily, codexTokens: cap.codexTokens } });
+  checkCap(o);
+  broadcast({ type: "costs", office: o.def.id, ...costsBrief(o) });
+  // the cap was raised or switched off: what waited for it may go on
+  if (was && !capReached(o)) nudgeManager(o);
+  res.json(costsPayload(o, Math.min(90, Math.max(1, Math.round(Number(req.query.days)) || 7))));
+});
+r.get("/quota", (_req, res) => res.json(getQuota()));
+r.get("/activity", (req: OReq, res) => {
+  const o = officeOf(req);
+  if (!o) return res.status(404).json({ error: t("server.notFound") });
+  const limit = Math.min(1000, Math.max(1, Math.round(Number(req.query.limit)) || 200));
+  res.json({ events: o.events.since(Number(req.query.since) || 0, limit), lastSeen: o.store.getMeta<number>("_office", "lastSeen") ?? 0, now: Date.now() });
+});
+r.put("/activity/seen", (req: OReq, res) => {
+  const o = officeOf(req);
+  if (!o) return res.status(404).json({ error: t("server.notFound") });
+  const ts = Math.min(Date.now(), Number(req.body?.ts) || Date.now());
+  o.store.setMeta("_office", "lastSeen", Math.max(ts, o.store.getMeta<number>("_office", "lastSeen") ?? 0));
+  res.json({ ok: true, lastSeen: o.store.getMeta<number>("_office", "lastSeen") });
 });
 // Ideas: suggestions from employees (and the boss). Moving one to the board makes it a task; it never starts by that alone.
 const effortOf = (v: unknown) => (["S", "M", "L"].includes(String(v)) ? (String(v) as Effort) : undefined);
@@ -802,6 +1069,7 @@ r.post("/employees", (req: OReq, res) => {
   o.employees.set(e.cfg.id, e);
   wire(e);
   syncAgents(o);
+  logEvent(o, { kind: "hired", emp: e.cfg.id, by: "user", data: {} });
   broadcast({ type: "roster", office: o.def.id, employees: roster(o) });
   res.json(publicInfo(e));
 });
@@ -846,6 +1114,9 @@ r.delete("/employees/:id", async (req: OReq, res) => {
   const o = officeOf(req), e = empOf(req);
   if (!o || !e) return res.status(404).json({ error: t("server.notFound") });
   await e.dispose();
+  settleRuns(o, e.cfg.id, true);
+  logEvent(o, { kind: "fired", emp: e.cfg.id, empName: e.cfg.name, by: "user", data: {} });
+  o.store.setMeta(e.cfg.id, "unread", 0);
   // their unfinished tasks stay on the board, flagged so somebody else gets them
   for (const k of o.board.tasks.filter((x) => x.owner === e.cfg.id && x.status !== "done")) o.board.updateTask(k.id, { status: "blocked", note: t("server.board.ownerLeft", { name: e.cfg.name }) }, "system");
   o.employees.delete(e.cfg.id);
@@ -918,6 +1189,8 @@ function broadcast(payload: unknown) {
   for (const c of wss.clients) if (c.readyState === WebSocket.OPEN) c.send(data);
 }
 
+onQuota((quota) => broadcast({ type: "quota", quota }));
+
 function wire(e: Employee) {
   const id = e.cfg.id, office = e.cfg.officeId;
   // a listener that throws must not break the employee's turn loop that emitted the event
@@ -937,6 +1210,20 @@ function wire(e: Employee) {
   onE("compacting", (on) => broadcast({ type: "compacting", office, id, on }));
   onE("chunk_end", () => broadcast({ type: "chunk_end", office, id }));
   onE("ask", (request) => broadcast({ type: "ask", office, id, request }));
+  const oOf = () => offices.get(office);
+  onE("ask", (request) => { const o = oOf(); if (o) logEvent(o, request.kind === "question"
+    ? { kind: "question", emp: id, task: e.currentTask, data: { summary: askSummary(request) } }
+    : { kind: "ask", emp: id, task: e.currentTask, data: { tool: request.toolName, summary: askSummary(request) } }); });
+  onE("spend", (s) => { const o = oOf(); if (o) recordSpend(o, e, s); });
+  onE("message", (m) => { if (m.role === "assistant" && setUnread(e, unreadOf(e) + 1)) broadcast({ type: "unread", office, id, unread: unreadOf(e) }); });
+  onE("status", (status) => {
+    const o = oOf();
+    if (!o) return;
+    if (status === "error") logEvent(o, { kind: "emp_error", emp: id, task: e.currentTask, data: { message: [...e.history].reverse().find((m) => m.role === "system")?.text.slice(0, 300) ?? "" } });
+    else if (status === "sick") logEvent(o, { kind: "emp_sick", emp: id, data: {} });
+    if (status !== "working" && status !== "waiting") settleRuns(o, id);
+  });
+  onE("result", () => { const o = oOf(); if (o) settleRuns(o, id); });
   onE("ask_done", (requestId) => broadcast({ type: "ask_done", office, id, requestId }));
   onE("result", (res) => broadcast({ type: "result", office, id, ...res, model: e.model }));
   onE("status", () => broadcast({ type: "usage", office, id, context: e.context, task: e.currentTask ?? null }));
@@ -948,6 +1235,12 @@ function wire(e: Employee) {
 }
 for (const o of offices.values()) { for (const e of o.employees.values()) wire(e); syncAgents(o); }
 
+// What a permission request is about, in one line for the feed.
+function askSummary(r: { title: string; description?: string; input: Record<string, unknown> }): string {
+  const qs = Array.isArray(r.input.questions) ? (r.input.questions as Array<{ question?: string }>).map((q) => q.question).filter(Boolean).join(" / ") : "";
+  return (qs || r.title || r.description || "").replace(/\s+/g, " ").slice(0, 200);
+}
+
 function startMeeting(o: OfficeRt, topic: string, ids: string[], interruptBusy: boolean) {
   if (o.meeting?.active) return;
   const people = ids.map((id) => o.employees.get(id)).filter((e): e is Employee => !!e && !e.inMeeting);
@@ -957,12 +1250,19 @@ function startMeeting(o: OfficeRt, topic: string, ids: string[], interruptBusy: 
   const office = o.def.id;
   m.on("state", () => { if (o.meeting === m) broadcast({ type: "meeting", office, meeting: m.state() }); });
   m.on("entry", (entry) => { if (o.meeting === m) broadcast({ type: "meeting_entry", office, meetingId: m.id, entry }); });
+  m.on("ended", safe("meeting end log", () => logEvent(o, { kind: "meeting_end", by: "user", data: { topic } })));
+  m.on("cost", safe("meeting summary cost", (cost: number, model: string) => {
+    o.ledger.add({ ts: Date.now(), emp: "_meeting", empName: t("server.events.meetingSummary"), engine: "claude", model, kind: "meeting", cost });
+    broadcast({ type: "costs", office, ...costsBrief(o) });
+    checkCap(o);
+  }));
+  logEvent(o, { kind: "meeting_start", by: "user", data: { topic, people: people.map((p) => p.cfg.name) } });
   void m.start(interruptBusy);
 }
 
 wss.on("connection", (ws) => {
   ws.on("error", (err) => logError("websocket client", err));
-  ws.send(JSON.stringify({ type: "init", offices: [...offices.values()].map((o) => ({ ...officeInfo(o), employees: roster(o), meeting: o.meeting?.state() ?? null, board: boardPayload(o) })) }));
+  ws.send(JSON.stringify({ type: "init", quota: getQuota(), offices: [...offices.values()].map((o) => ({ ...officeInfo(o), employees: roster(o), meeting: o.meeting?.state() ?? null, board: boardPayload(o), costs: costsBrief(o), lastSeen: o.store.getMeta<number>("_office", "lastSeen") ?? 0 })) }));
   ws.on("message", async (raw) => {
     let msg: ClientMessage;
     try { msg = JSON.parse(raw.toString()); } catch { return; }
@@ -1002,7 +1302,12 @@ async function handleClientMessage(ws: WebSocket, msg: ClientMessage) {
     const e = msg.id ? o.employees.get(msg.id) : undefined;
     if (!e) return;
     switch (msg.type) {
-      case "open": ws.send(JSON.stringify({ type: "history", office: o.def.id, id: e.cfg.id, messages: e.history, pending: e.pendingAsks, queue: e.queue })); break;
+      case "open":
+        ws.send(JSON.stringify({ type: "history", office: o.def.id, id: e.cfg.id, messages: e.history, pending: e.pendingAsks, queue: e.queue }));
+        if (setUnread(e, 0)) broadcast({ type: "roster", office: o.def.id, employees: roster(o) });
+        break;
+      // the chat is open while answers arrive: they are seen as they come
+      case "seen": if (setUnread(e, 0)) broadcast({ type: "roster", office: o.def.id, employees: roster(o) }); break;
       case "send": {
         const images = sanitizeImages(msg.images);
         if (msg.text?.trim() || images.length) e.send((msg.text ?? "").trim(), false, images);
@@ -1028,7 +1333,7 @@ const BOSS_QUIET_MS = 30 * 60e3;
 setInterval(() => {
   const now = Date.now();
   for (const o of offices.values()) for (const e of o.employees.values()) safe(`auto refresh of ${e.cfg.id}`, () => {
-    if (!autoRefreshOf(e) || e.status !== "idle") return;
+    if (!autoRefreshOf(e) || e.status !== "idle" || capReached(o)) return;
     // nothing runs, waits or is queued, no task or meeting, and the boss has been quiet for 30 minutes
     if (!e.canAutoRefresh(BOSS_QUIET_MS, now)) return;
     const hours = (e.cfg.refreshHours ?? 0) > 0 ? e.cfg.refreshHours! : settings.refreshHours > 0 ? settings.refreshHours : 24;
@@ -1038,9 +1343,11 @@ setInterval(() => {
   })();
 }, 10 * 60e3);
 
-// Now and then an idle employee catches something and rests on the sofa for a few minutes (config `sickness: false` turns it off).
+// Now and then an idle employee catches something and rests on the sofa for a few minutes (config `sickness: false` turns it off;
+// the settings panel switches it live, so the check always runs and looks at the setting each time).
 const SICK_CHANCE = Number(process.env.PIXEL_OFFICE_SICK_CHANCE ?? 1 / 1000); // per employee per check → roughly once per 8 hours of idling
-if (settings.sickness) setInterval(safe("sickness", () => {
+setInterval(safe("sickness", () => {
+  if (!settings.sickness) return;
   for (const o of offices.values()) for (const e of o.employees.values()) {
     if (e.status === "idle" && Math.random() < SICK_CHANCE) e.fallIll(Math.round(3 * 60e3 + Math.random() * 2 * 60e3));
   }
@@ -1062,6 +1369,7 @@ server.listen(settings.port, settings.host, () => {
     console.log(`  [${o.def.name}] ${o.def.employeesDir} → ${o.def.cwd}`);
     for (const e of o.employees.values()) console.log(`    - ${e.cfg.name} (${e.cfg.role})`);
   }
+  for (const o of offices.values()) safe(`start log of ${o.def.id}`, () => logEvent(o, { kind: "server_start", by: "office", data: {} }))();
   // work the last run left "doing" (or queued in memory) is put right before anything else starts
   for (const o of offices.values()) safe(`stuck tasks of ${o.def.id}`, () => reconcileAtStart(o))();
   setInterval(() => { for (const o of offices.values()) safe(`stuck check of ${o.def.id}`, () => checkStuck(o))(); }, STUCK_CHECK_MS).unref();

@@ -1,0 +1,71 @@
+/* ---------- board: task drawer (one task on the right side of the board card) + mode switch confirmation ---------- */
+.board-card { position: relative; }
+.board-card.drawer-open { overflow: hidden; }
+.task-card.selected { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset; }
+
+.task-drawer { position: absolute; top: 0; right: 0; bottom: 0; width: min(430px, 100%); z-index: 3; background: var(--card); border-left: 1px solid var(--line); border-radius: 0 14px 14px 0; box-shadow: -14px 0 30px rgba(0,0,0,.4); padding: 16px 18px 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; font-size: 12.5px; line-height: 1.55; }
+.task-drawer > * { flex: none; }
+.drawer-head { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.drawer-head b { color: var(--accent); font-weight: 600; font-size: 13px; }
+.drawer-head .muted { font-size: 11px; letter-spacing: 1px; text-transform: uppercase; }
+.drawer-tags { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.drawer-head .d-close { flex: none; margin-left: auto; }
+.task-drawer > .task-meta { margin-top: -6px; white-space: normal; }
+
+.drawer-field { display: flex; flex-direction: column; gap: 5px; }
+.drawer-field > span { font-size: 11px; color: var(--muted); letter-spacing: .5px; }
+.drawer-field input, .drawer-field textarea, .task-drawer select { background: var(--bg); color: var(--text); border: 1px solid var(--line); border-radius: 8px; padding: 7px 10px; font: inherit; font-size: 12.5px; min-width: 0; }
+.drawer-field textarea { resize: vertical; line-height: 1.5; min-height: 90px; }
+.drawer-field input:focus, .drawer-field textarea:focus, .task-drawer select:focus { outline: none; border-color: var(--accent); }
+.task-drawer select:disabled { opacity: .55; cursor: not-allowed; }
+.drawer-save { display: flex; justify-content: flex-end; gap: 6px; margin-top: -4px; }
+.task-drawer .task-edit select { max-width: 100%; }
+
+.drawer-deps { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.drawer-deps .chip { font-size: 11px; display: inline-flex; align-items: center; gap: 4px; }
+.drawer-deps .chip button { background: none; border: none; color: inherit; font: inherit; cursor: pointer; padding: 0 0 0 2px; opacity: .6; }
+.drawer-deps .chip button:hover { opacity: 1; color: var(--error); }
+.drawer-deps select { padding: 4px 8px; font-size: 12px; max-width: 220px; }
+
+.drawer-actions { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; padding-top: 10px; border-top: 1px dashed var(--line); }
+.drawer-actions .task-actions { flex-wrap: wrap; }
+.drawer-actions .d-del { margin-left: auto; }
+.task-drawer .send-back { margin-top: -2px; }
+
+.task-drawer h4 { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 400; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); margin: 8px 0 0; }
+.task-drawer h4 span { opacity: .7; }
+.task-drawer .task-note { background: var(--bg); overflow-wrap: anywhere; }
+.task-drawer .task-note.drawer-in { border-left: 2px solid var(--accent); }
+.drawer-notes { display: grid; gap: 6px; }
+.drawer-empty { font-size: 12px; padding: 2px 0; }
+
+.drawer-run { display: flex; align-items: center; gap: 8px; white-space: nowrap; background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 5px 8px; font-size: 12px; }
+.drawer-run > * { flex: none; }
+.drawer-run-when { color: var(--muted); font-size: 11px; flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.drawer-run-who { flex: 1 1 auto; min-width: 30px; overflow: hidden; text-overflow: ellipsis; }
+.drawer-run-cost { color: var(--accent); }
+.drawer-total { font-size: 11px; color: var(--muted); text-align: right; }
+
+.drawer-ts summary { list-style: none; cursor: pointer; display: flex; align-items: center; gap: 8px; }
+.drawer-ts summary::-webkit-details-marker { display: none; }
+.drawer-ts summary h4::before { content: "▸"; font-size: 10px; }
+.drawer-ts[open] summary h4::before { content: "▾"; }
+.drawer-ts summary .link-btn { margin: 8px 0 0 auto; }
+.drawer-ts > div { margin-top: 8px; }
+.drawer-ts-list { display: grid; gap: 6px; max-height: 420px; overflow-y: auto; padding-right: 2px; }
+.drawer-ts-list .task-note p { margin: 0 0 4px; }
+.drawer-ts-list .task-note pre { background: #0f1015; padding: 8px 10px; border-radius: 8px; overflow-x: auto; white-space: pre-wrap; margin: 4px 0; }
+.drawer-tool { border: 1px solid var(--line); border-radius: 8px; padding: 3px 8px; font-size: 11px; color: var(--muted); }
+.drawer-tool summary { cursor: pointer; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.drawer-tool summary b { color: var(--text); font-weight: 500; }
+.drawer-tool pre { margin: 6px 0 4px; white-space: pre-wrap; word-break: break-word; font-size: 11px; color: var(--text); background: #0f1015; border-radius: 6px; padding: 6px 8px; max-height: 240px; overflow-y: auto; }
+
+/* mode switch to "on its own" / "approved rounds": asked in place, under the mode line */
+.mode-confirm { flex: 1 1 100%; background: var(--bg); border: 1px solid var(--accent); border-radius: 10px; padding: 10px 12px; font-size: 12.5px; line-height: 1.55; }
+.mode-confirm b { color: var(--accent); font-weight: 600; }
+.mode-confirm p { margin: 6px 0; }
+.mode-confirm .actions { display: flex; gap: 6px; margin-top: 8px; }
+
+@media (max-width: 600px) {
+  .task-drawer { width: 100%; border-radius: 14px; border-left: none; box-shadow: none; padding: 14px 14px 18px; }
+}

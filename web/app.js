@@ -16,6 +16,24 @@ let typingEl = null;
 const undoing = new Map();
 
 const cur = () => state.offices.get(state.office);
+// The header strip, inbox, activity, costs and status list (inbox.js, activity.js, costs.js, status.js) listen here.
+const panelHooks = [];
+function panelsChanged(what, officeId, data) { for (const f of panelHooks) { try { f(what, officeId, data); } catch (err) { console.error(err); } } }
+const officeApi = (path) => `/api/offices/${encodeURIComponent(state.office)}${path}`;
+// A task opens in the board's task drawer when the board offers one, else the board itself.
+function openTask(id) {
+  if (typeof window.openTaskDrawer === "function") window.openTaskDrawer(id);
+  else boardUI.show();
+}
+// Plain modals of the panels: close with ×, Esc or a click on the backdrop.
+function wireModal(id, closeId, onClose) {
+  const m = $(id);
+  const hide = () => { if (m.hidden) return; m.hidden = true; onClose?.(); };
+  $(closeId).onclick = hide;
+  m.addEventListener("click", (ev) => { if (ev.target === m) hide(); });
+  document.addEventListener("keydown", (ev) => { if (ev.key === "Escape" && !m.hidden) hide(); });
+  return { show: () => { m.hidden = false; }, hide, get open() { return !m.hidden; } };
+}
 const employeesOf = (officeId) => state.offices.get(officeId)?.employees;
 
 function connect() {
@@ -49,9 +67,12 @@ function mergeRoster(officeId, list, info) {
   const employees = new Map();
   for (const e of list) {
     const old = prev?.employees.get(e.id);
-    employees.set(e.id, { ...e, messages: old?.messages ?? [], pending: old?.pending ?? [], queue: old?.queue ?? [], loaded: old?.loaded ?? false, unread: old?.unread ?? 0 });
+    // the server keeps asks and unread counts (they survive a reload); the open chat counts as read
+    const unread = officeId === state.office && e.id === state.selected ? 0 : typeof e.unread === "number" ? e.unread : old?.unread ?? 0;
+    const since = e.statusSince ?? (old && old.status === e.status ? old.since : old ? Date.now() : null);
+    employees.set(e.id, { ...e, messages: old?.messages ?? [], pending: Array.isArray(e.pendingAsks) ? e.pendingAsks : old?.pending ?? [], queue: old?.queue ?? [], loaded: old?.loaded ?? false, unread, since });
   }
-  state.offices.set(officeId, { info: info ?? prev?.info ?? { id: officeId, name: officeId }, employees, meeting: prev?.meeting ?? null, board: prev?.board ?? null });
+  state.offices.set(officeId, { info: info ?? prev?.info ?? { id: officeId, name: officeId }, employees, meeting: prev?.meeting ?? null, board: prev?.board ?? null, costs: prev?.costs ?? null });
 }
 
 function showOffice(officeId, keepChat = false) {
@@ -73,6 +94,7 @@ function showOffice(officeId, keepChat = false) {
   else if (state.selected) closeChat();
   meetingUI.sync();
   boardUI.refresh();
+  panelsChanged("office", officeId);
 }
 
 function renderOfficeTabs() {
@@ -100,6 +122,8 @@ function handle(m) {
     for (const o of m.offices) { mergeRoster(o.id, o.employees, { id: o.id, name: o.name, cwd: o.cwd, theme: o.theme }); state.offices.get(o.id).meeting = o.meeting ?? null; state.offices.get(o.id).board = o.board ?? null; }
     const hired = params.get("hired");
     if (hired && !state.inited) { state.entering = new Set([hired]); history.replaceState(null, "", `/?office=${encodeURIComponent(state.office)}`); }
+    if ("quota" in m) state.quota = m.quota;
+    for (const o of m.offices) if (o.costs) state.offices.get(o.id).costs = o.costs;
     state.inited = true;
     showOffice(state.office, true);
     const open = params.get("open");
@@ -112,7 +136,7 @@ function handle(m) {
     for (const o of m.offices) { seen.add(o.id); mergeRoster(o.id, o.employees, { id: o.id, name: o.name, cwd: o.cwd, theme: o.theme }); }
     for (const id of [...state.offices.keys()]) if (!seen.has(id)) state.offices.delete(id);
     showOffice(state.offices.has(state.office) ? state.office : m.offices[0]?.id, true);
-    if (!$("officesModal").hidden) renderOfficeList();
+    if (!$("settingsModal").hidden) renderOfficeList();
     return;
   }
   if (m.type === "roster") {
@@ -123,7 +147,11 @@ function handle(m) {
     return;
   }
   if (m.type === "meeting" || m.type === "meeting_entry") { meetingUI.onMessage(m); return; }
-  if (m.type === "board") { const o = state.offices.get(m.office); if (o) { o.board = m.board; boardUI.refresh(m.office); } return; }
+  if (m.type === "board") { const o = state.offices.get(m.office); if (o) { o.board = m.board; boardUI.refresh(m.office); } panelsChanged("board", m.office); return; }
+  // spend today and the daily cap; plan limits (global); one line of the office's activity log
+  if (m.type === "costs") { const o = state.offices.get(m.office); if (o) o.costs = { today: m.today, todayTokens: m.todayTokens, cap: m.cap }; panelsChanged("costs", m.office); return; }
+  if (m.type === "quota") { state.quota = m.quota; panelsChanged("quota"); return; }
+  if (m.type === "activity") { panelsChanged("activity", m.office, m.event); return; }
   // something the server could not do for us (a websocket request that failed): say so instead of failing silently
   if (m.type === "error") { toast(t("ui.toast.error", { message: m.error || "?" })); return; }
   const e = employeesOf(m.office)?.get(m.id);
@@ -132,12 +160,14 @@ function handle(m) {
   const selected = current && m.id === state.selected;
   switch (m.type) {
     case "status":
+      if (e.status !== m.status) e.since = Date.now();
       e.status = m.status;
       e.sickUntil = m.sickUntil || 0;
       if (current) { meetingUI.onStatus(); boardUI.refresh(undefined, "status"); }
       if (current) { office.setStatus(m.id, m.status, m.reason); renderRoster(); }
       renderOfficeTabs();
       if (selected) { renderHead(e); updateTyping(e); }
+      panelsChanged("status", m.office);
       break;
     case "history":
       e.messages = m.messages;
@@ -167,6 +197,13 @@ function handle(m) {
       else if (m.op === "deliver_now") toast(t("ui.chat.nowInMeeting", { name: e.name }));
       if (selected) refreshQueued(e);
       break;
+    // the server's unread count for one employee (it survives a reload); the open chat is read already
+    case "unread":
+      e.unread = selected ? 0 : Number(m.unread) || 0;
+      if (current) { office.setUnread(e.id, e.unread); renderRoster(); }
+      renderOfficeTabs();
+      panelsChanged("unread", m.office);
+      break;
     case "compacting":
       e.compacting = !!m.on;
       if (selected) renderHead(e);
@@ -179,10 +216,12 @@ function handle(m) {
         appendMessage(e, m.message);
         updateTyping(e);
         scrollDown(m.message.role === "user");
-      } else if (m.message.role === "assistant" || m.message.role === "colleague") {
+        if (m.message.role === "assistant" && isOnline()) send({ type: "seen", id: e.id }); // read as it arrives: the server keeps the count at zero
+      } else if (m.message.role === "colleague") { // the server counts assistant replies itself (the "unread" message)
         e.unread++;
         if (current) { office.setUnread(e.id, e.unread); renderRoster(); }
         renderOfficeTabs();
+        panelsChanged("unread", m.office);
       }
       if ((m.message.role === "assistant" || m.message.role === "colleague") && (!selected || document.hidden)) notify(e, m.office, t("ui.notify.replied", { name: e.name }), m.message.text);
       break;
@@ -208,10 +247,12 @@ function handle(m) {
       if (selected) { removeTyping(); chatBody.appendChild(renderAsk(e, m.request)); scrollDown(); }
       else toast(t("ui.toast.waiting", { name: e.name }));
       if (!selected || document.hidden) notify(e, m.office, t("ui.notify.waiting", { name: e.name }), m.request.question || m.request.title || "");
+      panelsChanged("ask", m.office);
       break;
     case "ask_done":
       e.pending = e.pending.filter((p) => p.requestId !== m.requestId);
       if (selected) document.querySelector(`[data-ask="${m.requestId}"]`)?.remove();
+      panelsChanged("ask", m.office);
       break;
     case "usage":
       e.context = m.context; e.task = m.task;
@@ -224,6 +265,7 @@ function handle(m) {
       if (selected) renderHead(e);
       else if (m.durationMs > 0 && !meetingUI.has(e.id)) toast(t("ui.toast.done", { name: e.name }));
       if (current) renderRoster();
+      panelsChanged("result", m.office);
       break;
   }
 }
@@ -309,6 +351,7 @@ function openChat(id) {
   renderHead(e);
   renderRoster();
   renderOfficeTabs();
+  panelsChanged("unread", state.office);
   if (e.loaded) renderChat(e);
   else { chatBody.innerHTML = ""; send({ type: "open", id }); }
   setTimeout(() => { office.fit(); $("chatInput").focus(); }, 260);
@@ -356,14 +399,18 @@ function renderRoster() {
   el.innerHTML = "";
   const o = cur();
   if (!o) return;
+  // the compact list view (status.js) shows everyone, also those without a desk
+  if (typeof statusUI !== "undefined" && statusUI.renderList(el)) return;
   for (const e of o.employees.values()) {
     const chip = document.createElement("button");
     chip.className = "roster-chip" + (e.id === state.selected ? " selected" : "");
     const rs = e.compacting ? t("ui.chat.compacting") : (STATUS_T[e.status] || e.status) + (e.queued ? ` · ${t("ui.chat.queuedCount", { n: e.queued })}` : "");
-    chip.innerHTML = `<img src="${office.portrait(e.id)}" alt="" /><i class="dot ${e.status}"></i><span class="rn">${escapeHtml(e.name)}</span><span class="rs">${escapeHtml(rs)}</span>${e.unread ? `<span class="badge">${e.unread}</span>` : ""}`;
+    const pic = office.portrait(e.id); // no desk, no drawn portrait (the office seats 12): a color swatch instead
+    chip.innerHTML = `${pic ? `<img src="${pic}" alt="" />` : `<span class="spic" style="background:${escapeHtml(e.color || "var(--idle)")}"></span>`}<i class="dot ${e.status}"></i><span class="rn">${escapeHtml(e.name)}</span><span class="rs">${escapeHtml(rs)}</span>${e.unread ? `<span class="badge">${e.unread}</span>` : ""}`;
     chip.onclick = () => openChat(e.id);
     el.appendChild(chip);
   }
+  if (typeof statusUI !== "undefined") statusUI.decorate(el);
 }
 
 function renderChat(e) {
@@ -525,7 +572,7 @@ function renderAsk(e, ask) {
   return card;
 }
 
-// ---- office management modal ----
+// ---- office management (Settings → Offices, settings.js) ----
 function renderOfficeList() {
   const host = $("officeList");
   host.innerHTML = "";
@@ -566,24 +613,21 @@ function buildThemeCards(host, current, onChange) {
 }
 let newTheme = "default";
 buildThemeCards($("oTheme"), newTheme, (v) => { newTheme = v; });
-$("btnOffices").onclick = () => { renderOfficeList(); $("officesModal").hidden = false; $("oName").focus(); };
 attachFolderPicker($("oCwd"));
 
-// ---- desktop notifications (🔔) ----
+// ---- desktop notifications (Settings → General) ----
 const notifyPref = () => { try { return localStorage.getItem("po.notify") === "1"; } catch { return false; } };
-function renderNotifyBtn() {
-  const on = notifyPref() && "Notification" in window && Notification.permission === "granted";
-  $("btnNotify").classList.toggle("off", !on);
-  $("btnNotify").title = `${t("ui.notify.title")} — ${on ? t("ui.notify.on") : t("ui.notify.off")}`;
-}
-$("btnNotify").onclick = async () => {
-  if (!("Notification" in window)) return;
-  if (notifyPref()) { try { localStorage.setItem("po.notify", "0"); } catch {} toast(t("ui.notify.off")); renderNotifyBtn(); return; }
+const notifyOn = () => notifyPref() && "Notification" in window && Notification.permission === "granted";
+// Switches them on (asking the browser for permission first) or off; resolves to whether they are on now.
+async function setNotify(on) {
+  if (!("Notification" in window)) return false;
+  if (!on) { try { localStorage.setItem("po.notify", "0"); } catch {} toast(t("ui.notify.off")); return false; }
   const perm = Notification.permission === "granted" ? "granted" : await Notification.requestPermission();
-  if (perm !== "granted") { toast(t("ui.notify.denied")); return; }
+  if (perm !== "granted") { toast(t("ui.notify.denied")); return false; }
   try { localStorage.setItem("po.notify", "1"); } catch {}
-  toast(t("ui.notify.on")); renderNotifyBtn();
-};
+  toast(t("ui.notify.on"));
+  return true;
+}
 function notify(e, officeId, title, body) {
   if (!notifyPref() || !("Notification" in window) || Notification.permission !== "granted") return;
   try {
@@ -591,15 +635,14 @@ function notify(e, officeId, title, body) {
     n.onclick = () => { window.focus(); if (officeId !== state.office) showOffice(officeId); openChat(e.id); n.close(); };
   } catch {}
 }
-renderNotifyBtn();
 
 // ---- welcome card (first run only) ----
 const welcomed = () => { try { return localStorage.getItem("po.welcomed") === "1"; } catch { return false; } };
 if (PO.firstRun && !welcomed()) $("welcomeModal").hidden = false;
 $("welcomeGo").onclick = () => { $("welcomeModal").hidden = true; try { localStorage.setItem("po.welcomed", "1"); } catch {} };
 
-// ---- shutdown (⏻) ----
-$("btnShutdown").onclick = () => { $("shutdownModal").hidden = false; $("shutdownConfirm").focus(); };
+// ---- shutdown (Settings → Server) ----
+function askShutdown() { $("shutdownModal").hidden = false; $("shutdownConfirm").focus(); }
 for (const id of ["shutdownClose", "shutdownCancel"]) $(id).onclick = () => { $("shutdownModal").hidden = true; };
 $("shutdownModal").addEventListener("click", (ev) => { if (ev.target === $("shutdownModal")) $("shutdownModal").hidden = true; });
 $("shutdownConfirm").onclick = async () => {
@@ -616,8 +659,6 @@ function markClosed() {
   for (const o of state.offices.values()) for (const e of o.employees.values()) e.status = "idle";
   toast(t("ui.shutdown.done"));
 }
-$("officesClose").onclick = () => { $("officesModal").hidden = true; };
-$("officesModal").addEventListener("click", (ev) => { if (ev.target === $("officesModal")) $("officesModal").hidden = true; });
 $("officeAdd").onsubmit = async (ev) => {
   ev.preventDefault();
   try {
@@ -729,7 +770,7 @@ input.addEventListener("keydown", (ev) => {
   }
 });
 document.addEventListener("keydown", (ev) => {
-  if (ev.key === "Escape" && !$("officesModal").hidden) { $("officesModal").hidden = true; return; }
+  if (ev.key === "Escape" && !$("shutdownModal").hidden) { $("shutdownModal").hidden = true; ev.stopImmediatePropagation(); return; }
   // Esc closes the top-most thing only: an open modal (board, meeting cards…) handles it, the chat behind it stays
   if (ev.key === "Escape" && state.selected && document.activeElement?.tagName !== "INPUT" && !document.querySelector(".modal:not([hidden])")) closeChat();
 });

@@ -7,6 +7,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Silkscreen&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="panels.css" />
+  <link rel="stylesheet" href="drawer.css" />
 </head>
 <body>
   <header class="topbar">
@@ -15,11 +17,15 @@
       <span class="brand-name" data-i18n="ui.brand">OFFICE</span>
     </div>
     <nav class="offices" id="offices" hidden></nav>
+    <div class="strip" id="strip">
+      <button class="strip-chip" id="stripMode" type="button" hidden data-i18n-title="ui.strip.modeTip"></button>
+      <button class="strip-chip" id="stripSpend" type="button" hidden></button>
+      <button class="strip-chip" id="stripQuota" type="button" hidden></button>
+      <button class="icon-btn small strip-btn" id="btnInbox" type="button" data-i18n-title="ui.strip.inboxTip">📥<span class="badge" id="inboxBadge" hidden></span></button>
+      <button class="icon-btn small strip-btn" id="btnActivity" type="button" data-i18n-title="ui.strip.activityTip">🕘<i class="strip-dot" id="activityDot" hidden></i></button>
+    </div>
     <div class="tools">
-      <button class="icon-btn small" id="btnOffices" data-i18n-title="ui.offices.manage">⚙</button>
-      <span id="langHost"></span>
-      <button class="icon-btn small" id="btnNotify" data-i18n-title="ui.notify.title">🔔</button>
-      <button class="icon-btn small power" id="btnShutdown" data-i18n-title="ui.shutdown.btn">⏻</button>
+      <button class="icon-btn small" id="btnSettings" type="button" data-i18n-title="ui.settings.btn">⚙</button>
     </div>
     <div class="legend">
       <span class="legend-item" data-i18n-tip="ui.legend.idle"><i class="dot idle"></i><span class="sr" data-i18n="ui.legend.idle"></span></span>
@@ -41,6 +47,7 @@
       <div class="labels" id="labels"></div>
     </div>
     <div class="roster" id="roster"></div>
+    <div class="away-card" id="awayCard" hidden></div>
   </main>
 
   <aside class="chat" id="chat">
@@ -110,6 +117,7 @@
         <label class="mode-extra"><span data-i18n="ui.board.rounds"></span> <input id="officeRounds" type="number" min="1" max="24" step="1" /></label>
         <span class="tag" id="cyclePhase" hidden></span>
         <small class="muted" id="officeModeHint"></small>
+        <div class="mode-confirm" id="modeConfirm" hidden></div>
       </div>
       <section id="boardTasks">
         <div class="board-bar"><select id="taskOwnerFilter"></select><button class="btn small primary" type="button" id="taskStartAll" hidden></button><label class="check"><input type="checkbox" id="taskShowDone" /> <span data-i18n="ui.board.showDone"></span></label></div>
@@ -142,6 +150,7 @@
           <div class="board-row"><input id="newNoteTags" data-i18n-ph="ui.board.noteTags" /><button class="btn primary small" type="submit" data-i18n="ui.board.addNote"></button></div>
         </form>
       </section>
+      <aside class="task-drawer" id="taskDrawer" hidden></aside>
     </div>
   </div>
 
@@ -181,17 +190,104 @@
     </div>
   </div>
 
-  <div class="modal" id="officesModal" hidden>
-    <div class="modal-card">
-      <div class="modal-head"><h2 data-i18n="ui.offices.manage"></h2><button class="icon-btn" id="officesClose" data-i18n-title="ui.offices.close">×</button></div>
-      <div class="office-list" id="officeList"></div>
-      <h3 data-i18n="ui.offices.add"></h3>
-      <form id="officeAdd" class="office-add">
-        <label class="field"><span data-i18n="ui.offices.name"></span><input id="oName" required maxlength="60" data-i18n-ph="ui.offices.namePh" /></label>
-        <label class="field"><span data-i18n="ui.offices.cwd"></span><input id="oCwd" maxlength="500" data-i18n-ph="ui.offices.cwdPh" /><small data-i18n="ui.offices.cwdHint"></small></label>
-        <div class="field"><span data-i18n="ui.themes.label"></span><div class="theme-cards" id="oTheme"></div></div>
-        <div class="actions"><button class="btn primary" type="submit" data-i18n="ui.offices.add"></button></div>
-      </form>
+  <div class="modal" id="inboxModal" hidden>
+    <div class="modal-card panel-card">
+      <div class="modal-head"><h2 data-i18n="ui.inbox.title"></h2><button class="icon-btn" id="inboxClose" data-i18n-title="ui.inbox.close">×</button></div>
+      <div class="panel-list" id="inboxList"></div>
+    </div>
+  </div>
+
+  <div class="modal" id="activityModal" hidden>
+    <div class="modal-card panel-card">
+      <div class="modal-head"><h2 data-i18n="ui.activity.title"></h2><button class="icon-btn" id="activityClose" data-i18n-title="ui.activity.close">×</button></div>
+      <nav class="pfilters" id="activityFilters"></nav>
+      <div class="panel-list" id="activityList"></div>
+    </div>
+  </div>
+
+  <div class="modal" id="costsModal" hidden>
+    <div class="modal-card panel-card">
+      <div class="modal-head"><h2 data-i18n="ui.costs.title"></h2><button class="icon-btn" id="costsClose" data-i18n-title="ui.costs.close">×</button></div>
+      <div id="costsBody"></div>
+    </div>
+  </div>
+
+  <div class="modal" id="settingsModal" hidden>
+    <div class="modal-card settings-card">
+      <div class="modal-head">
+        <nav class="tabs" id="settingsTabs"><button type="button" data-tab="general" data-i18n="ui.settings.tabs.general"></button><button type="button" data-tab="offices" data-i18n="ui.settings.tabs.offices"></button><button type="button" data-tab="office" data-i18n="ui.settings.tabs.office"></button><button type="button" data-tab="sessions" data-i18n="ui.settings.tabs.sessions"></button><button type="button" data-tab="server" data-i18n="ui.settings.tabs.server"></button></nav>
+        <button class="icon-btn" id="settingsClose" data-i18n-title="ui.settings.close">×</button>
+      </div>
+      <section class="set-pane" data-pane="general">
+        <label class="field"><span data-i18n="ui.settings.lang"></span><span id="langHost" class="set-lang"></span><small data-i18n="ui.settings.langHint"></small></label>
+        <div class="field">
+          <label class="check"><input type="checkbox" id="setNotify" /> <span data-i18n="ui.settings.notify"></span></label>
+          <small id="setNotifyHint" data-i18n="ui.settings.notifyHint"></small>
+        </div>
+        <div class="field">
+          <label class="check"><input type="checkbox" id="setSickness" data-key="sickness" /> <span data-i18n="ui.settings.sickness"></span></label>
+          <small data-i18n="ui.settings.sicknessHint"></small>
+          <small class="set-lock" data-lock="sickness" hidden></small>
+        </div>
+      </section>
+      <section class="set-pane" data-pane="offices" hidden>
+        <p class="muted set-intro" data-i18n="ui.settings.officesHint"></p>
+        <div class="office-list" id="officeList"></div>
+        <h3 data-i18n="ui.offices.add"></h3>
+        <form id="officeAdd" class="office-add">
+          <label class="field"><span data-i18n="ui.offices.name"></span><input id="oName" required maxlength="60" data-i18n-ph="ui.offices.namePh" /></label>
+          <label class="field"><span data-i18n="ui.offices.cwd"></span><input id="oCwd" maxlength="500" data-i18n-ph="ui.offices.cwdPh" /><small data-i18n="ui.offices.cwdHint"></small></label>
+          <div class="field"><span data-i18n="ui.themes.label"></span><div class="theme-cards" id="oTheme"></div></div>
+          <div class="actions"><button class="btn primary" type="submit" data-i18n="ui.offices.add"></button></div>
+        </form>
+      </section>
+      <section class="set-pane" data-pane="office" hidden>
+        <p class="muted set-intro" id="setOfficeName"></p>
+        <h3 data-i18n="ui.settings.modeTitle"></h3>
+        <div class="board-mode set-mode" id="setMode">
+          <label><span data-i18n="ui.board.modeLabel"></span> <select id="setOfficeMode"></select></label>
+          <label class="mode-extra"><span data-i18n="ui.board.budget"></span> <input id="setOfficeBudget" type="number" min="1" max="500" step="1" /></label>
+          <label class="mode-extra"><span data-i18n="ui.board.rounds"></span> <input id="setOfficeRounds" type="number" min="1" max="24" step="1" /></label>
+          <span class="tag" id="setCyclePhase" hidden></span>
+          <small class="muted" id="setOfficeModeHint"></small>
+          <div class="mode-confirm" id="setModeConfirm" hidden></div>
+        </div>
+        <h3 data-i18n="ui.settings.capTitle"></h3>
+        <form class="ccap" id="setCapForm">
+          <label><span data-i18n="ui.costs.capDaily"></span><input id="setCapDaily" type="number" min="0" step="any" /></label>
+          <label><span data-i18n="ui.costs.capCodex"></span><input id="setCapCodex" type="number" min="0" step="any" /></label>
+          <button class="btn small primary" type="submit" data-i18n="ui.settings.capSave"></button>
+          <small class="muted" data-i18n="ui.costs.capHint"></small>
+        </form>
+        <div class="actions"><button class="link-btn" type="button" id="setCostsLink"><span data-i18n="ui.settings.costsLink"></span> →</button></div>
+      </section>
+      <section class="set-pane" data-pane="sessions" hidden>
+        <div class="field">
+          <span data-i18n="ui.settings.compact"></span>
+          <input id="setCompact" data-key="compactAtTokens" type="number" min="0" max="1000" step="10" />
+          <small data-i18n="ui.settings.compactHint"></small>
+          <small class="set-lock" data-lock="compactAtTokens" hidden></small>
+        </div>
+        <div class="field">
+          <label class="check"><input type="checkbox" id="setTaskSessions" data-key="taskSessions" /> <span data-i18n="ui.settings.taskSessions"></span></label>
+          <small data-i18n="ui.settings.taskSessionsHint"></small>
+        </div>
+        <div class="field">
+          <span data-i18n="ui.settings.refresh"></span>
+          <input id="setRefresh" data-key="refreshHours" type="number" min="1" max="168" step="1" />
+          <small data-i18n="ui.settings.refreshHint"></small>
+        </div>
+        <div class="field">
+          <label class="check"><input type="checkbox" id="setSync" data-key="syncClaudeAgents" /> <span data-i18n="ui.settings.sync"></span></label>
+          <small data-i18n="ui.settings.syncHint"></small>
+        </div>
+      </section>
+      <section class="set-pane" data-pane="server" hidden>
+        <dl class="set-info" id="setServerInfo"></dl>
+        <small class="muted set-note" data-i18n="ui.settings.restartHint"></small>
+        <h3 data-i18n="ui.shutdown.btn"></h3>
+        <div class="actions set-danger"><small class="muted" data-i18n="ui.settings.shutdownHint"></small><button class="btn danger" type="button" id="setShutdown"><span>⏻</span> <span data-i18n="ui.shutdown.btn"></span></button></div>
+      </section>
     </div>
   </div>
 
@@ -227,5 +323,10 @@
   <script src="app.js"></script>
   <script src="board.js"></script>
   <script src="meeting.js"></script>
+  <script src="inbox.js"></script>
+  <script src="activity.js"></script>
+  <script src="costs.js"></script>
+  <script src="status.js"></script>
+  <script src="settings.js"></script>
 </body>
 </html>

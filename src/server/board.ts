@@ -125,6 +125,7 @@ export class Board extends EventEmitter {
     const idea: Idea = { id: this.data.nextIdea++, by, byName, title: input.title.trim().slice(0, 160), text: input.text.trim().slice(0, 4000), ...(input.effort ? { effort: input.effort } : {}), ...(input.owner ? { owner: input.owner } : {}), tags: (input.tags ?? []).map((x) => x.trim().toLowerCase().slice(0, 30)).filter(Boolean).slice(0, 6), status: "new", ts: Date.now() };
     this.data.ideas.push(idea);
     this.save();
+    this.emit("idea", idea); // for the activity log
     return idea;
   }
 
@@ -159,6 +160,7 @@ export class Board extends EventEmitter {
     const detail = (opts.detail?.trim() || idea.text) + `\n\n(💡 #${idea.id} · ${idea.byName})`;
     const task = this.addTask(owner, idea.title, detail, createdBy, !!opts.review, opts.after ?? []);
     this.updateIdea(id, { status: "moved", taskId: task.id });
+    this.emit("promoted", idea, task, createdBy);
     return task;
   }
 
@@ -177,6 +179,7 @@ export class Board extends EventEmitter {
     const task: Task = { id: this.data.nextTask++, title: title.trim().slice(0, 160), detail: detail.trim().slice(0, 8000), owner, status: "todo", createdBy, created: now, updated: now, notes: [], ...(review ? { review: true } : {}), ...(deps.length ? { after: deps } : {}), ...(kind ? { kind } : {}) };
     this.data.tasks.push(task);
     this.save();
+    this.emit("added", task);
     return task;
   }
 
@@ -197,17 +200,20 @@ export class Board extends EventEmitter {
   updateTask(id: number, patch: { status?: TaskStatus; owner?: string; title?: string; detail?: string; note?: string; review?: boolean; after?: number[] }, by: string): Task | undefined {
     const task = this.data.tasks.find((x) => x.id === id);
     if (!task) return undefined;
-    const prev = task.status;
+    const prev = task.status, prevOwner = task.owner;
+    const before = JSON.stringify([task.title, task.detail, !!task.review, task.after ?? []]);
     if (patch.status && TASK_STATUSES.includes(patch.status)) task.status = patch.status;
     if (patch.owner) task.owner = patch.owner;
     if (patch.title !== undefined) task.title = patch.title.trim().slice(0, 160) || task.title;
     if (patch.detail !== undefined) task.detail = patch.detail.trim().slice(0, 8000);
     if (patch.review !== undefined) { if (patch.review) task.review = true; else delete task.review; }
     if (patch.after) { const deps = [...new Set(patch.after)].filter((d) => d !== id && this.data.tasks.some((x) => x.id === d)); if (deps.length) task.after = deps; else delete task.after; }
+    const edited = before !== JSON.stringify([task.title, task.detail, !!task.review, task.after ?? []]);
     if (task.status !== "todo") delete task.autoStart;
     if (patch.note?.trim()) task.notes.push({ ts: Date.now(), by, text: patch.note.trim().slice(0, 2000) });
     task.updated = Date.now();
     this.save();
+    if (task.owner !== prevOwner || edited) this.emit("edited", task, { owner: task.owner !== prevOwner ? prevOwner : undefined, edited }, by);
     if (task.status !== prev) this.emit("status", task, prev, by); // the office reacts: prerequisites met, digest for the project manager
     return task;
   }

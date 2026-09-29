@@ -190,3 +190,14 @@ function md(text) {
   html = html.replace(new RegExp(`${PH}(\\d+)${PH}`, "g"), (_, i) => blocks[Number(i)]);
   return html;
 }
+
+// Money, token and duration formatting for the header strip and the costs / activity / status panels.
+const usd = (n) => "$" + (Number(n) || 0).toFixed(2);
+function fmtTokens(n) {
+  n = Number(n) || 0;
+  return n >= 1e6 ? (n / 1e6).toFixed(n >= 1e7 ? 0 : 1) + "M" : n >= 1000 ? Math.round(n / 1000) + "k" : String(n);
+}
+function fmtDur(ms) {
+  const m = Math.max(0, Math.round((Number(ms) || 0) / 60e3));
+  return m < 1 ? "<1m" : m < 60 ? `${m}m` : `${Math.floor(m / 60)}h${m % 60 ? ` ${m % 60}m` : ""}`;
+}

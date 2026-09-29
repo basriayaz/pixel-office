@@ -16,6 +16,7 @@ export interface Colleagues {
   discoveryBlock(): string | undefined;
   autoMoveBlock(): string | undefined;
   countDiscovery(): void;
+  capBlock(): string | undefined; // past the office's daily cap: nothing is started by anyone but the boss
   mcpUrl(self: Employee): string; // where an engine that is a separate program reaches this employee's office tools
 }
 
@@ -44,6 +45,8 @@ export function officeToolDefs(self: Employee, colleagues: Colleagues) {
   const board = () => colleagues.board();
   const nameOf = (id: string) => (id === "user" ? t("server.meeting.boss") : colleagues.list().find((e) => e.cfg.id === id)?.cfg.name ?? id);
   const started = (k: Task, target: Employee) => {
+    const cap = colleagues.capBlock();
+    if (cap) return cap;
     const r = colleagues.launch(k, self);
     return t(r === "started" ? "server.board.started" : r === "queued" ? "server.board.queued" : "server.board.waitingDeps", { id: k.id, name: target.cfg.name, deps: board().waitingOn(k).map((d) => "#" + d).join(", ") });
   };

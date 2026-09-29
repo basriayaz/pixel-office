@@ -1,5 +1,70 @@
 // Board: the office task list and the shared notebook. Tasks listed here are a plan: nobody starts one until
 // the boss presses Start or the project manager starts it. Loaded after app.js, before meeting.js.
+// How the office works (manual / cycle / auto) with the budget of a round and rounds per day. One control per place it is
+// shown (the board's mode row, Settings → This office); both read the office's board state and stay in sync through the
+// "board" broadcast. `els` = { root, mode, budget, rounds, hint, phase, confirm }; isOpen() = the panel holding it is visible.
+function makeModeControl(els, isOpen) {
+  const board = () => cur()?.board || {};
+  const API = () => `/api/offices/${encodeURIComponent(state.office)}/board`;
+  function render() {
+    const b = board(), mode = b.mode || "manual";
+    const sel = els.mode;
+    if (!sel.options.length) sel.innerHTML = ["manual", "cycle", "auto"].map((m) => `<option value="${m}">${escapeHtml(t(`ui.board.modes.${m}`))}</option>`).join("");
+    if (confirming) sel.value = confirming; // the switch is asked about below; the office still runs as before
+    else if (document.activeElement !== sel) sel.value = mode;
+    if (document.activeElement !== els.budget && !confirming) els.budget.value = b.budget ?? 10;
+    if (document.activeElement !== els.rounds && !confirming) els.rounds.value = b.roundsPerDay ?? 3;
+    const shown = confirming || mode;
+    els.root.querySelectorAll(".mode-extra").forEach((el) => (el.hidden = shown === "manual"));
+    els.hint.textContent = t(`ui.board.modeHint.${shown}`);
+    els.hint.hidden = !!confirming; // the question below says it in short
+    renderConfirm();
+    const c = b.cycle, chip = els.phase;
+    chip.hidden = !c || c.phase === "idle";
+    if (c && c.phase !== "idle") chip.textContent = t(`ui.board.phase.${c.phase}`, { no: c.no, spent: (c.spent || 0).toFixed(2) });
+  }
+  // Letting the office run by itself spends money while the boss is away: that switch is confirmed first, in place
+  // (no confirm() dialog), with the round budget and today's spending against the daily cap.
+  let confirming = null, capInfo = null; // mode waiting for "yes"; { cap, today } or "off" / "none" while loading
+  async function askMode(m) {
+    confirming = m; capInfo = null;
+    render();
+    try {
+      const c = await api("GET", `/api/offices/${encodeURIComponent(state.office)}/costs?days=1`);
+      capInfo = { daily: Number(c?.cap?.daily) || 0, today: Number(c?.today) || 0 };
+    } catch { capInfo = "off"; }
+    if (confirming === m) renderConfirm();
+  }
+  function cancel() { if (!confirming) return; confirming = null; if (isOpen()) render(); else renderConfirm(); }
+  function renderConfirm() {
+    const box = els.confirm;
+    if (!confirming) { box.hidden = true; box.innerHTML = ""; return; }
+    const budget = Number(els.budget.value) || 10, rounds = Number(els.rounds.value) || 3;
+    const cap = capInfo == null ? t("ui.board.drawer.loading") : capInfo === "off" ? t("ui.board.modeConfirm.capUnknown")
+      : capInfo.daily ? t("ui.board.modeConfirm.cap", { cap: capInfo.daily.toFixed(2), today: capInfo.today.toFixed(2) }) : t("ui.board.modeConfirm.noCap");
+    box.hidden = false;
+    box.innerHTML = `<b>${escapeHtml(t("ui.board.modeConfirm.title", { mode: t(`ui.board.modes.${confirming}`) }))}</b>
+      <p>${escapeHtml(t(`ui.board.modeConfirm.${confirming}`))}</p>
+      <p class="muted">${escapeHtml(t("ui.board.modeConfirm.budget", { budget, rounds }))}<br />${escapeHtml(cap)}</p>
+      <div class="actions right"><button class="btn small ghost mc-cancel" type="button">${escapeHtml(t("ui.board.cancel"))}</button><button class="btn small primary mc-ok" type="button">${escapeHtml(t("ui.board.modeConfirm.ok"))}</button></div>`;
+    box.querySelector(".mc-cancel").onclick = cancel;
+    box.querySelector(".mc-ok").onclick = async () => { const m = confirming; if (!m) return; await save(); if (confirming === m) { confirming = null; render(); } };
+  }
+  const onModeChange = () => {
+    const m = els.mode.value, now = board().mode || "manual";
+    if ((m === "auto" || m === "cycle") && m !== now) { if (m !== confirming) askMode(m); return; }
+    confirming = null; renderConfirm();
+    if (m !== now) save();
+  };
+  const save = async () => {
+    try { await api("PUT", `${API()}/mode`, { mode: els.mode.value, budget: Number(els.budget.value), roundsPerDay: Number(els.rounds.value) }); toast(t("ui.board.modeSaved")); }
+    catch (err) { toast(err.message); }
+  };
+  els.mode.onchange = onModeChange;
+  els.budget.onchange = els.rounds.onchange = () => { if (confirming) renderConfirm(); else save(); };
+  return { render, cancel, get confirming() { return confirming; } };
+}
+
 const boardUI = (() => {
   const STATUSES = ["blocked", "review", "doing", "todo", "done"];
   let tab = "tasks", ownerFilter = "", showDone = false, noteFilter = "", ideaShowAll = false;
@@ -40,7 +105,8 @@ const boardUI = (() => {
   const alertSig = () => board().tasks.map((k) => `${k.id}:${alertOf(k) || ""}`).join(",");
   let shownSig = "";
 
-  let deepLink = params.get("board"); // /?board=tasks or /?board=notes opens the panel straight away
+  let deepLink = params.get("board"); // /?board=tasks or /?board=notes opens the panel straight away; &task=3 also opens that task's drawer
+  let drawerId = params.get("task") ? Number(params.get("task")) : null; // the task shown in the side drawer
   // reason "status": an employee's status changed (or the clock ticked), which only matters for alerts on the task list
   function refresh(officeId, reason) {
     if (officeId && officeId !== state.office) return;
@@ -58,7 +124,7 @@ const boardUI = (() => {
   const busy = () => {
     if (pointerDown && Date.now() - pointerDown < 2000) return true; // mid-click: do not pull the button away
     const a = document.activeElement;
-    if (!a || !(a.closest("#taskList, #ideaList, #noteList") || a.id === "taskOwnerFilter" || a.id === "noteAuthorFilter")) return false;
+    if (!a || !(a.closest("#taskList, #ideaList, #noteList, #taskDrawer") || a.id === "taskOwnerFilter" || a.id === "noteAuthorFilter")) return false;
     if (a.tagName === "SELECT") return !a.dataset.changed; // an open dropdown; once a choice is made the update may land
     return (a.tagName === "INPUT" && a.type !== "checkbox") || a.tagName === "TEXTAREA";
   };
@@ -79,7 +145,7 @@ const boardUI = (() => {
   const draft = (k, fallback) => (drafts.has(k) ? drafts.get(k) : fallback);
 
   function show() { $("boardModal").hidden = false; pending = false; render(); }
-  function hide() { $("boardModal").hidden = true; }
+  function hide() { $("boardModal").hidden = true; drawerId = null; cancelMode(); }
 
   function render() {
     shownSig = alertSig();
@@ -90,13 +156,14 @@ const boardUI = (() => {
     renderMode();
     const mgr = emps().find((e) => e.manager);
     $("boardManager").textContent = mgr ? t("ui.board.managerIs", { name: mgr.name }) : t("ui.board.noManager");
-    if (tab === "tasks") renderTasks(); else if (tab === "ideas") renderIdeas(); else renderNotes();
+    if (tab === "tasks") renderTasks(); else { renderDrawer(); if (tab === "ideas") renderIdeas(); else renderNotes(); }
   }
 
   const ownerOptions = (selected, withAll) => (withAll ? `<option value="">${escapeHtml(t("ui.board.filterAll"))}</option>` : "") + emps().map((e) => `<option value="${escapeHtml(e.id)}"${e.id === selected ? " selected" : ""}>${escapeHtml(e.name)} — ${escapeHtml(e.role)}</option>`).join("");
 
   // ---------- tasks ----------
-  function renderTasks() {
+  function renderTasks() { renderTaskList(); renderDrawer(); }
+  function renderTaskList() {
     $("taskOwnerFilter").innerHTML = ownerOptions(ownerFilter, true);
     $("taskShowDone").checked = showDone;
     if (!$("newTaskOwner").options.length || [...$("newTaskOwner").options].length !== emps().length) $("newTaskOwner").innerHTML = ownerOptions($("newTaskOwner").value, false);
@@ -127,76 +194,206 @@ const boardUI = (() => {
   }
 
   function taskCard(k) {
-    const key = "t" + k.id, isOpen = open.has(key);
     const owner = emp(k.owner);
     const card = document.createElement("div");
-    card.className = "task-card " + k.status + (isOpen ? " open" : "");
+    card.className = "task-card " + k.status + (drawerId === k.id ? " selected" : "");
     const last = k.notes[k.notes.length - 1];
     const alert = alertOf(k);
     if (alert) card.classList.add("alert-" + alert);
     card.innerHTML = `
       <div class="task-head">
         ${owner ? `<img src="${office.portrait(k.owner)}" alt="" />` : ""}
-        <div class="task-main"><div class="task-title"><b>#${k.id}</b> ${escapeHtml(k.title)}${k.review ? ` <span class="tag" title="${escapeHtml(t("ui.board.reviewHint"))}">${escapeHtml(t("ui.board.reviewTag"))}</span>` : ""}${k.kind === "discovery" ? ` <span class="tag">${escapeHtml(t("ui.board.kindDiscovery"))}</span>` : ""}${k.after?.length ? ` <span class="tag" title="${escapeHtml(t("ui.board.afterHint"))}">${escapeHtml(t("ui.board.afterTag", { ids: k.after.map((d) => "#" + d).join(", ") }))}</span>` : ""}${k.autoStart && k.status === "todo" ? ` <span class="tag" title="${escapeHtml(t("ui.board.queuedHint"))}">${escapeHtml(t("ui.board.queuedTag"))}</span>` : ""}${alert ? ` <span class="tag alert">${escapeHtml(t(`ui.board.alert.${alert}`))}</span>` : ""}</div>
-          <div class="task-meta">${escapeHtml(owner?.name || t("ui.board.noOwner"))} · ${escapeHtml(t("ui.board.by", { name: who(k.createdBy) }))} · ${when(k.updated)}${last && !isOpen ? ` · <i>${escapeHtml(last.text.slice(0, 90))}</i>` : ""}</div></div>
+        <div class="task-main"><div class="task-title"><b>#${k.id}</b> ${escapeHtml(k.title)}${taskTags(k, alert)}</div>
+          <div class="task-meta">${escapeHtml(owner?.name || t("ui.board.noOwner"))} · ${escapeHtml(t("ui.board.by", { name: who(k.createdBy) }))} · ${when(k.updated)}${last ? ` · <i>${escapeHtml(last.text.slice(0, 90))}</i>` : ""}</div></div>
         <div class="task-actions"></div>
       </div>
-      ${k.status === "review" && sendingBack.has(k.id) ? `<div class="send-back"><input class="t-back-reason" data-draft="t-back:${k.id}" maxlength="2000" placeholder="${escapeHtml(t("ui.board.sendBackPh"))}" value="${escapeHtml(draft(`t-back:${k.id}`, ""))}" /><button class="btn small ghost t-back-cancel" type="button">${escapeHtml(t("ui.board.cancel"))}</button><button class="btn small primary t-back-go" type="button">${escapeHtml(t("ui.board.sendBack"))}</button></div>` : ""}
-      <div class="task-body"${isOpen ? "" : " hidden"}>
-        ${k.detail ? `<div class="task-detail">${md(k.detail)}</div>` : ""}
-        ${k.notes.map((n) => `<div class="task-note"><span>${escapeHtml(who(n.by))} · ${when(n.ts)}</span>${escapeHtml(n.text)}</div>`).join("")}
-        <div class="task-edit">
-          <select class="t-status">${STATUSES.slice().reverse().map((s) => `<option value="${s}"${s === k.status ? " selected" : ""}>${escapeHtml(t(`ui.board.status.${s}`))}</option>`).join("")}</select>
-          <select class="t-owner">${owner ? "" : `<option value="" selected>${escapeHtml(t("ui.board.noOwner"))}</option>`}${ownerOptions(k.owner, false)}</select>
-          <label class="check"><input type="checkbox" class="t-review"${k.review ? " checked" : ""} /> <span>${escapeHtml(t("ui.board.needsReview"))}</span></label>
-          <button class="btn small danger t-del" type="button">${escapeHtml(t("ui.board.delete"))}</button>
-        </div>
-      </div>`;
-    card.querySelector(".task-main").onclick = () => { isOpen ? open.delete(key) : open.add(key); renderTasks(); };
-    const actions = card.querySelector(".task-actions");
-    const btn = (label, cls, fn, tip) => { const b = document.createElement("button"); b.type = "button"; b.className = "btn small " + cls; b.textContent = label; if (tip) b.title = tip; b.onclick = (ev) => { ev.stopPropagation(); fn(); }; actions.appendChild(b); };
+      ${drawerId !== k.id ? sendBackBox(k) : ""}`;
+    // the row opens the task in the side drawer (a second click closes it)
+    card.querySelector(".task-main").onclick = () => { drawerId = drawerId === k.id ? null : k.id; renderTasks(); };
+    taskButtons(k, card.querySelector(".task-actions"), false);
+    wireSendBack(card, k);
+    return card;
+  }
+
+  const taskTags = (k, alert) => `${k.review ? ` <span class="tag" title="${escapeHtml(t("ui.board.reviewHint"))}">${escapeHtml(t("ui.board.reviewTag"))}</span>` : ""}${k.kind === "discovery" ? ` <span class="tag">${escapeHtml(t("ui.board.kindDiscovery"))}</span>` : ""}${k.after?.length ? ` <span class="tag" title="${escapeHtml(t("ui.board.afterHint"))}">${escapeHtml(t("ui.board.afterTag", { ids: k.after.map((d) => "#" + d).join(", ") }))}</span>` : ""}${k.autoStart && k.status === "todo" ? ` <span class="tag" title="${escapeHtml(t("ui.board.queuedHint"))}">${escapeHtml(t("ui.board.queuedTag"))}</span>` : ""}${alert ? ` <span class="tag alert">${escapeHtml(t(`ui.board.alert.${alert}`))}</span>` : ""}`;
+
+  const sendBackBox = (k) => (k.status === "review" && sendingBack.has(k.id) ? `<div class="send-back"><input class="t-back-reason" data-draft="t-back:${k.id}" maxlength="2000" placeholder="${escapeHtml(t("ui.board.sendBackPh"))}" value="${escapeHtml(draft(`t-back:${k.id}`, ""))}" /><button class="btn small ghost t-back-cancel" type="button">${escapeHtml(t("ui.board.cancel"))}</button><button class="btn small primary t-back-go" type="button">${escapeHtml(t("ui.board.sendBack"))}</button></div>` : "");
+
+  function wireSendBack(root, k) {
+    const backBox = root.querySelector(".send-back");
+    if (!backBox) return;
+    const reason = backBox.querySelector(".t-back-reason");
+    const close = () => { sendingBack.delete(k.id); drafts.delete(`t-back:${k.id}`); renderTasks(); };
+    const go = async () => { if (await call("PUT", `${API()}/tasks/${k.id}`, { status: "todo", ...(reason.value.trim() ? { note: reason.value.trim() } : {}) })) { toast(t("ui.board.sentBack", { id: k.id })); close(); } };
+    backBox.querySelector(".t-back-cancel").onclick = close;
+    backBox.querySelector(".t-back-go").onclick = go;
+    reason.onkeydown = (ev) => { if (ev.key === "Enter" && !ev.isComposing) { ev.preventDefault(); go(); } else if (ev.key === "Escape") { ev.stopPropagation(); close(); } };
+  }
+
+  // The same buttons on the row and in the drawer; the drawer also gets "Stop" for a task that is running now.
+  function taskButtons(k, actions, inDrawer) {
+    const owner = emp(k.owner), alert = alertOf(k);
+    const btn = (label, cls, fn, tip) => { const b = document.createElement("button"); b.type = "button"; b.className = "btn small " + cls; b.textContent = label; if (tip) b.title = tip; b.onclick = (ev) => { ev.stopPropagation(); fn(); }; actions.appendChild(b); return b; };
     if (alert === "waiting" || alert === "error") btn(t("ui.board.openChat"), "always", () => { hide(); openChat(k.owner); });
     if (alert === "stalled") btn(t("ui.board.restart"), "ghost", async () => { if (await call("POST", `${API()}/tasks/${k.id}/start`)) toast(t("ui.board.started", { id: k.id, name: owner?.name || k.owner })); }, t("ui.board.startTip"));
     // a task that waits for others is not started by hand while they are open (the status select still can)
     const waitsFor = (k.after || []).filter((d) => board().tasks.some((x) => x.id === d && x.status !== "done"));
-    if (owner && (k.status === "todo" || k.status === "blocked")) btn(t("ui.board.start"), "primary", async () => { if (await call("POST", `${API()}/tasks/${k.id}/start`)) toast(t("ui.board.started", { id: k.id, name: owner?.name || k.owner })); }, waitsFor.length ? t("ui.board.afterHint") : t("ui.board.startTip"));
-    if (waitsFor.length) { const b = actions.lastElementChild; if (b) b.disabled = true; }
+    if (owner && (k.status === "todo" || k.status === "blocked")) btn(t("ui.board.start"), "primary", async () => { if (await call("POST", `${API()}/tasks/${k.id}/start`)) toast(t("ui.board.started", { id: k.id, name: owner?.name || k.owner })); }, waitsFor.length ? t("ui.board.afterHint") : t("ui.board.startTip")).disabled = !!waitsFor.length;
+    if (inDrawer && k.status === "doing" && owner && ["working", "waiting", "compacting"].includes(owner.status)) btn(t("ui.board.drawer.stop"), "no", () => { send({ type: "interrupt", id: k.owner }); toast(t("ui.board.drawer.stopped", { id: k.id })); }, t("ui.board.drawer.stopTip"));
     // "send back" asks why first (optional): the reason becomes a note on the task, and the owner gets it when they resume
     if (k.status === "review" && !sendingBack.has(k.id)) btn(t("ui.board.sendBack"), "ghost", () => { sendingBack.add(k.id); renderTasks(); setTimeout(() => document.querySelector(`[data-draft="t-back:${k.id}"]`)?.focus(), 0); });
-    const backBox = card.querySelector(".send-back");
-    if (backBox) {
-      const reason = backBox.querySelector(".t-back-reason");
-      const close = () => { sendingBack.delete(k.id); drafts.delete(`t-back:${k.id}`); renderTasks(); };
-      const go = async () => { if (await call("PUT", `${API()}/tasks/${k.id}`, { status: "todo", ...(reason.value.trim() ? { note: reason.value.trim() } : {}) })) { toast(t("ui.board.sentBack", { id: k.id })); close(); } };
-      backBox.querySelector(".t-back-cancel").onclick = close;
-      backBox.querySelector(".t-back-go").onclick = go;
-      reason.onkeydown = (ev) => { if (ev.key === "Enter" && !ev.isComposing) { ev.preventDefault(); go(); } else if (ev.key === "Escape") { ev.stopPropagation(); close(); } };
-    }
     if (k.status === "review" || k.status === "doing") btn(t(k.status === "review" ? "ui.board.approve" : "ui.board.markDone"), "ok", () => call("PUT", `${API()}/tasks/${k.id}`, { status: "done" }));
     if (k.status === "done") btn(t("ui.board.reopen"), "ghost", () => call("PUT", `${API()}/tasks/${k.id}`, { status: "todo" }));
-    card.querySelector(".t-status").onchange = (ev) => call("PUT", `${API()}/tasks/${k.id}`, { status: ev.target.value });
-    card.querySelector(".t-owner").onchange = (ev) => { if (ev.target.value) call("PUT", `${API()}/tasks/${k.id}`, { owner: ev.target.value, ...(k.status === "blocked" && !owner ? { status: "todo" } : {}) }); };
-    card.querySelector(".t-review").onchange = (ev) => call("PUT", `${API()}/tasks/${k.id}`, { review: ev.target.checked });
-    const del = card.querySelector(".t-del");
-    del.onclick = () => { if (del.dataset.armed) call("DELETE", `${API()}/tasks/${k.id}`); else { del.dataset.armed = "1"; del.textContent = t("ui.board.deleteConfirm"); setTimeout(() => { delete del.dataset.armed; del.textContent = t("ui.board.delete"); }, 3000); } };
-    return card;
   }
 
-  // ---------- how the office works: by hand, approved rounds, on its own ----------
-  function renderMode() {
-    const b = board(), mode = b.mode || "manual";
-    const sel = $("officeMode");
-    if (!sel.options.length) sel.innerHTML = ["manual", "cycle", "auto"].map((m) => `<option value="${m}">${escapeHtml(t(`ui.board.modes.${m}`))}</option>`).join("");
-    if (document.activeElement !== sel) sel.value = mode;
-    if (document.activeElement !== $("officeBudget")) $("officeBudget").value = b.budget ?? 10;
-    if (document.activeElement !== $("officeRounds")) $("officeRounds").value = b.roundsPerDay ?? 3;
-    document.querySelectorAll("#boardMode .mode-extra").forEach((el) => (el.hidden = mode === "manual"));
-    $("officeModeHint").textContent = t(`ui.board.modeHint.${mode}`);
-    const c = b.cycle, chip = $("cyclePhase");
-    chip.hidden = !c || c.phase === "idle";
-    if (c && c.phase !== "idle") chip.textContent = t(`ui.board.phase.${c.phase}`, { no: c.no, spent: (c.spent || 0).toFixed(2) });
+  // ---------- task drawer: everything about one task on the right side of the board ----------
+  const runsCache = new Map(); // task id → { at: task.updated when fetched, data? , off?: text }
+  const tsCache = new Map();   // task id → { data?, off?, loading? }
+  let tsOpen = false;          // the transcript section is unfolded (stays so while the boss moves between tasks)
+  const toolOpen = new Set();  // unfolded tool lines "id:index", kept across re-renders
+
+  async function getJSON(url) {
+    const r = await fetch(url);
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok) throw Object.assign(new Error(data.error || r.statusText), { status: r.status });
+    return data;
   }
-  const saveMode = async () => { if (await call("PUT", `${API()}/mode`, { mode: $("officeMode").value, budget: Number($("officeBudget").value), roundsPerDay: Number($("officeRounds").value) })) toast(t("ui.board.modeSaved")); };
+  const offText = (err) => (err.status === 404 ? t("ui.board.drawer.notYet") : err.message);
+
+  async function loadRuns(k) {
+    runsCache.set(k.id, { at: k.updated, loading: true });
+    let v;
+    try { v = { at: k.updated, data: await getJSON(`${API()}/tasks/${k.id}/runs`) }; } catch (err) { v = { at: k.updated, off: offText(err) }; }
+    runsCache.set(k.id, v);
+    if (drawerId === k.id) renderDrawer();
+  }
+  async function loadTranscript(id) {
+    tsCache.set(id, { loading: true });
+    renderDrawer();
+    let v;
+    try { v = { data: await getJSON(`${API()}/tasks/${id}/transcript`) }; } catch (err) { v = { off: offText(err) }; }
+    tsCache.set(id, v);
+    if (drawerId === id) { renderDrawer(); const box = $("taskDrawer").querySelector(".drawer-ts-list"); if (box) box.scrollTop = box.scrollHeight; }
+  }
+
+  const dur = (ms) => { const s = Math.round((ms || 0) / 1000); return s < 60 ? t("ui.board.drawer.durS", { n: s }) : s < 3600 ? t("ui.board.drawer.durM", { n: Math.round(s / 60) }) : t("ui.board.drawer.durH", { h: Math.floor(s / 3600), m: Math.round((s % 3600) / 60) }); };
+  const money = (c) => "$" + (Number(c) || 0).toFixed(2);
+  const tokens = (n) => (n >= 1e6 ? (n / 1e6).toFixed(1) + "M" : n >= 1e3 ? Math.round(n / 1e3) + "k" : String(n));
+  // does `from` (through its prerequisites) already wait for `target`? then `target` cannot wait for `from`
+  const reaches = (from, target, seen = new Set()) => {
+    if (from === target) return true;
+    if (seen.has(from)) return false;
+    seen.add(from);
+    return (board().tasks.find((x) => x.id === from)?.after || []).some((d) => reaches(d, target, seen));
+  };
+
+  function runsHtml(k) {
+    const r = runsCache.get(k.id);
+    if (!r || r.loading) return `<div class="muted drawer-empty">${escapeHtml(t("ui.board.drawer.loading"))}</div>`;
+    if (r.off) return `<div class="muted drawer-empty">${escapeHtml(r.off)}</div>`;
+    const runs = r.data?.runs || [];
+    if (!runs.length) return `<div class="muted drawer-empty">${escapeHtml(t("ui.board.drawer.noRuns"))}</div>`;
+    const tot = r.data.total || {};
+    const cost = (x) => (x.codexTokens ? t("ui.board.drawer.tokens", { n: tokens(x.codexTokens) }) : money(x.cost));
+    const dotOf = (st) => (st === "done" ? "done" : st === "review" ? "review" : st === "error" || st === "blocked" ? "blocked" : "todo");
+    return runs.slice().reverse().map((x) => `<div class="drawer-run"><i class="tdot ${dotOf(x.status)}"></i><span class="drawer-run-when">${when(x.startedAt || x.endedAt)}</span><span class="drawer-run-who">${escapeHtml(x.empName || who(x.emp))}</span><span>${dur(x.durationMs)}</span><span class="drawer-run-cost">${cost(x)}</span><span class="tag">${escapeHtml(t(`ui.board.drawer.run.${x.status}`))}</span></div>`).join("")
+      + `<div class="drawer-total">${escapeHtml(t("ui.board.drawer.total", { n: runs.length, time: dur(tot.durationMs), cost: money(tot.cost) }))}${tot.codexTokens ? " · " + escapeHtml(t("ui.board.drawer.tokens", { n: tokens(tot.codexTokens) })) : ""}</div>`;
+  }
+
+  function transcriptHtml(k) {
+    const v = tsCache.get(k.id);
+    if (!v || v.loading) return `<div class="muted drawer-empty">${escapeHtml(t("ui.board.drawer.loading"))}</div>`;
+    if (v.off) return `<div class="muted drawer-empty">${escapeHtml(v.off)}</div>`;
+    const d = v.data || {};
+    if (!d.available) return `<div class="muted drawer-empty">${escapeHtml(d.reason || t("ui.board.drawer.tsOff"))}</div>`;
+    const msgs = d.messages || [];
+    if (!msgs.length) return `<div class="muted drawer-empty">${escapeHtml(t("ui.board.drawer.tsEmpty"))}</div>`;
+    const ownerName = emp(k.owner)?.name || k.owner;
+    return `<div class="drawer-ts-list">${msgs.map((m, i) => {
+      if (m.role === "tool") {
+        const first = String(m.text || "").split("\n")[0].slice(0, 90);
+        return `<details class="drawer-tool" data-tool="${k.id}:${i}"${toolOpen.has(`${k.id}:${i}`) ? " open" : ""}><summary>🔧 <b>${escapeHtml(m.tool || t("ui.board.drawer.tool"))}</b> <span>${escapeHtml(first)}</span></summary><pre>${escapeHtml(m.text || "")}</pre></details>`;
+      }
+      const label = m.role === "user" ? t("ui.board.drawer.roleUser") : ownerName;
+      return `<div class="task-note${m.role === "user" ? " drawer-in" : ""}"><span>${escapeHtml(label)}${m.ts ? " · " + when(m.ts) : ""}</span>${md(m.text || "")}</div>`;
+    }).join("")}</div>`;
+  }
+
+  function renderDrawer() {
+    const el = $("taskDrawer"), cardEl = el.parentElement;
+    const k = tab === "tasks" && drawerId != null ? board().tasks.find((x) => x.id === drawerId) : null;
+    if (!k && drawerId != null && cur()?.board) drawerId = null; // deleted, or another office
+    cardEl.classList.toggle("drawer-open", !!k);
+    if (!k) { el.hidden = true; el.innerHTML = ""; return; }
+    const keepScroll = el.hidden ? 0 : el.scrollTop;
+    if (el.hidden) cardEl.scrollTop = 0;
+    el.hidden = false;
+    const r = runsCache.get(k.id);
+    if (!r || (!r.loading && r.at !== k.updated)) loadRuns(k); // fetched once per change of the task, not polled
+    if (tsOpen && !tsCache.has(k.id)) loadTranscript(k.id);
+    const owner = emp(k.owner), alert = alertOf(k), running = k.status === "doing";
+    const others = board().tasks.filter((x) => x.id !== k.id);
+    const deps = (k.after || []).map((d) => { const x = others.find((o) => o.id === d); return `<span class="chip dep${x?.status === "done" ? " working" : ""}" title="${escapeHtml(x?.title || "")}">#${d} ${x?.status === "done" ? "✓" : "…"}<button type="button" class="d-dep-del" data-id="${d}" title="${escapeHtml(t("ui.board.drawer.depRemove"))}">×</button></span>`; }).join("");
+    const candidates = others.filter((x) => x.status !== "done" && !(k.after || []).includes(x.id) && !reaches(x.id, k.id));
+    el.innerHTML = `
+      <div class="drawer-head"><i class="tdot ${k.status}"></i><b>#${k.id}</b><span class="muted">${escapeHtml(t(`ui.board.status.${k.status}`))}</span><span class="drawer-tags">${taskTags({ ...k, after: [] }, alert)}</span><button class="icon-btn small d-close" type="button" title="${escapeHtml(t("ui.board.close"))}">×</button></div>
+      <div class="task-meta">${escapeHtml(t("ui.board.by", { name: who(k.createdBy) }))} · ${when(k.created)} · ${escapeHtml(t("ui.board.drawer.updated", { when: when(k.updated) }))}</div>
+      <label class="drawer-field"><span>${escapeHtml(t("ui.board.taskTitle"))}</span><input class="d-title" data-draft="d-title:${k.id}" maxlength="160" value="${escapeHtml(draft(`d-title:${k.id}`, k.title))}" /></label>
+      <label class="drawer-field"><span>${escapeHtml(t("ui.board.drawer.detail"))}</span><textarea class="d-detail" data-draft="d-detail:${k.id}" rows="5" maxlength="8000" placeholder="${escapeHtml(t("ui.board.taskDetail"))}">${escapeHtml(draft(`d-detail:${k.id}`, k.detail || ""))}</textarea></label>
+      <div class="drawer-save"><button class="btn small ghost d-revert" type="button">${escapeHtml(t("ui.board.cancel"))}</button><button class="btn small primary d-save" type="button">${escapeHtml(t("ui.board.save"))}</button></div>
+      <div class="task-edit">
+        <select class="d-status" title="${escapeHtml(t("ui.board.drawer.status"))}">${STATUSES.slice().reverse().map((s) => `<option value="${s}"${s === k.status ? " selected" : ""}>${escapeHtml(t(`ui.board.status.${s}`))}</option>`).join("")}</select>
+        <select class="d-owner"${running ? ` disabled title="${escapeHtml(t("ui.board.drawer.ownerLocked"))}"` : ` title="${escapeHtml(t("ui.board.owner"))}"`}>${owner ? "" : `<option value="" selected>${escapeHtml(t("ui.board.noOwner"))}</option>`}${ownerOptions(k.owner, false)}</select>
+        <label class="check"><input type="checkbox" class="d-review"${k.review ? " checked" : ""} /> <span>${escapeHtml(t("ui.board.needsReview"))}</span></label>
+      </div>
+      <div class="drawer-field"><span>${escapeHtml(t("ui.board.drawer.deps"))}</span>
+        <div class="drawer-deps">${deps || `<small class="muted">${escapeHtml(t("ui.board.drawer.noDeps"))}</small>`}${candidates.length ? `<select class="d-dep-add"><option value="">${escapeHtml(t("ui.board.drawer.depAdd"))}</option>${candidates.map((x) => `<option value="${x.id}">#${x.id} ${escapeHtml(x.title.slice(0, 60))}</option>`).join("")}</select>` : ""}</div></div>
+      <div class="drawer-actions"><span class="task-actions"></span><button class="btn small danger d-del" type="button">${escapeHtml(t("ui.board.delete"))}</button></div>
+      ${sendBackBox(k)}
+      <h4>${escapeHtml(t("ui.board.drawer.notes"))} <span>${k.notes.length}</span></h4>
+      ${k.notes.length ? `<div class="drawer-notes">${k.notes.map((n) => `<div class="task-note"><span>${escapeHtml(who(n.by))} · ${when(n.ts)}</span>${escapeHtml(n.text)}</div>`).join("")}</div>` : `<div class="muted drawer-empty">${escapeHtml(t("ui.board.drawer.noNotes"))}</div>`}
+      <h4>${escapeHtml(t("ui.board.drawer.runs"))}</h4>
+      ${runsHtml(k)}
+      <details class="drawer-ts"${tsOpen ? " open" : ""}><summary><h4>${escapeHtml(t("ui.board.drawer.transcript"))}</h4>${tsOpen ? `<button type="button" class="link-btn d-ts-reload">${escapeHtml(t("ui.board.drawer.reload"))}</button>` : ""}</summary>${tsOpen ? transcriptHtml(k) : ""}</details>`;
+    el.scrollTop = keepScroll;
+    taskButtons(k, el.querySelector(".task-actions"), true);
+    wireSendBack(el, k);
+    const put = (body) => call("PUT", `${API()}/tasks/${k.id}`, body);
+    el.querySelector(".d-close").onclick = () => { drawerId = null; renderTasks(); };
+    const forget = () => { drafts.delete(`d-title:${k.id}`); drafts.delete(`d-detail:${k.id}`); };
+    el.querySelector(".d-revert").onclick = () => { forget(); renderDrawer(); };
+    el.querySelector(".d-save").onclick = async () => {
+      const title = el.querySelector(".d-title").value.trim();
+      if (!title) { el.querySelector(".d-title").focus(); return; }
+      const detail = el.querySelector(".d-detail").value;
+      document.activeElement?.blur(); // the board holds updates while a field has focus; after saving it may re-render
+      if (await put({ title, detail })) { forget(); toast(t("ui.board.saved")); }
+    };
+    el.querySelector(".d-status").onchange = (ev) => put({ status: ev.target.value });
+    el.querySelector(".d-owner").onchange = (ev) => { if (ev.target.value) put({ owner: ev.target.value, ...(k.status === "blocked" && !owner ? { status: "todo" } : {}) }); };
+    el.querySelector(".d-review").onchange = (ev) => put({ review: ev.target.checked });
+    const addDep = el.querySelector(".d-dep-add");
+    if (addDep) addDep.onchange = () => { if (addDep.value) put({ after: [...(k.after || []), Number(addDep.value)] }); };
+    el.querySelectorAll(".d-dep-del").forEach((b) => (b.onclick = () => put({ after: (k.after || []).filter((d) => d !== Number(b.dataset.id)) })));
+    const del = el.querySelector(".d-del");
+    del.onclick = () => { if (del.dataset.armed) call("DELETE", `${API()}/tasks/${k.id}`); else { del.dataset.armed = "1"; del.textContent = t("ui.board.deleteConfirm"); setTimeout(() => { delete del.dataset.armed; del.textContent = t("ui.board.delete"); }, 3000); } };
+    const ts = el.querySelector(".drawer-ts");
+    ts.ontoggle = () => { if (ts.open === tsOpen) return; tsOpen = ts.open; if (tsOpen && !tsCache.has(k.id)) loadTranscript(k.id); else renderDrawer(); };
+    el.querySelector(".d-ts-reload")?.addEventListener("click", (ev) => { ev.preventDefault(); loadTranscript(k.id); });
+    el.querySelectorAll(".drawer-tool").forEach((d) => (d.ontoggle = () => { d.open ? toolOpen.add(d.dataset.tool) : toolOpen.delete(d.dataset.tool); }));
+  }
+
+  // Other panels (inbox, activity) open a task here: the board on its task list, with the drawer on that task.
+  window.openTaskDrawer = (id) => {
+    tab = "tasks"; drawerId = Number(id);
+    if (!cur()?.board) { deepLink = "tasks"; return; } // the board arrives with the office; refresh() opens it then
+    show();
+  };
+
+  // ---------- how the office works: by hand, approved rounds, on its own (the same control sits in Settings → This office) ----------
+  const modeCtl = makeModeControl({ root: $("boardMode"), mode: $("officeMode"), budget: $("officeBudget"), rounds: $("officeRounds"), hint: $("officeModeHint"), phase: $("cyclePhase"), confirm: $("modeConfirm") }, () => !$("boardModal").hidden);
+  const renderMode = () => modeCtl.render();
+  const cancelMode = () => modeCtl.cancel();
 
   // ---------- ideas: suggestions waiting for the boss; "move" makes one a task ----------
   const ideaOwner = new Map(); // idea id → owner chosen in the card
@@ -288,7 +485,6 @@ const boardUI = (() => {
   $("taskOwnerFilter").onchange = (ev) => { ownerFilter = ev.target.value; renderTasks(); };
   $("taskShowDone").onchange = (ev) => { showDone = ev.target.checked; renderTasks(); };
   $("noteAuthorFilter").onchange = (ev) => { noteFilter = ev.target.value; renderNotes(); };
-  $("officeMode").onchange = $("officeBudget").onchange = $("officeRounds").onchange = saveMode;
   $("ideaDiscover").onclick = async () => { if (await call("POST", `${API()}/discover`)) toast(t("ui.board.discoverStarted")); };
   $("ideaShowAll").onchange = (ev) => { ideaShowAll = ev.target.checked; renderIdeas(); };
   $("newIdeaForm").onsubmit = async (ev) => {
@@ -309,7 +505,11 @@ const boardUI = (() => {
     if (!title || !text) return;
     if (await call("POST", `${API()}/notes`, { title, text, tags: $("newNoteTags").value.split(",") })) { $("newNoteTitle").value = ""; $("newNoteText").value = ""; $("newNoteTags").value = ""; }
   };
-  document.addEventListener("keydown", (ev) => { if (ev.key === "Escape" && !$("boardModal").hidden) hide(); });
+  // Escape closes the innermost thing first: the mode question, then the task drawer, then the board
+  document.addEventListener("keydown", (ev) => {
+    if (ev.key !== "Escape" || $("boardModal").hidden) return;
+    if (modeCtl.confirming) cancelMode(); else if (drawerId != null) { drawerId = null; renderTasks(); } else hide();
+  });
 
   setInterval(() => refresh(undefined, "status"), 30e3); // "stalled" depends on the clock
 

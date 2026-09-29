@@ -16,6 +16,8 @@ import { t, tget, getSettings } from "./runtime.js";
 import { officeServer, OFFICE_TOOLS, type Colleagues } from "./office-tools.js";
 import { isCodexModel, runCodexTurn, skillsIndex, skillFile, type CodexItem } from "./codex.js";
 import { listSkills, listProjectSkills } from "./agents.js";
+import { fromClaudeRateLimit, fromClaudeUsage, fromCodexThread, claudeUsageDue } from "./quota.js";
+import type { CostKind } from "./ledger.js";
 
 export type Status = "idle" | "working" | "waiting" | "error" | "sick";
 
@@ -85,6 +87,9 @@ export interface ImageInput {
 
 export const IMAGE_TYPES = new Set(["image/png", "image/jpeg", "image/gif", "image/webp"]);
 
+
+// What one finished turn spent, for the office's cost ledger (the running `cost` resets with the employee, the ledger never does).
+export interface Spend { cost: number; kind: CostKind; task?: number; model: string; engine: "claude" | "codex"; tokens?: { input: number; output: number; cached?: number } }
 
 export interface AskRequest {
   requestId: string;
@@ -195,7 +200,11 @@ export class Employee extends EventEmitter {
   private disposed = false;
   private colleagues?: Colleagues;
   private turnTexts: string[] = [];
-  private costBase = 0;    // spent by earlier Claude processes of this employee
+  // A Claude process reports its cost as a running total, and a resumed session starts from the total its transcript saved:
+  // the turn's own cost is the difference to the last total seen for that session.
+  private procPrev = 0;
+  private procFirst = true;
+  private turnSpend?: { cost: number; tokens?: Spend["tokens"] };
   private taskId?: number; // the board task being worked on, in a clean session of its own
   private taskQueue: Array<{ id: number; from?: Employee }> = [];
   private taskNotesSeen = new Map<number, number>(); // task id -> how many notes it had when this employee last began it
@@ -705,7 +714,7 @@ export class Employee extends EventEmitter {
     this.stopQuery(true);
     this.carry = [];
     this.sessionId = undefined;
-    this.cost = this.costBase = this.context = 0;
+    this.cost = this.context = 0;
     this.store.setMeta(this.cfg.id, "cost", 0);
     this.history = [];
     this.unanswered = [];
@@ -860,11 +869,13 @@ export class Employee extends EventEmitter {
     if (this.carry.length) this.inbox.unshift(...this.carry.splice(0));
     const gen = this.generation;
     if (this.engine === "codex") { void this.runCodex(gen, key); return; }
-    this.costBase = this.cost; // a new Claude process counts its cost from zero
     this.context = 0;
     const compactAt = getSettings().compactAtTokens;
     const taskId = taskOf(key);
     const task = taskId !== undefined ? this.colleagues?.board().tasks.find((x) => x.id === taskId) : undefined;
+    const resumeId = key === "side" ? undefined : taskId !== undefined ? task?.session : this.sessionId;
+    this.procPrev = resumeId ? this.sessionTotals()[resumeId] ?? 0 : 0;
+    this.procFirst = true;
     this.q = query({
       prompt: this.input(gen),
       options: {
@@ -873,7 +884,7 @@ export class Employee extends EventEmitter {
         additionalDirectories: this.cfg.dir ? [this.cfg.dir] : undefined,
         systemPrompt: { type: "preset", preset: "claude_code", append: this.buildPrompt() },
         plugins: this.cfg.pluginDir ? [{ type: "local", path: this.cfg.pluginDir }] : undefined,
-        resume: key === "side" ? undefined : taskId !== undefined ? task?.session : this.sessionId,
+        resume: resumeId,
         persistSession: key === "side" ? false : undefined,
         // summarize in place long before the model's own limit: on a 1M-token model a chat otherwise grows until every step re-reads a book
         // one memory, the one the boss sees on the profile page: Claude Code's own hidden per-folder memory would be a second place to look
@@ -971,8 +982,23 @@ export class Employee extends EventEmitter {
         }
         break;
       }
+      case "rate_limit_event":
+        fromClaudeRateLimit(m.rate_limit_info as unknown as Record<string, unknown>);
+        break;
       case "result": {
-        if (m.subtype === "success") { this.cost = this.costBase + m.total_cost_usd; this.store.setMeta(this.cfg.id, "cost", this.cost); }
+        const total = Number(m.total_cost_usd) || 0;
+        if (this.procFirst && total < this.procPrev) this.procPrev = 0; // this transcript did not carry its earlier total
+        this.procFirst = false;
+        const delta = Math.max(0, total - this.procPrev);
+        if (delta > 0) {
+          this.procPrev = total;
+          if (key !== "side" && m.session_id) this.rememberSessionTotal(m.session_id, total);
+          this.cost += delta;
+          this.store.setMeta(this.cfg.id, "cost", this.cost);
+        }
+        this.turnSpend = { cost: delta };
+        // the plan's windows, when the CLI can tell (a plain HTTP call, no tokens), now and then
+        if (claudeUsageDue()) this.q?.usage_EXPERIMENTAL_MAY_CHANGE_DO_NOT_RELY_ON_THIS_API_YET?.({ skipBehaviors: true }).then(fromClaudeUsage, () => {});
         const detail = m.subtype === "success" ? undefined : "errors" in m && Array.isArray(m.errors) ? m.errors.join("; ") : m.subtype;
         // more turns queued inside the CLI follow without further input: the employee is not free yet
         const more = (m.queued_turn_count ?? 0) > 0 && !this.interrupting;
@@ -994,6 +1020,7 @@ export class Employee extends EventEmitter {
   private endTurn(detail: string | undefined, durationMs: number, sessionLost = false, more = false) {
     this.flushStream();
     const key = this.runningFor;
+    this.emitSpend(key);
     const wasInterrupted = this.interrupting;
     if (more) {
       if (detail && !wasInterrupted) this.push({ role: "system", text: t("server.turnError", { detail }), ts: Date.now() });
@@ -1020,6 +1047,27 @@ export class Employee extends EventEmitter {
     this.emit("result", { cost: this.cost, durationMs, context: this.context });
     this.applyPending();
     if (this.pending.size === 0) this.settle();
+  }
+
+  // The ledger hears of every finished turn that spent something, whatever happens to the turn afterwards.
+  private emitSpend(key?: string) {
+    const s = this.turnSpend;
+    this.turnSpend = undefined;
+    if (!s || (s.cost <= 0 && !s.tokens)) return;
+    const task = taskOf(key);
+    const kind: CostKind = this.meetingTurn ? "meeting" : key === "side" ? "refresh"
+      : task !== undefined ? (this.colleagues?.board().tasks.find((x) => x.id === task)?.kind === "discovery" ? "discovery" : "task") : "chat";
+    const spend: Spend = { cost: s.cost, kind, ...(task !== undefined ? { task } : {}), model: this.model ?? this.cfg.model ?? "", engine: this.engine, ...(s.tokens ? { tokens: s.tokens } : {}) };
+    this.emit("spend", spend);
+  }
+
+  // Last running total per session / thread, kept across restarts so a resumed session is not counted twice.
+  private sessionTotals(): Record<string, number> { return this.store.getMeta<Record<string, number>>(this.cfg.id, "sessionCost") ?? {}; }
+  private rememberSessionTotal(session: string, total: number) {
+    const all = { ...this.sessionTotals(), [session]: total };
+    const keys = Object.keys(all);
+    for (const k of keys.slice(0, Math.max(0, keys.length - 100))) delete all[k];
+    this.store.setMeta(this.cfg.id, "sessionCost", all);
   }
 
   // Idle, unless something that waited starts right away: then the employee never shows as free in between
@@ -1075,6 +1123,17 @@ export class Employee extends EventEmitter {
           const before = this.cxTokens.get(tk) ?? 0;
           this.cxTokens.set(tk, res.inputTokens);
           this.context = Math.round(Math.max(0, res.inputTokens - before) / Math.max(1, res.calls));
+          // the same difference for the ledger, kept across restarts (the in-memory one above starts over)
+          const seen = this.store.getMeta<Record<string, [number, number, number]>>(this.cfg.id, "threadTokens") ?? {};
+          const [pi, po, pc] = key !== "side" && seen[tk] && seen[tk][0] <= res.inputTokens ? seen[tk] : [0, 0, 0];
+          this.turnSpend = { cost: 0, tokens: { input: res.inputTokens - pi, output: Math.max(0, res.outputTokens - po), cached: Math.max(0, res.cachedTokens - pc) } };
+          if (key !== "side" && tk !== "-") {
+            const next = { ...seen, [tk]: [res.inputTokens, res.outputTokens, res.cachedTokens] as [number, number, number] };
+            const keys = Object.keys(next);
+            for (const k of keys.slice(0, Math.max(0, keys.length - 100))) delete next[k];
+            this.store.setMeta(this.cfg.id, "threadTokens", next);
+          }
+          void fromCodexThread(tk === "-" ? undefined : tk).catch(() => {});
         }
         // messages that came in during the turn run next, in the same session, before the employee counts as free
         const more = res.ok && this.inbox.length > 0 && !this.interrupting;

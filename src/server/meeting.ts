@@ -201,7 +201,10 @@ export class Meeting extends EventEmitter {
       options: { cwd: this.cwd, model: "claude-haiku-4-5", tools: [], maxTurns: 1, persistSession: false, settingSources: [], systemPrompt: t("server.meeting.summarySystem") },
     });
     let out = "";
-    for await (const m of q) if (m.type === "result" && m.subtype === "success") out = m.result;
+    for await (const m of q) if (m.type === "result") {
+      if (m.subtype === "success") out = m.result;
+      if (m.total_cost_usd > 0) this.emit("cost", m.total_cost_usd, "claude-haiku-4-5"); // the office's ledger counts the summary too
+    }
     const json = out.match(/\{[\s\S]*\}/);
     let parsed: { summary?: unknown; tasks?: unknown } = {};
     try { parsed = json ? JSON.parse(json[0]) : {}; } catch {}

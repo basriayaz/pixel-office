@@ -161,3 +161,21 @@ export function readJsonSafe<T>(file: string, fallback: () => T, opts: ReadOptio
 export function removeWithBackup(file: string): void {
   for (const p of [file, file + ".bak"]) try { fs.unlinkSync(p); } catch {}
 }
+
+// Append-only logs (costs, activity, runs): one JSON object per line, written with a single call so lines never interleave.
+// A crash can at worst leave a half line at the end, which readJsonLines skips.
+export function appendJsonLineSync(file: string, value: unknown): void {
+  fs.mkdirSync(path.dirname(file), { recursive: true });
+  fs.appendFileSync(file, JSON.stringify(value) + "\n");
+}
+
+export function readJsonLines<T>(file: string, keep: (v: T) => boolean = () => true): T[] {
+  let text: string;
+  try { text = fs.readFileSync(file, "utf8"); } catch { return []; }
+  const out: T[] = [];
+  for (const line of text.split("\n")) {
+    if (!line.trim()) continue;
+    try { const v = JSON.parse(line) as T; if (v && typeof v === "object" && keep(v)) out.push(v); } catch {}
+  }
+  return out;
+}

@@ -58,7 +58,7 @@ export interface CodexHandlers {
   onItem(item: CodexItem): void;
 }
 
-export interface CodexResult { ok: boolean; error?: string; inputTokens: number; outputTokens: number; calls: number; notFound?: boolean }
+export interface CodexResult { ok: boolean; error?: string; inputTokens: number; outputTokens: number; cachedTokens: number; calls: number; notFound?: boolean }
 
 const toml = (v: unknown) => JSON.stringify(v); // JSON strings and arrays of strings are valid TOML
 
@@ -83,7 +83,7 @@ export function runCodexTurn(turn: CodexTurn, h: CodexHandlers): { done: Promise
   let child: ChildProcess | undefined;
   let killed = false;
   const done = new Promise<CodexResult>((resolve) => {
-    const res: CodexResult = { ok: false, inputTokens: 0, outputTokens: 0, calls: 1 };
+    const res: CodexResult = { ok: false, inputTokens: 0, outputTokens: 0, cachedTokens: 0, calls: 1 };
     let buf = "", err = "";
     try { child = spawn("codex", args, { cwd: turn.cwd, stdio: ["pipe", "pipe", "pipe"], env: process.env }); }
     catch (e) { resolve({ ...res, error: (e as Error).message }); return; }
@@ -97,7 +97,7 @@ export function runCodexTurn(turn: CodexTurn, h: CodexHandlers): { done: Promise
         const line = buf.slice(0, nl).trim();
         buf = buf.slice(nl + 1);
         if (!line.startsWith("{")) continue;
-        let ev: { type: string; thread_id?: string; item?: CodexItem; usage?: { input_tokens?: number; output_tokens?: number }; message?: string; error?: { message?: string } };
+        let ev: { type: string; thread_id?: string; item?: CodexItem; usage?: { input_tokens?: number; output_tokens?: number; cached_input_tokens?: number }; message?: string; error?: { message?: string } };
         try { ev = JSON.parse(line); } catch { continue; }
         if (ev.type === "thread.started" && ev.thread_id) h.onThread(ev.thread_id);
         else if (ev.type === "item.started" && ev.item) h.onItemStarted(ev.item);
@@ -105,7 +105,7 @@ export function runCodexTurn(turn: CodexTurn, h: CodexHandlers): { done: Promise
           if (ev.item.type === "command_execution" || ev.item.type === "mcp_tool_call" || ev.item.type === "file_change" || ev.item.type === "web_search") res.calls++;
           if (ev.item.type === "error" && isCodexNotice(ev.item.message)) continue; // a harmless notice, not a failure
           h.onItem(ev.item);
-        } else if (ev.type === "turn.completed") { res.ok = true; res.inputTokens = ev.usage?.input_tokens ?? 0; res.outputTokens = ev.usage?.output_tokens ?? 0; }
+        } else if (ev.type === "turn.completed") { res.ok = true; res.inputTokens = ev.usage?.input_tokens ?? 0; res.outputTokens = ev.usage?.output_tokens ?? 0; res.cachedTokens = ev.usage?.cached_input_tokens ?? 0; }
         else if (ev.type === "turn.failed" || ev.type === "error") res.error = readable(ev.error?.message ?? ev.message ?? "turn failed");
       }
     });

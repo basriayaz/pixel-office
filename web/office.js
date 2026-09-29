@@ -1,12 +1,10 @@
 // Pixel-art office: 32px tiles, rooms with doors, BFS walking, detailed characters.
 const REDUCED_MOTION = matchMedia("(prefers-reduced-motion: reduce)");
 const TILE = 32;
-const COLS = 30;
-const ROWS = 17;
+const { COLS, ROWS, ENTRANCE } = POLayout; // the room grid and the entrance doormat; furniture, spots and desks come from web/layout.js
 const LW = COLS * TILE;
 const LH = ROWS * TILE;
 const WALK_SPEED = 88;
-const ENTRANCE = { tx: 14, ty: 16 }; // doormat at the bottom edge of the open office; new hires walk in from below
 const CONFETTI = ["#ff3b3b", "#ffd166", "#4ade80", "#61afef", "#c678dd", "#ff8c42", "#f4f4f4"];
 const OUTLINE = "#1d1a1f";
 
@@ -16,117 +14,47 @@ const key = (x, y) => x + "," + y;
 // Rooms: x0..x1, y0..y1 in tiles (inclusive)
 const ROOM_NAMES = (window.PO && window.PO.strings && window.PO.strings.rooms) || {};
 const roomName = (theme, key) => (ROOM_NAMES[theme] && ROOM_NAMES[theme][key]) || ROOM_NAMES[key] || key.toUpperCase();
-const ROOMS = [
-  { key: "kitchen", name: ROOM_NAMES["kitchen"] || "KITCHEN", x0: 0, y0: 2, x1: 6, y1: 8, floor: "tiles" },
-  { key: "office", name: ROOM_NAMES["office"] || "OPEN OFFICE", x0: 8, y0: 2, x1: 21, y1: 16, floor: "wood" },
-  { key: "meeting", name: ROOM_NAMES["meeting"] || "MEETING", x0: 23, y0: 2, x1: 29, y1: 8, floor: "carpet" },
-  { key: "lounge", name: ROOM_NAMES["lounge"] || "LOUNGE", x0: 0, y0: 10, x1: 6, y1: 16, floor: "wood" },
-  { key: "archive", name: ROOM_NAMES["archive"] || "ARCHIVE", x0: 23, y0: 10, x1: 29, y1: 16, floor: "concrete" },
-];
+const ROOMS = POLayout.ROOMS.map((r) => ({ ...r, name: ROOM_NAMES[r.key] || (r.key === "office" ? "OPEN OFFICE" : r.key.toUpperCase()) }));
 
-// Hangout spots: tile, facing, animation (sit = sits on furniture at that tile)
-// `via` = the tile a character must step in from (so nobody climbs over a sofa back or a table)
-const SPOTS = [
-  { key: "coffee", tx: 3, ty: 3, dir: "up", anim: "drink" },
-  { key: "fridge", tx: 5, ty: 3, dir: "up", anim: "stand" },
-  { key: "stoolL", tx: 1, ty: 6, dir: "right", anim: "sitfree", via: [1, 7] },
-  { key: "stoolR", tx: 4, ty: 6, dir: "left", anim: "sitfree", via: [4, 7] },
-  { key: "meetA", tx: 24, ty: 3, dir: "down", anim: "sitfree", via: [24, 2] },
-  { key: "meetB", tx: 26, ty: 3, dir: "down", anim: "sitfree", via: [26, 2] },
-  { key: "meetC", tx: 24, ty: 6, dir: "up", anim: "sitfree", via: [24, 7] },
-  { key: "meetD", tx: 26, ty: 6, dir: "up", anim: "sitfree", via: [26, 7] },
-  { key: "sofaL", tx: 1, ty: 12, dir: "down", anim: "sitfree", via: [1, 13] },
-  { key: "sofaR", tx: 3, ty: 12, dir: "down", anim: "sitfree", via: [3, 13] },
-  { key: "books", tx: 5, ty: 12, dir: "up", anim: "read" },
-  { key: "printer", tx: 27, ty: 14, dir: "up", anim: "think" },
-  { key: "water", tx: 24, ty: 14, dir: "left", anim: "drink" },
-  { key: "window", tx: 20, ty: 2, dir: "up", anim: "stand" },
-  // idle-life spots (see the "idle life" block below): coffee-machine wait, second window, plant watering
-  { key: "brew", tx: 8, ty: 3, dir: "up", anim: "brew" },
-  { key: "window2", tx: 16, ty: 2, dir: "up", anim: "gaze" },
-  { key: "plantK", tx: 6, ty: 7, dir: "down", anim: "water" },
-  { key: "plantM", tx: 23, ty: 7, dir: "down", anim: "water" },
-];
+// Furniture is data (web/layout.js: items {id, type, tx, ty, dir?}); the hangout spots {key, tx, ty, dir, anim, via?}, the meeting places,
+// the blocked tiles, the desks and the event tiles are all derived from those records and live on the Office (this.spots, this.meetingSpots,
+// this.blocked, this.scene). `via` = the tile a character must step in from (so nobody climbs over a sofa back or a table).
 
-// Where people go during a meeting: the four chairs first, then standing places around the table.
-const MEETING_SPOTS = [
-  ...SPOTS.filter((s) => s.key.startsWith("meet")),
-  { key: "meetS1", tx: 25, ty: 3, dir: "down", anim: "stand" },
-  { key: "meetS2", tx: 25, ty: 6, dir: "up", anim: "stand" },
-  { key: "meetS3", tx: 23, ty: 4, dir: "right", anim: "stand" },
-  { key: "meetS4", tx: 28, ty: 4, dir: "left", anim: "stand" },
-  { key: "meetS5", tx: 27, ty: 3, dir: "down", anim: "stand" },
-  { key: "meetS6", tx: 27, ty: 6, dir: "up", anim: "stand" },
-  { key: "meetS7", tx: 28, ty: 6, dir: "left", anim: "stand" },
-  { key: "meetS8", tx: 28, ty: 5, dir: "left", anim: "stand" },
-];
+// Which PROPS slot draws a piece; `t` = the animation clock is handed to it, `kind` = the plant variant.
+const ITEM_DRAW = {
+  counter: { prop: "kitchenCounter", t: true }, fridge: { prop: "fridge" }, roundTable: { prop: "roundTable" }, stool: { prop: "stool" }, bin: { prop: "bin" },
+  plant: { prop: "plant", kind: true }, meetingTable: { prop: "meetingTable" }, sofa: { prop: "sofa" }, coffeeTable: { prop: "coffeeTable" },
+  bookshelf: { prop: "bookshelf" }, lamp: { prop: "lamp", t: true }, cabinets: { prop: "cabinets" }, boxes: { prop: "boxes" },
+  printer: { prop: "printer", t: true }, cooler: { prop: "cooler" }, coffeeStation: { prop: "coffeeStation", t: true },
+};
 
-// Desk layout inside the open office (x 8..21): seat tile columns / rows by head-count
-function deskLayout(n) {
-  const cols = n <= 2 ? [14] : n <= 4 ? [11, 17] : [10, 14, 18];
-  const rowsNeeded = Math.ceil(n / cols.length);
-  const rows = [[8], [5, 11], [4, 9, 14], [3, 7, 11, 15]][Math.min(rowsNeeded, 4) - 1];
-  return { cols, rows };
+// The draw entries of one piece (depth = the row of its feet, like the old hard-coded list).
+function itemDecor(theme, it, out) {
+  const P = (name) => prop(theme, name);
+  const x = it.tx * TILE, y = it.ty * TILE;
+  const sy = (it.ty + (POLayout.TYPES[it.type].sort || 0) + 1) * TILE;
+  if (it.type === "meetingChair") {
+    const dir = it.dir || "down";
+    out.push({ id: it.id, y: sy, draw: (b) => P("meetingChair")(b, x, y, dir, "back") });
+    out.push({ id: it.id, y: sy + 8, draw: (b) => P("meetingChair")(b, x, y, dir, "front") });
+    return;
+  }
+  const d = ITEM_DRAW[it.type];
+  if (!d) return;
+  if (d.t) out.push({ id: it.id, y: sy, draw: (b, t) => P(d.prop)(b, x, y, t) });
+  else if (d.kind) out.push({ id: it.id, y: sy, draw: (b) => P(d.prop)(b, x, y, it.v || 1) });
+  else out.push({ id: it.id, y: sy, draw: (b) => P(d.prop)(b, x, y) });
 }
 
-function buildStaticFor(theme) {
-    const blocked = new Set(), doors = new Set(), decor = [];
-    const block = (x, y) => blocked.add(key(x, y));
-    const add = (x, y, draw) => decor.push({ y: (y + 1) * TILE, draw });
-    const P = (name) => prop(theme, name);
-
-    for (let x = 0; x < COLS; x++) { block(x, 0); block(x, 1); }
-    // interior walls with doors
-    const doorTiles = [[7, 5], [7, 6], [22, 5], [22, 6], [3, 9], [4, 9], [25, 9], [26, 9], [7, 12], [7, 13], [22, 12], [22, 13]];
-    for (const [x, y] of doorTiles) doors.add(key(x, y));
-    for (let y = 2; y < ROWS; y++) { if (!doors.has(key(7, y))) block(7, y); if (!doors.has(key(22, y))) block(22, y); }
-    for (let x = 0; x <= 6; x++) if (!doors.has(key(x, 9))) block(x, 9);
-    for (let x = 23; x < COLS; x++) if (!doors.has(key(x, 9))) block(x, 9);
-
-    // kitchen
-    for (let x = 0; x <= 4; x++) block(x, 2);
-    add(2, 2, (b, t) => P("kitchenCounter")(b, 0, 2 * TILE, t));
-    block(5, 2); add(5, 2, (b) => P("fridge")(b, 5 * TILE, 2 * TILE));
-    block(2, 6); block(3, 6); add(2, 6, (b) => P("roundTable")(b, 2 * TILE, 6 * TILE));
-    add(1, 6, (b) => P("stool")(b, 1 * TILE, 6 * TILE)); add(4, 6, (b) => P("stool")(b, 4 * TILE, 6 * TILE));
-    block(0, 8); add(0, 8, (b) => P("bin")(b, 0, 8 * TILE));
-    block(6, 8); add(6, 8, (b) => P("plant")(b, 6 * TILE, 8 * TILE, 1));
-
-    // meeting room
-    for (let x = 24; x <= 27; x++) for (let y = 4; y <= 5; y++) block(x, y);
-    add(25, 5, (b) => P("meetingTable")(b, 24 * TILE, 4 * TILE));
-    for (const [x, y, dir] of [[24, 3, "down"], [26, 3, "down"], [24, 6, "up"], [26, 6, "up"]]) {
-      add(x, y, (b) => P("meetingChair")(b, x * TILE, y * TILE, dir, "back"));
-      decor.push({ y: (y + 1) * TILE + 8, draw: (b) => P("meetingChair")(b, x * TILE, y * TILE, dir, "front") });
-    }
-    block(29, 2); add(29, 2, (b) => P("plant")(b, 29 * TILE, 2 * TILE, 2));
-    block(23, 8); add(23, 8, (b) => P("plant")(b, 23 * TILE, 8 * TILE, 1));
-
-    // lounge
-    for (let x = 1; x <= 3; x++) block(x, 12);
-    add(2, 12, (b) => P("sofa")(b, 1 * TILE, 12 * TILE));
-    for (let x = 1; x <= 3; x++) block(x, 14);
-    add(2, 14, (b) => P("coffeeTable")(b, 1 * TILE, 14 * TILE));
-    block(5, 11); add(5, 11, (b) => P("bookshelf")(b, 5 * TILE, 11 * TILE));
-    block(0, 10); add(0, 10, (b, t) => P("lamp")(b, 0, 10 * TILE, t));
-    block(6, 16); add(6, 16, (b) => P("plant")(b, 6 * TILE, 16 * TILE, 2));
-    block(0, 16); add(0, 16, (b) => P("plant")(b, 0, 16 * TILE, 1));
-
-    // archive
-    for (let x = 23; x <= 25; x++) block(x, 10);
-    add(24, 10, (b) => P("cabinets")(b, 23 * TILE, 10 * TILE));
-    block(28, 10); block(29, 10); add(28, 10, (b) => P("boxes")(b, 28 * TILE, 10 * TILE));
-    block(27, 13); block(28, 13); add(27, 13, (b, t) => P("printer")(b, 27 * TILE, 13 * TILE, t));
-    block(23, 14); add(23, 14, (b) => P("cooler")(b, 23 * TILE, 14 * TILE));
-    block(29, 16); add(29, 16, (b) => P("plant")(b, 29 * TILE, 16 * TILE, 2));
-
-    // open office extras
-    block(8, 16); add(8, 16, (b) => P("plant")(b, 8 * TILE, 16 * TILE, 2));
-    block(21, 16); add(21, 16, (b) => P("plant")(b, 21 * TILE, 16 * TILE, 2));
-    block(8, 2); add(8, 2, (b, t) => P("coffeeStation")(b, 8 * TILE, 2 * TILE, t));
-    // entrance doormat (walkable)
-    decor.push({ y: ENTRANCE.ty * TILE + 2, draw: (b) => { const x = ENTRANCE.tx * TILE + 2, y = ENTRANCE.ty * TILE + 14; outlineRect(b, x, y, 28, 16, "#6b4a2b"); b.fillStyle = "#8a6a3b"; for (let i = 0; i < 6; i++) b.fillRect(x + 2, y + 2 + i * 2.5, 24, 1); b.fillStyle = "#c9a781"; b.fillRect(x + 8, y + 6, 12, 4); } });
-      return { blocked, doors, decor };
+// Blocked tiles, doors and depth-sorted draw entries for a theme and a list of furniture (default: the classic layout without desks).
+function buildStaticFor(theme, items = POLayout.defaultItems()) {
+  const built = POLayout.build(items);
+  const doors = new Set(POLayout.DOORS.map(([x, y]) => key(x, y)));
+  const decor = [];
+  for (const it of items) if (it.type !== "desk") itemDecor(theme, it, decor);
+  // entrance doormat (walkable)
+  decor.push({ y: ENTRANCE.ty * TILE + 2, draw: (b) => { const x = ENTRANCE.tx * TILE + 2, y = ENTRANCE.ty * TILE + 14; outlineRect(b, x, y, 28, 16, "#6b4a2b"); b.fillStyle = "#8a6a3b"; for (let i = 0; i < 6; i++) b.fillRect(x + 2, y + 2 + i * 2.5, 24, 1); b.fillStyle = "#c9a781"; b.fillRect(x + 8, y + 6, 12, 4); } });
+  return { blocked: built.blocked, doors, decor, build: built };
 }
 
 class Office {
@@ -147,14 +75,22 @@ class Office {
     this.blocked = new Set();
     this.doors = new Set();
     this.decor = [];
+    this.layoutDoc = null;      // the saved furniture layout (null = the classic one)
+    this.scene = null;          // resolved layout: items, derived build, who sits at which desk
+    this.spots = [];            // hangout spots derived from the furniture
+    this.meetingSpots = [];     // meeting chairs first, then standing places
+    this.freeSeats = new Set(); // seat tiles of desks nobody sits at
+    this.rosterIds = [];
+    this.editing = false;
     this.theme = "default";
     this.particles = [];
     this.last = performance.now();
     this.labelEls = new Map();
     this.roomEls = [];
-    canvas.addEventListener("mousemove", (e) => this.onMove(e));
+    canvas.addEventListener("mousemove", (e) => { if (!this.editing) this.onMove(e); });
     canvas.addEventListener("mouseleave", () => { this.hovered = null; canvas.classList.remove("hover"); });
     canvas.addEventListener("click", (e) => {
+      if (this.editing) return; // the layout editor owns the pointer
       const id = this.hitTest(e);
       if (id) this.react(id); // little hop / wave + balloon; never blocks the panel below
       if (id && this.clickHandler) this.clickHandler(id);
@@ -171,17 +107,28 @@ class Office {
     if (next === this.theme) return;
     this.theme = next;
     this.buildStatic();
-    for (const e of this.emps) for (let dx = -1; dx <= 1; dx++) this.blocked.add(key(e.seat.tx + dx, e.seat.ty + 1));
     for (const { r, el } of this.roomEls) el.textContent = roomName(this.theme, r.key);
     this.labelsEl.classList.toggle("dark", !!(THEMES[this.theme] || {}).dark);
   }
 
   // ---------- layout ----------
+  // Everything static comes from the furniture records: blocked tiles, decor draw list, spots, meeting places, desks.
   buildStatic() {
-    const st = buildStaticFor(this.theme);
+    const sc = POLayout.scene(this.layoutDoc, this.rosterIds);
+    const st = buildStaticFor(this.theme, sc.items);
+    this.scene = sc;
     this.blocked = st.blocked;
     this.doors = st.doors;
+    this.baseDecor = st.decor;
     this.decor = st.decor.concat(progressDecor(this.progress || 0));
+    // spots that did not change keep their object (people standing at them are undisturbed)
+    const pool = new Map([...this.spots, ...this.meetingSpots].map((s) => [s.key, s]));
+    const same = (a, c) => a.tx === c.tx && a.ty === c.ty && a.dir === c.dir && a.anim === c.anim && a.group === c.group && a.wk === c.wk && JSON.stringify(a.via) === JSON.stringify(c.via);
+    const fix = (s) => { const o = pool.get(s.key); return o && same(o, s) ? o : s; };
+    this.spots = sc.build.spots.map(fix);
+    this.meetingSpots = sc.build.meetingSpots.map(fix);
+    const seated = new Set(sc.assign.values());
+    this.freeSeats = new Set(sc.build.desks.filter((d) => !seated.has(d.id)).map((d) => key(d.tx, d.ty)));
   }
 
   // Decor unlocked by finished work: only the decor list is rebuilt, and only when the count changes.
@@ -189,20 +136,30 @@ class Office {
     n = Math.max(0, Math.min(5, Math.floor(Number(n)) || 0));
     if (n === (this.progress || 0)) return;
     this.progress = n;
-    this.decor = buildStaticFor(this.theme).decor.concat(progressDecor(n));
+    this.decor = (this.baseDecor || []).concat(progressDecor(n));
+  }
+
+  // The seat of a colleague: the tile in front of their desk. Without a desk (nothing fits) a free tile near the entrance with just a chair.
+  seatFor(id) {
+    const sc = this.scene, deskId = sc.assign.get(id);
+    const d = deskId && sc.build.desks.find((x) => x.id === deskId);
+    if (d) return { tx: d.tx, ty: d.ty, desk: d.id };
+    const taken = new Set([...this.emps.filter((e) => e.id !== id && e.seat).map((e) => key(e.seat.tx, e.seat.ty)), ...sc.build.spots.map((s) => key(s.tx, s.ty))]);
+    const [tx, ty] = POLayout.nearestFree(sc.build, [ENTRANCE.tx, ENTRANCE.ty - 1], taken) || [ENTRANCE.tx, ENTRANCE.ty - 1];
+    return { tx, ty, desk: null, none: true };
   }
 
   setEmployees(list, entering = null) {
-    const n = Math.min(list.length, 12);
-    const { cols, rows } = deskLayout(n);
+    const seated = list.slice(0, POLayout.MAX_EMP);
+    this.rosterIds = seated.map((e) => e.id);
     this.buildStatic();
     const prev = new Map(this.emps.map((e) => [e.id, e]));
-    this.emps = list.slice(0, 12).map((e, i) => {
-      const seat = { tx: cols[i % cols.length], ty: rows[Math.floor(i / cols.length)] };
-      for (let dx = -1; dx <= 1; dx++) this.blocked.add(key(seat.tx + dx, seat.ty + 1));
+    this.emps = seated.map((e, i) => {
+      const seat = this.seatFor(e.id);
       const look = e.look || { skin: "#f1c9a5", hair: "#3b2a20", hairStyle: "short", top: e.color, bottom: "#2f3548" };
       const old = prev.get(e.id);
       if (old && old.seat.tx === seat.tx && old.seat.ty === seat.ty) {
+        old.seat = seat;
         Object.assign(old, { name: e.name, role: e.role, color: e.color, look, status: e.status || old.status });
         return old;
       }
@@ -245,6 +202,87 @@ class Office {
       this.labelEls.set(e.id, el);
     }
     this.placeRoomLabels();
+    this.warnDesks();
+  }
+
+  // ---------- layout changes (the editor, another browser, a new hire) ----------
+  // Stored only: setEmployees builds the scene right after (switching offices).
+  setLayoutDoc(doc) { this.layoutDoc = doc || null; }
+
+  // A new furniture layout while the office is running.
+  applyLayout(doc) {
+    this.layoutDoc = doc || null;
+    this.relayout();
+  }
+
+  // Rebuild everything derived from the furniture, then make sure every colleague still has somewhere valid to be:
+  // spots that vanished or moved are let go, walkers whose path is now blocked are re-routed, anybody standing where a piece
+  // now stands is set down on the nearest free tile, and a moved desk is walked to.
+  relayout() {
+    const now = performance.now();
+    const oldSeats = new Map(this.emps.map((e) => [e.id, e.seat]));
+    this.rosterIds = this.emps.map((e) => e.id);
+    if (this.evt && this.evt.kind !== "blackout") this.endEvent(now); // its table / printer may be gone
+    this.buildStatic();
+    const alive = new Set([...this.spots, ...this.meetingSpots]);
+    const redo = [];
+    for (const e of this.emps) {
+      const seat = this.seatFor(e.id), was = oldSeats.get(e.id);
+      let dirty = !was || was.tx !== seat.tx || was.ty !== seat.ty;
+      e.seat = seat;
+      if (e.spot && !e.spot.evt && !alive.has(e.spot)) { e.spot = null; dirty = true; }
+      if (e.napSpot && !alive.has(e.napSpot)) e.napSpot = null;
+      if (e.errand && this.blocked.has(key(e.errand.tx, e.errand.ty))) { e.errand = null; dirty = true; }
+      if (this.standsOnFurniture(e)) { this.setDown(e); dirty = true; }
+      else if (e.path.length && this.pathBroken(e)) { e.path = []; dirty = true; }
+      if (dirty) { e.spotTalk = null; e.lifeSpot = null; this.endAct(e, now, false); redo.push(e); }
+    }
+    for (const e of redo) this.resume(e, now);
+    if (this.meetingOn) this.assignMeetingSpots();
+    this.warnDesks();
+  }
+
+  standsOnFurniture(e) {
+    if (e.ty >= ROWS || e.tx < 0 || e.ty < 0 || e.tx >= COLS) return false; // still outside, walking in
+    const k = key(e.tx, e.ty);
+    if (!this.blocked.has(k)) return false;
+    return !(e.spot && e.spot.tx === e.tx && e.spot.ty === e.ty); // sitting on the sofa is fine
+  }
+
+  pathBroken(e) {
+    const goal = e.spot ? key(e.spot.tx, e.spot.ty) : key(e.seat.tx, e.seat.ty);
+    return e.path.some((p, i) => {
+      const k = key(p.tx, p.ty);
+      return (this.blocked.has(k) || this.freeSeats.has(k)) && !(i === e.path.length - 1 && k === goal);
+    });
+  }
+
+  // Put somebody on the nearest free, reachable tile.
+  setDown(e) {
+    const taken = new Set(this.emps.filter((o) => o !== e).map((o) => key(o.tx, o.ty)));
+    const [x, y] = POLayout.nearestFree(this.scene.build, [e.tx, e.ty], taken) || [ENTRANCE.tx, ENTRANCE.ty];
+    Object.assign(e, { tx: x, ty: y, x: x * TILE, y: y * TILE, path: [], spot: null, napSpot: null, dir: "down", anim: "stand", restUntil: performance.now() + rand(800, 2500) });
+  }
+
+  // Back to what they should be doing after their surroundings changed.
+  resume(e, now) {
+    if (e.spot && !e.spot.evt) {
+      if (e.tx === e.spot.tx && e.ty === e.spot.ty && !e.path.length) return;
+      if (this.goToSpot(e, e.spot)) return;
+      e.spot = null; e.napSpot = null;
+    }
+    if (e.meet) return; // assignMeetingSpots gives them a place
+    if (e.status === "sick") { this.restOnSofa(e); return; }
+    if (this.atSeat(e)) return;
+    if (!this.goTo(e, e.seat.tx, e.seat.ty)) { this.setDown(e); this.goTo(e, e.seat.tx, e.seat.ty); }
+    e.restUntil = Math.max(e.restUntil, now + 1000);
+  }
+
+  // Says so once when somebody has no desk to sit at (nothing fits any more).
+  warnDesks() {
+    const miss = this.scene ? this.scene.missing.join(",") : "";
+    if (miss && miss !== this.warnedDesks && typeof toast === "function" && typeof t === "function") toast(t("ui.layout.noDesk"));
+    this.warnedDesks = miss;
   }
 
   placeRoomLabels() {
@@ -312,7 +350,7 @@ class Office {
   // Off to the lounge sofa (or any free seat) to rest until it passes; stays at the desk if nothing is free.
   restOnSofa(e) {
     const taken = new Set(this.emps.filter((o) => o !== e && o.spot).map((o) => o.spot.key));
-    const s = SPOTS.find((x) => x.key.startsWith("sofa") && !taken.has(x.key)) || SPOTS.find((x) => x.anim === "sitfree" && !taken.has(x.key));
+    const s = this.spots.find((x) => x.group === "sofa" && !taken.has(x.key)) || this.spots.find((x) => x.anim === "sitfree" && !taken.has(x.key));
     if (s && this.goToSpot(e, s)) e.spot = s;
     else { e.spot = null; this.goTo(e, e.seat.tx, e.seat.ty); }
   }
@@ -335,17 +373,22 @@ class Office {
         e.spot = null;
         this.goTo(e, e.seat.tx, e.seat.ty);
         e.restUntil = now + rand(9000, 22000);
-      } else if (this.meetingOn && e.spot && e.spot.key.startsWith("meet")) {
+      } else if (this.meetingOn && e.spot && e.spot.meet) {
         // somebody idling in the meeting room makes way
         e.spot = null;
         this.goTo(e, e.seat.tx, e.seat.ty);
         e.restUntil = now + rand(9000, 22000);
       }
     }
+    this.assignMeetingSpots();
+  }
+
+  // Everybody in the meeting without a place takes the first free chair / standing spot (chairs come first).
+  assignMeetingSpots() {
     for (const e of this.emps) {
       if (!e.meet || e.spot) continue;
       const taken = new Set(this.emps.filter((o) => o !== e && o.spot).map((o) => o.spot.key));
-      const s = MEETING_SPOTS.find((x) => !taken.has(x.key));
+      const s = this.meetingSpots.find((x) => !taken.has(x.key));
       if (s && this.goToSpot(e, s)) e.spot = s;
     }
   }
@@ -385,6 +428,7 @@ class Office {
   isBlocked(x, y, self) {
     if (x < 0 || y < 0 || x >= COLS || y >= ROWS) return true;
     if (this.blocked.has(key(x, y))) return true;
+    if (this.freeSeats.has(key(x, y))) return true; // the chair of an empty desk
     for (const o of this.emps) {
       if (o === self) continue;
       if (o.seat.tx === x && o.seat.ty === y) return true;
@@ -430,7 +474,7 @@ class Office {
 
   freeSpot(e) {
     const taken = new Set(this.emps.filter((o) => o !== e && o.spot).map((o) => o.spot.key));
-    const options = SPOTS.filter((s) => !taken.has(s.key) && !(this.meetingOn && s.key.startsWith("meet")));
+    const options = this.spots.filter((s) => !taken.has(s.key) && !(this.meetingOn && s.meet));
     return options.length ? this.pickSpot(e, options) : null;
   }
 
@@ -559,11 +603,19 @@ class Office {
     drawFloors(b, this.theme);
     drawWalls(b, this.blocked, this.doors, t, this.theme);
     const items = [];
-    for (const d of this.decor) items.push({ y: d.y, draw: () => d.draw(b, t) });
+    const dim = this.editing ? this.editorDim : null; // the piece being dragged stays faded where it was
+    const faded = (id, fn) => (dim && id === dim ? () => { b.save(); b.globalAlpha = 0.3; fn(); b.restore(); } : fn);
+    for (const d of this.decor) items.push({ y: d.y, draw: faded(d.id, () => d.draw(b, t)) });
+    // every desk is drawn (an empty one too); the colleague at it is the one whose seat points at it
+    const sitting = new Map(this.emps.filter((e) => e.seat.desk).map((e) => [e.seat.desk, e]));
+    for (const d of this.scene.build.desks) {
+      const feet = (d.ty + 1) * TILE;
+      const who = sitting.get(d.id) || { seat: d, tx: -1, ty: -1, path: [], status: "idle", color: "#8b8f9e", look: {}, seed: 0, anim: "stand" };
+      items.push({ y: feet - 24, draw: faded(d.id, () => drawChair(b, d.tx * TILE, feet)) });
+      items.push({ y: feet + TILE + 6, draw: faded(d.id, () => drawDesk(b, who, t)) });
+    }
     for (const e of this.emps) {
-      const seatFeet = (e.seat.ty + 1) * TILE;
-      items.push({ y: seatFeet - 24, draw: () => drawChair(b, e.seat.tx * TILE, seatFeet) });
-      items.push({ y: seatFeet + TILE + 6, draw: () => drawDesk(b, e, t) });
+      if (e.seat.none) { const feet = (e.seat.ty + 1) * TILE; items.push({ y: feet - 24, draw: () => drawChair(b, e.seat.tx * TILE, feet) }); }
       const frame = Math.floor(e.walkDist / 9) % 4;
       const seated = e.anim === "sit" || e.anim === "type" || e.anim === "wave" || e.anim === "slump" || e.anim === "sip" || LIFE_SEATED.includes(e.anim);
       const sitFree = e.anim === "sitfree" || e.anim === "dozefree";
@@ -586,7 +638,8 @@ class Office {
     for (const it of this.eventItems(t)) items.push(it);
     items.sort((a, c) => a.y - c.y);
     for (const it of items) it.draw(b);
-    const occupied = new Set(this.emps.filter((e) => e.spot && !e.path.length).map((e) => e.spot.key));
+    if (this.editing && this.editorDraw) this.editorDraw(b, t);
+    const occupied = new Map(this.emps.filter((e) => e.spot && !e.path.length).map((e) => [e.spot.key, e.spot.group || e.spot.key]));
     for (const e of this.emps) { drawOverhead(b, e, t, occupied); drawLifeOverhead(b, e, t); }
     for (const e of this.emps) if (this.isNapping(e)) drawZzz(b, e, t);
     drawDayNight(b, t, this.evt);
@@ -662,7 +715,7 @@ Object.assign(Office.prototype, {
   // weighted pick: the personality decides where somebody likes to hang out
   pickSpot(e, options) {
     const w = TRAIT_LIFE[traitOf(e)].spots;
-    const ws = options.map((s) => w[s.key] || 1);
+    const ws = options.map((s) => w[s.wk || s.key] || 1);
     let r = Math.random() * ws.reduce((a, c) => a + c, 0);
     for (let i = 0; i < options.length; i++) { r -= ws[i]; if (r <= 0) return options[i]; }
     return options[options.length - 1];
@@ -836,7 +889,7 @@ Object.assign(Office.prototype, {
     const trait = traitOf(e);
     if (trait === "coffee" && e.anim === "sit" && e.sipAt - now > 18000) e.sipAt = now + rand(5000, 15000);
     // printer: pick up the page and read it
-    if (e.spot && e.spot.key === "printer" && e.lifeSpot !== e.spot) {
+    if (e.spot && e.spot.wk === "printer" && e.lifeSpot !== e.spot) {
       e.lifeSpot = e.spot;
       if (Math.random() < (trait === "perfectionist" ? 1 : 0.7)) { e.act = { kind: "paper", anim: "paper", dir: "down", t0: now, until: now + rand(5000, 8500), spot: e.spot }; return; }
     }
@@ -870,7 +923,7 @@ Object.assign(Office.prototype, {
       const st = e.spotTalk;
       if (st.n < 2 && now >= st.at) {
         st.n++; st.at = now + rand(6000, 14000);
-        if (Math.random() < 0.35) this.say(e, lifePick((S.spot || {})[SPOT_LINE[sp.key]]));
+        if (Math.random() < 0.35) this.say(e, lifePick((S.spot || {})[SPOT_LINE[sp.wk || sp.key]]));
       }
       return;
     }
@@ -1780,9 +1833,9 @@ function drawOverhead(b, e, t, occupied) {
     b.fillStyle = "#0b3a1e";
     for (let i = 0; i < 4; i++) b.fillRect(cx - 7 + i, top - 11 + bob + i, 2, 2);
     for (let i = 0; i < 7; i++) b.fillRect(cx - 3 + i, top - 8 + bob - i, 2, 2);
-  } else if ((e.anim === "chat" && e.spot && !e.act) || (e.anim === "sitfree" && e.spot && (e.spot.key.startsWith("meet") || e.spot.key.startsWith("sofa") || e.spot.key.startsWith("stool")) && e.napSpot !== e.spot)) {
-    const group = e.spot.key.replace(/[A-Z]$/, "");
-    const others = [...occupied].filter((k) => k !== e.spot.key && k.replace(/[A-Z]$/, "") === group);
+  } else if ((e.anim === "chat" && e.spot && !e.act) || (e.anim === "sitfree" && e.spot && ["meet", "sofa", "stool"].includes(e.spot.group) && e.napSpot !== e.spot)) {
+    const group = e.spot.group || e.spot.key;
+    const others = [...occupied].filter(([k, g]) => k !== e.spot.key && g === group);
     if (others.length) {
       const phase = Math.floor(t / 1500 + e.seed) % 3 === 0;
       if (phase) { bubble(24, 12, "#fff"); b.fillStyle = "#2b2b2b"; for (let i = 0; i < 3; i++) b.fillRect(cx - 8 + i * 6, top - 8 + bob, 3, 3); }
@@ -3734,8 +3787,8 @@ function progressDecor(n) {
 const officeEventsOn = () => { try { return localStorage.getItem("po.events") !== "0"; } catch { return true; } };
 
 const EVENT_KINDS = ["pizza", "cake", "printer", "blackout"];
-const KITCHEN_TILES = [[2, 5], [3, 5], [4, 5], [1, 5], [2, 7], [3, 7], [5, 5], [4, 7]];
-const PRINTER_TILES = [[27, 14], [26, 14], [28, 14], [26, 15], [27, 15]];
+// Where people gather comes from the furniture (POLayout events): the tiles around a round table (pizza / cake), around a printer (jam).
+// No table or no printer in the office: that event is simply skipped.
 
 Object.assign(Office.prototype, {
   isNapping(e) { return !!e.napSpot && e.napSpot === e.spot && e.status === "idle" && !e.path.length; },
@@ -3744,7 +3797,7 @@ Object.assign(Office.prototype, {
   tryNap(e, now) {
     if (!isNight() || e.meet || this.evt || Math.random() > 0.5) return false;
     const taken = new Set(this.emps.filter((o) => o !== e && o.spot).map((o) => o.spot.key));
-    const s = SPOTS.find((x) => x.key.startsWith("sofa") && !taken.has(x.key));
+    const s = this.spots.find((x) => x.group === "sofa" && !taken.has(x.key));
     if (!s || !this.goToSpot(e, s)) return false;
     e.spot = s; e.napSpot = s;
     return true;
@@ -3786,8 +3839,11 @@ Object.assign(Office.prototype, {
         if (text && i < 5) e.sayLater = { at: now + 500 + i * 700 + rand(0, 400), text };
       });
     } else {
-      const tiles = kind === "printer" ? PRINTER_TILES : KITCHEN_TILES;
+      const sites = (kind === "printer" ? this.scene.build.events.printer : this.scene.build.events.food).filter((s) => s.tiles.length).sort(() => Math.random() - 0.5);
       let n = 0;
+      for (const site of sites) {
+      ev.site = site;
+      const tiles = site.tiles;
       for (const e of idle.sort(() => Math.random() - 0.5)) {
         if (n >= (kind === "printer" ? 2 : 4)) break;
         const tile = tiles.find(([x, y]) => !this.isBlocked(x, y, e));
@@ -3801,6 +3857,8 @@ Object.assign(Office.prototype, {
           if (text) e.sayLater = { at: now + 300 + n * 800 + rand(0, 500), text };
           n++;
         } else e.spot = was;
+      }
+      if (n) break;
       }
       if (!n) { this.evt = null; return false; }
     }
@@ -3817,9 +3875,10 @@ Object.assign(Office.prototype, {
   // Table / printer props, depth-sorted with the rest of the scene.
   eventItems(t) {
     const ev = this.evt;
-    if (!ev || ev.kind === "blackout") return [];
-    if (ev.kind === "printer") return [{ y: 14 * TILE + 24, draw: (b) => drawPrinterJam(b, 27 * TILE, 13 * TILE, t) }];
-    return [{ y: 6 * TILE + 30, draw: (b) => (ev.kind === "pizza" ? drawPizza : drawCake)(b, 3 * TILE, 6 * TILE + 10, t) }];
+    if (!ev || ev.kind === "blackout" || !ev.site) return [];
+    const s = ev.site;
+    if (ev.kind === "printer") return [{ y: (s.ty + 1) * TILE + 24, draw: (b) => drawPrinterJam(b, s.tx * TILE, s.ty * TILE, t) }];
+    return [{ y: s.ty * TILE + 30, draw: (b) => (ev.kind === "pizza" ? drawPizza : drawCake)(b, (s.tx + 1) * TILE, s.ty * TILE + 10, t) }];
   },
 });
 

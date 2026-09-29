@@ -37,6 +37,8 @@ export function loadOffice({ files = ["web/layout.js", "web/office.js"] } = {}) 
   sandbox.window = sandbox;
   const ctx = vm.createContext(sandbox);
   vm.runInContext("(() => { let s = 12345; Math.random = () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296); globalThis.__reseed = () => { s = 12345; }; })()", ctx);
+  // a fixed clock: some props draw the current time
+  vm.runInContext("(() => { const R = Date, fixed = new R(2026, 0, 5, 10, 15).getTime(); globalThis.Date = class extends R { constructor(...a) { if (a.length) super(...a); else super(fixed); } static now() { return fixed; } }; })()", ctx);
   for (const f of files) {
     if (!fs.existsSync(path.join(ROOT, f))) continue;
     vm.runInContext(fs.readFileSync(path.join(ROOT, f), "utf8"), ctx, { filename: f });

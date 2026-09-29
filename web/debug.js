@@ -43,7 +43,7 @@
   group("Durum", ["idle", "working", "waiting", "error", "sick"].map((s) => [s, () => { const e = emp(); if (e.status === s) office.setStatus(e.id, "idle"); office.setStatus(e.id, s); }]));
   group("2) Masada mikro hareket", (typeof MICRO_KINDS !== "undefined" ? MICRO_KINDS : []).map((k) => [k, () => { const e = emp(); atDesk(e, () => { e.micro = { kind: k, t0: now() }; }); }]));
   group("Masada boşta", ["stretch", "yawn", "doze"].map((k) => [k, () => { const e = emp(); atDesk(e, () => { e.act = { kind: k, anim: k, t0: now(), until: now() + (k === "doze" ? 8000 : 2300), spot: null }; }); }]));
-  group("3) Spot'a gönder", SPOTS.filter((s) => !s.key.startsWith("meet")).map((s) => [s.key, () => { const e = emp(); office.setStatus(e.id, "idle"); e.act = null; if (office.goToSpot(e, s)) { e.spot = s; e.restUntil = now() + 60000; } }]));
+  group("3) Spot'a gönder", POLayout.build(POLayout.defaultItems()).spots.filter((s) => !s.meet).map((s) => [s.key, () => { const e = emp(), sp = office.spots.find((x) => x.key === s.key); if (!sp) throw new Error("bu spot yok (eşyası silinmiş olabilir)"); office.setStatus(e.id, "idle"); e.act = null; if (office.goToSpot(e, sp)) { e.spot = sp; e.restUntil = now() + 60000; } }]));
   const pair = () => { const a = emp(), b = office.emps.find((x) => x !== a); if (!b) return null; for (const x of [a, b]) { office.setStatus(x.id, "idle"); x.act = null; } return [a, b]; };
   group("Sohbet / tepki", [
     ["Sohbet (bu + sıradaki)", () => { const p = pair(); if (p) office.startChat(p[0], p[1], now()); }],

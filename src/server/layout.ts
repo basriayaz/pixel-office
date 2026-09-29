@@ -8,10 +8,10 @@ import { isObject, readJsonSafe, removeWithBackup, writeJsonAtomicSync } from ".
 // No file = the classic layout. The geometry rules (walls, doors, overlap, reachability of every desk and hangout spot, a desk for
 // everybody) live in web/layout.js, the same file the browser runs; the server loads it here and checks every layout it is sent.
 export interface LayoutItem { id: string; type: string; tx: number; ty: number; dir?: string; v?: number; water?: boolean; emp?: string }
-export interface LayoutDoc { v: 1; items: LayoutItem[] }
+export interface LayoutDoc { v: 1; items: LayoutItem[]; walls?: string[] } // walls: the themes whose wall decor is stored in items
 interface Lib {
   MAX_EMP: number;
-  sanitize(doc: unknown): { ok: boolean; items?: LayoutItem[]; error?: string };
+  sanitize(doc: unknown): { ok: boolean; items?: LayoutItem[]; walls?: string[]; error?: string };
   check(items: LayoutItem[], o: { empCount: number }): { ok: boolean; errors: Array<{ code: string; id?: string | null }> };
   ensureDesks(items: LayoutItem[], ids: string[]): { items: LayoutItem[]; changed: boolean; missing: string[] };
 }
@@ -49,7 +49,7 @@ export class OfficeLayout {
     if (!s.ok || !s.items) return { ok: false, error: `schema:${s.error ?? "shape"}`, codes: [] };
     const r = g.check(s.items, { empCount: Math.min(empIds.length, g.MAX_EMP) });
     if (!r.ok) return { ok: false, error: r.errors[0]?.code ?? "invalid", codes: [...new Set(r.errors.map((e) => e.code))] };
-    return { ok: true, doc: { v: 1, items: s.items } };
+    return { ok: true, doc: { v: 1, items: s.items, ...(s.walls ? { walls: s.walls } : {}) } };
   }
 
   set(doc: LayoutDoc | null) {
@@ -64,7 +64,7 @@ export class OfficeLayout {
     try {
       const r = geometry().ensureDesks(this.doc.items, empIds);
       if (!r.changed) return false;
-      this.set({ v: 1, items: r.items });
+      this.set({ ...this.doc, items: r.items }); // (keeps `walls`)
       return true;
     } catch (err) { console.error("[pixel-office] layout: could not add desks:", err); return false; }
   }

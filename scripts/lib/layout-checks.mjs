@@ -3,6 +3,64 @@ import assert from "node:assert/strict";
 
 const plant = (id, tx, ty) => ({ id, type: "plant", tx, ty, v: 1 });
 
+// Wall decor: movable pieces on the top wall band, one arrangement per theme.
+export function runWalls(P) {
+  const ids = ["a", "b", "c"], themes = Object.keys(P.WALL);
+  const plain = P.scene(null, ids).items; // (no theme: no wall decor)
+  const codes = (items) => [...new Set(P.check(items, { empCount: 3 }).errors.map((e) => e.code))];
+  for (const th of themes) {
+    const items = P.scene(null, ids, th).items, wall = P.wallOf(items, th);
+    assert.deepEqual(P.check(items, { empCount: 3 }).errors, [], `${th}: the default wall decor is valid`);
+    assert.ok(wall.length >= 5, `${th}: has wall decor`);
+    assert.equal(P.wallOrder(th).length, Object.keys(P.WALL[th]).length, `${th}: one palette entry per piece`);
+    assert.deepEqual([...P.build(items).blocked].sort(), [...P.build(plain).blocked].sort(), `${th}: wall decor blocks no floor tile`);
+    assert.deepEqual(P.build(items).spots.map((s) => s.key).sort(), P.build(plain).spots.map((s) => s.key).sort(), `${th}: and creates no spots`);
+    for (const it of wall) assert.equal(it.ty, 0);
+    assert.deepEqual(P.sanitize(P.toDoc(items, [th])).ok, true, `${th}: schema accepts it`);
+    assert.equal(P.wallOf(P.scene(null, ids, "default").items, th).length, th === "default" ? wall.length : 0, `${th}: other themes' decor is not in the scene`);
+  }
+  const base = P.scene(null, ids, "default").items;
+  const piece = (id) => base.find((i) => i.id === id);
+  const move = (id, tx, ty = 0) => base.map((i) => (i.id === id ? { ...i, tx, ty } : i));
+  // windows are part of the wall; pieces stay inside the band and off each other
+  for (const tx of [9, 10, 11, 17, 18, 19]) assert.ok(codes(move("default_poster", tx)).includes("window"), `poster over the window at ${tx}`);
+  assert.ok(codes(move("default_poster", 12)).length === 0 && codes(move("default_poster", 16)).length === 0, "right next to a window is fine");
+  assert.ok(codes(move("default_tv", 27)).includes("wallEdge"), "a screen hanging off the right edge");
+  assert.ok(codes(move("default_poster", -1)).includes("wallEdge") && codes(move("default_poster", 30)).includes("wallEdge"));
+  assert.ok(codes(move("default_poster", 13, 3)).includes("wallEdge"), "a wall piece on the floor");
+  assert.ok(codes(move("default_poster", 15)).includes("wallOverlap"), "poster on the clock");
+  assert.ok(codes(move("default_cabinets", 1)).length === 0, "sliding the cabinets along is fine");
+  assert.ok(codes([...base, { id: "default_clock2", type: "default_clock", tx: 2, ty: 0 }]).includes("wallOverlap"), "a copy on top of the cabinets");
+  assert.ok(codes([...base, { id: "default_clock2", type: "default_clock", tx: 14, ty: 0 }]).length === 0, "a copy in the gap");
+  // another theme's pieces sleep: same tiles are fine, and they keep being checked on their own
+  const asleep = [...base, ...P.defaultWall("football")];
+  assert.deepEqual(codes(asleep), [], "two themes may hang on the same tiles");
+  assert.ok(codes([...asleep, { id: "football_clock2", type: "football_clock", tx: 13, ty: 0 }]).includes("wallOverlap"), "but not two pieces of one theme");
+  // adding / moving with the same search the editor uses
+  const spot = P.findPlace(base, { id: P.nextId(base, "default_clock"), type: "default_clock" }, [12, 0], { empCount: 3 });
+  assert.ok(spot && spot.ty === 0 && P.check([...base, spot], { empCount: 3 }).ok, "findPlace hangs a wall piece on the wall");
+  assert.equal(spot.tx, 12, "as near as it can");
+  let crowded = base;
+  for (let i = 0; i < 40; i++) { const p = P.findPlace(crowded, { id: P.nextId(crowded, "default_clock"), type: "default_clock" }, [14, 0], { empCount: 3 }); if (!p) break; crowded = [...crowded, p]; }
+  assert.ok(crowded.length > base.length + 3 && crowded.length < base.length + 40, "the wall fills up, then there is no room");
+  assert.equal(P.findPlace(crowded, { id: "zz", type: "default_tv" }, [14, 0], { empCount: 3 }), null, "a big piece finds no room");
+  assert.deepEqual(P.tilesOf(piece("default_tv")).length, 8, "a 4-tile screen highlights both rows of 4 tiles");
+  // where the decor of a theme is stored: `walls` lists the themes; the others get their default arrangement
+  const stored = P.toDoc(plain.concat(P.defaultWall("football").filter((i) => i.id !== "football_banner")), ["football"]);
+  assert.equal(P.wallOf(P.scene(stored, ids, "football").items, "football").length, 5, "a stored arrangement is used as it is");
+  const emptied = P.toDoc(plain, ["football"]);
+  assert.equal(P.wallOf(P.scene(emptied, ids, "football").items, "football").length, 0, "a theme whose walls were all taken down stays bare");
+  assert.equal(P.wallOf(P.scene(emptied, ids, "gothic").items, "gothic").length, 8, "while another theme starts from its default");
+  assert.equal(P.wallOf(P.scene(P.toDoc(plain), ids, "football").items, "football").length, 6, "no marker: the default arrangement");
+  assert.deepEqual(P.sanitize(P.toDoc(plain, ["football", "football", "dream"])).walls, ["football", "dream"], "markers are kept, once");
+  assert.equal(P.sanitize(P.toDoc(plain)).walls, undefined);
+  // repair moves a wall piece along the wall
+  const bad = [...base, { id: "default_clock2", type: "default_clock", tx: 2, ty: 0 }];
+  const fixed = P.repair(bad, 3);
+  assert.ok(fixed && P.check(fixed, { empCount: 3 }).ok && fixed.find((i) => i.id === "default_clock2").ty === 0, "repair keeps a wall piece on the wall");
+  console.log("layout wall decor ok:", themes.length, "themes");
+}
+
 export function runValidation(P) {
   const ids3 = ["a", "b", "c"];
   const base = () => P.scene(null, ids3).items;
@@ -72,7 +130,10 @@ export function runValidation(P) {
     ["float tile", { v: 1, items: [plant("x", 1.5, 1)] }], ["huge tile", { v: 1, items: [plant("x", 99, 1)] }], ["string tile", { v: 1, items: [{ ...plant("x", 1, 1), tx: "1" }] }],
     ["bad id", { v: 1, items: [plant("x y", 1, 1)] }], ["proto id", { v: 1, items: [plant("__proto__;", 1, 1)] }],
     ["bad dir", { v: 1, items: [{ id: "s", type: "stool", tx: 1, ty: 6, dir: "sideways" }] }],
-    ["too many", { v: 1, items: Array.from({ length: 151 }, (_, i) => plant("p" + i, 1, 1)) }],
+    ["too many", { v: 1, items: Array.from({ length: P.MAX_ITEMS + 1 }, (_, i) => plant("p" + i, 1, 1)) }],
+    ["inherited type", { v: 1, items: [{ id: "x", type: "constructor", tx: 1, ty: 1 }] }], ["proto type", { v: 1, items: [{ id: "x", type: "__proto__", tx: 1, ty: 1 }] }],
+    ["wall piece off the wall band", { v: 1, items: [{ id: "x", type: "default_poster", tx: 3, ty: 3 }] }], ["wall piece over the edge", { v: 1, items: [{ id: "x", type: "default_tv", tx: 27, ty: 0 }] }],
+    ["walls not a list", { ...okDoc, walls: "default" }], ["walls: unknown theme", { ...okDoc, walls: ["nope"] }], ["walls: inherited theme", { ...okDoc, walls: ["constructor"] }],
     ["bad variant", { v: 1, items: [{ ...plant("x", 1, 1), v: 7 }] }], ["emp too long", { v: 1, items: [{ id: "d", type: "desk", tx: 12, ty: 5, emp: "x".repeat(81) }] }],
   ]) assert.equal(P.sanitize(doc).ok, false, `schema rejects: ${name}`);
   const cleaned = P.sanitize({ v: 1, items: [{ id: "f", type: "fridge", tx: 5, ty: 2, dir: "up", evil: "x", emp: "a" }] });

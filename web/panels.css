@@ -373,7 +373,7 @@
 .ptable .pmatch { min-width: 120px; font-family: ui-monospace, monospace; }
 .ptable .pdef td { color: var(--muted); padding: 5px 8px; }
 
-/* ---------- layout editor (web/layouteditor.js): a palette bar under the office while the pencil is on ---------- */
+/* ---------- layout editor (web/layouteditor.js): an action bar under the office and the market drawer while the pencil is on ---------- */
 body.layout-editing .roster { display: none; }
 body.layout-editing #office { touch-action: none; user-select: none; }
 .layout-bar { align-self: stretch; max-width: 980px; width: 100%; margin-inline: auto; margin-top: 12px; padding: 10px 12px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; background: var(--card); border: 1px solid var(--line); border-radius: 12px; }
@@ -384,12 +384,80 @@ body.layout-editing #office { touch-action: none; user-select: none; }
 .lb-msg { flex: 1 1 100%; height: 1.4em; line-height: 1.4em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; color: var(--text); } /* own fixed-height line: the bar must not grow/shrink while a red hint comes and goes, or the office jitters */
 .lb-msg.bad { color: var(--error); }
 .lb-body { display: flex; align-items: flex-end; gap: 12px; flex-wrap: wrap; }
-.lb-palette { flex: 1 1 100%; min-width: 0; display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: thin; }
-.lb-type { flex: none; width: 78px; height: 76px; padding: 4px; display: grid; justify-items: center; align-content: space-between; gap: 2px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--muted); font: inherit; font-size: 10px; line-height: 1.2; cursor: pointer; }
-.lb-type img { max-width: 66px; max-height: 46px; object-fit: contain; image-rendering: pixelated; }
-.lb-type:hover { border-color: var(--accent); color: var(--text); }
-.lb-type:focus-visible, .layout-bar .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
-.lb-type.on { border-color: var(--accent); color: var(--accent); }
+.layout-bar .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 .lb-actions { margin-left: auto; max-width: 100%; justify-content: flex-end; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
 .lb-sep { align-self: stretch; width: 1px; margin: 0 4px; background: var(--line); }
 #btnLayout.active { border-color: var(--accent); color: var(--accent); }
+
+/* ---------- the market drawer (web/layouteditor.js + web/market.js): where new pieces come from ---------- */
+:root { --market-w: clamp(300px, 27vw, 400px); }
+body.layout-editing .stage { padding-right: calc(var(--market-w) + 16px); }
+.market {
+  position: fixed; top: 48px; right: 0; bottom: 0; width: var(--market-w); z-index: 15; box-sizing: border-box;
+  background: var(--panel); border-left: 1px solid var(--line); padding: 12px; display: grid; grid-template-rows: auto auto auto minmax(0, 1fr); gap: 10px;
+  transform: translateX(100%); visibility: hidden; transition: transform .25s ease, visibility 0s .25s;
+}
+body.layout-editing .market { transform: none; visibility: visible; transition-delay: 0s; }
+.mk-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.mk-head b { font-family: "Silkscreen", monospace; font-weight: 400; font-size: 13px; letter-spacing: 1px; color: var(--accent); }
+.mk-coins { font-variant-numeric: tabular-nums; font-size: 13px; padding: 3px 10px; border-radius: 999px; background: var(--bg); border: 1px solid var(--line); color: var(--accent); }
+.mk-search { width: 100%; box-sizing: border-box; background: var(--bg); color: var(--text); border: 1px solid var(--line); border-radius: 8px; padding: 7px 10px; font: inherit; font-size: 12.5px; }
+.mk-search:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.mk-tabs { display: flex; gap: 4px; flex-wrap: wrap; }
+.mk-tab { background: var(--bg); color: var(--muted); border: 1px solid var(--line); border-radius: 999px; padding: 3px 10px; font: inherit; font-size: 11.5px; cursor: pointer; }
+.mk-tab:hover { color: var(--text); border-color: var(--muted); }
+.mk-tab.on { color: #1a1a1a; background: var(--accent); border-color: var(--accent); }
+.mk-tab:focus-visible, .mk-pick:focus-visible, .mk-sell:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.mk-grid { min-height: 0; overflow-y: auto; display: grid; grid-template-columns: repeat(auto-fill, minmax(128px, 1fr)); gap: 8px; align-content: start; grid-auto-rows: max-content; padding: 2px 2px 8px; scrollbar-width: thin; }
+.mk-empty { grid-column: 1 / -1; margin: 18px 4px; color: var(--muted); font-size: 12px; line-height: 1.5; text-align: center; }
+.mk-card { --rc: var(--line); position: relative; display: flex; flex-direction: column; border: 1px solid var(--rc); border-radius: 10px; background: var(--bg); overflow: hidden; }
+.mk-card.r-rare { --rc: #61afef; }
+.mk-card.r-legendary { --rc: var(--accent); box-shadow: 0 0 0 1px var(--accent), 0 0 14px -2px rgba(255, 209, 102, .45); background: linear-gradient(160deg, rgba(255, 209, 102, .10), var(--bg) 55%); }
+.mk-card:hover { border-color: var(--text); }
+.mk-card.on { box-shadow: 0 0 0 2px var(--accent); }
+.mk-card.poor .mk-pick { opacity: .5; }
+.mk-pick { display: grid; gap: 4px; justify-items: center; width: 100%; padding: 8px 6px 6px; border: 0; background: none; color: var(--text); font: inherit; font-size: 11.5px; cursor: pointer; text-align: center; }
+.mk-thumb { display: grid; place-items: center; width: 100%; height: 62px; }
+.mk-thumb img { max-width: 100%; max-height: 62px; object-fit: contain; image-rendering: pixelated; } /* (drawn at twice their size: the piece art is small) */
+.mk-coin { display: inline-block; width: 9px; height: 9px; margin-right: 4px; vertical-align: -1px; background: var(--accent); border: 2px solid #b8862b; border-radius: 50%; box-sizing: content-box; image-rendering: pixelated; }
+.mk-name { line-height: 1.2; }
+.mk-meta { display: flex; justify-content: space-between; gap: 6px; width: 100%; font-size: 10.5px; }
+.mk-rar { color: var(--rc); font-weight: 600; text-transform: uppercase; letter-spacing: .4px; }
+.r-common .mk-rar { color: var(--muted); }
+.mk-price { color: var(--accent); font-variant-numeric: tabular-nums; }
+.mk-own { width: 100%; color: var(--muted); font-size: 10px; text-align: left; }
+.mk-sell { border: 0; border-top: 1px solid var(--line); background: var(--card); color: var(--accent); padding: 5px; font: inherit; font-size: 11px; cursor: pointer; }
+.mk-sell:hover { background: var(--accent); color: #1a1a1a; }
+@media (max-width: 900px) { /* narrow window: the market becomes a sheet at the bottom */
+  :root { --market-w: 100vw; }
+  .market { top: auto; height: 42vh; width: 100vw; border-left: 0; border-top: 1px solid var(--line); transform: translateY(100%); }
+  body.layout-editing .stage { padding-right: 16px; padding-bottom: calc(42vh + 8px); }
+}
+@media (prefers-reduced-motion: reduce) { .market { transition: none; } }
+
+/* feedback while buying: the coin chip, the floating amount, the confirmation and the piece being dragged out of a card */
+.mk-head-r { display: flex; align-items: center; gap: 8px; }
+.mk-mute { background: none; border: 1px solid var(--line); border-radius: 8px; padding: 2px 6px; font-size: 13px; line-height: 1.3; cursor: pointer; color: var(--text); }
+.mk-mute:hover { border-color: var(--muted); }
+.mk-mute:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.mk-coins { position: relative; }
+.mk-coins.pulse { animation: mk-pulse .5s ease; }
+@keyframes mk-pulse { 0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 209, 102, .7); } 40% { transform: scale(1.12); box-shadow: 0 0 0 6px rgba(255, 209, 102, 0); } 100% { transform: scale(1); } }
+.mk-float { position: absolute; right: 8px; top: 100%; color: var(--accent); font-weight: 700; pointer-events: none; animation: mk-float 1s ease-out forwards; text-shadow: 0 1px 3px rgba(0,0,0,.6); }
+@keyframes mk-float { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(22px); } }
+.mk-auto { position: absolute; top: 4px; right: 4px; width: 22px; height: 22px; padding: 0; border: 1px solid var(--line); border-radius: 6px; background: var(--card); font-size: 11px; line-height: 1; cursor: pointer; opacity: 0; transition: opacity .12s; }
+.mk-card:hover .mk-auto, .mk-auto:focus-visible { opacity: 1; }
+.mk-auto:hover { border-color: var(--accent); }
+.mk-auto:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.mk-pick { user-select: none; touch-action: pan-y; }
+body.mk-dragging, body.mk-dragging * { cursor: grabbing !important; user-select: none; }
+.mk-dragimg { position: fixed; left: 0; top: 0; z-index: 60; pointer-events: none; image-rendering: pixelated; max-width: 220px; opacity: .9; filter: drop-shadow(0 6px 10px rgba(0,0,0,.55)); }
+.mk-confirm { position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%); z-index: 6; display: flex; align-items: center; gap: 10px; padding: 8px 10px 8px 14px; max-width: calc(100% - 24px); box-sizing: border-box; background: var(--card); border: 1px solid var(--accent); border-radius: 12px; box-shadow: 0 12px 34px rgba(0,0,0,.6); font-size: 13px; animation: mk-in .16s ease-out; }
+.mk-confirm[hidden] { display: none; }
+.mkc-text { display: grid; gap: 1px; min-width: 0; }
+.mkc-line { display: flex; align-items: baseline; gap: 12px; }
+.mkc-price { color: var(--accent); font-variant-numeric: tabular-nums; font-weight: 700; }
+.mkc-text small { color: var(--muted); font-size: 11px; }
+.mk-confirm kbd { font: inherit; font-size: 10px; opacity: .65; margin-left: 2px; }
+@keyframes mk-in { from { opacity: 0; transform: translateX(-50%) translateY(8px); } to { opacity: 1; transform: translateX(-50%); } }
+@media (prefers-reduced-motion: reduce) { .mk-coins.pulse, .mk-float, .mk-confirm { animation: none; } }

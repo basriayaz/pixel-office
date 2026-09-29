@@ -114,9 +114,10 @@ class Office {
   // ---------- layout ----------
   // Everything static comes from the furniture records: blocked tiles, decor draw list, spots, meeting places, desks.
   buildStatic() {
-    const sc = POLayout.scene(this.layoutDoc, this.rosterIds);
+    const sc = POLayout.scene(this.layoutDoc, this.rosterIds, this.theme);
     const st = buildStaticFor(this.theme, sc.items);
     this.scene = sc;
+    this.wallItems = POLayout.wallOf(sc.items, this.theme); // the wall decor of the current theme
     this.blocked = st.blocked;
     this.doors = st.doors;
     this.baseDecor = st.decor;
@@ -610,9 +611,9 @@ class Office {
   draw(t) {
     const b = this.b;
     drawFloors(b, this.theme);
-    drawWalls(b, this.blocked, this.doors, t, this.theme);
-    const items = [];
     const dim = this.editing ? this.editorDim : null; // the piece being dragged stays faded where it was
+    drawWalls(b, this.blocked, this.doors, t, this.theme, this.wallItems, dim);
+    const items = [];
     const faded = (id, fn) => (dim && id === dim ? () => { b.save(); b.globalAlpha = 0.3; fn(); b.restore(); } : fn);
     for (const d of this.decor) items.push({ y: d.y, draw: faded(d.id, () => d.draw(b, t)) });
     // every desk is drawn (an empty one too); the colleague at it is the one whose seat points at it
@@ -1260,7 +1261,7 @@ function nightDarkness() {
 }
 const isNight = () => nightDarkness() >= 0.25;
 
-function drawWalls(b, blocked, doors, t, theme = "default") {
+function drawWalls(b, blocked, doors, t, theme = "default", wall = POLayout.defaultWall(theme), dim = null) {
   const T = THEMES[theme] || THEMES.default;
   const W = T.wall;
   // top wall face
@@ -1297,7 +1298,15 @@ function drawWalls(b, blocked, doors, t, theme = "default") {
     b.fillStyle = "#eef2f4"; b.fillRect(wx + 47, 8, 2, 40); b.fillRect(wx, 27, 96, 2);
     b.fillStyle = "rgba(240,240,236,.55)"; for (let i = 0; i < 4; i++) b.fillRect(wx, 9 + i * 4, 96, 2);
   }
-  prop(theme, "wallDecor")(b, t);
+  const fixed = PROPS[theme] && PROPS[theme].wallFixed; // ambient decor that spans the wall: under the pieces (wallFixed) or over them (wallOver)
+  if (fixed) fixed(b, t);
+  for (const it of wall) { // the movable wall decor (the one being dragged in the layout editor stays faded where it was)
+    const art = WALL_ART[it.type];
+    if (!art) continue;
+    if (dim && it.id === dim) { b.save(); b.globalAlpha = 0.3; art(b, t, it.tx * TILE); b.restore(); } else art(b, t, it.tx * TILE);
+  }
+  const over = PROPS[theme] && PROPS[theme].wallOver;
+  if (over) over(b, t);
 
   // interior walls (top-down): cap + shadow
   for (let y = 2; y < ROWS; y++)
@@ -1338,35 +1347,36 @@ function line(b, x0, y0, x1, y1, col) {
 }
 
 
-function drawWallDecorDefault(b, t) {
-  // kitchen wall cabinets
+// ---------- wall decor ----------
+// The movable wall decor: WALL_ART["<theme>_<piece>"](b, t, x0) draws a piece with the left edge of its first tile at x0 (sizes and default
+// tiles: POLayout.WALL). The artwork is each theme's original wall decor; wallAt(tile, fn, nudge) runs code written for a fixed spot at any
+// tile (nudge: a pixel or two, for a piece that overhung its tiles). Ambient decor that spans the wall (string lights, stained glass ...)
+// stays fixed: PROPS[theme].wallFixed (under the pieces) / wallOver (over them).
+const WALL_ART = {};
+const wallAt = (tile, fn, nudge = 0) => (b, t, x0) => { b.save(); b.translate(x0 - tile * TILE + nudge, 0); fn(b, t); b.restore(); };
+const wallClock = (b, t, x0) => drawClock(b, x0 + 16, 28);
+WALL_ART.default_cabinets = wallAt(0, (b) => {
   for (let i = 0; i < 4; i++) {
     const cx = 8 + i * 40;
     b.fillStyle = "#e9e4d8"; b.fillRect(cx, 8, 36, 34);
     b.fillStyle = "#cdc6b6"; b.fillRect(cx, 8, 36, 2); b.fillRect(cx, 40, 36, 2); b.fillRect(cx + 17, 8, 2, 34);
     b.fillStyle = "#5c5c5c"; b.fillRect(cx + 12, 24, 3, 6); b.fillRect(cx + 21, 24, 3, 6);
   }
-  // poster + clock + shelf
+});
+WALL_ART.default_poster = wallAt(13, (b) => {
   b.fillStyle = "#2b2b2b"; b.fillRect(13 * TILE + 4, 10, 30, 38);
   b.fillStyle = "#ffd166"; b.fillRect(13 * TILE + 7, 13, 24, 32);
   b.fillStyle = "#2b2b2b"; b.fillRect(13 * TILE + 12, 20, 14, 12); b.fillRect(13 * TILE + 10, 36, 18, 2); b.fillRect(13 * TILE + 13, 40, 12, 2);
   b.fillStyle = "#ffd166"; b.fillRect(13 * TILE + 16, 24, 6, 4);
-  const d = new Date();
-  const ccx = 15 * TILE + 16, ccy = 28;
-  b.fillStyle = "#2b2b2b"; b.fillRect(ccx - 13, ccy - 13, 26, 26);
-  b.fillStyle = "#f7f7f7"; b.fillRect(ccx - 11, ccy - 11, 22, 22);
-  b.fillStyle = "#2b2b2b";
-  for (let i = 0; i < 12; i++) { const a = (i / 12) * Math.PI * 2; b.fillRect(ccx + Math.round(Math.cos(a) * 9) - 1, ccy + Math.round(Math.sin(a) * 9) - 1, i % 3 === 0 ? 2 : 1, i % 3 === 0 ? 2 : 1); }
-  const ha = ((d.getHours() % 12) + d.getMinutes() / 60) / 12 * Math.PI * 2 - Math.PI / 2;
-  const ma = d.getMinutes() / 60 * Math.PI * 2 - Math.PI / 2;
-  line(b, ccx, ccy, ccx + Math.cos(ha) * 5, ccy + Math.sin(ha) * 5, "#2b2b2b");
-  line(b, ccx, ccy, ccx + Math.cos(ma) * 8, ccy + Math.sin(ma) * 8, "#2b2b2b");
-  b.fillStyle = "#d9534f"; b.fillRect(ccx - 1, ccy - 1, 2, 2);
+}, -3);
+WALL_ART.default_clock = wallClock;
+WALL_ART.default_shelf = wallAt(20, (b) => {
   const shx = 20 * TILE + 12;
   b.fillStyle = "#5c3d22"; b.fillRect(shx - 2, 36, 50, 5);
   b.fillStyle = "#8a5a32"; b.fillRect(shx - 2, 36, 50, 1);
   ["#d9534f", "#3f7cc9", "#ffd166", "#3a9d5d", "#c678dd", "#e07b39"].forEach((c, i) => { b.fillStyle = c; b.fillRect(shx + 2 + i * 7, 14 + (i % 2) * 3, 5, 22 - (i % 2) * 3); b.fillStyle = "rgba(0,0,0,.25)"; b.fillRect(shx + 2 + i * 7, 14 + (i % 2) * 3, 1, 22 - (i % 2) * 3); });
-  // meeting TV
+});
+WALL_ART.default_tv = wallAt(24, (b, t) => {
   const tx = 24 * TILE + 8;
   b.fillStyle = "#1c1e24"; b.fillRect(tx, 8, 112, 42);
   b.fillStyle = "#0f2a3a"; b.fillRect(tx + 4, 12, 104, 34);
@@ -1374,13 +1384,13 @@ function drawWallDecorDefault(b, t) {
   bars.forEach((h, i) => { b.fillStyle = i === 5 ? "#ffd166" : "#4fc3f7"; b.fillRect(tx + 10 + i * 14, 44 - h, 9, h); });
   b.fillStyle = "#fff"; b.fillRect(tx + 8, 16, 30, 2); b.fillRect(tx + 8, 20, 18, 2);
   b.fillStyle = Math.floor(t / 900) % 2 ? "#4ade80" : "#1c1e24"; b.fillRect(tx + 106, 46, 3, 2);
-  // meeting whiteboard (right)
+});
+WALL_ART.default_whiteboard = wallAt(28, (b) => {
   b.fillStyle = "#c9ced3"; b.fillRect(28 * TILE + 4, 10, 52, 36);
   b.fillStyle = "#fbfbf8"; b.fillRect(28 * TILE + 7, 13, 46, 30);
   b.fillStyle = "#3f7cc9"; b.fillRect(28 * TILE + 11, 18, 30, 2); b.fillRect(28 * TILE + 11, 24, 22, 2);
   b.fillStyle = "#d9534f"; b.fillRect(28 * TILE + 11, 31, 14, 6); b.fillStyle = "#3a9d5d"; b.fillRect(28 * TILE + 30, 30, 18, 8);
-
-}
+});
 
 // ---------- furniture ----------
 function outlineRect(b, x, y, w, h, fill) {
@@ -1955,31 +1965,35 @@ function drawBottleCrate(b, x, y) {
   for (let i = 0; i < 4; i++) { b.fillStyle = "#c9e8ff"; b.fillRect(x + 7 + i * 5, y - 2, 4, 12); b.fillStyle = "#61afef"; b.fillRect(x + 8 + i * 5, y - 5, 2, 3); }
 }
 function drawDrinksCooler(b, x, y, t) { outlineRect(b, x + 4, y + 4, 24, 24, "#2c62c9"); b.fillStyle = "#4a86e8"; b.fillRect(x + 4, y + 4, 24, 5); b.fillStyle = "#f4f4f4"; b.fillRect(x + 8, y + 14, 16, 3); if (Math.floor(t / 900) % 2) { b.fillStyle = "#c9e8ff"; b.fillRect(x + 10, y + 20, 4, 4); } }
-function drawWallDecorFootball(b, t) {
-  // scoreboard
+function drawWallFixedFootball(b) { // pennant string across the open office
+  b.fillStyle = "#f4f4f4"; b.fillRect(8 * TILE, 6, 14 * TILE, 1);
+  const cols = ["#d9534f", "#ffd166", "#2c62c9", "#f4f4f4", "#4ade80"];
+  for (let i = 0; i < 14; i++) { const px = 8 * TILE + 8 + i * 32; b.fillStyle = cols[i % cols.length]; b.fillRect(px, 7, 12, 4); b.fillRect(px + 2, 11, 8, 4); b.fillRect(px + 4, 15, 4, 3); }
+}
+WALL_ART.football_scoreboard = wallAt(24, (b, t) => {
   const sx = 24 * TILE + 8; outlineRect(b, sx, 8, 112, 42, "#1c1e24");
   b.fillStyle = "#0a0c10"; b.fillRect(sx + 4, 12, 104, 34);
   const led = (x, y, digit) => { const seg = { 0: [1,1,1,1,1,1,0], 1: [0,1,1,0,0,0,0], 2: [1,1,0,1,1,0,1], 3: [1,1,1,1,0,0,1] }[digit]; b.fillStyle = "#ff3b3b"; if (seg[0]) b.fillRect(x + 1, y, 6, 2); if (seg[1]) b.fillRect(x + 6, y + 1, 2, 6); if (seg[2]) b.fillRect(x + 6, y + 8, 2, 6); if (seg[3]) b.fillRect(x + 1, y + 13, 6, 2); if (seg[4]) b.fillRect(x, y + 8, 2, 6); if (seg[5]) b.fillRect(x, y + 1, 2, 6); if (seg[6]) b.fillRect(x + 1, y + 7, 6, 2); };
   led(sx + 30, 22, 2); led(sx + 74, 22, 1); b.fillStyle = "#ff3b3b"; b.fillRect(sx + 54, 26, 3, 3); b.fillRect(sx + 54, 33, 3, 3);
   b.fillStyle = "#ffd166"; b.fillRect(sx + 10, 14, 24, 3); b.fillRect(sx + 78, 14, 24, 3);
   b.fillStyle = Math.floor(t / 1000) % 2 ? "#4ade80" : "#0a0c10"; b.fillRect(sx + 48, 40, 16, 3);
-  // pennant string across the open office
-  b.fillStyle = "#f4f4f4"; b.fillRect(8 * TILE, 6, 14 * TILE, 1);
-  const cols = ["#d9534f", "#ffd166", "#2c62c9", "#f4f4f4", "#4ade80"];
-  for (let i = 0; i < 14; i++) { const px = 8 * TILE + 8 + i * 32; b.fillStyle = cols[i % cols.length]; b.fillRect(px, 7, 12, 4); b.fillRect(px + 2, 11, 8, 4); b.fillRect(px + 4, 15, 4, 3); }
-  // framed jersey
+});
+WALL_ART.football_jersey = wallAt(13, (b) => {
   outlineRect(b, 13 * TILE + 2, 12, 36, 36, "#3a3f4a"); b.fillStyle = "#f4f4f4"; b.fillRect(13 * TILE + 8, 20, 24, 22); b.fillRect(13 * TILE + 4, 22, 5, 8); b.fillRect(13 * TILE + 31, 22, 5, 8); b.fillStyle = "#d9534f"; b.fillRect(13 * TILE + 8, 20, 24, 3);
   b.fillStyle = "#1c1a20"; b.fillRect(13 * TILE + 14, 28, 2, 10); b.fillRect(13 * TILE + 19, 28, 2, 10); b.fillRect(13 * TILE + 21, 28, 5, 2); b.fillRect(13 * TILE + 21, 36, 5, 2); b.fillRect(13 * TILE + 25, 28, 2, 10);
-  // trophy shelf + clock
+});
+WALL_ART.football_trophies = wallAt(20, (b) => {
   b.fillStyle = "#5c3d22"; b.fillRect(20 * TILE + 10, 40, 52, 4);
   for (let i = 0; i < 3; i++) { const tx = 20 * TILE + 14 + i * 17; b.fillStyle = i === 1 ? "#ffd166" : "#c0c0c0"; b.fillRect(tx, 14 + (i === 1 ? -4 : 0), 10, 10); b.fillRect(tx + 3, 24, 4, 8); b.fillRect(tx + 1, 32, 8, 4); b.fillStyle = "#fff3b0"; b.fillRect(tx + 2, 16 + (i === 1 ? -4 : 0), 2, 3); }
-  drawClock(b, 15 * TILE + 16, 28);
-  // kitchen wall: GOL banner
+});
+WALL_ART.football_clock = wallClock;
+WALL_ART.football_banner = wallAt(0, (b) => { // GOL banner
   outlineRect(b, 16, 10, 150, 30, "#d9534f"); b.fillStyle = "#f4f4f4"; for (const [gx, gw] of [[40, 18], [70, 18], [100, 18]]) b.fillRect(gx, 16, gw, 18); b.fillStyle = "#d9534f"; b.fillRect(45, 21, 8, 8); b.fillRect(75, 21, 8, 8); b.fillRect(105, 16, 13, 12); b.fillRect(100, 21, 6, 8);
-  // meeting whiteboard: pitch diagram
+});
+WALL_ART.football_tactics = wallAt(28, (b) => { // pitch diagram
   b.fillStyle = "#c9ced3"; b.fillRect(28 * TILE + 4, 10, 52, 36); b.fillStyle = "#fbfbf8"; b.fillRect(28 * TILE + 7, 13, 46, 30);
   b.fillStyle = "#3a9d5d"; b.fillRect(28 * TILE + 10, 16, 40, 24); b.fillStyle = "#fbfbf8"; b.fillRect(28 * TILE + 29, 16, 1, 24); b.fillStyle = "#d9534f"; b.fillRect(28 * TILE + 14, 22, 3, 3); b.fillRect(28 * TILE + 20, 30, 3, 3); b.fillStyle = "#2c62c9"; b.fillRect(28 * TILE + 38, 20, 3, 3); b.fillRect(28 * TILE + 42, 32, 3, 3);
-}
+});
 
 // --- fashion props ---
 function drawCuttingTable(b, x, y, t) {
@@ -2049,24 +2063,28 @@ function drawHatStand(b, x, y) {
   hat(x + 2, y - 32, "#d9534f"); hat(x + 16, y - 18, "#2b2b2b"); hat(x + 2, y - 4, "#ffd166");
 }
 function drawSmallMannequin(b, x, y) { drawMannequin(b, x, y, "#e06c75"); }
-function drawWallDecorFashion(b, t) {
-  // moodboard
-  b.fillStyle = "#c9a781"; b.fillRect(198, 3, 70, 22); b.fillStyle = "#f7efe7"; b.fillRect(200, 5, 66, 18);
-  ["#e06c75", "#f78fb3", "#c678dd", "#61afef", "#ffd166", "#98c379"].forEach((c, i) => { b.fillStyle = c; b.fillRect(204 + i * 10, 8 + (i % 2) * 3, 7, 8); b.fillStyle = "#1c1a20"; b.fillRect(207 + i * 10, 7 + (i % 2) * 3, 1, 1); });
-  // dress poster
-  outlineRect(b, 13 * TILE + 2, 8, 30, 42, "#2b2b2b"); b.fillStyle = "#f7efe7"; b.fillRect(13 * TILE + 5, 11, 24, 36);
-  b.fillStyle = "#e06c75"; b.fillRect(13 * TILE + 14, 14, 6, 4); b.fillRect(13 * TILE + 12, 18, 10, 8); b.fillRect(13 * TILE + 9, 26, 16, 16); b.fillStyle = "#c95c86"; b.fillRect(13 * TILE + 9, 40, 16, 2);
-  // string lights across open office
+function drawWallOverFashion(b, t) { // string lights across the open office
   b.fillStyle = "#3a3f4a"; b.fillRect(8 * TILE, 6, 14 * TILE, 1);
   for (let i = 0; i < 14; i++) { const on = Math.floor(t / 600 + i) % 3 !== 0; b.fillStyle = on ? "#fff3b0" : "#8a8060"; b.fillRect(8 * TILE + 12 + i * 32, 7, 3, 4); if (on) { b.fillStyle = "rgba(255,240,180,.25)"; b.fillRect(8 * TILE + 10 + i * 32, 6, 7, 7); } }
-  // ATELIER sign
-  outlineRect(b, 16, 10, 150, 28, "#f7efe7"); b.fillStyle = "#c95c86"; for (let i = 0; i < 7; i++) b.fillRect(28 + i * 18, 17, 12, 14); b.fillStyle = "#f7efe7"; for (let i = 0; i < 7; i++) b.fillRect(32 + i * 18, 21, 4, 6);
-  // mirror wall (meeting)
-  b.fillStyle = "#c9a781"; b.fillRect(24 * TILE + 8, 6, 112, 46); b.fillStyle = "#cfe6f2"; b.fillRect(24 * TILE + 12, 10, 104, 38); b.fillStyle = "rgba(255,255,255,.6)"; b.fillRect(24 * TILE + 20, 14, 3, 30); b.fillRect(24 * TILE + 26, 12, 1, 14);
-  drawClock(b, 15 * TILE + 16, 28);
-  // hat shelf
-  b.fillStyle = "#c9a781"; b.fillRect(20 * TILE + 10, 40, 52, 4); ["#d9534f", "#2b2b2b", "#ffd166"].forEach((c, i) => { const hx = 20 * TILE + 12 + i * 17; b.fillStyle = OUTLINE; b.fillRect(hx - 1, 33, 18, 3); b.fillRect(hx + 3, 26, 10, 8); b.fillStyle = c; b.fillRect(hx, 34, 16, 1); b.fillRect(hx + 4, 27, 8, 7); });
 }
+WALL_ART.fashion_moodboard = wallAt(6, (b) => {
+  b.fillStyle = "#c9a781"; b.fillRect(198, 3, 70, 22); b.fillStyle = "#f7efe7"; b.fillRect(200, 5, 66, 18);
+  ["#e06c75", "#f78fb3", "#c678dd", "#61afef", "#ffd166", "#98c379"].forEach((c, i) => { b.fillStyle = c; b.fillRect(204 + i * 10, 8 + (i % 2) * 3, 7, 8); b.fillStyle = "#1c1a20"; b.fillRect(207 + i * 10, 7 + (i % 2) * 3, 1, 1); });
+});
+WALL_ART.fashion_poster = wallAt(13, (b) => { // dress poster
+  outlineRect(b, 13 * TILE + 2, 8, 30, 42, "#2b2b2b"); b.fillStyle = "#f7efe7"; b.fillRect(13 * TILE + 5, 11, 24, 36);
+  b.fillStyle = "#e06c75"; b.fillRect(13 * TILE + 14, 14, 6, 4); b.fillRect(13 * TILE + 12, 18, 10, 8); b.fillRect(13 * TILE + 9, 26, 16, 16); b.fillStyle = "#c95c86"; b.fillRect(13 * TILE + 9, 40, 16, 2);
+}, -1);
+WALL_ART.fashion_atelier = wallAt(0, (b) => { // ATELIER sign
+  outlineRect(b, 16, 10, 150, 28, "#f7efe7"); b.fillStyle = "#c95c86"; for (let i = 0; i < 7; i++) b.fillRect(28 + i * 18, 17, 12, 14); b.fillStyle = "#f7efe7"; for (let i = 0; i < 7; i++) b.fillRect(32 + i * 18, 21, 4, 6);
+});
+WALL_ART.fashion_mirror = wallAt(24, (b) => {
+  b.fillStyle = "#c9a781"; b.fillRect(24 * TILE + 8, 6, 112, 46); b.fillStyle = "#cfe6f2"; b.fillRect(24 * TILE + 12, 10, 104, 38); b.fillStyle = "rgba(255,255,255,.6)"; b.fillRect(24 * TILE + 20, 14, 3, 30); b.fillRect(24 * TILE + 26, 12, 1, 14);
+});
+WALL_ART.fashion_clock = wallClock;
+WALL_ART.fashion_hats = wallAt(20, (b) => {
+  b.fillStyle = "#c9a781"; b.fillRect(20 * TILE + 10, 40, 52, 4); ["#d9534f", "#2b2b2b", "#ffd166"].forEach((c, i) => { const hx = 20 * TILE + 12 + i * 17; b.fillStyle = OUTLINE; b.fillRect(hx - 1, 33, 18, 3); b.fillRect(hx + 3, 26, 10, 8); b.fillStyle = c; b.fillRect(hx, 34, 16, 1); b.fillRect(hx + 4, 27, 8, 7); });
+});
 
 function drawClock(b, ccx, ccy) {
   const d = new Date();
@@ -2082,9 +2100,9 @@ function drawClock(b, ccx, ccy) {
 }
 
 const PROPS = {
-  default: { plant: drawPlant, counter: drawKitchenCounter, fridge: drawFridge, roundTable: drawRoundTable, stool: drawStool, bin: drawBin, meetingTable: drawMeetingTable, meetingChair: drawMeetingChair, sofa: drawSofa, coffeeTable: drawCoffeeTable, bookshelf: drawBookshelf, lamp: drawLamp, cabinets: drawCabinets, boxes: drawBoxes, printer: drawPrinter, cooler: drawCooler, coffeeStation: drawCoffeeStation, wallDecor: drawWallDecorDefault },
-  football: { counter: drawSnackBar, fridge: drawVending, roundTable: drawBallTable, meetingTable: drawTacticsTable, sofa: drawBench, coffeeTable: drawBallRack, bookshelf: drawTrophyCase, lamp: drawFloodlight, cabinets: drawLockers, boxes: drawCones, printer: drawJerseyRack, cooler: drawBottleCrate, coffeeStation: drawDrinksCooler, wallDecor: drawWallDecorFootball },
-  fashion: { counter: drawCuttingTable, fridge: drawMannequin, roundTable: drawSwatchTable, meetingTable: drawDesignTable, sofa: drawVelvetSofa, coffeeTable: drawShoeDisplay, bookshelf: drawClothesRack, lamp: drawMirror, cabinets: drawWardrobe, boxes: drawFabricRolls, printer: drawIroning, cooler: drawHatStand, coffeeStation: drawSmallMannequin, wallDecor: drawWallDecorFashion },
+  default: { plant: drawPlant, counter: drawKitchenCounter, fridge: drawFridge, roundTable: drawRoundTable, stool: drawStool, bin: drawBin, meetingTable: drawMeetingTable, meetingChair: drawMeetingChair, sofa: drawSofa, coffeeTable: drawCoffeeTable, bookshelf: drawBookshelf, lamp: drawLamp, cabinets: drawCabinets, boxes: drawBoxes, printer: drawPrinter, cooler: drawCooler, coffeeStation: drawCoffeeStation },
+  football: { counter: drawSnackBar, fridge: drawVending, roundTable: drawBallTable, meetingTable: drawTacticsTable, sofa: drawBench, coffeeTable: drawBallRack, bookshelf: drawTrophyCase, lamp: drawFloodlight, cabinets: drawLockers, boxes: drawCones, printer: drawJerseyRack, cooler: drawBottleCrate, coffeeStation: drawDrinksCooler, wallFixed: drawWallFixedFootball },
+  fashion: { counter: drawCuttingTable, fridge: drawMannequin, roundTable: drawSwatchTable, meetingTable: drawDesignTable, sofa: drawVelvetSofa, coffeeTable: drawShoeDisplay, bookshelf: drawClothesRack, lamp: drawMirror, cabinets: drawWardrobe, boxes: drawFabricRolls, printer: drawIroning, cooler: drawHatStand, coffeeStation: drawSmallMannequin, wallOver: drawWallOverFashion },
 };
 const PROP_ALIAS = { kitchenCounter: "counter" };
 const prop = (theme, name) => { const n = PROP_ALIAS[name] || name; return (PROPS[theme] && PROPS[theme][n]) || PROPS.default[n]; };
@@ -2215,7 +2233,7 @@ function drawCauldronSmall(b, x, y, t) {
   const bub = Math.floor(t / 350) % 3; b.fillStyle = "#e9b5ff"; b.fillRect(x + 10 + bub * 5, y + 3, 2, 2); b.fillStyle = "rgba(198,120,221,.15)"; b.fillRect(x + 4, y - 10, 26, 14);
   b.fillStyle = OUTLINE; b.fillRect(x + 8, y + 22, 4, 6); b.fillRect(x + 22, y + 22, 4, 6);
 }
-function drawWallDecorGothic(b, t) {
+function drawWallFixedGothic(b, t) {
   // stained glass over the two windows (arched)
   for (const wx of [9 * TILE, 17 * TILE]) {
     b.fillStyle = "#2c2735"; b.fillRect(wx - 4, 4, 104, 48);
@@ -2226,24 +2244,28 @@ function drawWallDecorGothic(b, t) {
     b.fillStyle = "#2c2735"; b.fillRect(wx, 8, 8, 6); b.fillRect(wx + 88, 8, 8, 6); b.fillRect(wx, 8, 4, 10); b.fillRect(wx + 92, 8, 4, 10);
     b.fillStyle = `rgba(255,230,180,${0.06 + (Math.floor(t / 900) % 2) * 0.02})`; b.fillRect(wx, 48, 96, 8);
   }
-  // chandelier (center)
+  // cobwebs in the corners
+  b.fillStyle = "rgba(255,255,255,.35)"; for (let i = 0; i < 8; i++) { b.fillRect(0, i * 3, 24 - i * 3, 1); b.fillRect(i * 3, 0, 1, 24 - i * 3); b.fillRect(LW - 24 + i * 3, i * 3, 1, 1); b.fillRect(LW - 1 - i * 3, 0, 1, 24 - i * 3); }
+}
+WALL_ART.gothic_chandelier = wallAt(14, (b, t) => {
   const cx = 14 * TILE + 16;
   b.fillStyle = "#3a3a40"; b.fillRect(cx - 1, 0, 2, 14); b.fillRect(cx - 22, 14, 44, 3); b.fillRect(cx - 24, 17, 4, 8); b.fillRect(cx + 20, 17, 4, 8); b.fillRect(cx - 2, 17, 4, 8);
   for (const px of [cx - 22, cx, cx + 22]) { b.fillStyle = "#f4ecd8"; b.fillRect(px - 1, 20, 2, 6); drawCandleFlame(b, px - 1, 20, t, px); }
-  // torches on kitchen and meeting walls
-  for (const px of [30, 120, 26 * TILE, 28 * TILE + 20]) { b.fillStyle = OUTLINE; b.fillRect(px, 22, 4, 22); b.fillStyle = "#6b4a2b"; b.fillRect(px + 1, 24, 2, 18); b.fillStyle = "#ffb347"; b.fillRect(px - 2, 12 + (Math.floor((t + px) / 150) % 2), 8, 10); b.fillStyle = "#fff0a0"; b.fillRect(px, 15, 4, 5); b.fillStyle = "rgba(255,180,80,.12)"; b.fillRect(px - 10, 6, 24, 40); }
-  // portrait with watching eyes
+}, 16);
+WALL_ART.gothic_torch = (b, t, x0) => { // (one tile wide; the old torches stood at 30, 120, 26 tiles and 28 tiles + 20)
+  const px = x0 + 16;
+  b.fillStyle = OUTLINE; b.fillRect(px, 22, 4, 22); b.fillStyle = "#6b4a2b"; b.fillRect(px + 1, 24, 2, 18); b.fillStyle = "#ffb347"; b.fillRect(px - 2, 12 + (Math.floor((t + px) / 150) % 2), 8, 10); b.fillStyle = "#fff0a0"; b.fillRect(px, 15, 4, 5); b.fillStyle = "rgba(255,180,80,.12)"; b.fillRect(px - 10, 6, 24, 40);
+};
+WALL_ART.gothic_portrait = wallAt(13, (b, t) => { // portrait with watching eyes
   outlineRect(b, 13 * TILE + 2, 8, 30, 40, "#8a6a1f"); b.fillStyle = "#2b2730"; b.fillRect(13 * TILE + 6, 12, 22, 32);
   b.fillStyle = "#c9a781"; b.fillRect(13 * TILE + 12, 16, 10, 10); b.fillRect(13 * TILE + 9, 26, 16, 14); b.fillStyle = "#1c1c20"; b.fillRect(13 * TILE + 10, 14, 14, 4);
   const look = Math.floor(t / 1500) % 3; b.fillStyle = "#1c1c20"; b.fillRect(13 * TILE + 13 + look, 20, 2, 2); b.fillRect(13 * TILE + 18 + look, 20, 2, 2);
-  // cobwebs in the corners
-  b.fillStyle = "rgba(255,255,255,.35)"; for (let i = 0; i < 8; i++) { b.fillRect(0, i * 3, 24 - i * 3, 1); b.fillRect(i * 3, 0, 1, 24 - i * 3); b.fillRect(LW - 24 + i * 3, i * 3, 1, 1); b.fillRect(LW - 1 - i * 3, 0, 1, 24 - i * 3); }
-  // moon in the sky above the meeting wall
+}, -1);
+WALL_ART.gothic_moon = wallAt(20, (b) => {
   b.fillStyle = "#f4ecd8"; b.fillRect(20 * TILE + 10, 10, 12, 12); b.fillStyle = THEMES.gothic.wall.face; b.fillRect(20 * TILE + 15, 8, 10, 10);
-  // clock
-  drawClock(b, 15 * TILE + 16, 28);
-}
-PROPS.gothic = { counter: drawGothicCounter, fridge: drawArmor, roundTable: drawGothicTable, meetingTable: drawGothicMeeting, sofa: drawThrone, coffeeTable: drawChest, bookshelf: drawTomeShelf, lamp: drawCandleStand, cabinets: drawBarrels, boxes: drawBones, printer: drawLectern, cooler: drawGargoyle, coffeeStation: drawCauldronSmall, wallDecor: drawWallDecorGothic };
+});
+WALL_ART.gothic_clock = wallClock;
+PROPS.gothic = { counter: drawGothicCounter, fridge: drawArmor, roundTable: drawGothicTable, meetingTable: drawGothicMeeting, sofa: drawThrone, coffeeTable: drawChest, bookshelf: drawTomeShelf, lamp: drawCandleStand, cabinets: drawBarrels, boxes: drawBones, printer: drawLectern, cooler: drawGargoyle, coffeeStation: drawCauldronSmall, wallFixed: drawWallFixedGothic };
 THEME_NAMES.push("gothic");
 
 // --- music theme (YouTube music channel studio) ---
@@ -2419,25 +2441,30 @@ function drawHeadphoneStand(b, x, y, t = 0) { // coffeeStation slot: headphones 
   b.fillStyle = "#e3212b"; b.fillRect(x + 6, y - 18, 20, 2);
   drawMusicNote(b, x + 30, y - 8 - (Math.floor(t / 600) % 3), "#ffd166");
 }
-function drawWallDecorMusic(b, t) {
-  // acoustic foam on the kitchen wall
+WALL_ART.music_foam = wallAt(0, (b) => { // acoustic foam
   for (let i = 0; i < 6; i++) for (let j = 0; j < 2; j++) { const px = 8 + i * 22, py = 8 + j * 18; b.fillStyle = "#1f1f27"; b.fillRect(px, py, 20, 16); b.fillStyle = "#2b2b35"; for (let k = 0; k < 4; k++) b.fillRect(px + 2 + k * 5, py + 2 + (k % 2) * 6, 3, 6); }
-  // wall speakers flanking the windows
-  for (const px of [8 * TILE + 2, 20 * TILE + 10]) { outlineRect(b, px, 10, 20, 34, "#1c1c22"); disc(b, px + 10, 20, 4, "#3a3a48"); disc(b, px + 10, 34, 6, "#3a3a48"); disc(b, px + 10, 34, 2 + (Math.floor(t / 150) % 2), "#4c4c5c"); }
-  // YouTube plaque between the windows + ON AIR sign
+});
+WALL_ART.music_speaker = (b, t, x0) => { // (one tile wide; the old speakers flanked the windows)
+  const px = x0 + 6;
+  outlineRect(b, px, 10, 20, 34, "#1c1c22"); disc(b, px + 10, 20, 4, "#3a3a48"); disc(b, px + 10, 34, 6, "#3a3a48"); disc(b, px + 10, 34, 2 + (Math.floor(t / 150) % 2), "#4c4c5c");
+};
+WALL_ART.music_plaque = wallAt(13, (b, t) => { // YouTube plaque + floating notes
   drawYtLogo(b, 13 * TILE + 2, 12, 40, 28);
   b.fillStyle = "#ffffff"; b.fillRect(13 * TILE + 4, 44, 36, 1);
+  for (let i = 0; i < 3; i++) { const ph = ((t / 900) + i / 3) % 1; drawMusicNote(b, 13 * TILE + 46 + i * 6 + Math.round(Math.sin(ph * 6 + i) * 2), 40 - Math.round(ph * 28), ["#ffd166", "#ff3b3b", "#61afef"][i]); }
+});
+WALL_ART.music_onair = wallAt(15, (b, t) => {
   const on = Math.floor(t / 800) % 2 === 0;
   outlineRect(b, 15 * TILE + 2, 12, 52, 20, on ? "#5a0f14" : "#26262e"); b.fillStyle = on ? "#ff3b3b" : "#4a2a2a";
   // "ON AIR" in 3x5 pixel letters
   const glyph = { O: ["111", "101", "101", "101", "111"], N: ["101", "111", "111", "111", "101"], A: ["010", "101", "111", "101", "101"], I: ["111", "010", "010", "010", "111"], R: ["110", "101", "110", "101", "101"] };
   let gx = 15 * TILE + 6; for (const ch of "ON AIR") { if (ch !== " ") { const g = glyph[ch]; for (let r = 0; r < 5; r++) for (let c = 0; c < 3; c++) if (g[r][c] === "1") b.fillRect(gx + c * 2, 17 + r * 2, 2, 2); } gx += ch === " " ? 4 : 8; }
   if (on) { b.fillStyle = "rgba(255,59,59,.10)"; b.fillRect(15 * TILE - 6, 4, 68, 40); }
-  // floating notes rising from the plaque
-  for (let i = 0; i < 3; i++) { const ph = ((t / 900) + i / 3) % 1; drawMusicNote(b, 13 * TILE + 46 + i * 6 + Math.round(Math.sin(ph * 6 + i) * 2), 40 - Math.round(ph * 28), ["#ffd166", "#ff3b3b", "#61afef"][i]); }
-  // creator award plaques (silver, gold, diamond) on the meeting wall
-  for (let i = 0; i < 3; i++) { const px = 23 * TILE + 4 + i * 34; outlineRect(b, px, 10, 28, 36, "#3a3a48"); b.fillStyle = "#1a1a22"; b.fillRect(px + 2, 12, 24, 32); drawYtLogo(b, px + 6, 18, 16, 12, ["#c0c0c0", "#ffd166", "#bfe8ff"][i]); b.fillStyle = "#e8e6e0"; b.fillRect(px + 6, 36, 16, 1); b.fillRect(px + 9, 39, 10, 1); }
-  // subscriber counter
+});
+WALL_ART.music_awards = wallAt(23, (b) => { // creator award plaques (silver, gold, diamond)
+  for (let i = 0; i < 3; i++) { const px = 23 * TILE + 1 + i * 32; outlineRect(b, px, 10, 28, 36, "#3a3a48"); b.fillStyle = "#1a1a22"; b.fillRect(px + 2, 12, 24, 32); drawYtLogo(b, px + 6, 18, 16, 12, ["#c0c0c0", "#ffd166", "#bfe8ff"][i]); b.fillStyle = "#e8e6e0"; b.fillRect(px + 6, 36, 16, 1); b.fillRect(px + 9, 39, 10, 1); }
+});
+WALL_ART.music_counter = wallAt(26, (b, t) => { // subscriber counter
   const sx = 26 * TILE + 14; outlineRect(b, sx, 12, 108, 30, "#0a0c10"); b.fillStyle = "#ff3b3b"; b.fillRect(sx + 4, 16, 24, 5); b.fillStyle = "#e8e6e0"; b.fillRect(sx + 32, 17, 40, 3);
   const digits = ["1", ".", "2", "M"]; let dx = sx + 8;
   const seg7 = { 1: [0, 1, 1, 0, 0, 0, 0], 2: [1, 1, 0, 1, 1, 0, 1] };
@@ -2447,10 +2474,9 @@ function drawWallDecorMusic(b, t) {
     const s = seg7[d]; b.fillStyle = "#ff3b3b"; if (s[0]) b.fillRect(dx + 1, 24, 6, 2); if (s[1]) b.fillRect(dx + 6, 25, 2, 6); if (s[2]) b.fillRect(dx + 6, 32, 2, 6); if (s[3]) b.fillRect(dx + 1, 37, 6, 2); if (s[4]) b.fillRect(dx, 32, 2, 6); if (s[5]) b.fillRect(dx, 25, 2, 6); if (s[6]) b.fillRect(dx + 1, 31, 6, 2); dx += 12;
   }
   drawVu(b, sx + 60, 38, 11, t, 3);
-  // clock on the kitchen wall
-  drawClock(b, 6 * TILE + 6, 28);
-}
-PROPS.music = { counter: drawStudioBar, fridge: drawSpeakerStack, roundTable: drawDrumKit, meetingTable: drawMixingConsole, sofa: drawStudioCouch, coffeeTable: drawSynth, bookshelf: drawVinylShelf, lamp: drawMicStand, cabinets: drawGuitarRack, boxes: drawAmpStack, printer: drawCameraRig, cooler: drawRingLight, coffeeStation: drawHeadphoneStand, wallDecor: drawWallDecorMusic };
+});
+WALL_ART.music_clock = wallClock;
+PROPS.music = { counter: drawStudioBar, fridge: drawSpeakerStack, roundTable: drawDrumKit, meetingTable: drawMixingConsole, sofa: drawStudioCouch, coffeeTable: drawSynth, bookshelf: drawVinylShelf, lamp: drawMicStand, cabinets: drawGuitarRack, boxes: drawAmpStack, printer: drawCameraRig, cooler: drawRingLight, coffeeStation: drawHeadphoneStand };
 THEME_NAMES.push("music");
 
 // --- travel theme (travel agency / Footyprint) ---
@@ -2610,17 +2636,18 @@ function drawClockOffset(b, ccx, ccy, offsetH, label) {
   line(b, ccx, ccy, ccx + Math.cos(ha) * 4, ccy + Math.sin(ha) * 4, "#2b2b2b"); line(b, ccx, ccy, ccx + Math.cos(ma) * 6, ccy + Math.sin(ma) * 6, "#2b2b2b");
   b.fillStyle = label; b.fillRect(ccx - 6, ccy + 13, 12, 3);
 }
-function drawWallDecorTravel(b, t) {
-  // kitchen wall: bunting flags + world clocks
+WALL_ART.travel_bunting = wallAt(0, (b) => { // bunting flags + world clocks
   b.fillStyle = "#f4efe1"; b.fillRect(8, 8, 200, 1);
   const flags = [["#d9534f", "#f4efe1"], ["#3b8bc9", "#ffd166"], ["#4ade80", "#f4efe1"], ["#ff8c42", "#f4efe1"], ["#c678dd", "#ffd166"], ["#2f6f8f", "#d9534f"], ["#ffd166", "#3b8bc9"], ["#f4efe1", "#d9534f"]];
   for (let i = 0; i < 8; i++) { const px = 12 + i * 25; b.fillStyle = flags[i][0]; b.fillRect(px, 9, 14, 8); b.fillStyle = flags[i][1]; b.fillRect(px, 13, 14, 2); b.fillStyle = flags[i][0]; b.fillRect(px + 4, 17, 6, 3); }
   drawClockOffset(b, 40, 36, 3, "#d9534f"); drawClockOffset(b, 100, 36, 1, "#3b8bc9"); drawClockOffset(b, 160, 36, -4, "#ffd166");
-  // Footyprint poster (footprint icon) on the office wall, left of the first window
+});
+WALL_ART.travel_poster = wallAt(7, (b) => { // Footyprint poster (footprint icon)
   outlineRect(b, 8 * TILE - 2, 10, 26, 36, "#2f6f8f"); b.fillStyle = "#3f8fb0"; b.fillRect(8 * TILE, 12, 22, 32);
   const fx = 8 * TILE + 6, fy = 16; b.fillStyle = "#f4efe1"; b.fillRect(fx + 2, fy + 8, 8, 12); b.fillRect(fx + 3, fy + 20, 6, 4); b.fillRect(fx + 1, fy + 3, 3, 4); b.fillRect(fx + 5, fy + 2, 2, 3); b.fillRect(fx + 8, fy + 3, 2, 3); b.fillRect(fx + 11, fy + 5, 2, 3);
   b.fillStyle = "#ffd166"; b.fillRect(fx + 2, fy + 26, 10, 1); b.fillRect(fx + 4, fy + 28, 6, 1);
-  // world map mural between the windows with blinking pins + a plane on its route
+});
+WALL_ART.travel_map = wallAt(12, (b, t) => { // world map with blinking pins + a plane on its route
   const mx = 9 * TILE + 102, my = 8; outlineRect(b, mx, my, 148, 44, "#2f6f8f"); b.fillStyle = "#3b8bc9"; b.fillRect(mx + 2, my + 2, 144, 40);
   b.fillStyle = "#6fc276";
   for (const [ox, oy, w, h] of [[8, 6, 24, 14], [14, 20, 12, 16], [40, 4, 30, 10], [44, 14, 14, 8], [70, 6, 44, 14], [84, 20, 12, 10], [118, 26, 16, 8], [96, 30, 8, 4], [128, 8, 14, 10]]) b.fillRect(mx + 2 + ox, my + 2 + oy, w, h);
@@ -2630,14 +2657,14 @@ function drawWallDecorTravel(b, t) {
   pins.forEach(([px, py], i) => { const on = Math.floor(t / 500) % pins.length === i; b.fillStyle = on ? "#ffd166" : "#d9534f"; b.fillRect(mx + 1 + px, my + 1 + py, 3, 3); if (on) { b.fillStyle = "rgba(255,209,102,.25)"; b.fillRect(mx - 1 + px, my - 1 + py, 7, 7); } });
   const seg = Math.floor(t / 2000) % (pins.length - 1), f = (t % 2000) / 2000; const [ax, ay] = pins[seg], [bx, by] = pins[seg + 1];
   drawPlaneIcon(b, mx + 2 + Math.round(ax + (bx - ax) * f) - 5, my + 2 + Math.round(ay + (by - ay) * f) - 6, "#f4efe1", 1);
-  // departures board on the meeting wall
+});
+WALL_ART.travel_departures = wallAt(23, (b, t) => {
   const dx = 23 * TILE + 4; outlineRect(b, dx, 8, 200, 42, "#1c1e24"); b.fillStyle = "#0a0c10"; b.fillRect(dx + 3, 11, 194, 36);
   b.fillStyle = "#ffd166"; b.fillRect(dx + 8, 14, 44, 3); drawPlaneIcon(b, dx + 180, 12, "#ffd166", 1);
   const rows = 4; for (let r = 0; r < rows; r++) { const flip = Math.floor((t / 900 + r * 0.7)) % 6; const y = 21 + r * 6; b.fillStyle = "#e8e6e0"; b.fillRect(dx + 8, y, 20 + ((r * 7 + flip) % 3) * 6, 2); b.fillRect(dx + 60, y, 24 + ((r * 5 + flip) % 4) * 5, 2); b.fillStyle = flip === r ? "#4ade80" : (r === 2 && flip === 5 ? "#d9534f" : "#ffd166"); b.fillRect(dx + 120, y, 16, 2); b.fillStyle = "#8fa7b8"; b.fillRect(dx + 150, y, 10 + ((r + flip) % 3) * 4, 2); }
-  // clock in the office
-  drawClock(b, 21 * TILE + 8, 28);
-}
-PROPS.travel = { counter: drawTravelCafe, fridge: drawGlobe, roundTable: drawCafeTable, meetingTable: drawMapTable, sofa: drawBeachSofa, coffeeTable: drawBambooTable, bookshelf: drawBrochureRack, lamp: drawPalm, cabinets: drawLuggageShelf, boxes: drawLuggageCart, printer: drawCheckinKiosk, cooler: drawSignpost, coffeeStation: drawCarryOn, wallDecor: drawWallDecorTravel };
+});
+WALL_ART.travel_clock = wallClock;
+PROPS.travel = { counter: drawTravelCafe, fridge: drawGlobe, roundTable: drawCafeTable, meetingTable: drawMapTable, sofa: drawBeachSofa, coffeeTable: drawBambooTable, bookshelf: drawBrochureRack, lamp: drawPalm, cabinets: drawLuggageShelf, boxes: drawLuggageCart, printer: drawCheckinKiosk, cooler: drawSignpost, coffeeStation: drawCarryOn };
 THEME_NAMES.push("travel");
 
 // ---------- theme previews (for the office picker) ----------
@@ -2672,6 +2699,16 @@ function renderItemThumb(theme, type) {
   const k = theme + ":" + type;
   if (itemThumbs.has(k)) return itemThumbs.get(k);
   const T = POLayout.TYPES[type];
+  if (T.wall) { // wall decor: the piece on a bit of its theme's wall
+    const cv = document.createElement("canvas");
+    cv.width = T.wall.w * TILE; cv.height = 60;
+    const g = cv.getContext("2d");
+    g.fillStyle = (THEMES[theme] || THEMES.default).wall.face; g.fillRect(0, 0, cv.width, cv.height);
+    if (WALL_ART[type]) WALL_ART[type](g, 0, 0);
+    const url = cv.toDataURL();
+    itemThumbs.set(k, url);
+    return url;
+  }
   const it = { id: "thumb", type, tx: 4, ty: 4, dir: POLayout.DEFAULT_DIR[type], v: 1 };
   const tiles = POLayout.tilesOf(it);
   const x0 = Math.min(...tiles.map((q) => q[0])), x1 = Math.max(...tiles.map((q) => q[0]));
@@ -3746,8 +3783,7 @@ function drawDreamcatcher(b, x, y, t = 0) { // coffeeStation slot: dreamcatcher 
   const sway = Math.round(Math.sin(t / 600) * 2);
   for (const [ox, len, c] of [[-6, 12, DREAM.pink], [0, 16, DREAM.teal], [6, 12, DREAM.gold]]) { b.fillStyle = OUTLINE; b.fillRect(x + 16 + ox + sway, y - 2, 1, 6); b.fillStyle = c; b.fillRect(x + 15 + ox + sway, y + 4, 3, len); b.fillStyle = shade(c, -30); b.fillRect(x + 16 + ox + sway, y + 4, 1, len); }
 }
-function drawWallDecorDream(b, t) {
-  // night sky in the windows, whatever the time of day
+function drawWallFixedDream(b, t) { // night sky in the windows, whatever the time of day
   for (const wx of [9 * TILE, 17 * TILE]) {
     b.fillStyle = "#2a2150"; b.fillRect(wx - 4, 4, 104, 48); b.fillStyle = "#1a153a"; b.fillRect(wx - 4, 50, 104, 3);
     const g = b.createLinearGradient(0, 8, 0, 48); g.addColorStop(0, "#120e2c"); g.addColorStop(1, "#3a2d6e"); b.fillStyle = g; b.fillRect(wx, 8, 96, 40);
@@ -3756,23 +3792,27 @@ function drawWallDecorDream(b, t) {
     b.save(); b.beginPath(); b.rect(wx, 8, 96, 40); b.clip(); b.fillStyle = "rgba(233,230,247,.35)"; const cx = wx + ((t / 160) % 140) - 40; b.fillRect(cx, 30, 26, 5); b.fillRect(cx + 6, 27, 12, 3); b.fillRect(cx + 50, 14, 18, 4); b.restore();
     b.fillStyle = "#2a2150"; b.fillRect(wx + 47, 8, 2, 40); b.fillRect(wx, 27, 96, 2);
   }
-  // moon phases along the kitchen wall
+}
+WALL_ART.dream_moons = wallAt(0, (b, t) => { // moon phases along the kitchen wall + floating z's
   for (let i = 0; i < 5; i++) { const px = 22 + i * 36; disc(b, px, 26, 9, OUTLINE); disc(b, px, 26, 8, "#fff3b0"); if (i !== 2) { const k = i < 2 ? 1 : -1; disc(b, px + k * (i === 0 || i === 4 ? 4 : 7), 26, 8, THEMES.dream.wall.face); } }
-  // floating z's over the kitchen
   for (let i = 0; i < 3; i++) { const ph = (t / 900 + i * 1.1) % 3; drawZ(b, 150 + i * 14 + Math.round(ph), 40 - Math.round(ph * 6), `rgba(255,243,176,${0.9 - ph * 0.25})`, 1 + (i === 2 ? 1 : 0)); }
-  // the all-seeing eye between the windows
+});
+WALL_ART.dream_eye = wallAt(14, (b, t) => { // the all-seeing eye
   const ex = 14 * TILE + 16; b.fillStyle = OUTLINE; b.fillRect(ex - 18, 22, 36, 12); b.fillRect(ex - 14, 18, 28, 4); b.fillRect(ex - 14, 34, 28, 4); b.fillRect(ex - 8, 14, 16, 4); b.fillRect(ex - 8, 38, 16, 4);
   b.fillStyle = "#f4ecd8"; b.fillRect(ex - 16, 23, 32, 10); b.fillRect(ex - 12, 19, 24, 4); b.fillRect(ex - 12, 33, 24, 4);
   const look = Math.floor(t / 1700) % 3 - 1; disc(b, ex + look * 2, 28, 5, "#5a3d9a"); disc(b, ex + look * 2, 28, 3, OUTLINE); b.fillStyle = "#fff"; b.fillRect(ex + look * 2 - 2, 26, 1, 1);
   b.fillStyle = DREAM.gold; for (let i = 0; i < 6; i++) { const a = i / 6 * Math.PI * 2; b.fillRect(ex + Math.round(Math.cos(a) * 24) - 1, 28 + Math.round(Math.sin(a) * 16) - 1, 2, 2); }
-  // constellation on the meeting wall, a framed dream painting, and a clock
+}, 16);
+WALL_ART.dream_constellation = wallAt(23, (b, t) => {
   const cx = 23 * TILE + 10; b.fillStyle = "#fff8d0"; const pts = [[6, 12], [30, 8], [52, 18], [78, 10], [96, 26], [126, 14], [150, 22]];
   for (let i = 0; i < pts.length - 1; i++) { const [ax, ay] = pts[i], [bx, by] = pts[i + 1]; for (let k = 0; k < 10; k += 2) b.fillRect(cx + Math.round(ax + (bx - ax) * k / 10), 10 + Math.round(ay + (by - ay) * k / 10), 1, 1); }
   pts.forEach(([px, py], i) => { const tw = Math.floor(t / 400 + i) % 4 === 0; b.fillStyle = tw ? DREAM.gold : "#fff8d0"; b.fillRect(cx + px - 1, 10 + py - 1, 3, 3); });
+}, -4);
+WALL_ART.dream_painting = wallAt(28, (b) => { // a framed dream painting
   outlineRect(b, 28 * TILE - 6, 8, 36, 40, DREAM.goldDark); b.fillStyle = DREAM.night; b.fillRect(28 * TILE - 2, 12, 28, 32); b.fillStyle = "#6a3b8a"; b.fillRect(28 * TILE - 2, 32, 28, 12); disc(b, 28 * TILE + 16, 22, 5, DREAM.gold); b.fillStyle = DREAM.pink; b.fillRect(28 * TILE + 2, 36, 12, 2);
-  drawClock(b, 21 * TILE + 8, 28);
-}
-PROPS.dream = { counter: drawTeaBar, fridge: drawGrandfatherClock, roundTable: drawMoonTable, stool: drawCloudStool, meetingTable: drawDreamTable, sofa: drawChaise, coffeeTable: drawCrystalStand, bookshelf: drawDreamShelf, lamp: drawMoonLamp, cabinets: drawApothecary, boxes: drawPillowPile, printer: drawEasel, cooler: drawHourglass, coffeeStation: drawDreamcatcher, wallDecor: drawWallDecorDream };
+}, 7);
+WALL_ART.dream_clock = wallClock;
+PROPS.dream = { counter: drawTeaBar, fridge: drawGrandfatherClock, roundTable: drawMoonTable, stool: drawCloudStool, meetingTable: drawDreamTable, sofa: drawChaise, coffeeTable: drawCrystalStand, bookshelf: drawDreamShelf, lamp: drawMoonLamp, cabinets: drawApothecary, boxes: drawPillowPile, printer: drawEasel, cooler: drawHourglass, coffeeStation: drawDreamcatcher, wallFixed: drawWallFixedDream };
 THEME_NAMES.push("dream");
 
 // ---------- progress decor (unlocked by finished work; see web/progress.js) ----------

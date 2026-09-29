@@ -1,11 +1,12 @@
 // Office layout as data: every movable piece of furniture is a record {id, type, tx, ty, dir?, v?, water?, emp?}.
 // Everything the office needs is derived from those records: blocked tiles, hangout spots, meeting places, seats, event tiles.
-// Rooms, walls, doors and the window / clock wall decor are fixed. Pure logic (no drawing, no DOM): the browser loads this as a
+// Rooms, walls, doors and the two windows are fixed; the other wall decor (posters, clocks, shelves, screens ...) is movable, one set of
+// pieces per theme (WALL below), hung on the top wall band. Pure logic (no drawing, no DOM): the browser loads this as a
 // classic script (window.POLayout), the server loads the very same file to validate what a browser sends (globalThis.POLayout).
 (() => {
   const COLS = 30, ROWS = 17;
   const MAX_EMP = 12;        // the office seats this many colleagues
-  const MAX_ITEMS = 150, MAX_DESKS = 16;
+  const MAX_ITEMS = 240, MAX_DESKS = 16;
   const ENTRANCE = { tx: 14, ty: 16 }; // doormat at the bottom edge of the open office; new hires walk in from below
   const key = (x, y) => x + "," + y;
 
@@ -32,6 +33,21 @@
     { key: "window", tx: 20, ty: 2, dir: "up", anim: "stand" },
     { key: "window2", tx: 16, ty: 2, dir: "up", anim: "gaze" },
   ];
+
+  // The top wall band (rows 0-1) carries the wall decor. The windows are part of the wall: nothing hangs over them.
+  const WINDOW_TILES = new Set([9, 10, 11, 17, 18, 19]);
+  // Wall pieces per theme: piece -> [default tiles (one piece per tile), width in tiles]. A piece's type is "<theme>_<piece>".
+  // The artwork lives in office.js (WALL_ART); each theme has its own decor, so each theme keeps its own arrangement.
+  const WALL = {
+    default: { cabinets: [[0], 6], poster: [[13], 1], clock: [[15], 1], shelf: [[20], 2], tv: [[24], 4], whiteboard: [[28], 2] },
+    football: { banner: [[0], 6], jersey: [[13], 2], clock: [[15], 1], trophies: [[20], 2], scoreboard: [[24], 4], tactics: [[28], 2] },
+    fashion: { atelier: [[0], 6], moodboard: [[6], 3], poster: [[13], 1], clock: [[15], 1], hats: [[20], 2], mirror: [[24], 4] },
+    gothic: { torch: [[1, 3, 26, 28], 1], portrait: [[13], 1], chandelier: [[14], 2], clock: [[16], 1], moon: [[20], 1] },
+    music: { foam: [[0], 5], clock: [[6], 1], speaker: [[8, 20], 1], plaque: [[13], 2], onair: [[15], 2], awards: [[23], 3], counter: [[26], 4] },
+    travel: { bunting: [[0], 7], poster: [[7], 2], map: [[12], 5], clock: [[21], 1], departures: [[23], 7] },
+    dream: { moons: [[0], 6], eye: [[14], 2], clock: [[21], 1], constellation: [[23], 5], painting: [[28], 2] },
+  };
+  const hasOwn = (o, k) => Object.prototype.hasOwnProperty.call(o, k);
 
   const doors = new Set(DOORS.map(([x, y]) => key(x, y)));
   const floor = new Set();
@@ -78,6 +94,7 @@
     cooler: { fp: [[0, 0]], up: 16, spots: [{ at: [[1, 0, "left"], [-1, 0, "right"], [0, 1, "up"]], anim: "drink", wk: "water" }] },
     coffeeStation: { fp: [[0, 0]], up: 8, spots: [{ at: FRONT, anim: "brew", wk: "brew" }] },
   };
+  for (const th of Object.keys(WALL)) for (const [piece, [, w]] of Object.entries(WALL[th])) TYPES[th + "_" + piece] = { wall: { theme: th, piece, w } };
   // palette order (desks are added automatically and by copying)
   const TYPE_ORDER = ["desk", "counter", "fridge", "roundTable", "stool", "bin", "plant", "meetingTable", "meetingChair", "sofa", "coffeeTable", "bookshelf", "lamp", "cabinets", "boxes", "printer", "cooler", "coffeeStation"];
   const DEFAULT_DIR = { stool: "right", meetingChair: "down" };
@@ -145,12 +162,13 @@
     const errors = [];
     const blocked = new Set(WALLS), occ = new Map(), soft = new Map();
     const ids = new Set();
-    const list = [];
+    const list = [], wallItems = [];
     for (const it of items) {
-      const T = TYPES[it.type];
+      const T = hasOwn(TYPES, it.type) ? TYPES[it.type] : null;
       if (!T) { errors.push({ code: "type", id: it.id }); continue; }
       if (ids.has(it.id)) { errors.push({ code: "dup", id: it.id }); continue; }
       ids.add(it.id);
+      if (T.wall) { wallItems.push(it); continue; }
       list.push(it);
       const claim = (x, y, isSoft) => {
         const k = key(x, y);
@@ -161,6 +179,17 @@
       };
       for (const d of T.fp || []) { const [x, y] = tileOf(it, d); claim(x, y, false); }
       for (const d of T.soft || []) { const [x, y] = tileOf(it, d); claim(x, y, true); }
+    }
+    // wall decor: inside the top band, clear of the windows, not on another piece of the same theme (other themes' pieces are asleep)
+    const hung = new Map();
+    for (const it of wallItems) {
+      const { theme, w } = TYPES[it.type].wall;
+      if (it.ty !== 0 || it.tx < 0 || it.tx + w > COLS) { errors.push({ code: "wallEdge", id: it.id }); continue; }
+      const cols = Array.from({ length: w }, (_, i) => it.tx + i);
+      if (cols.some((x) => WINDOW_TILES.has(x))) { errors.push({ code: "window", id: it.id }); continue; }
+      const hit = cols.map((x) => hung.get(theme + "|" + x)).find(Boolean);
+      if (hit) { errors.push({ code: "wallOverlap", id: it.id, other: hit }); continue; }
+      for (const x of cols) hung.set(theme + "|" + x, it.id);
     }
     // a walkable tile that nobody stands on, sits on or walks through: walls, furniture, desk seats, stools and chairs all block passage
     const passBlock = new Set([...blocked, ...soft.keys()]);
@@ -244,9 +273,10 @@
     const items = [], ids = new Set();
     for (const raw of doc.items) {
       if (!raw || typeof raw !== "object" || Array.isArray(raw)) return { ok: false, error: "item" };
-      const T = TYPES[raw.type];
+      const T = typeof raw.type === "string" && hasOwn(TYPES, raw.type) ? TYPES[raw.type] : null;
       if (!T || typeof raw.id !== "string" || !ID_RE.test(raw.id) || ids.has(raw.id)) return { ok: false, error: "item" };
       if (!isInt(raw.tx) || !isInt(raw.ty) || raw.tx < 0 || raw.ty < 0 || raw.tx >= COLS || raw.ty >= ROWS) return { ok: false, error: "tile" };
+      if (T.wall && (raw.ty !== 0 || raw.tx + T.wall.w > COLS)) return { ok: false, error: "tile" };
       ids.add(raw.id);
       const it = { id: raw.id, type: raw.type, tx: raw.tx, ty: raw.ty };
       if (T.dirs) { if (raw.dir !== undefined && !T.dirs.includes(raw.dir)) return { ok: false, error: "dir" }; it.dir = raw.dir || DEFAULT_DIR[raw.type]; }
@@ -261,10 +291,33 @@
       }
       items.push(it);
     }
-    return { ok: true, items };
+    // the themes whose wall decor is stored here (the others use their default arrangement)
+    let walls;
+    if (doc.walls !== undefined) {
+      if (!Array.isArray(doc.walls) || doc.walls.length > 16 || doc.walls.some((x) => typeof x !== "string" || !hasOwn(WALL, x))) return { ok: false, error: "walls" };
+      walls = [...new Set(doc.walls)];
+    }
+    return { ok: true, items, ...(walls && walls.length ? { walls } : {}) };
   }
-  const toDoc = (items) => ({ v: 1, items: items.map((it) => ({ ...it })) });
+  const toDoc = (items, walls) => ({ v: 1, items: items.map((it) => ({ ...it })), ...(walls && walls.length ? { walls: [...new Set(walls)] } : {}) });
   const clone = (items) => items.map((it) => ({ ...it }));
+
+  // ---------- wall decor ----------
+  const wallOrder = (theme) => (hasOwn(WALL, theme) ? Object.keys(WALL[theme]).map((p) => theme + "_" + p) : []);
+  const wallOf = (items, theme) => items.filter((it) => hasOwn(TYPES, it.type) && TYPES[it.type].wall && TYPES[it.type].wall.theme === theme);
+  // A theme's default arrangement (the decor the office has always had). One piece per default tile: gothic_torch, gothic_torch2 ...
+  function defaultWall(theme) {
+    if (!hasOwn(WALL, theme)) return [];
+    const out = [];
+    for (const [piece, [tiles]] of Object.entries(WALL[theme])) tiles.forEach((tx, i) => out.push({ id: theme + "_" + piece + (i ? i + 1 : ""), type: theme + "_" + piece, tx, ty: 0 }));
+    return out;
+  }
+  // `doc.walls` lists the themes whose decor is stored; for any other theme the default arrangement is added (nothing is stored for it yet).
+  function withWall(items, doc, theme) {
+    if (!theme || !hasOwn(WALL, theme) || (doc && doc.walls && doc.walls.includes(theme)) || wallOf(items, theme).length) return items;
+    return items.concat(defaultWall(theme));
+  }
+  const wallTiles = () => Array.from({ length: COLS }, (_, x) => [x, 0]);
 
   // ---------- desks and colleagues ----------
   // Explicit `emp` first, then whoever is left takes the first free desk in list order.
@@ -290,7 +343,7 @@
   }
   // The valid tile closest to `near` for a piece like `proto` (or null). `tiles` limits / orders the search.
   function findPlace(items, proto, near, { tiles, empCount = 0 } = {}) {
-    const cand = (tiles || floorTiles()).slice().sort((a, b) => dist(a, near) - dist(b, near));
+    const cand = (tiles || (TYPES[proto.type] && TYPES[proto.type].wall ? wallTiles() : floorTiles())).slice().sort((a, b) => dist(a, near) - dist(b, near));
     for (const [x, y] of cand) {
       const test = { ...proto, tx: x, ty: y };
       if (check([...items, test], { empCount }).ok) return test;
@@ -318,11 +371,12 @@
     return { items: out, changed, missing };
   }
   // The full picture for a set of colleagues: the saved layout (null = the default one), desks made sure of, who sits where.
-  function scene(doc, ids) {
+  function scene(doc, ids, theme) {
     ids = ids.slice(0, MAX_EMP);
     let items, missing = [], added = false;
     if (!doc) items = defaultItems().concat(autoDesks(ids.length, ids));
     else { const r = ensureDesks(doc.items, ids); items = r.items; missing = r.missing; added = r.changed; }
+    items = withWall(items, doc, theme);
     const { map, missing: unseated } = assignDesks(items, ids);
     return { items, build: build(items), assign: map, missing: [...new Set([...missing, ...unseated])], changed: added };
   }
@@ -372,10 +426,16 @@
     }
     return best;
   }
-  const tilesOf = (it) => [...(TYPES[it.type]?.fp || []), ...(TYPES[it.type]?.soft || [])].map((d) => tileOf(it, d));
+  // (a wall piece: the two rows of the wall band under it, for hit testing and highlighting)
+  const tilesOf = (it) => {
+    const T = hasOwn(TYPES, it.type) ? TYPES[it.type] : null;
+    if (T && T.wall) return Array.from({ length: T.wall.w }, (_, i) => [[it.tx + i, 0], [it.tx + i, 1]]).flat();
+    return [...((T && T.fp) || []), ...((T && T.soft) || [])].map((d) => tileOf(it, d));
+  };
 
   globalThis.POLayout = {
     COLS, ROWS, MAX_EMP, MAX_ITEMS, MAX_DESKS, ENTRANCE, ROOMS, DOORS, DOOR_GROUPS, FIXED_SPOTS, WALLS, TYPES, TYPE_ORDER, DEFAULT_DIR,
+    WALL, WINDOW_TILES, wallOrder, wallOf, defaultWall, withWall,
     key, defaultItems, deskLayout, autoDesks, build, check, sanitize, toDoc, clone, assignDesks, ensureDesks, findPlace, nextId, scene,
     canDelete, rotate, repair, nearestFree, tilesOf, floorTiles, isFloor: (x, y) => floor.has(key(x, y)),
   };

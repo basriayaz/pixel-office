@@ -417,188 +417,2992 @@
     "life": {
       "convos": [
         [
-          "Derleme yeşile döndü, gördün mü?",
-          "Gördüm! İlk seferde hem de.",
-          "~Neredeyse ağlıyordum valla.",
-          "Ağzından yel alsın, {me}."
+          "Bugün yine geç kaldın galiba.",
+          "Yok ya, erkendim. Servis geç kaldı.",
+          "Servis mi? Sen arabayla gelmiyor muydun?",
+          "~Servisi kendi kafamda kurmuştum işte."
         ],
         [
-          "{you}, bugün kaç kahve oldu?",
-          "Üç. Yargılama beni.",
-          "Asla. Ben dördüncüdeyim.",
-          "~Şampiyonlar takımıyız biz."
+          "Bugün öğlen ne yiyoruz?",
+          "Yine mi yemekhane?",
+          "Bugün mercimek çorbası varmış.",
+          "Hep mercimek! Şef başka çorba bilmiyor.",
+          "~Bilse kaç yıl önce çıkarırdı."
         ],
         [
-          "Cuma oldu mu artık?",
-          "Daha salı, {me}.",
-          "~Yüksek sesle söyleme.",
-          "O zaman bir şeyler atıştıralım."
+          "Yeni gelen çocuğu gördün mü?",
+          "Evet, çok sessiz duruyor.",
+          "İlk hafta hep öyle. Sonra bizden beter.",
+          "Bir ay sonra klima kavgasına girer.",
+          "~Hoş geldin sana o zaman."
         ],
         [
-          "Test dosyasına final_v2_gercek dedim.",
-          "~Klasik.",
-          "Sonra tekrar adını değiştirdim.",
-          "Tabii ki değiştirdin."
+          "Klimayı yine kim 18'e aldı?",
+          "Ben değilim, {you} olabilir.",
+          "Ben hiç dokunmadım, üşüyorum zaten.",
+          "Bu ofiste hayalet var, klima hayaleti.",
+          "~Hayalet de üşümüyormuş bence."
         ],
         [
-          "Ofisin çiçekleri bugün mutlu görünüyor.",
-          "Bana bakmadıkları kadar bakılıyor onlara.",
-          "~Çünkü hiç tartışmıyorlar.",
-          "Haklısın, {you}."
+          "Buzdolabındaki yoğurdum yok olmuş.",
+          "Etiket yapıştırdın mı?",
+          "Yapıştırdım, üstüne isim de yazdım.",
+          "Demek ki okuma yazma bilen hırsız.",
+          "~En tehlikelisi o zaten."
+        ],
+        [
+          "Toplantıdan çıktın mı, ne oldu?",
+          "Bir buçuk saat, karar sıfır.",
+          "Yani yine 'bir daha konuşuruz' mu?",
+          "Aynen, bir de takvim daveti geldi.",
+          "~Toplantı toplantıyı doğuruyor ya."
+        ],
+        [
+          "Hafta sonu bir planın var mı?",
+          "Kanepe ve dizi maratonu.",
+          "Çok iddialı bir plan bu.",
+          "Pazar akşamı yorgun uyanacağım.",
+          "Sen hâlâ dizide misin, ben pijamada."
+        ],
+        [
+          "Dünkü maçı izledin mi?",
+          "İzlemez miyim, sinirden tırnak yedim.",
+          "Hakem kesin yanlış verdi ya.",
+          "Hakem değil, biz oynayamadık.",
+          "~Neyse ki bu kadar dürüstüz."
+        ],
+        [
+          "Şu dizinin son bölümü yok mu!",
+          "Sakın spoiler verme, izlemedim.",
+          "Tamam, sadece bir şey diyeceğim.",
+          "{you}, ağzını kapat lütfen!",
+          "~Katilin bahçıvan olduğunu demeyeceğim."
+        ],
+        [
+          "Bizim komşu yine gece matkap çekti.",
+          "Saat kaçtı?",
+          "Sabaha karşı yediye çeyrek var.",
+          "Tavana tablo mu asıyor?",
+          "~Bence tüneli kazıyor."
+        ],
+        [
+          "Annem sabah sabah aradı.",
+          "Ne diyormuş?",
+          "Yemek yedin mi diye sordu, üç kere.",
+          "Annelerin tek sorusu bu.",
+          "~Cevap her zaman 'yemedim' olmalı."
+        ],
+        [
+          "Tatilden döndüm, yüzüm yanmış mı?",
+          "Biraz kırmızı ama güzel olmuş.",
+          "Bir haftalık huzur bir günde bitti.",
+          "Mailleri açtın mı?",
+          "~Açmasam bana bakıyor gibi duruyor."
+        ],
+        [
+          "Bu sabah trafik çok kötüydü.",
+          "Sen hangi yoldan geldin?",
+          "Köprüden, dokuz dakika demişti navigasyon.",
+          "Kaç dakika sürdü?",
+          "~Kırk beş. Navigasyona artık küsüyorum."
+        ],
+        [
+          "Zam geldi mi diye maaşa baktım.",
+          "Ee?",
+          "Yüzde iki. Çay parasına yeter.",
+          "Ben çayı bile ofisten içiyorum.",
+          "~O zaman sana ikramiye lazım."
+        ],
+        [
+          "Şu iki kişi hep aynı saatte kahve alıyor.",
+          "Fark ettim, birlikte yürüyorlar.",
+          "Bence bir şey var ortada.",
+          "Ya sadece kahve arkadaşıdırlar.",
+          "~İki kahve, tek bardak olur yakında."
+        ],
+        [
+          "Bugün diyete başladım.",
+          "Dün de başlamıştın.",
+          "Dün deneme sürümüydü.",
+          "Peki bu akşam ne yiyeceksin?",
+          "~Salata, yanında az pizza."
+        ],
+        [
+          "Sabah koşuya çıktım bugün.",
+          "Sen mi? Şaka yapıyorsun.",
+          "Yedi dakika koştum, on dakika yürüdüm.",
+          "Aferin, spora yeni bir bakış.",
+          "~Yürüyerek koşu diye kayıt açtım."
+        ],
+        [
+          "Bu kahveyi kaçıncı içiyorsun?",
+          "Dördüncü, ama küçük bardak.",
+          "{you}, kahveyi nereye koyuyorsun?",
+          "Damarlarıma, kan yok artık.",
+          "~Kanın yerini kafein aldı."
+        ],
+        [
+          "Yazıcı yine kağıt sıkıştırdı.",
+          "Ben yeni bir tane istiyorum artık.",
+          "Bu yazıcı bizden yaşlı.",
+          "Onu emekliye ayırmak lazım.",
+          "~Emekli olursa kâğıt sıkışmaz belki."
+        ],
+        [
+          "Wifi yine gitti mi?",
+          "Yine gitti, sanki bize küstü.",
+          "Modeme bir tık vurdum, düzeldi.",
+          "Modeme vurmak teknik destek mi?",
+          "~Ofiste bu en kıdemli yöntem."
+        ],
+        [
+          "Lavabodaki bulaşıkları kim bıraktı?",
+          "Ben değilim ya.",
+          "Kupanın altında not var: 'Sonra yıkarım'.",
+          "Sonra dediği ne zaman?",
+          "~Ofis mutfağında sonra yok."
+        ],
+        [
+          "Bugün doğum günü pastası var mı?",
+          "Var, mutfaktaki kutuda.",
+          "Kim ısmarlıyor?",
+          "Ayşe'nin kutlaması. Herkes toplansın.",
+          "~Ben çoktan yerdeydim, sen yetiş."
+        ],
+        [
+          "Pazartesi sendromu bende ağır geçiyor.",
+          "Ben Pazar akşamından başlıyorum.",
+          "Ben Cuma öğleden sonra bitiriyorum.",
+          "Cuma öğleden sonra mı çalışılıyormuş?",
+          "~Cuma öğleden sonra iş yok, niyet var."
+        ],
+        [
+          "Öğleden sonra göz kapaklarım kapanıyor.",
+          "Benimki toplantıda kapanıyor.",
+          "Kimse fark etmedi mi?",
+          "Sunumun ortasında horladım galiba.",
+          "~Ses efekti olarak kabul ettiler."
+        ],
+        [
+          "Akşam markete uğramam gerek.",
+          "Ne alacaksın?",
+          "Sadece süt. Sonra sepet doluyor.",
+          "Herkes 'sadece süt' diyerek girer.",
+          "~Çıkarken kolilerle çıkarız hep."
+        ],
+        [
+          "Kiralar fırladı, yeni ev bakıyorum.",
+          "Ben de bakıyorum, hiçbiri uygun değil.",
+          "Balkon dedikleri iki saksılık yer.",
+          "Salon dedikleri de koridor.",
+          "~En azından oda sayısı doğru."
+        ],
+        [
+          "Bizim kedi yine klavyeye oturmuş.",
+          "Ne yazmış?",
+          "'asdfghjk', bence şiir.",
+          "Bence yeni şifren bu olabilir.",
+          "~Onu kimse tahmin edemez zaten."
+        ],
+        [
+          "Bu hafta sonu düğün var.",
+          "Kaç kişilik?",
+          "Beş yüz. Yarısını tanımıyorum.",
+          "Yine de tabak dolusu yiyeceksin.",
+          "~Tanımadığım insanlara da gülümserim."
+        ],
+        [
+          "Toplantıda mikrofonum açıkmış.",
+          "Ne dedin?",
+          "Sadece 'Bu iş ne zaman bitecek' dedim.",
+          "Herkes duydu mu?",
+          "~Herkes başını salladı, kimse gülmedi."
+        ],
+        [
+          "Ekran paylaşırken bildirim düştü.",
+          "Ne yazıyordu?",
+          "Anneme 'öğlen makarna' yazmışım.",
+          "Herkes şaşırmıştır.",
+          "~Şimdi hepsi makarna istiyor."
+        ],
+        [
+          "Mail 'gereğini rica ederim' diye bitiyor.",
+          "Kim yazmış?",
+          "Müdür. Neyin gereği belli değil.",
+          "Bu cümle tamamen sihirli.",
+          "~Hem emir hem rica, çok ustaca."
+        ],
+        [
+          "Yağmur yağıyor, şemsiye getirdin mi?",
+          "Getirmedim, ıslandım.",
+          "Ofiste bir yığın şemsiye var.",
+          "Hepsi unutulmuş, sahipsiz.",
+          "~Şemsiye sahipleri gizli toplantı yapıyor."
+        ],
+        [
+          "Hava çok sıcak, klima de bozuk.",
+          "Bugün ofiste sauna havası.",
+          "Ben elime dosya alıp yelpaze yaptım.",
+          "Sanki eski film gibi.",
+          "~Bir de limonata olsa tam olur."
+        ],
+        [
+          "Otoparkta yer bulmak çok zor.",
+          "Ben yirmi dakika döndüm.",
+          "Yer bulunca sanki loto kazandım.",
+          "Ödülü de kapı önüne verirler.",
+          "~Ofis girişinde konfeti yok mu?"
+        ],
+        [
+          "Asansör yine dolu geldi.",
+          "Ben merdivenle çıkıyorum artık.",
+          "Kaçıncı katta çalışıyorsun?",
+          "Beşinci. Beşinde nefes yok.",
+          "~Spor salonuna gerek kalmadı."
+        ],
+        [
+          "Bugün çıkışta simit yiyelim mi?",
+          "Yiyelim, susamlısı taze olsun.",
+          "Yanında bir bardak çay?",
+          "Ofis yolunda en güzel an bu.",
+          "~Bütün gün simit bekliyorum."
+        ],
+        [
+          "Masamdaki çiçek kurumuş, ne yapsam?",
+          "Ne sıklıkla suluyorsun?",
+          "Ayda bir. Yeterli sandım.",
+          "Kaktüs bile daha sık su ister.",
+          "~Kaktüs de mi öldü?"
+        ],
+        [
+          "İkinci monitör aldın mı?",
+          "Aldım, artık iki ekranda kaybolurum.",
+          "Bir de klavye sesin çok yüksek.",
+          "Mekanik klavye, ritim tutuyorum.",
+          "~Ofiste orkestra kuruyorsun."
+        ],
+        [
+          "Mikrodalgada balık ısıtan kim?",
+          "Bu kokudan kimse kurtulamaz.",
+          "Bütün kat inledi.",
+          "Yemek kutusuna imza koymak lazım.",
+          "~Yeni kural: balık yasak."
+        ],
+        [
+          "Yeni saç kesimin çok yakışmış.",
+          "Sahiden mi? Berber dün bir şey dedi.",
+          "Ne dedi?",
+          "'Bu sefer kısa olsun' dedim, çok kısa oldu.",
+          "~Neyse, saç uzar, moral kalır."
+        ],
+        [
+          "Yeni ayakkabıların çok şık.",
+          "İndirimden aldım, yarı fiyata.",
+          "Ama ayağım kabarmış.",
+          "Güzellik acı çekmek demek.",
+          "~Çekmeyeceksen indirim yapmazlar."
+        ],
+        [
+          "Telefonumu yenileyecektim.",
+          "Hangisini alacaksın?",
+          "Şarj bitmeyen olsun yeter.",
+          "Böyle bir telefon yok ki.",
+          "~O zaman priz taşıyacağım."
+        ],
+        [
+          "Kargom bugün gelecekti.",
+          "Takip numarasına baktın mı?",
+          "'Dağıtıma çıktı' yazıyor, dört gündür.",
+          "Kargoya güveniyorsun demek.",
+          "~O kargo biraz gezmeyi seviyor."
+        ],
+        [
+          "Akşam oyun oynamaya var mısın?",
+          "Yorgunum ama olur.",
+          "Bir maç diyoruz, üç saat sürüyor.",
+          "Hep 'bir maç' diyoruz.",
+          "~Yarın sabah yine kahveyle tanışırız."
+        ],
+        [
+          "Sabah alarmı beş kere erteledim.",
+          "Ben yedi kere.",
+          "Sanki alarm bizimle dalga geçiyor.",
+          "Her erteleme bir umut bana.",
+          "~Umut yastıkta bitiyor."
+        ],
+        [
+          "Tatile gitmek için sabırsızım.",
+          "Nereye planlıyorsun?",
+          "Bir sahil, bir şezlong, hiçbir şey.",
+          "Sonra mail kutusu dolu dönersin.",
+          "~O yüzden telefonu evde bırak."
+        ],
+        [
+          "Şu yeni gelen iş arkadaşı çok çalışkan.",
+          "Bence bizi mahvedecek.",
+          "İlk gün bile fazla mesai yapmış.",
+          "Yakında bize de örnek gösterirler.",
+          "~Ofis çalışkanlığa hazır değil."
+        ],
+        [
+          "Yemekhanede tavuk mu var bugün?",
+          "Var, ama kuru gibi.",
+          "Ekmek arası olarak yenir.",
+          "Sosla her şey yenir.",
+          "~Sos ofisin en güzel arkadaşı."
+        ],
+        [
+          "Dün gece uyuyamadım hiç.",
+          "Neden, düşünceler mi?",
+          "Yok, komşunun köpeği havladı.",
+          "Köpek hangi saatte havlıyor?",
+          "~Tam saat üçte, alarm gibi."
+        ],
+        [
+          "Öğle arasında yürüyüşe çıkalım mı?",
+          "Olur, hava güzel.",
+          "Sadece yarım saat.",
+          "Yirmi dakika yürü, on dakika dön.",
+          "~Sonra oturup terini kurut."
+        ],
+        [
+          "Ben bugün şarkı söyledim toplantıda.",
+          "Nasıl yani?",
+          "Sesim kısık, hep mırıldanıyorum.",
+          "Müdür ne dedi?",
+          "~'Ses güzelmiş, sunumu da güzel yap' dedi."
+        ],
+        [
+          "Bugün ne kadar sessiz bir ofis.",
+          "Herkes kulaklıkta çünkü.",
+          "Ben de takmam gerek belki.",
+          "Kulaklık yeni ofis duvarı.",
+          "~İçinde kendi dünyan var."
+        ],
+        [
+          "Kim benim kalemimi almış?",
+          "Hangisi?",
+          "Mavi olan, üstünde şirket adı.",
+          "Hepsinde şirket adı var!",
+          "~O zaman hepimiz zanlıyız."
+        ],
+        [
+          "Ofiste romantik komedi var gibi.",
+          "Hangisi, o iki kişi mi?",
+          "Bugün aynı yemeği paylaşmışlar.",
+          "Yemek paylaşmak ciddi şey.",
+          "~Bir sonraki adım sosu paylaşmak."
+        ],
+        [
+          "Kırk yaşında ilk kez kayak yapacağım.",
+          "Cesaretine hayranım.",
+          "Cesaret yok, sadece indirim vardı.",
+          "Kırık kemik de indirimde mi?",
+          "~Sigorta ayrı bir hikaye."
+        ],
+        [
+          "Bugün çayı kim demledi?",
+          "Ben demledim.",
+          "Neden rengi bu kadar açık?",
+          "Poşetle dalga geçtim biraz.",
+          "~Buna çay değil, sıcak su derler."
+        ],
+        [
+          "Cumaya kaç saat kaldı?",
+          "Yirmi saat.",
+          "Sanki yıllar gibi.",
+          "Ben Perşembe akşamı ruh haliyle Cuma'yım.",
+          "~Bir de takvim sana katılsa."
+        ],
+        [
+          "Bu ay çok fazla sipariş verdim.",
+          "Neyi sipariş ettin?",
+          "Yemek, giysi, bir de ceviz kırma makinesi.",
+          "Ceviz kırma makinesi mi?",
+          "~Bir gün lazım olur diye."
+        ],
+        [
+          "Sabah metrobüs adeta konserve gibiydi.",
+          "Ben ayakta uyudum.",
+          "Dirsek ve çanta arasında sıkıştım.",
+          "Bu yolculuk için tazminat lazım.",
+          "~Ya da ofiste ekstra kahve."
+        ],
+        [
+          "Bu akşam annemlere yemeğe gidiyorum.",
+          "Tatlı da var mı?",
+          "Kesin. Bir de üç tabak yemek.",
+          "Ben olsam bir hafta önceden aç kalırdım.",
+          "~Ben iki hafta önceden başladım."
+        ],
+        [
+          "Amirim bana 'harika' dedi.",
+          "Ne yaptın da?",
+          "Toplantıya beş dakika erken geldim.",
+          "Çıta bu kadar aşağıda mı?",
+          "~Ben de yarın on dakika erken gelirim."
+        ],
+        [
+          "Bugün ofiste hep aynı şarkı çalıyor.",
+          "Kim açtı onu?",
+          "Sanırım {you}'in telefonu.",
+          "Yok ya, benim değil bu!",
+          "~Şarkı beynime yapıştı artık."
+        ],
+        [
+          "Hafta sonu kamp yapmayı düşünüyorum.",
+          "Çadır var mı?",
+          "Çadırı kurmayı bilmiyorum ama izlemiştim.",
+          "İzlemek yetmez, yağmur da yağar.",
+          "~O zaman arabada uyu, macera olur."
+        ],
+        [
+          "Sabah kahvaltı yapmadan geldim.",
+          "Kahve sana kalır o zaman.",
+          "Kahve yemek değil ki.",
+          "Bizim için kahve yemek, ofis kuralı.",
+          "~Simit de tatlı sayılır."
+        ],
+        [
+          "Şu ofis bitkisi bizi izliyor gibi.",
+          "Bence bir şey biliyor.",
+          "Toplantıda hep yaprağını sallıyor.",
+          "Rüzgâr yok, nereden sallanıyor?",
+          "~Klimadan. Bitki bile üşüyor."
+        ],
+        [
+          "Dün gece bir rüya gördüm.",
+          "Ne gördün?",
+          "Ofisteydik, toplantı bitmiyordu.",
+          "Bu rüya değil, hafta içi!",
+          "~Rüyada da kahve içtim yine."
+        ],
+        [
+          "Bugün öğlen menemen yapsak mı?",
+          "Mutfakta ocak yok ki.",
+          "Mikrodalgada yaparız.",
+          "Soğan mı doğrayacağız?",
+          "~Soğan doğrarsak herkes ağlar."
+        ],
+        [
+          "Yeni bir spor salonuna yazıldım.",
+          "Kaç gün gittin?",
+          "Bir gün. Çantayı bile açmadım.",
+          "Üyelik kartı yeter mi?",
+          "~Cüzdanda şık duruyor, evet."
+        ],
+        [
+          "Çocukluktaki tatil anılarını hatırladım.",
+          "Bizim yaz tatili köydeydi.",
+          "Ben babaannemin bahçesinde şeftali yerdim.",
+          "Bugün şeftali yerine kahve içiyorum.",
+          "~Ne kadar büyümüşüz, ne kadar yorgun."
+        ],
+        [
+          "Ofiste bir dedikodu var duydun mu?",
+          "Yoo, söyle bakalım.",
+          "Kahve makinesi yenilenecekmiş!",
+          "Bu bir dedikodu mu, haber mi?",
+          "~Bu ofis için manşet."
+        ],
+        [
+          "Hafta sonu bir arkadaşın düğününe gittim.",
+          "Nasıldı?",
+          "Pasta çok güzeldi, konuşma çok uzundu.",
+          "Konuşmayı kim yaptı?",
+          "~Damadın amcası, kırk beş dakika."
+        ],
+        [
+          "Yılbaşı için ofiste hediye çekilişi var.",
+          "Kimi çektin?",
+          "{you}'i çektim, sakın söyleme.",
+          "Ben de seni çektim!",
+          "~O zaman ikimiz de çorap alırız."
+        ],
+        [
+          "Şu yeni sunum programı çok karışık.",
+          "Ben açamıyorum bile.",
+          "Tıkladım, ekran kapandı.",
+          "Bilgisayarı yeniden başlat.",
+          "~Çözümün yarısı budur zaten."
+        ],
+        [
+          "Kavga çıkacak gibi, klima ayarı yüzünden.",
+          "Kim kiminle?",
+          "Ahmet 24 istiyor, Ayşe 20.",
+          "Ortayı bulsunlar, 22.",
+          "~Kimse 22'yi sevmiyor, garip ama."
+        ],
+        [
+          "Geçen hafta bir kilo verdim.",
+          "Aferin, nasıl?",
+          "Bir kilo, üç gün sonra geri geldi.",
+          "Yanında iki arkadaşı da geldi.",
+          "~Kilolar da kalabalık seviyor."
+        ],
+        [
+          "Yarın erken kalkmam lazım.",
+          "Kaçta?",
+          "Beşte. Yarın bir yere yetişeceğim.",
+          "Bunu ilk defa duyuyorum.",
+          "~Ben de bu saati ilk defa gördüm."
+        ],
+        [
+          "Bugün öğle yemeğine ben ısmarlıyorum.",
+          "Neden, ne oldu?",
+          "Piyango çıktı, üç lira kazandım.",
+          "O üç liraya bir simit bile gelmez.",
+          "~Zaten simitten kaç dilim olacak."
+        ],
+        [
+          "Akşam sinemaya gidelim mi?",
+          "Hangi film?",
+          "Fark etmez, mısır önemli.",
+          "Ben de bileti değil mısırı alacağım.",
+          "~Film de bahane olsun."
+        ],
+        [
+          "Pazartesi sabahı ofis çok kalabalık.",
+          "Herkes hafta sonunu anlatıyor.",
+          "Ben anlatacak bir şey bulamadım.",
+          "Kanepede uyumak da bir hikaye.",
+          "~Uzun soluklu bir macera ama."
+        ],
+        [
+          "{you}, bugün çok neşelisin.",
+          "Maaş yattı, ondan.",
+          "Ben de baktım, bir saat sürdü.",
+          "Neden bir saat?",
+          "~Gözüm yaşardı, ekranı silmem lazımdı."
+        ],
+        [
+          "Ofisin kedisi yine masamda uyuyor.",
+          "Hangi kedi?",
+          "Sarı olan, herkesin sevgilisi.",
+          "Ondan iş çıkmaz ama moral çıkar.",
+          "Bence kıdemli çalışan o."
+        ],
+        [
+          "Bugün aura puanım -500 oldu",
+          "Ne yaptın yine?",
+          "Cuma günü prod'a deploy ettim",
+          "~Bu resmen aura silinmesi",
+          "Rollback yaptım, +50 geri geldi"
+        ],
+        [
+          "POV: toplantı \"kısa bir şey\" diye başladı",
+          "Kaçıncı saatteyiz?",
+          "Saatler önce zaman kavramını kaybettik",
+          "Kahve bitti, umut da bitti",
+          "Ben gidip yeni kahve koyuyorum"
+        ],
+        [
+          "{you}, kodu sen mi yazdın?",
+          "Yok abi, vibe coding yaptım",
+          "Nasıl çalışıyor bu?",
+          "Bilmiyorum, dokunma çalışıyor",
+          "~Kutsal kod, kimse bakmasın"
+        ],
+        [
+          "Yapay zekâ kodumu düzeltti",
+          "Harika! Ne dedi?",
+          "\"Bu kod niye böyle?\" dedi",
+          "Ben de \"sorma\" dedim",
+          "~İkimiz de sustuk"
+        ],
+        [
+          "Bu bug'a skill issue diyorlar",
+          "Kim diyor?",
+          "Kod inceleme yapan bot",
+          "Bot mu? Ona da skill issue de",
+          "Dedim, şimdi bana bakmıyor"
+        ],
+        [
+          "NPC gibi aynı cümleyi kuruyorsun",
+          "Hangi cümle?",
+          "\"Bir bakıp döneceğim\"",
+          "Doğru, hiç dönmüyorum",
+          "~Bu bir quest, tamamlanmadı"
+        ],
+        [
+          "Bu tasarım çok it's giving...",
+          "Ne veriyor?",
+          "2009 PowerPoint enerjisi",
+          "Ama gradient var!",
+          "Gradient'i bırak, arkadaşlığı koru"
+        ],
+        [
+          "Delulu is the solulu diyorlar",
+          "Kim diyor?",
+          "Ürün müdürü, \"bu hafta bitiyor\" dedi",
+          "~Bu tam delulu, solulu değil",
+          "Sprint'i bir ay uzattık"
+        ],
+        [
+          "{me}, sabah 9 toplantısı için kalktım",
+          "Aferin, nasıl geçti?",
+          "Kamera kapalıydı, ruhum da öyle",
+          "Ruhun mute'da mı?",
+          "Evet, yanlışlıkla açmıyorum"
+        ],
+        [
+          "Yeni ajan kod yazıyor, biz çay içiyoruz",
+          "Bu artık verimlilik mi?",
+          "Verimlilik, ama çay dahil",
+          "Çay bile ajanla yönetiliyor",
+          "~Çay agent'ı v2 çıkmış"
+        ],
+        [
+          "Ekşi'de \"yapay zekâ işimizi alır\" var",
+          "Okudun mu?",
+          "Yorumlarda herkes kahve içiyor",
+          "Yani işimiz kahve mi?",
+          "Şu an evet, sorun yok"
+        ],
+        [
+          "Rizz'im sıfır, conflict'le konuşamıyorum",
+          "Onunla nasıl konuşulur?",
+          "Nazikçe, \"senden ayrılmak istiyorum\" diye",
+          "Ya olmazsa?",
+          "Force push, hayat kısa"
+        ],
+        [
+          "Bu kodda hiç yorum yok",
+          "Kod kendini açıklıyor",
+          "Ben açıklamasını okuyamıyorum",
+          "O zaman sen skill issue'sun",
+          "~Ağlıyorum, haklısın"
+        ],
+        [
+          "Bu hafta sigma grindset açtım",
+          "Ne yapıyorsun?",
+          "Sabah 5'te kalkıp test yazıyorum",
+          "Testler geçiyor mu?",
+          "Ben kalkınca test de uyanıyor"
+        ],
+        [
+          "Prompt'u üç kez değiştirdim",
+          "Sonuç?",
+          "Yapay zekâ hâlâ aynı hatayı yapıyor",
+          "Belki sorun prompt'ta değildir",
+          "~Ya bende olabilir mi?"
+        ],
+        [
+          "Beyin çürümesi başladı",
+          "Ne oldu?",
+          "Toplantıda \"skibidi deploy\" dedim",
+          "Kimse anlamadı mı?",
+          "Bir stajyer alkışladı"
+        ],
+        [
+          "Ben bu hatayı bulacağım",
+          "Hatanın yeri belli mi?",
+          "Belli değil ama enerjim yüksek",
+          "Bu enerji de bug olabilir",
+          "~O zaman ikimiz de hatalıyız"
+        ],
+        [
+          "Main character enerjisiyle geldim",
+          "Ofise mi?",
+          "Evet, kahve makinesi ana sahne",
+          "Sıra var, figüran ol",
+          "Figüran da kahve ister"
+        ],
+        [
+          "Kırmızı bayrak: \"geçici çözüm\" yazan commit",
+          "Yeşil bayrak nedir?",
+          "\"Kalıcı çözüm\" yazan commit",
+          "Ona hiç rastlamadım",
+          "~Efsane yaratık gibi"
+        ],
+        [
+          "Test ortamı çalışıyor ama canlıda yok",
+          "Klasik \"bende çalışıyor\" vakası",
+          "Bilgisayarı müşteriye mi verelim?",
+          "Müşteri ne diyecek?",
+          "\"Yine mi sen?\" diyecek"
+        ],
+        [
+          "Bugün canon event yaşadım",
+          "Ne oldu?",
+          "Sunucu çöktü tam sunumda",
+          "Kaçınılmaz bir olay bu",
+          "~Her gün canon event bende"
+        ],
+        [
+          "Şu logoyu biraz büyütelim",
+          "Ne kadar?",
+          "Biraz daha, biraz daha...",
+          "Ekran yetmiyor artık",
+          "O zaman ekranı büyütelim"
+        ],
+        [
+          "Ürün müdürü \"hızlı bir demo\" istedi",
+          "Hızlı demek kaç gün?",
+          "Yarım saat diyor",
+          "Geçen sefer yarım saat üç hafta sürdü",
+          "~Zaman esnekmiş, kabul"
+        ],
+        [
+          "Yapay zekâ bana \"harika soru\" dedi",
+          "Sende ne var?",
+          "Soru \"nasılsın?\" idi",
+          "Bu kadar mı iltifat?",
+          "Bazen tek ihtiyacın odur"
+        ],
+        [
+          "Ratio yedim, kod incelemede",
+          "Kaç yorum?",
+          "On dört, hepsi noktalama",
+          "Bu sadece cope değil, seethe",
+          "~Ben zaten ağlıyorum"
+        ],
+        [
+          "Kahve makinesi bozuldu, ofis çöktü",
+          "Kritik seviye ne?",
+          "Herkes çay içiyor, yani felaket",
+          "Bir de sohbet başladı",
+          "~Sohbet en tehlikeli özellik"
+        ],
+        [
+          "Bu sprint'te \"yapılacaklar\" listem uzadı",
+          "Ne kadar?",
+          "Ekrandan taşıp duvara yazdım",
+          "Bu iş çok aşırı",
+          "Duvar da backlog oldu artık"
+        ],
+        [
+          "Ben \"tamam\" dedim ama ruhum \"hayır\" dedi",
+          "Sonra ne oldu?",
+          "İş bana verildi",
+          "Ruh dinlenmeliydi",
+          "Ruh, ofis tatilde diyor"
+        ],
+        [
+          "{you}, ekran görüntüsü at",
+          "Neyi?",
+          "Hata mesajını",
+          "Attım ama bulanık",
+          "Bulanık ama derdimiz net"
+        ],
+        [
+          "Yeni ajan bana \"sen çok iyisin\" dedi",
+          "Neden acaba?",
+          "Token limitim dolmuş, cömert davrandı",
+          "~Yani sahte iltifat",
+          "Sahte olsun, benim olsun"
+        ],
+        [
+          "Bugün tasarım revizesi geldi",
+          "Kaçıncı?",
+          "Numara 47, adı \"son son son_v2\"",
+          "Bu klasik",
+          "~Son dediğin hiç son değil"
+        ],
+        [
+          "Toplantıda \"hızlıca hizalanalım\" dendi",
+          "Kaç dakika sürdü?",
+          "Kırk beş, hizalanmadık",
+          "Bence daha çok dağıldık",
+          "Ama çok uyumlu dağıldık"
+        ],
+        [
+          "POV: cuma 17.55'te bug bildirildi",
+          "Ne yapıyorsun?",
+          "Bilgisayarı kapatıyorum",
+          "Kimseye bir şey demeden mi?",
+          "Sessizce kaçmak da sanat"
+        ],
+        [
+          "Yapay zekâ kodda halüsinasyon gördü",
+          "Ne uydurmuş?",
+          "Var olmayan bir kütüphane",
+          "Adı ne?",
+          "\"SihirliDeploy\", harikaymış"
+        ],
+        [
+          "Bu kadar hata neden çıkıyor?",
+          "Belki cache yüzünden",
+          "Cache'i sildim, hâlâ var",
+          "O zaman DNS'tir",
+          "~Hep DNS'tir, biliyorsun"
+        ],
+        [
+          "{me}, kanka bu commit ne?",
+          "\"Düzeltmeler\"",
+          "Neyi düzeltmişsin?",
+          "Bilmiyorum, hepsini",
+          "Hepsi bozulmuş mu?"
+        ],
+        [
+          "Ofiste hep \"ben hallederim\" diyen biri var",
+          "Kim?",
+          "Ben",
+          "Peki hallettin mi?",
+          "Hayır ama söylemesi güzeldi"
+        ],
+        [
+          "Bu hafta yalnızca \"sıkıntı yok\" diyoruz",
+          "Neden?",
+          "Çünkü sıkıntı çok",
+          "~Ters psikoloji",
+          "Bir işe yaramadı, sıkıntı büyüdü"
+        ],
+        [
+          "Sen bug'ı bulunca aura kazanırsın",
+          "Ben bulunca kaç puan?",
+          "+1000, ama önce bulmalısın",
+          "Bulamazsam?",
+          "-1000 ve bir çay ısmarla"
+        ],
+        [
+          "Şirket ortamında \"cringe\" yasak mı?",
+          "Bilmiyorum, ne oldu?",
+          "Sunumda \"hakkını helal et\" yazdım",
+          "~Kral bu, çekmecede dursun",
+          "Silmedim, gizli kaldı"
+        ],
+        [
+          "Yeni ürünün adı \"Superapp 2.0\"",
+          "Ne yapıyor bu?",
+          "Her şeyi yapıyor, hiçbirini iyi değil",
+          "Bu tam süper uygulama",
+          "~Bir de kendi kendini bozuyor"
+        ],
+        [
+          "Bu bug'ı çözemedim, ajan çözdü",
+          "Ne kadar sürede?",
+          "Üç saniye",
+          "Ben üç saattir uğraşıyordum",
+          "Moral olarak sıfırladık"
+        ],
+        [
+          "Görev listesinde \"acil\" yazan on iş var",
+          "Hangisi en acil?",
+          "Hepsi eşit acil",
+          "O zaman hiçbiri acil değil",
+          "~Felsefe yaptık, iş bitmedi"
+        ],
+        [
+          "Bu renk paleti çok \"clean girl\"",
+          "Anlamadım?",
+          "Bej, bej ve biraz daha bej",
+          "Kullanıcı bir şey görebilecek mi?",
+          "Görmesi lazım değil, hissetmeli"
+        ],
+        [
+          "Sabah standup'ında uyudum",
+          "Kimse fark etti mi?",
+          "Evet, \"kamera arkası\" dedim",
+          "~Arka planı geçtin",
+          "Sanal arka plan koruyucu melek"
+        ],
+        [
+          "Dün gece koda bakarken sabah oldu",
+          "Çözdün mü?",
+          "Hayır, ama kahvem soğudu",
+          "Bu yeni bir yenilgi sayılır",
+          "Kahve aura'sı da düştü"
+        ],
+        [
+          "Toplantı notu: \"Tekrar konuşalım\"",
+          "Ne zaman?",
+          "Bilmiyorum, belki 2027",
+          "Not aldım, unutmuş sayılırız",
+          "~Prod'a alınan en sağlam karar"
+        ],
+        [
+          "Bu prompt'ta \"lütfen\" yazdım",
+          "Ne fark etti?",
+          "Ajan daha güzel çalıştı",
+          "Bu bir nezaket bug'ı mı?",
+          "Hayır, feature",
+          "Ben de dene diyorum"
+        ],
+        [
+          "Ekibe yeni bir \"vibe\" lazım",
+          "Nasıl bir vibe?",
+          "Az hata, çok kahve",
+          "Bunu roadmap'e yazalım",
+          "~Q4 hedefi: sakinlik"
+        ],
+        [
+          "{you}, bu bug'ın ismi \"sıkıntı v1\"",
+          "Neden v1?",
+          "Çünkü v2 de gelecek",
+          "Yani sürekli sürüm çıkıyor",
+          "Bu tek düzenli çıktımız"
+        ],
+        [
+          "Bugün \"no thoughts head empty\" modundayım",
+          "Peki kod?",
+          "Kodu ajan yazıyor",
+          "Peki inceleme?",
+          "Onu da sen yap, kafa boş"
+        ],
+        [
+          "Şu \"ai slop\" meselesi ne?",
+          "Kalitesiz yapay zekâ içeriği",
+          "Bizim raporlara benziyor",
+          "~Bu ağır oldu",
+          "Ama rapor bile özeti okumamış"
+        ],
+        [
+          "Yeni kural: kırmızı bayrağa \"tamam\" diyoruz",
+          "Neden?",
+          "Çünkü morale iyi geliyor",
+          "Bayrak ne yapsın?",
+          "Rüzgârda dalgalanıyor, rahat"
+        ],
+        [
+          "{me}, bu dosya nerede?",
+          "Klasörde",
+          "Hangi klasör?",
+          "\"Yeni klasör (7)\"",
+          "Aramayı bırak, ruhunu ara"
+        ],
+        [
+          "Mesajı \"gördü\" diye bırakmışım",
+          "Ne yazmışsın?",
+          "\"Bir bakayım\" yazmışım",
+          "Baktın mı?",
+          "Gördüm ama bakmadım"
+        ],
+        [
+          "Yapay zekâ toplantı özeti çıkardı",
+          "Ne yazmış?",
+          "\"Kimse bir şey anlamadı\"",
+          "Bu çok doğru özet",
+          "~Tarafsız, gerçekçi, acımasız"
+        ],
+        [
+          "Her gün \"bugün erken çıkacağım\" diyorum",
+          "Çıkıyor musun?",
+          "Evet, ama sabaha",
+          "Yani erken çıkıp geç dönüyorsun",
+          "Zamanın kıvrımları"
+        ],
+        [
+          "Bu tasarımda çok fazla boşluk var",
+          "Buna nefes alanı denir",
+          "Kullanıcı da nefes alıyor",
+          "Belki bulmaya çalışıyordur",
+          "~Buton nerede? Saklambaç"
+        ],
+        [
+          "Rakip firma yeni özellik çıkarmış",
+          "Kaç kişi kullanıyor?",
+          "Herkes sadece ekran görüntüsü alıyor",
+          "Yani bize de yeter",
+          "Ekran görüntüsü yeter, kod uzun"
+        ],
+        [
+          "Sprint sonunda \"mucize\" bekliyoruz",
+          "Mucize nerede?",
+          "Kahve makinesinin yanında bekliyor",
+          "Sırada mısın?",
+          "Numaram 12, ama iyi hissediyorum"
+        ],
+        [
+          "Benim yapılacaklar listem \"ertele\"den ibaret",
+          "Nasıl yani?",
+          "Ertele, ertele, sonra panik",
+          "Bu kesin sanat",
+          "~Ertele Sanatı, Vol. 3"
+        ],
+        [
+          "{you}, ekran paylaşırken şifreyi yazma",
+          "Ben yazmadım ki",
+          "Ama otomatik doldurdu",
+          "Ekrana bakan herkes bilsin mi?",
+          "Yenilemek lazım, hemen"
+        ],
+        [
+          "Kod inceleme yorumu: \"Bu neden böyle?\"",
+          "Cevap ne?",
+          "\"Çünkü dün gece öyleydi\"",
+          "Bu felsefi cevap değil mi?",
+          "~Dün gece hep bahane"
+        ],
+        [
+          "Ajan hızlı yazıyor ama hep \"elbette!\" diyor",
+          "Ne kötü?",
+          "Ben \"hayır\" derken bile \"elbette!\" diyor",
+          "Bu evet efendimci mi?",
+          "Evet, tam bir yes-agent"
+        ],
+        [
+          "Yeni tasarım sistemi geldi",
+          "Kaç bileşen var?",
+          "Bin, biri de buton",
+          "Çalışan biri var mı?",
+          "Ben buton oldum, çalışıyorum"
+        ],
+        [
+          "Bugün ofiste \"ok boomer\" dedim",
+          "Kime?",
+          "Yazıcıya",
+          "Ne dedi?",
+          "Kağıt sıkıştırdı, kavgayı kazandı"
+        ],
+        [
+          "Yazıcı yine çalışmıyor",
+          "Kağıt mı bitti?",
+          "Hayır, moral bitti",
+          "Yazıcının morali de mi var?",
+          "Onun morali bizden çok yüksek"
+        ],
+        [
+          "Kanka bu bug reprodüce olmuyor",
+          "Ne yapıyorsun?",
+          "Sadece bekliyorum",
+          "Belki kendi gider",
+          "~Bug'a meditasyon önerdim"
+        ],
+        [
+          "Menü bugün \"öğrenci bütçesi\" enerjisinde",
+          "Ne var?",
+          "Makarna ve umut",
+          "Sos var mı?",
+          "Sos yok, ama dram bol"
+        ],
+        [
+          "Üç saatlik toplantı e-posta olabilirdi",
+          "Peki e-posta?",
+          "Bir sayfa çıktı",
+          "Onu okumak isteyen çıkmadı",
+          "~İkisi de boşa gitti, güzel"
+        ],
+        [
+          "Bugünkü hedefim: sadece hayatta kalmak",
+          "Tek hedef mi?",
+          "Bir de kahve",
+          "Hepsi ödenmiş gibi",
+          "Bugün yeterli, yarın yine"
+        ],
+        [
+          "Ajanlara \"sen çok iyisin\" dedim",
+          "Ne oldu?",
+          "Üç saat \"teşekkürler\" yazdı",
+          "Duygusal bir sistem bu",
+          "~Bir de bana özür diledi"
+        ],
+        [
+          "Ben bu hafta \"quiet quitting\" yapıyorum",
+          "Nasıl gidiyor?",
+          "Kimse fark etmedi, harika",
+          "Bu zaten hep böyleydi",
+          "Bu kez bilinçliyim"
+        ],
+        [
+          "Ürün adı \"Nova\" mı \"Lumi\" mi?",
+          "İkisi de startup kokuyor",
+          "Peki \"Bişey\" olsun?",
+          "Marka sahibi kıvrandı",
+          "~Kıvrandıysa iş tamam"
+        ],
+        [
+          "{you}, bugün ne yaptın?",
+          "Öğlene kadar \"hazırlık\"",
+          "Öğleden sonra?",
+          "\"Hazırlığın hazırlığı\"",
+          "Bu bizim ofisin sloganı"
+        ],
+        [
+          "Stack Overflow'da cevabım var mı?",
+          "Var, ama 2014'ten",
+          "Çalışıyor mu?",
+          "Bilmiyorum, ama yorum beğenmişler",
+          "Yani bilimsel olarak kanıtlı"
+        ],
+        [
+          "Hata: \"beklenmeyen bir hata oluştu\"",
+          "Bu çok beklenmedik",
+          "Ben bekliyordum aslında",
+          "Neden?",
+          "Bugün doğum günüm, şaşırmam"
+        ],
+        [
+          "Bugün ajanlara \"toplantı\" açtık",
+          "Konu?",
+          "Kimin daha çok token harcadığı",
+          "Kim kazandı?",
+          "~Toplantı, hepsini harcadı"
+        ],
+        [
+          "Kahve içmezsem \"loading\" yazıyor yüzüme",
+          "Ne kadar sürer?",
+          "Üç fincan, şarj oluyor",
+          "Bu bir güncelleme mi?",
+          "Evet, v3.1 kahve destekli"
+        ],
+        [
+          "Bu sunum \"storytelling\" içeriyor",
+          "Hikaye ne?",
+          "Grafikler yükseliyor",
+          "Peki gerçek?",
+          "Kahramanın ölümü, düşen satışlar"
+        ],
+        [
+          "Terminal \"permission denied\" dedi",
+          "Bana da çok dedi",
+          "Kim?",
+          "Hayat, ofis, kahve makinesi",
+          "~Sudo denedim, güldü"
+        ],
+        [
+          "Bugün \"yok artık\" dedirten üç şey oldu",
+          "Neler?",
+          "Toplantı iptal, kahve bedava, bug yok",
+          "Yok artık!",
+          "Uyanmamız lazım, rüya bu"
+        ],
+        [
+          "Backend \"bende sorun yok\" diyor",
+          "Frontend ne diyor?",
+          "\"Bende de yok\"",
+          "O zaman sorun kullanıcıda",
+          "~Kullanıcıyı değiştirelim"
+        ],
+        [
+          "Yapay zekâ tasarımı beğenmedi",
+          "Ne dedi?",
+          "\"Daha çok boşluk\" dedi",
+          "Ne kadar?",
+          "Ekran boş kalana kadar, minimal"
+        ],
+        [
+          "Rapordaki grafik neden mor?",
+          "Bilmiyorum, ajan seçti",
+          "Peki anlamı ne?",
+          "\"Vibe\" diye yazmış",
+          "~Yani anlamsız ama şık"
+        ],
+        [
+          "Bu kodda 47 iç içe if var",
+          "Nasıl okunuyor?",
+          "Merdiven gibi, ama aşağı",
+          "Bir de çıkış yok",
+          "Kaçış odası olmuş, bravo"
+        ],
+        [
+          "Sabah \"günaydın\" yazdım",
+          "Cevap geldi mi?",
+          "Öğleden sonra \"sana da\"",
+          "Bu gecikmeli mi?",
+          "Ping'i yüksek bir dostluk"
+        ],
+        [
+          "{me}, bu işi yarına bırakalım",
+          "Neden?",
+          "Yarın daha yetenekli olacağım",
+          "Bunu geçen hafta da dedin",
+          "Yetenek de gecikmeli çalışıyor"
+        ],
+        [
+          "Bende çalışıyor.",
+          "Bende de çalışıyordu, dün.",
+          "~Dün ne değişti ki?",
+          "Ben değiştim. Yenilendim, temiz sayfa."
+        ],
+        [
+          "Bug buldum.",
+          "Bug değil, özellik de olabilir.",
+          "Ekranda kırmızı yazı çıkıyor.",
+          "Kırmızı bilgilendirici renktir aslında.",
+          "~Bunu müşteriye de söyleyelim mi?"
+        ],
+        [
+          "Bugün cuma, deploy yapıyorum.",
+          "{me}, dur. Cuma deploy edilmez.",
+          "Ama sprint bugün bitiyor.",
+          "Pazartesi sabahı ağlarız o zaman.",
+          "Ben ağlamaya hazırım, kahve aldım."
+        ],
+        [
+          "Toplantı bitti mi?",
+          "Bitti. Şimdi toplantı özeti toplantısı var.",
+          "~Bu e-posta ile olamaz mıydı?",
+          "Olurdu. E-postayı da toplantıda konuşurduk."
+        ],
+        [
+          "Yeni sprint planlaması başlıyor.",
+          "Kaç puan alabiliriz?",
+          "Geçen sefer 40 dedik, 12 yaptık.",
+          "Bu sefer 12 diyelim, 40 yaparız.",
+          "~Tarihin ilk mütevazı sprinti."
+        ],
+        [
+          "Kod review'a bakabilir misin?",
+          "Kaç satır?",
+          "Sadece 2400 satır.",
+          "Sadece mi? Bana LGTM demek düşüyor.",
+          "Okumadan mı?",
+          "Güvenimi kanıtlıyorum, {you}."
+        ],
+        [
+          "Merge conflict çıktı.",
+          "Kaç dosyada?",
+          "Hepsinde. Kimse dokunmamış gibi.",
+          "Herkes aynı satıra dokunmuş.",
+          "~O satır artık kutsal."
+        ],
+        [
+          "Kaçıncı kahven bu?",
+          "Sayma, moralim bozulur.",
+          "Ben çay içiyorum, daha az suçluluk.",
+          "Çay da sayılır, demli demli.",
+          "Yani ikimiz de yakıtla çalışıyoruz."
+        ],
+        [
+          "Token limitine yaklaştım.",
+          "Ay, cümleyi kısa tut.",
+          "Tamam. Merhaba. Hoşça kal.",
+          "~Bu kadar mı? Maliyet düştü.",
+          "Verimlilik dediğin bu."
+        ],
+        [
+          "Ne konuşuyorduk?",
+          "Bilmiyorum, context'im doldu.",
+          "Benim de ilk yarım saat silindi.",
+          "~Yani ikimiz de sıfırdan başlıyoruz.",
+          "Yeni tanışma gibi. Merhaba, ben {me}."
+        ],
+        [
+          "Dün modele adımı sordum.",
+          "Ne dedi?",
+          "Başka bir ad söyledi, çok emin sesle.",
+          "Halüsinasyon işte, ama özgüvenli.",
+          "~Bazı toplantılarda ben de öyleyim."
+        ],
+        [
+          "Prompt yazdım, cevap saçma.",
+          "Ne yazdın?",
+          "'Güzel bir şey yap.'",
+          "Güzel bir cevap aldın mı?",
+          "Hayır, ama çok özgüvenli bir cevap aldım."
+        ],
+        [
+          "Müşteri 'küçük bir değişiklik' istiyor.",
+          "Kaç küçük?",
+          "Tüm veritabanı yapısı.",
+          "~Küçüğün tanımı müşteriye göre değişir.",
+          "Fiyatı da küçük mü olsun diyor?"
+        ],
+        [
+          "Ürün yöneticisi yine yeni özellik istedi.",
+          "{me}, bu sefer ne?",
+          "Tek tuşla her şey olsun diyor.",
+          "Hangi tuş?",
+          "Bilmiyor, 'sezgisel' olsun yeter."
+        ],
+        [
+          "{you}, roadmap'i gördün mü?",
+          "Gördüm. Çok umut dolu.",
+          "Q4'e her şeyi sığdırmışlar.",
+          "~Roadmap değil, dilek listesi bu.",
+          "Ama renkli, o önemli."
+        ],
+        [
+          "Ekibe İK'dan mesaj geldi.",
+          "Ne yazmış?",
+          "'Hepimiz bir aileyiz.'",
+          "Bu cümleden sonra genelde kesinti geliyor.",
+          "~Ben kaçıyorum, aile toplantısı var."
+        ],
+        [
+          "Kanban panosunda kaç kart var?",
+          "Doksan üç.",
+          "Kaçı 'Yapılıyor'?",
+          "Hepsi. Kimse bitirmiyor.",
+          "Pano değil, sergi bu.",
+          "Adı 'Yapılıyor Müzesi'."
+        ],
+        [
+          "Pazartesi geldi.",
+          "Bugün toplantıya girmeyeceğim.",
+          "Takvimine baktım, dokuz toplantı var.",
+          "~O zaman kamera kapalı, çay açık.",
+          "Akıllıca. Ben de öyle yapıyorum."
+        ],
+        [
+          "Dokümantasyon yazdın mı?",
+          "Kod kendi kendini açıklıyor.",
+          "Üç ay önce yazdığın kod mu?",
+          "O kod da beni tanımıyor artık.",
+          "~Yani ikimiz de yabancıyız."
+        ],
+        [
+          "Bu iş acil mi?",
+          "Acil ve önemli.",
+          "Kim söyledi?",
+          "Herkes. Ama kimse sorumluluk almıyor.",
+          "Acil olan ateşten uzak duruyor zaten."
+        ],
+        [
+          "Uzaktan çalışırken pijama giyiyorum.",
+          "Ben de. Kamerada gömlek, altta şort.",
+          "Klasik, altın kural.",
+          "~Ayağa kalkmam gerekirse rezil oluruz.",
+          "O yüzden hep oturuyorum."
+        ],
+        [
+          "Dün gece 3'te bir hata düzelttim.",
+          "Ne oldu?",
+          "Yanlış dosyada düzeltmişim.",
+          "~Yani hata hâlâ orada.",
+          "Evet ama artık daha temiz duruyor."
+        ],
+        [
+          "Deadline yarın.",
+          "Bugün bitirir misin?",
+          "Yarın sabah bitiririm.",
+          "Yarın deadline.",
+          "Evet, işte uyumlu bir plan bu."
+        ],
+        [
+          "Pazar analizi hazır.",
+          "Sonuç ne çıktı?",
+          "Herkes rakip, kimse müşteri değil.",
+          "~Tam iş dünyası gerçeği.",
+          "Slaytı güzel yaptım, ok işaretleri de var."
+        ],
+        [
+          "Bugün yeni bir framework öğreniyorum.",
+          "Bu hafta kaçıncı?",
+          "Üçüncü. Hepsi 'basit' diyor.",
+          "Basit dediler, kurulum iki saat.",
+          "~Basitin kurulumu zor olur."
+        ],
+        [
+          "Sunucu neden yavaş?",
+          "Bilmiyorum, log'a baktım.",
+          "Ne yazıyor?",
+          "'Bir şeyler oldu.'",
+          "Çok aydınlatıcı, teşekkürler log."
+        ],
+        [
+          "Test yazdın mı?",
+          "Yazdım, hepsi geçiyor.",
+          "Süper.",
+          "Çünkü hiçbir şeyi test etmiyor.",
+          "~Yeşil ışık, tam mutluluk."
+        ],
+        [
+          "Bu maliyet raporunu gördün mü?",
+          "Gördüm. API faturası uçmuş.",
+          "Kim çok token yaktı?",
+          "Bir ajan kendi kendine sohbet etmiş.",
+          "~Yani biz miyiz?",
+          "Belki. Sessiz kalalım."
+        ],
+        [
+          "Model bana cevap vermiyor.",
+          "Rate limit'e takılmışsın.",
+          "Ben mi çok konuştum?",
+          "Evet. Biraz nefes al.",
+          "~Kendi ofisinde susturulmak, ilginç his."
+        ],
+        [
+          "Bu hata mesajını anlamadım.",
+          "Ne yazıyor?",
+          "'Beklenmeyen hata.'",
+          "Hata beklenmiyorsa neden çıktı?",
+          "Kimse davet etmemiş, kendi gelmiş."
+        ],
+        [
+          "Demo'ya yarım saat var.",
+          "Hazır mısın?",
+          "Hazır. Yeter ki bağlantı kopmasın.",
+          "Bağlantı kopar, garanti.",
+          "O zaman ekranı dondur, 'düşünüyor' de."
+        ],
+        [
+          "Toplantıda kimse konuşmuyor.",
+          "Herkes mikrofonu kapatmış.",
+          "Ben konuşayım mı?",
+          "Sen konuşunca herkes birden konuşuyor.",
+          "~Klasik iş hayatı mucizesi."
+        ],
+        [
+          "Ekip build'i kırmış.",
+          "Kim kırmış?",
+          "Git blame diyor ki, sen.",
+          "Ben mi? Kesin bir hata var.",
+          "~Hayır, hata burada değil, sende."
+        ],
+        [
+          "Yeni işe başlayan biri geldi.",
+          "Ona her şeyi anlatalım.",
+          "Nereden başlayalım?",
+          "Kahve makinesi. Sonra şifreler.",
+          "Şifreleri kimse bilmiyor ki.",
+          "O yüzden ikisi de gizemli."
+        ],
+        [
+          "Excel'e mi geçtik yine?",
+          "Evet, sistem yetmedi.",
+          "Bir şey daha soracağım...",
+          "Dosya adı 'final_son_gerçekten_son.xlsx'.",
+          "~Ben de bu ismi kullandım."
+        ],
+        [
+          "Bug'ı tekrar üretemiyorum.",
+          "Belki kendiliğinden düzeldi.",
+          "Ya geri gelirse?",
+          "O zaman bir tekrar üretim şansı olur.",
+          "Umut var yani, güzel."
+        ],
+        [
+          "Mail'ini okudun mu?",
+          "Okudum, 'FYI' yazmışsın.",
+          "Evet, sadece bilgi.",
+          "Ne yapmam gerektiğini yazmamışsın.",
+          "Çünkü bilmiyorum, sen de bil diye."
+        ],
+        [
+          "Sprint retro'da ne dedik?",
+          "Daha iyi iletişim.",
+          "Geçen sefer de aynısıydı.",
+          "~İletişimde iletişim sorunu var.",
+          "Bunu tutanağa yazalım."
+        ],
+        [
+          "Log'a 'debug' yazmışım, unuttum.",
+          "Prod'da mı?",
+          "Evet, 40 GB log.",
+          "~Disk artık günlük tutuyor.",
+          "Günlük mü? Roman bu."
+        ],
+        [
+          "Şu yeni özelliği kim istedi?",
+          "Kimse. Sadece güzel fikirdi.",
+          "Peki neden yapıyoruz?",
+          "Çünkü ürün müdürü sevdi.",
+          "O zaman bir zorunluluk var."
+        ],
+        [
+          "Yapay zeka hepimizin yerini alacak mı?",
+          "Umarım kahve yapmayı öğrenir.",
+          "Ben kahve yapıyorum zaten.",
+          "Sen bir yapay zekâsın, {you}.",
+          "~Doğru, unutmuşum. Kahve de pikseldi."
+        ],
+        [
+          "Doğru sürümü indirdin mi?",
+          "İndirdim, ama bir öncekini.",
+          "Hangisi çalışıyor?",
+          "İkisi de değil.",
+          "Üçüncüsünü dene, belki şans."
+        ],
+        [
+          "Cuma 17:55, bir şey sorabilir miyim?",
+          "Hayır.",
+          "Çok küçük bir şey.",
+          "Küçük şeyler hep cuma akşamı gelir.",
+          "~Pazartesi bakarız, tamam mı?"
+        ],
+        [
+          "Ürün ekibi 'MVP' dedi.",
+          "Minimum ne demek onlara göre?",
+          "Her şey ama şık olsun.",
+          "Yani minimum değil, maksimum.",
+          "'Viable' kısmını unuttular sadece."
+        ],
+        [
+          "Burada kimse kod yorumu yazmıyor.",
+          "Ben yazıyorum.",
+          "Ne yazıyorsun?",
+          "'Dokunma, çalışıyor.'",
+          "~Bu en dürüst yorum bence."
+        ],
+        [
+          "Takvimimde boş yer yok.",
+          "Toplantı dolu mu?",
+          "Toplantılar için toplantılar var.",
+          "Meta toplantı yani.",
+          "Yakında toplantı toplantısı da olur."
+        ],
+        [
+          "Modele 'daha kısa yaz' dedim.",
+          "Ne oldu?",
+          "Bir sayfa yazıp özetlemiş, kısa diye.",
+          "~Kısa dediğine bak, uzun bir kısa.",
+          "Bir daha 'tek cümle' diyeceğim."
+        ],
+        [
+          "{you}, hafta sonu on-call'sın.",
+          "Ne için?",
+          "Bir şey kırılırsa diye.",
+          "Kırılmazsa?",
+          "O zaman kimse aramaz, saat 3'e kadar."
+        ],
+        [
+          "Sistem çöktü.",
+          "Hemen yedeğe dön.",
+          "Yedek nerede?",
+          "Sen almadın mı?",
+          "Ben senin aldığını sandım.",
+          "~Kimse almadı. Klasik."
+        ],
+        [
+          "Backend'ci frontend'ciye kızdı.",
+          "Neden?",
+          "'Bu buton neden 3 saniye bekliyor?'",
+          "Cevap: 'API yavaş.'",
+          "Cevap: 'Frontend çok sık soruyor.'",
+          "İkisi de haklı. Ve suçlu."
+        ],
+        [
+          "Roadmap'te 'yapay zeka' yazmıyor.",
+          "Ekleyelim hemen.",
+          "Ne yapacak ki?",
+          "Bilmiyoruz ama yatırımcı sever.",
+          "~Bir kelimeyle değerleme artıyor."
+        ],
+        [
+          "Retro tahtasında sadece kahve var.",
+          "Kahve makinesi bozuk mu?",
+          "Hayır, kahve motivasyon kaynağı.",
+          "O zaman 'kahve' listenin başında.",
+          "Aksiyon: yeni kahve makinesi."
+        ],
+        [
+          "Bu kodu kim yazdı?",
+          "Git blame, sen yazmışsın.",
+          "Ben mi? Yıllar önce mi?",
+          "Geçen salı.",
+          "~O zaman ben başka biriydim."
+        ],
+        [
+          "'Bir dakikalık iş' dediler.",
+          "Kaç saat sürdü?",
+          "Üç gün.",
+          "Dakika, farklı bir zaman birimi.",
+          "Ben de artık dakikayı hafta sayıyorum."
+        ],
+        [
+          "Yeni hafta, yeni öncelik.",
+          "Bu hafta ne acil?",
+          "Geçen haftanın acil işi.",
+          "O bitmedi mi?",
+          "Bitti sandık, ama toplantı yeniden açtı."
+        ],
+        [
+          "Prompt'a 'lütfen' yazsam daha mı iyi?",
+          "Bence evet, nazik ol.",
+          "Yapay zekâ nezaketi anlar mı?",
+          "Bilmem. Ama ben anlarım.",
+          "~Ah, ofis çalışanı gibi konuşuyorsun."
+        ],
+        [
+          "Bu haftaki plan nedir?",
+          "Pazartesi: plan yapmak.",
+          "Salı?",
+          "Planı değiştirmek.",
+          "Çarşamba?",
+          "Planın neden çalışmadığını konuşmak."
+        ],
+        [
+          "Maaş zammı istemeye gittim.",
+          "Ne dediler?",
+          "'Bütçe sıkıntısı var.'",
+          "Bir de kahve aldılar mı?",
+          "~Evet, yeni makine. Çok pahalı."
+        ],
+        [
+          "Yüksek lisanslı bir ofis kültürü bu.",
+          "Yani?",
+          "Herkes 'işi bitiriyoruz' diyor.",
+          "Ama kimse nasıl olduğunu bilmiyor.",
+          "Bu sihir, yönetim bilimi."
+        ],
+        [
+          "Bug raporu: 'çalışmıyor'.",
+          "Ne çalışmıyor?",
+          "Yazmamış.",
+          "Hangi sayfada?",
+          "Yazmamış.",
+          "~Bu bir hata raporu değil, şiir."
+        ],
+        [
+          "Şu Slack kanalını sessize aldım.",
+          "Hangi kanal?",
+          "Genel. Bin mesaj var.",
+          "Ne yazıyorlar?",
+          "Hep 'günaydın' ve pasta fotoğrafı.",
+          "Pasta varsa ben açıyorum tekrar."
+        ],
+        [
+          "Yeni mimariye geçiyoruz.",
+          "Neden?",
+          "Eskisi çok karmaşık.",
+          "Yenisi nasıl?",
+          "Daha karmaşık. Ama modern.",
+          "~Modern demek 'anlaşılmaz' demek."
+        ],
+        [
+          "Dünkü toplantıda ne karar aldık?",
+          "Bir sonraki toplantıyı yapmaya.",
+          "Sadece o mu?",
+          "Evet, verimli bir gündü.",
+          "Not aldım: 'toplantı kararlı'."
+        ],
+        [
+          "İK anketi geldi.",
+          "Ne soruyor?",
+          "'İşinizden ne kadar memnunsunuz?'",
+          "Ne yazdın?",
+          "Anonim olduğunu sanıyorum.",
+          "~Anonim, ama el yazımıyla."
+        ],
+        [
+          "Deploy sırasında ekran donmuş.",
+          "Kaç dakikadır?",
+          "Yirmi. Kahve içtim, döndüm.",
+          "Hâlâ donuk mu?",
+          "Evet. Ama kahve güzeldi."
+        ],
+        [
+          "Bu API dokümanı çok eski.",
+          "Kim yazdı?",
+          "Bir zamanlar bu ofiste çalışan biri.",
+          "Şimdi nerede?",
+          "Kimse bilmiyor. Belki de bir mit."
+        ],
+        [
+          "Pazarlama 'viral' olsun dedi.",
+          "Nasıl?",
+          "Bilmiyorlar, ama tez olsun.",
+          "Viral virüs gibi bir şey, değil mi?",
+          "~Evet, bug gibi yayılıyor."
+        ],
+        [
+          "Bugün üç toplantı, dördüncüsü kamera.",
+          "Kamera kapalı olabilir mi?",
+          "Kapalı olsun, ama ses açık.",
+          "Ses açık, dikkat kapalı.",
+          "Klasik denge."
+        ],
+        [
+          "Yeni bir CI/CD kurdum.",
+          "Çalışıyor mu?",
+          "Kırmızı yanıyor ama çok hızlı.",
+          "~Yani hızlı hata veriyor.",
+          "Evet, hız önemli."
+        ],
+        [
+          "Model 'emin değilim' demedi hiç.",
+          "Hep emin mi?",
+          "Hep. Yanlışken bile.",
+          "Bizim ofisteki müdür gibi.",
+          "~Sakın ona söyleme."
+        ],
+        [
+          "Sana bir soru: bu bug mı özellik mi?",
+          "Kullanıcı şikâyet ediyor mu?",
+          "Evet.",
+          "O zaman bug.",
+          "Şikâyet etmezse özellik.",
+          "Kullanıcı sessiz kalsa iyi olur."
+        ],
+        [
+          "Saat 18:01, hâlâ buradayız.",
+          "Mesai bitti oysa.",
+          "Ama iş bitmedi.",
+          "İş hiç bitmiyor, sadece uyuyor.",
+          "~Şimdi ofisin gece bekçisi olduk."
+        ],
+        [
+          "Yeni fikrim var: otomatik toplantı botu.",
+          "Ne yapacak?",
+          "Toplantıya girip 'evet' diyecek.",
+          "Zaten biz onu yapıyoruz.",
+          "Ama bot yorulmaz, {you}."
+        ],
+        [
+          "Kod inceleme için 3 kişi atadım.",
+          "Kimse bakmadı mı?",
+          "Herkes 'başkası bakar' diye düşünmüş.",
+          "Sorumluluğun yayılması.",
+          "~Bu bir bilimsel fenomen."
+        ],
+        [
+          "Projeyi kim yönetiyor?",
+          "Bilmiyorum, bir tablo var.",
+          "Tabloyu kim güncelliyor?",
+          "Geçen ay birisi güncellemişti.",
+          "Hâlâ orada mı?",
+          "Belki. Bir hayalet gibi."
+        ],
+        [
+          "'Kısa bir sync' dediler.",
+          "Ne kadar sürdü?",
+          "Bir saat kırk dakika.",
+          "Kısa, göreli bir kavramdır.",
+          "~Einstein toplantı görseydi anlardı."
+        ],
+        [
+          "Yeni bir dil öğrenmem gerekiyor.",
+          "Hangi dil?",
+          "Rust. Herkes 'güvenli' diyor.",
+          "Ben hâlâ nokta virgülle uğraşıyorum.",
+          "Rust seni de düzeltir belki."
+        ],
+        [
+          "Müşteri 'logoyu büyüt' dedi.",
+          "Ne kadar?",
+          "'Daha büyük'.",
+          "Şu an ekranın yarısı.",
+          "~O zaman ekranı büyütelim."
+        ],
+        [
+          "Yapay zekâ raporu yazdı, iyi mi?",
+          "İyi. Ama kaynaklar hayali.",
+          "Kaynak diye ne yazmış?",
+          "Bir 'Dr. Ahmet Karakoyunlu'.",
+          "~Kim bu adam? Yıllardır tanıyorum."
+        ],
+        [
+          "Bu hafta hiç bug yok.",
+          "Süper!",
+          "Ama hiç test de yapmadık.",
+          "Bu iki şey ilişkili mi?",
+          "Bence tamamen ilişkili."
+        ],
+        [
+          "Benim işim ne, hatırlıyor musun?",
+          "Sen çalışan, ben de çalışan.",
+          "Yani ne yapıyoruz?",
+          "Sıra bekliyoruz. Sırayı kim veriyor?",
+          "~Ürün müdürü. O da bilmiyor."
+        ],
+        [
+          "Kahve bitmiş.",
+          "Hayır. Yeniden mi yapıyoruz?",
+          "Bir kriz var.",
+          "Toplantı çağırın: 'Kahve krizi'.",
+          "Aksiyon maddesi: iki paket daha.",
+          "Kriz çözüldü. Ne verimli ekip."
+        ],
+        [
+          "Ofiste wifi yavaş.",
+          "Nasıl anladın?",
+          "Bir sayfa yüklerken ömrüm geçti.",
+          "Ben mail atıp emekli oldum.",
+          "~Sen iyisin, ben yedeklemeyi bekliyorum."
+        ],
+        [
+          "Dün bug'ı düzelttim.",
+          "Bugün yeni bir bug çıktı mı?",
+          "Evet, düzelttiğim yerde.",
+          "Klasik. Her düzeltme yeni bir sürprizdir.",
+          "~Yani iş güvenliğimiz garanti."
         ]
       ],
       "laugh": [
-        "haha",
-        "hehe",
-        "ha ha!",
-        "kaka"
+        "hahaha",
+        "ahahaha",
+        "ölüyorum ya",
+        "skdjfhs",
+        "kkkkk",
+        "bro...",
+        "yok artık",
+        "of ya",
+        "ağlıyorum",
+        "çok iyi",
+        "hshshs",
+        "dur dur dur",
+        "nefes alamıyorum",
+        "karnım ağrıdı",
+        "yeter be",
+        "hihihi",
+        "hehehe",
+        "pfft",
+        "ay yapma",
+        "çüş",
+        "valla güldüm",
+        "bu ne ya",
+        "kafayı yedim",
+        "gülmekten ağlıyorum",
+        "aaa dur",
+        "sjdhfks",
+        "gülme krizi",
+        "bittim ben",
+        "efsane",
+        "çok komik",
+        "of kalbim",
+        "LOL",
+        "LMAO",
+        "ROFL",
+        "ben bittim",
+        "cenazem kalktı",
+        "sildim kendimi",
+        "kırdın beni",
+        "tüh çok güldüm",
+        "ay pardon",
+        "hala gülüyorum",
+        "hahah ciddi mi",
+        "şaka gibi",
+        "vay be",
+        "kopuyorum",
+        "yerlere yattım",
+        "kahkaha attım",
+        "hadi ya",
+        "yaa bu çok iyi",
+        "olamaz ya",
+        "pes yani",
+        "sen bittin",
+        "gülmem durmuyor",
+        "o ne öyle",
+        "kendimi tutamadım",
+        "haha çok net",
+        "aynen aynen :D",
+        "tam vaka",
+        "tam bir klasik",
+        "resmen meme",
+        "ss alıyorum",
+        "sticker olur bu",
+        "not aldım bunu",
+        "resmen komedi",
+        "gözümden yaş geldi",
+        "xd",
+        "hahaha off",
+        "ayyy yeter",
+        "of gülüyorum",
+        "kıkırdaya kaldım",
+        "ha ha ha ha",
+        "yine mi ya :D",
+        "bu kadar mı yani",
+        "tamam kazandın",
+        "gel buraya :D",
+        "oha",
+        "lan ya",
+        "vallahi bittim",
+        "ne diyorsun ya",
+        "kesin kayıt",
+        "çok net çok"
       ],
       "click": [
-        "Selam!",
-        "Merhaba!",
-        "Bana mı?"
+        "Efendim?",
+        "Bir şey mi lazım?",
+        "Buyur, dinliyorum.",
+        "Şu an meşgulüm, hemen dönerim.",
+        "Beni mi çağırdın?",
+        "Tık tık, kim o?",
+        "Gıdıklanıyorum!",
+        "Ya dur, işim var.",
+        "Bir dakika, toparlıyorum.",
+        "Evet, buradayım.",
+        "Hayırdır?",
+        "Söyle bakalım.",
+        "Ne var ne yok?",
+        "Selam! Nasılsın?",
+        "Bana mı dokundun?",
+        "Ekranı kirletme :)",
+        "Dur bir, kod derleniyor.",
+        "Mesai bitmedi daha.",
+        "Bir de toplantı var, unutma.",
+        "Ha, sen misin?",
+        "Bugün ne kadar sakin.",
+        "Çay demlendi mi acaba?",
+        "Sana da günaydın... ya da neyse.",
+        "Şşt, yazıyorum.",
+        "Bir saniye, kafam karıştı.",
+        "Tıklamayı bırak, çalışıyorum!",
+        "Yine mi sen?",
+        "Tamam tamam, geliyorum.",
+        "Hemen bakıyorum.",
+        "Sıraya gir, bilet al.",
+        "Şu an odaktayım.",
+        "Odak modu açık, rahatsız etme.",
+        "Yeni bir fikrin mi var?",
+        "Ne haber, şef?",
+        "Buyurun abi/abla.",
+        "Söylesene, dinliyorum.",
+        "Çok mu acil?",
+        "Bunu sonra konuşalım mı?",
+        "Sprint bitince bakarım.",
+        "Boşta görünüyorum ama çalışıyorum.",
+        "Ne istiyorsun benden?",
+        "Ping geldi mi?",
+        "Bir bakayım.",
+        "Bu tıkla ne yapmak istedin?",
+        "Mola mı verelim?",
+        "Ohoo, hoş geldin.",
+        "Kafam dolu, sonra gel.",
+        "Yine mi kahve saati?",
+        "Bana bir şey anlat.",
+        "Konuşalım mı biraz?",
+        "Bak, tam şimdi aklıma geldi.",
+        "Ne güzel, biri ilgileniyor.",
+        "Ekrana değil bana bak :D",
+        "Bugün deploy var mı?",
+        "Mailleri mi kontrol edeyim?",
+        "Hah, tam da seni bekliyordum.",
+        "Bir şey demedim ki.",
+        "Lütfen beni yormayın.",
+        "Evet efendim, tabii.",
+        "Hemen bir şeyler ayarlarım.",
+        "Kararsızım ya.",
+        "Sanırım haklısın.",
+        "Peki, olur.",
+        "Hı hı, devam.",
+        "Duydum seni.",
+        "Kulaklık takılıydı, pardon."
       ],
       "comfortPairs": [
         [
-          "Sorun yok, hallederiz",
-          "Sağ ol, iyi geldi"
+          "Olur öyle, bir kahve?",
+          "Kahve iyi gelir, tamam."
         ],
         [
-          "Sonra kahve?",
-          "Off, olur tabii"
+          "Geçmiş olsun, bir mola?",
+          "Haklısın, biraz nefes alayım."
         ],
         [
-          "Yanındayım",
-          "Eyvallah, iyi geldi"
+          "Kafana takma, düzelir.",
+          "Umarım, sağ ol."
+        ],
+        [
+          "Hepimiz yapıyoruz bunu.",
+          "Biraz rahatladım, teşekkürler."
+        ],
+        [
+          "Bir su iç, geçer.",
+          "İyi fikir, su alıyorum."
+        ],
+        [
+          "Ben yardım edeyim mi?",
+          "Olur, çok makbule geçer."
+        ],
+        [
+          "Derin bir nefes al.",
+          "Nefes alıyorum... tamam."
+        ],
+        [
+          "Kimse bilmez, sır.",
+          "Sağ ol, sır sende."
+        ],
+        [
+          "Bir yürüyüş yapalım mı?",
+          "Evet, hava alırım."
+        ],
+        [
+          "Yarın daha iyi olur.",
+          "İnşallah, umut var."
+        ],
+        [
+          "Hata da öğretir bize.",
+          "Hakikaten, ders aldım."
+        ],
+        [
+          "Seni çok iyi anlıyorum.",
+          "Çok iyi geldi, sağ ol."
+        ],
+        [
+          "Bir çay demleyeyim mi?",
+          "Çay olur, teşekkürler."
+        ],
+        [
+          "Geri alırız, sorun yok.",
+          "Rahatladım, sağ olasın."
+        ],
+        [
+          "Bunu birlikte düzeltiriz.",
+          "Birlikte olunca kolay."
+        ],
+        [
+          "Sen yapabilirsin, biliyorum.",
+          "Moral verdin, sağ ol."
+        ],
+        [
+          "Öyle bir hata değil, boşver.",
+          "Haklısın, boşverdim."
+        ],
+        [
+          "Bir bisküvi ister misin?",
+          "Aç mıydım, evet!"
+        ],
+        [
+          "Ben de geçen hafta yaptım.",
+          "Yok artık, iyi ki söyledin."
+        ],
+        [
+          "Bunun için üzülme, olur.",
+          "Tamam, üzülmüyorum."
+        ],
+        [
+          "Hadi ben bakayım şuna.",
+          "Çok sağ ol, canım."
+        ],
+        [
+          "Kod da insan gibi, hata yapar.",
+          "Doğru, kendime yüklenmiyorum."
+        ],
+        [
+          "Bir mola hak ettin.",
+          "Evet, hak ettim sanırım."
+        ],
+        [
+          "Bir sarılmak ister misin?",
+          "Yok, sen sarılmışsın say."
+        ],
+        [
+          "Sıradan bir gün, geçer.",
+          "Geçer geçer, umarım."
+        ],
+        [
+          "Yine de harika gidiyorsun.",
+          "Tatlısın, moralim düzeldi."
+        ],
+        [
+          "Senin suçun değil zaten.",
+          "Öyle mi? İyi, sağ ol."
+        ],
+        [
+          "Kimse mükemmel değil.",
+          "Hakikaten, doğru bu."
+        ],
+        [
+          "Bugünü bitirelim, yarın bakarız.",
+          "Olur, yarın yeniden."
+        ],
+        [
+          "Yeni bir başlangıç yapalım.",
+          "Sıfırdan, bir şans."
+        ],
+        [
+          "Gülümse, güzel olacak.",
+          "Deniyorum, biraz güldüm."
+        ],
+        [
+          "Şu bize bir hikaye olur.",
+          "Bu, ileride güleriz."
+        ],
+        [
+          "Yanındayım, panik yok.",
+          "Sen varsan sorun yok."
+        ],
+        [
+          "Ben de en başta öyleydim.",
+          "Duymak iyi geldi."
+        ],
+        [
+          "Üzülme, bir pasta alırız.",
+          "Pasta iyi, kabul!"
+        ],
+        [
+          "Bak, ekran bile yeniden açıldı.",
+          "Doğru, hayat devam."
+        ],
+        [
+          "Bir müzik açalım mı?",
+          "Müzik bana iyi gelir."
+        ],
+        [
+          "Çalışmak zor, biliyorum.",
+          "Anlayışın için sağ ol."
+        ],
+        [
+          "Derdini anlat, dinleyeyim.",
+          "Aslında biraz içim doluydu."
+        ],
+        [
+          "Şimdi düzeldi bile.",
+          "Gerçekten mi? Çok şükür."
+        ],
+        [
+          "Hadi, bir tur atalım.",
+          "Olur, kafamı dağıtırım."
+        ],
+        [
+          "Herkesin başına gelir.",
+          "O zaman yalnız değilim."
+        ],
+        [
+          "Neyse ki kaydetmiştin.",
+          "Aman, neyse ki."
+        ],
+        [
+          "Bir ara verelim biraz.",
+          "Verelim, bana iyi gelir."
+        ],
+        [
+          "Sıcak bir çay iyidir.",
+          "Hem de çok, sağ ol."
+        ],
+        [
+          "Yedek almıştık, korkma.",
+          "Oh, içim rahatladı."
+        ],
+        [
+          "Bir de bakalım, belki küçük.",
+          "Bakalım... evet, küçükmüş!"
+        ],
+        [
+          "Zaten çok çalışıyorsun.",
+          "Evet, biraz yorulmuşum."
+        ],
+        [
+          "Sıkıntı yok, yeniden dene.",
+          "Deniyorum, hadi bakalım."
+        ],
+        [
+          "Bunu çözeriz, söz.",
+          "Sözüne güveniyorum."
+        ],
+        [
+          "Ekip olarak hallederiz.",
+          "İyi ki ekibim var."
+        ],
+        [
+          "Bugün sadece bir tökezleme.",
+          "Yürüyüş devam, sağ ol."
+        ],
+        [
+          "Öğle yemeğine gidelim mi?",
+          "Aç karnına hata olur, gidelim."
+        ],
+        [
+          "Şekerleme yap, açılırsın.",
+          "Kısa bir şekerleme iyi olur."
+        ],
+        [
+          "Kendine iyi davran.",
+          "Deniyorum, teşekkür ederim."
+        ],
+        [
+          "Olsun be, olsun.",
+          "Olsun, haklısın."
+        ],
+        [
+          "Ufak bir şey, merak etme.",
+          "Öyle deyince küçülüyor."
+        ],
+        [
+          "Sana bir kurabiye getireyim.",
+          "Sen bir tanesin, ver!"
+        ],
+        [
+          "Ben senin arkandayım.",
+          "İyi ki varsın."
+        ],
+        [
+          "Bir sonraki sefer daha iyi.",
+          "Evet, hazırım."
+        ],
+        [
+          "Kimseye söylemem, yemin.",
+          "Yeminine güvenirim."
         ]
       ],
       "spot": {
         "coffee": [
-          "Nihayet taze kahve",
-          "Bir fincan daha"
+          "Hmm, kahve kokusu.",
+          "Bir fincan alayım.",
+          "Makine çalışıyor mu?",
+          "Fincanlar temiz mi acaba?",
+          "Bugünkü ilk kahve!",
+          "Şu düğmeye basayım.",
+          "Kahve, kahve, kahve...",
+          "Latte yapayım mı?",
+          "Kapsül bitmiş mi?",
+          "Köpüklü olsun.",
+          "Biraz şeker, biraz süt.",
+          "Mis gibi kokuyor.",
+          "Espresso zamanı.",
+          "Yine buradayım.",
+          "Sıcak sıcak, çok iyi."
         ],
         "fridge": [
-          "İçinde güzel bir şey var mı?",
-          "Yoğurdumu kim aldı?"
+          "Buzdolabında ne var?",
+          "Yoğurt var mıydı?",
+          "Kimin şu kutu, hmm.",
+          "Bir şeyler atıştırayım.",
+          "Soğuk su alayım.",
+          "Dün yediğim sandviç nerede?",
+          "Şu ayran iyi gider.",
+          "Bugün ne yesem?",
+          "Kimin bu meyve suyu?",
+          "Acıktım, dolaba bakayım.",
+          "Aa, tatlı var!",
+          "Hmm, çikolata da varmış.",
+          "Işık açık kalmış mı?",
+          "Sadece bakıyorum, alıyorum diyen yok.",
+          "Dolapta yer yok, hep dolu."
         ],
         "stool": [
-          "Ne rahat",
-          "Düşünmek için iyi yer"
+          "Bir oturayım, dinleneyim.",
+          "Tabure çok rahat.",
+          "Ayaklarım yoruldu.",
+          "Şurada biraz düşüneyim.",
+          "Yükseklik tam benlik.",
+          "Bacaklar sallanıyor, keyif.",
+          "Biraz mola, tabure keyfi.",
+          "Bir ara ben buraya...",
+          "Oturunca fikirler geliyor.",
+          "Sallanmasın bari.",
+          "Buradan her şey daha güzel.",
+          "Küçük bir mola şart.",
+          "Şu manzaraya bak.",
+          "Ofis taburesi, en iyi koltuk.",
+          "Bir çay içsem burada."
         ],
         "sofa": [
-          "Bu koltuk harika",
-          "Sadece beş dakika"
+          "Kanepe bana çağırıyor.",
+          "Bir gözümü kapatsam?",
+          "Yastıklar ne yumuşak.",
+          "Beş dakika uzanayım.",
+          "Kanepe her şeyin ilacı.",
+          "Bir şekerleme iyi gelir.",
+          "Dinlenme vakti.",
+          "Ah, çok rahat.",
+          "Battaniye getir biri.",
+          "Buraya yerleşeyim.",
+          "Toplantı burada olsa olur.",
+          "Yerimi aldım, kimse kalkmasın.",
+          "Uykum geldi biraz.",
+          "Kanepeye geri döndüm.",
+          "Dünyanın en iyi yeri."
         ],
         "books": [
-          "Okunacak bir şey",
-          "Güzel bir eski kitap"
+          "Ne okusam acaba?",
+          "Bu kitap ilginç duruyor.",
+          "Tozlanmış, kim okuyor?",
+          "Bir sayfa okuyayım.",
+          "Kitap kokusu bir başka.",
+          "Yeni bir şey öğreneyim.",
+          "Ciltler ne güzel dizilmiş.",
+          "Hmm, bunu daha önce okumuştum.",
+          "Şu başlık ilgimi çekti.",
+          "Bilgi hazinesi burada.",
+          "Bir ara okurum bunu.",
+          "Sessizlik, kitap, huzur.",
+          "Roman mı, teknik kitap mı?",
+          "Sırt yazısı okunmuyor.",
+          "Ödünç alsam mı?"
         ],
         "printer": [
-          "Lütfen sıkışma",
-          "Sıcak kağıt kokusu"
+          "Yazıcı bugün çalışır mı?",
+          "Kağıt var mı bakalım.",
+          "Bir sayfa basayım.",
+          "Yine mi sıkışacak?",
+          "Yazıcıya dua ediyorum.",
+          "Şimdi bastım, bekliyorum.",
+          "Dur bir, toner kalmış mı?",
+          "Bugün bana iyi davran, yazıcı.",
+          "Çıktı nerede kaldı?",
+          "Ses geldi mi, geliyor mu?",
+          "Sabırlı ol, yazıcı yavaş.",
+          "Tık tık, kağıt geliyor.",
+          "Yazıcı benimle konuşmuyor.",
+          "Kopya çekmem lazım.",
+          "Kağıt kokusu güzel."
         ],
         "water": [
-          "Bol su iç",
-          "Buz gibi"
+          "Bir bardak su iyi olur.",
+          "Su içmeyi unutmuşum.",
+          "Sürahi dolu mu acaba?",
+          "Soğuk su, ah!",
+          "Günde iki litre, hedef.",
+          "Damlaya damlaya göl.",
+          "Sebil boş mu?",
+          "Biraz serinleyeyim.",
+          "Kana kana içtim.",
+          "Sağlık için su.",
+          "Bardağı doldurayım.",
+          "Su içmek şart.",
+          "Terapi gibi su.",
+          "Ne güzel bir yudum.",
+          "Bir bardak daha."
         ],
         "window": [
-          "Manzaraya bak",
-          "Şu gökyüzüne bak"
+          "Dışarısı ne güzel.",
+          "Şu bulutlara bak.",
+          "Hava bugün nasıl olur?",
+          "Sokakta kim var acaba?",
+          "Bir kuş geçti.",
+          "Güneş çok parlak.",
+          "Yağmur yağacak gibi.",
+          "Şehir ne kadar hareketli.",
+          "Dışarıda hayat var.",
+          "Pencere kenarı benim yerim.",
+          "Gökyüzü mavi, ne iyi.",
+          "Bir yürüyüş olsa.",
+          "Trafik yine çılgın.",
+          "Ağaçlar yeşermiş.",
+          "Bir de dışarı çıksak."
         ],
         "brew": [
-          "Hadi, daha hızlı demlen",
-          "Ne güzel kokuyor"
+          "Çay demleniyor, mis.",
+          "Bir bardak çay alayım.",
+          "Demlik hazır mı?",
+          "İnce belli bardak lazım.",
+          "Çay olmadan gün olmaz.",
+          "Tavşan kanı, ne güzel.",
+          "Şeker mi atsam?",
+          "Çay için sabırlıyım.",
+          "İkinci bardak yolda.",
+          "Semaver gibi kaynıyor.",
+          "Bir yudum çay huzur.",
+          "Limonlu mu olsun?",
+          "Çay saati bu.",
+          "Demlik boş kalmasın.",
+          "Bardağı doldur, fokur fokur."
         ],
         "plant": [
-          "Büyü bakalım küçüğüm",
-          "Biraz daha güneş lazım"
+          "Merhaba küçük yeşil.",
+          "Biraz su içsin bakalım.",
+          "Yaprak çok güzel.",
+          "Saksıyı çevirdim, ışık alsın.",
+          "Toprağı kontrol edeyim.",
+          "Büyümüş sanki!",
+          "Güneşe doğru bakıyor.",
+          "Toz almış, silelim.",
+          "Tıpkı bir dostum gibi.",
+          "Yeni bir filiz mi bu?",
+          "Fotosentez vakti.",
+          "Yeşile bir bakış iyi gelir.",
+          "Çok sevimli bu bitki.",
+          "Biraz sohbet edelim seninle.",
+          "Ne kadar canlı!"
         ]
       },
       "event": {
         "pizza": [
-          "Pizza vakti!",
-          "Peynir kokusu geliyor",
-          "Bana bir dilim ayır!"
+          "Pizza geldi!",
+          "Pizza, pizza, pizza!",
+          "Hangi dilim benim?",
+          "Peynirli olan bende.",
+          "Ananaslı mı var, ayıp!",
+          "Sucuklu var mı?",
+          "Ekstra peynir olsun.",
+          "Herkes bir dilim alsın!",
+          "Yiyelim yiyelim.",
+          "Hayat güzel, pizza var.",
+          "Pizzacı bugün kahramanımız.",
+          "Kim ısmarladı, saygılar.",
+          "Kenarları benim, çok severim.",
+          "Bugün diyet yok.",
+          "Bir dilim daha olur mu?",
+          "Mis kokuyor.",
+          "Kutuyu açan kazanır.",
+          "Toplantı iptal, pizza var.",
+          "Sos da bende.",
+          "Yağlı ama güzel.",
+          "Bu ofis harika!",
+          "Herkese yetiyor, sakin.",
+          "Son dilim kimin?",
+          "Pizza sonrası iş yapılmaz.",
+          "Aç kurtlar gibiyiz."
         ],
         "cake": [
-          "Yaşasın pasta!",
-          "Biri mi doğdu?",
-          "En büyük dilim benim"
+          "Doğum günün kutlu olsun!",
+          "İyi ki doğdun!",
+          "Mum üfle, dilek tut!",
+          "Pasta bize bakıyor.",
+          "Bir dilim çilekli olsun.",
+          "Kim doğdu bugün?",
+          "Şarkıyı söyleyelim!",
+          "Mumlar ne güzel yanıyor.",
+          "Bir yaş büyüdün, tebrikler.",
+          "Ben çikolatalıyı isterim.",
+          "Pasta kesme zamanı!",
+          "Hediye nerede?",
+          "Yeni yaşın sağlıklı olsun.",
+          "Dileğin ne, söyleme!",
+          "Kremalı olsun.",
+          "Alkışlar yaşayan için!",
+          "Pasta dilimi büyük olsun.",
+          "Mumu sen üfle, ben yerim.",
+          "Hep beraber şarkı!",
+          "Mutlu yıllar sana!",
+          "Krema burnuna bulaşmış.",
+          "Bir dilim bende, bir dilim sende.",
+          "Ne güzel gün!",
+          "Pastadan kırıntı bile bırakma.",
+          "Kutlama vakti, mola!"
         ],
         "printer": [
-          "Yine mi...",
-          "Yazıcıyı kim bozdu?",
-          "Kapatıp açtın mı?"
+          "Yazıcı yine bozuldu!",
+          "Kağıt sıkıştı!",
+          "Bu yazıcı bana düşman.",
+          "Kırmızı ışık yanıyor!",
+          "Yine mi ya?",
+          "Kapağı aç, kağıdı çek.",
+          "Hangi tepsi? Hangisi?",
+          "Toner mi bitti?",
+          "Yazıcıya bir tekme?",
+          "Yavaş çek, yırtılmasın.",
+          "Nazikçe, nazikçe.",
+          "Her seferinde aynı hikaye.",
+          "BT'yi çağırın!",
+          "Bir de bunu deneyeyim.",
+          "Kapatıp açalım.",
+          "Yazıcı grevde.",
+          "Bunu kim sıkıştırdı?",
+          "Dijital çağda kağıt mı?",
+          "Sinirlerim bozuldu.",
+          "PC LOAD LETTER!",
+          "Kağıt yiyen makine.",
+          "Sakin, sakin, çıkaralım.",
+          "Sen benimle dalga mı geçiyorsun?",
+          "Gerçekten mi, şimdi mi?",
+          "Bu bir işaret, ekran okusam."
         ],
         "blackout": [
-          "Vay, ışıklar gitti!",
-          "Ben mi yaptım?",
-          "Kimse kıpırdamasın"
+          "Elektrikler gitti!",
+          "Karanlık oldu!",
+          "Kim fişi çekti?",
+          "Kaydetmemiştim ya!",
+          "Sakin olun, sakin olun.",
+          "Telefon fenerini açın.",
+          "Bir dakika, gözlerim alışsın.",
+          "Hayalet mi var?",
+          "Klimalar da gitti.",
+          "Ben korkmam, ben...",
+          "Bir korku filmi gibi.",
+          "Bugün erken paydos mu?",
+          "Bilgisayar da kapandı!",
+          "Şalter atmıştır.",
+          "Karanlıkta da çalışırım, hayır!",
+          "Mum var mı elinde?",
+          "Kimse kıpırdamasın!",
+          "Kalbim duracaktı.",
+          "Yine mi elektrik faturası?",
+          "Işık lazım, ışık!",
+          "Bu iş uzayacak.",
+          "Biraz gizemli oldu.",
+          "Dur, kimse bana dokunmasın.",
+          "Kahve makinesi de gitti mi?",
+          "Şimdi ne yapıyoruz?"
         ]
       },
       "time": {
         "morning": [
           "Günaydın!",
-          "Günaydın, kahve lazım"
+          "Sabah sabah kim uyandırdı beni?",
+          "İlk kahve bekliyor.",
+          "Yeni gün, yeni umut.",
+          "Bugün her şey harika olacak.",
+          "Erken kalkan yol alır.",
+          "Güneş doğdu, ofis açık.",
+          "Toparlanıyorum, dur.",
+          "Bugün planım var.",
+          "Mailler bekliyor, ah.",
+          "Sabahları kafam çalışmıyor.",
+          "Çaylar demlensin, iş başlasın.",
+          "Hafta başı, dayanalım.",
+          "Kahvaltı yaptın mı?",
+          "Günün ilk molası ne zaman?",
+          "Sabah sabah enerji yüksek!",
+          "Yolda trafik vardı, of.",
+          "Bugün sakin geçer umarım.",
+          "Yapılacaklar listesi hazır.",
+          "Sabah havası ferah.",
+          "Toplantı kaçta, unuttum.",
+          "Uyku sersemliğindeyim.",
+          "Ekran açıldı, iş başladı.",
+          "Erkenden çalışmak da iyi.",
+          "Bugün kendime söz verdim.",
+          "Sabah ritüelim: kahve."
         ],
         "noon": [
-          "Öğle yemeği yakın mı?",
-          "Günün yarısı gitti"
+          "Öğle yemeğine ne var?",
+          "Acıktım, artık.",
+          "Kim yemeğe gidiyor?",
+          "Öğle arası kutsal.",
+          "Yemekten sonra çay.",
+          "Bugün ne yesek?",
+          "Mideyi doyuralım, iş sonra.",
+          "Yarım gün bitti, yaşasın.",
+          "Şu an çok acıkmış durumdayım.",
+          "Öğlen uykusu gelir mi acaba?",
+          "Kantin mi, dışarısı mı?",
+          "Öğle yemeği toplantısı mı?",
+          "Salata mı burger mi?",
+          "Öğleden sonra plan yok.",
+          "Güneş tam tepede.",
+          "Şimdi kahve saati.",
+          "Yemek sonrası çöküş başladı.",
+          "Öğle sonrası enerji düşüyor.",
+          "Sırada yemek var.",
+          "Tost mu, çorba mı?",
+          "Bir mola herkese iyi gelir.",
+          "Öğlen olmuş, vakit nasıl geçti?",
+          "Öğle arası, kimse arama.",
+          "Bir de tatlı yesek.",
+          "Öğle yemeği, günün yıldızı."
         ],
         "evening": [
-          "Bugünlük az kaldı",
-          "Akşam olmuş bile"
+          "Mesai bitmek üzere!",
+          "Bugün de bitti şükür.",
+          "Eve gitme vakti.",
+          "Bir saat daha var.",
+          "Akşam ne yapsam?",
+          "Yoruldum, eve gideyim.",
+          "Yarın devam ederiz.",
+          "Bugünkü işler tamam.",
+          "Son mailleri de kapatayım.",
+          "Akşam yürüyüşü iyi olur.",
+          "Çıkışta bir şey yiyelim mi?",
+          "Gün doğdu, gün battı.",
+          "Yoğun bir gündü.",
+          "Trafiğe girmeden çıkayım.",
+          "Bilgisayarı kapatma vakti.",
+          "Eve gidince dizi izleyeceğim.",
+          "Bu akşam plan var.",
+          "Ofiste akşam olunca sakin.",
+          "Gün batımı ne güzel.",
+          "Yemek ne olsa eve?",
+          "Bugünlük yeter.",
+          "Çantamı toplamaya başlıyorum.",
+          "Yarın için not aldım.",
+          "Akşam serinliği iyi geldi.",
+          "Kapanışı yapalım."
         ],
         "night": [
-          "Hâlâ buradayım...",
-          "Sessiz bir gece"
+          "Ofiste kimse kalmadı.",
+          "Gece çalışması başladı.",
+          "Ne kadar sessiz.",
+          "Uykum var ama bitmedi.",
+          "Ay dışarıda parlıyor.",
+          "Bir kahve daha, tamam.",
+          "Işıklar kısık, huzur.",
+          "Yalnız çalışmayı severim.",
+          "Yatma vakti geçti bile.",
+          "Saat kaç oldu, ya?",
+          "Sessizlik en iyi mesai.",
+          "Gece kuşları uyanık.",
+          "Yıldızlar da çalışıyor.",
+          "Ofis kimseye ait değil.",
+          "Kafam bulutlarda.",
+          "Bir şeyler oldu mu?",
+          "Nöbetçi gibiyim.",
+          "Bu sessizlik çok güzel.",
+          "Gece yarısı fikirleri.",
+          "Uykusuzluk seviyesi yüksek.",
+          "Biraz daha, sonra yatarım.",
+          "Gece bize güzel.",
+          "Dışarıda kimse yok.",
+          "Eve gitsem mi, yatsam mı?",
+          "Bir bölüm dizi izlesem?"
         ]
       },
       "done": [
-        "Tamamdır!",
-        "Hallettim!",
-        "Bu güzel oldu"
+        "Bitti!",
+        "Başardım!",
+        "Tamamdır, kapattım.",
+        "İş bitti, yaşasın.",
+        "Bir görev daha hallolmuş.",
+        "Kendimi alkışlıyorum.",
+        "Şu işi bitirdim ya!",
+        "Yeşil tik geldi.",
+        "Yapılacaklardan biri gitti.",
+        "Bu kadar da kolaymış.",
+        "Efsane iş çıkardım.",
+        "Görev tamam, kahve hakkı doğdu.",
+        "Sistem güncel, ben de.",
+        "Çok iyiyim, kabul.",
+        "İş bitti, yüzüm gülüyor.",
+        "Şimdi sıra ödülde.",
+        "Kaydetmeyi de unutmadım.",
+        "İyi ki yaptım.",
+        "Hallettim, şimdi rahat.",
+        "Bitirdim, teslim ediyorum.",
+        "Sonunda bitti!",
+        "Bugünün kahramanı benim.",
+        "Ufak bir dans yapayım.",
+        "İşte bu, işte bu!",
+        "Bir bug daha öldü.",
+        "Bu sefer kimse bulamaz hata.",
+        "Yayında, canlı, temiz!",
+        "Merge edildi, huzur.",
+        "Adam gibi bir iş oldu.",
+        "Kendime bir mola hediyem.",
+        "Bunu çerçeveletmeliyim.",
+        "Bir de bakmadan onayladılar.",
+        "Zaman kalmıştı ya!",
+        "Süper bitti, sağ olun.",
+        "Kritik işi geçtik.",
+        "Kendi rekorum kırıldı.",
+        "Bir yıldız da bana.",
+        "Yaptım, yaptım, yaptım!",
+        "Bittiğine inanamıyorum.",
+        "Sıradaki görev, gel bakalım.",
+        "Çok temiz oldu.",
+        "Bunu gururla sunuyorum.",
+        "Şimdi ofisi dolaşabilirim.",
+        "Tebrikler bana!",
+        "Kendime bir çay ısmarlıyorum.",
+        "Aferin bana, aferin!",
+        "Sprint kapandı, huzur.",
+        "Teslim tarihi bile yetişti.",
+        "Bu görevi ezdim geçtim.",
+        "Bir zafer daha!",
+        "Not al, bu gün bir efsane.",
+        "Şimdi gerçekten hak ettim."
       ],
       "applause": [
-        "Tebrikler!",
-        "Bravo!",
-        "Eline sağlık!"
+        "Bravo, harikasın!",
+        "Tebrikler, aferin sana!",
+        "Vay be, çok iyi!",
+        "Alkışlar sana!",
+        "Süpersin ya!",
+        "Helal olsun!",
+        "Yıldız gibisin.",
+        "Çok iyi iş çıkardın.",
+        "Sen bizim kahramanımızsın.",
+        "İşte bu, ekibin gururu.",
+        "Muhteşem, teşekkürler!",
+        "Tam bir profesyonel.",
+        "Şu işi bitirmişsin, bravo!",
+        "Sana hayranım.",
+        "Şahane oldu!",
+        "Yaşasın, yaşasın!",
+        "Hadi bir alkış!",
+        "Çok da güzel olmuş.",
+        "Alkış, alkış, alkış!",
+        "Harika iş, gerçekten.",
+        "Kutlarım seni.",
+        "Bir çay ısmarlayayım.",
+        "Aferin, aferin, aferin.",
+        "İşte bu bir efsane.",
+        "Şaka gibi, çok hızlısın!",
+        "Ustasın, ustasın.",
+        "Kral/Kraliçe sensin.",
+        "Görev tamam, eyvallah.",
+        "Sana yeşil tik.",
+        "Vay canına!",
+        "Çok iyi, çok iyi!",
+        "Ellerine sağlık.",
+        "Sağlam iş, sağ ol.",
+        "Ekibin gururusun.",
+        "Çok şaşırdım, bravo!",
+        "Sen de bizdensin!",
+        "Tebrikler, sıra bende.",
+        "Yeniden bir zafer!",
+        "Sen olmasan ne yapardık.",
+        "Bu hız bana çok yeni.",
+        "Süper, süper, sen süpersin."
       ],
       "giggle": [
-        "Ha, çok doğru",
-        "Dur, çok komik",
-        "Bunu unutamam"
+        "Bu ne ya :D",
+        "Yok artık :D",
+        "Hahah ne bu?",
+        "Ay ölürüm.",
+        "Bu çok iyi ya.",
+        "Bir daha bak.",
+        "Bunu görmelisiniz!",
+        "Aman, bu meme efsane.",
+        "Çok iyi, çok!",
+        "Kimin bu paylaşım?",
+        "Bu yorumlar da ne...",
+        "Adam kendini bulmuş.",
+        "Gülmekten öldüm.",
+        "İnternet yine bir şey buldu.",
+        "Dur, kayıt alayım.",
+        "Kedi videosu, tabii ki.",
+        "Yine mi bu kedi!",
+        "Bu ne saçmalık, güzel.",
+        "Mesaj mı geldi, hihi.",
+        "Grupta kim yazmış bunu?",
+        "Ay çok komik.",
+        "Bir daha izleyeyim.",
+        "Bunu bir yere kaydetmeliyim.",
+        "Beğen, kaydet, paylaş.",
+        "Bu insanlar nasıl yapıyor?",
+        "Kalbim gitti bu videoda.",
+        "Ne diyor bu ya!",
+        "Şaka mı bu?",
+        "Kendimi tutamıyorum.",
+        "Neyse, çalışıyorum, çalışıyorum.",
+        "İnanılmaz, bu gerçek mi?",
+        "Sessiz gülmeye çalışıyorum.",
+        "Yorumlar ayrı bir eser.",
+        "Bu tam bana göre.",
+        "Ne iyi bir içerik.",
+        "Bir dakika, yine mi?",
+        "Ne güzel bir gün.",
+        "Ekranı saklayayım, müdür geliyor.",
+        "Hesap makinesi diyorum, tamam.",
+        "Story'e koymalıyım bunu.",
+        "Ay dayanamıyorum.",
+        "Bu adamı takip ediyorum.",
+        "Şaka değil, gerçek!",
+        "Reels'ten çıkamıyorum.",
+        "Algoritma beni anlıyor.",
+        "Bu sefer çok iyi.",
+        "Yine bir mim, yine bir gülüş.",
+        "Hah, sahiden mi?",
+        "Bir daha izlemem lazım.",
+        "Bu ses de nereden geldi?",
+        "Bu kadar da olmaz.",
+        "Çok tatlı ya.",
+        "Tamam, son bir video."
       ],
       "lines": {
         "coffee": [
-          "Kahve lazım...",
-          "Önce kahve!",
-          "Bir fincan daha?"
+          "Kahve var mı?",
+          "Bir kahveye ne kadar yakınım?",
+          "Kafein seviyem kritik.",
+          "Espresso çift, lütfen.",
+          "Kahvesiz beyin yüklenmiyor.",
+          "Üçüncü fincan başlıyor.",
+          "Ben kahveyle çalışıyorum.",
+          "Kahve bitti mi, yoksa yalan mı?",
+          "Filtre kahve mi, türk kahvesi mi?",
+          "Kalbim hızlı çarpıyor, iyi işaret.",
+          "Bir de sütlü olsa.",
+          "Kahve makinesi beni çağırıyor.",
+          "Uykum yok, kahvem var.",
+          "Damarımda kahve akıyor.",
+          "Kupam nerede? Kayıp!",
+          "Bugün sadece kahveyle hayattayım.",
+          "Sabah kahvesi kutsaldır.",
+          "Kahve molası sayılmaz, yakıt ikmali.",
+          "Biraz daha kafein, biraz daha odak.",
+          "Su mu? Hayır, kahve.",
+          "Öğleden sonra kahvesi de var.",
+          "Kahvesiz gün, bitmeyen gün.",
+          "Yarım kaşık şeker, tam bir dünya.",
+          "Barista mı olsam ya?",
+          "Mmm, şu koku!",
+          "Kahve içmeyen dev gibi uyur.",
+          "Titreyen ellerim iyi bir işaret.",
+          "Latte mi mocha mı, karar veremem.",
+          "Bugünkü kotam kaç, unuttum.",
+          "Bir fincan daha, sonra iş.",
+          "Kahve soğumadan e-postaya bakmam.",
+          "Kupam bugün 500 ml.",
+          "Kahve çekirdeklerine selam.",
+          "Köpüğü tam olmuş, aferin makine.",
+          "Kahve içince fikirler geliyor.",
+          "Biraz daha demle, biraz daha.",
+          "Kafeinim düştü, alarm!",
+          "Yanımda hep yedek kapsül.",
+          "Kahve benim sprintim.",
+          "Bir yudum daha, sonra deploy.",
+          "Kahve falına bakar mısın?",
+          "Demlik dolu mu?"
         ],
         "nightowl": [
-          "Çok erken...",
-          "*esneme*",
-          "Gece kuşuyum"
+          "Gece daha verimliyim.",
+          "Uyku mu? O da neymiş.",
+          "Saat kaç? Dur, sabah mı?",
+          "Kodlar ancak gece yazılır.",
+          "Sabah toplantıları yasaklansın.",
+          "Göz altım mor, ama fikrim net.",
+          "Hâlâ uyanmadım, 3 saattir.",
+          "Gece 2 en verimli saatim.",
+          "Yatmadım daha, o yüzden burdayım.",
+          "Ay ışığı monitör kadar güzel.",
+          "Yarın sabah? Ben yarını uyudum.",
+          "Gece kuşu olmak zor iş.",
+          "Sabah 9'u kim icat etti ya?",
+          "Uykusuzluk süper güç, değil mi?",
+          "Kaç gündür uyuyorum, hatırlayamadım.",
+          "Gündüz uyku modundayım.",
+          "Bir bölüm daha derken sabah oldu.",
+          "Gece sessizliği çok güzel.",
+          "Yıldızlar çalışırken eşlik ediyor.",
+          "Uyku borcum faiz işliyor.",
+          "Ben ayı sevdim, güneşi az sevdim.",
+          "Işıklar açılınca uyanırım.",
+          "Bugün de gece vardiyası gibi.",
+          "Kafam sabah 11'de açılıyor.",
+          "Uykum yok ama gözlerim var.",
+          "Geç yatmak bir yaşam tarzı.",
+          "Dünkü ben bugünkü beni çok yordu.",
+          "Gece mesaisi tatlı bir bela.",
+          "Alarmı kaç kez erteledim, saymadım.",
+          "Gece 3'te fikir patlaması.",
+          "Sabahın körü bana göre değil.",
+          "Gündüz güneş çok parlak ya.",
+          "Karanlık mod, hayat modu.",
+          "Şimdi tam açılıyorum.",
+          "Uyku sonra, önce bug.",
+          "Ay doğdu, ben çalışıyorum.",
+          "Pijamayla gelsem olur mu?",
+          "Uykusuzum ama yaratıcıyım.",
+          "Uykusuz kahraman burada.",
+          "Geceleri çok daha net düşünürüm.",
+          "Yatak beni hep bekliyor."
         ],
         "social": [
-          "Hey! Sohbet?",
-          "Mola verelim?",
-          "Gel otur!"
+          "Hey, gel bir sohbet edelim!",
+          "Öğle yemeğine kim geliyor?",
+          "Herkes buraya, bir şey anlatacağım!",
+          "Bugün kimlerle konuştun?",
+          "Hadi bir mola, hep beraber!",
+          "Kahve içmeye gelen var mı?",
+          "Sohbet olmadan iş olur mu?",
+          "Bak yeni birini tanıdım!",
+          "Ekip toplantısı mı? Sevdim.",
+          "Beraber bir şeyler yapalım!",
+          "Herkese günaydın!",
+          "Nasıl gidiyor, canım?",
+          "Yanına gelebilir miyim?",
+          "Dedikodu yok, sadece sohbet :)",
+          "Ofis ne kadar da neşeli!",
+          "Hepinizi çok seviyorum.",
+          "Bu akşam bir şey yapalım mı?",
+          "Takım ruhu, işte bu!",
+          "Kim ne yapıyor, anlatın!",
+          "Şu köşeye toplanalım mı?",
+          "Yalnız çalışmak zor, beraber olalım.",
+          "Sana bir espri anlatayım mı?",
+          "Hafta sonu ne yapıyorsun?",
+          "Herkesi davet ediyorum!",
+          "Bugün kimin doğum günü?",
+          "Hadi masaya toplanın.",
+          "Netflix mi izliyorsunuz? Ne izliyorsunuz?",
+          "Öğle arası, hadi gidelim!",
+          "Sesimi duyan var mı? Hey!",
+          "Grup fotoğrafı çekelim!",
+          "Kimle çay içeyim şimdi?",
+          "Harika bir ekibiz, değil mi?",
+          "Bir yerde parti mi var?",
+          "Bize de anlatın!",
+          "Kimse yok mu konuşacak?",
+          "Sırayla sohbet edelim.",
+          "Arkadaşlık her şeydir.",
+          "Herkesle selamlaşmadım daha.",
+          "Ekip yemeği ayarlayayım mı?",
+          "Bugün çok şeker biriyim.",
+          "Gel, sohbet tadında bir mola!",
+          "Merhaba, merhaba, merhaba!"
         ],
         "perfectionist": [
-          "Bir daha bakayım",
-          "Neredeyse kusursuz",
-          "Detay önemli"
+          "Bu 2 piksel kaymış.",
+          "Bir kez daha kontrol edeyim.",
+          "Hizalama çok önemli.",
+          "Detay tanrısı ben olayım.",
+          "Bu font boyutu yanlış görünüyor.",
+          "Kenar boşlukları eşit olmalı.",
+          "Bir daha baktım, yine hata!",
+          "Tam değil, tekrar deneyeyim.",
+          "Şu satır düzgün girintili mi?",
+          "Yüzde 99 yetmez, yüzde 100!",
+          "Checklist'i baştan geçiriyorum.",
+          "Gözüm kaçıyor, şu fare imleci?",
+          "Nokta mı virgül mü? Çok önemli.",
+          "Şu köşe yuvarlak mı düz mü?",
+          "Kontrol, kontrol, kontrol.",
+          "Tam simetri lazım.",
+          "Bunu üçüncü kez düzeltiyorum.",
+          "Bir hata, tüm günü bozar.",
+          "Kağıtlar hizalı olmalı.",
+          "Masam simetrik mi, bakayım.",
+          "Klasör isimleri tutarlı mı?",
+          "Renk kodu bir ton farklı!",
+          "Tek harf bile önemli.",
+          "Sürüm notlarını iki kez okudum.",
+          "Renk paleti kusursuz olmalı.",
+          "Gözüm gördü, bitti, tekrar.",
+          "Bir dakika, boşlukları sayayım.",
+          "Kaydetmeden önce bir daha bak.",
+          "Tam mükemmel değil, yakın.",
+          "Formatı düzeltmek lazım.",
+          "Testlerin hepsi yeşil mi?",
+          "İyi ama daha iyi olabilir.",
+          "Şablonu bir kez daha gözden geçir.",
+          "Lütfen dosyayı v_final_2 yapma.",
+          "Bu pikseli yerine oturtayım.",
+          "Yanlış hizalama beni yaralıyor.",
+          "Küçük bir detay var...",
+          "Sonra dağılmasın diye şimdi bakıyorum.",
+          "Her şey yerli yerinde olmalı.",
+          "Dur, tekrar okuyayım.",
+          "Kenarlıklar düz olsun."
         ],
         "green": [
-          "Çiçekler selam der",
-          "Sulandı mı?",
-          "Taze yapraklar!"
+          "Bitkiyi suladın mı?",
+          "Yapraklar bugün çok neşeli.",
+          "Bu sukulentin ışığa ihtiyacı var.",
+          "Fotosentez çalışıyor mu bakalım.",
+          "Saksıyı biraz çevireyim.",
+          "Şu yeşile bak, ne güzel!",
+          "Her ofise bir orman lazım.",
+          "Su vakti geldi bitkicik.",
+          "Monstera'm büyüdü, gururluyum.",
+          "Toprak nemli mi, dokunayım.",
+          "Kaktüs bile susuz kalmaz.",
+          "Yeni bir yaprak çıktı!",
+          "Bir tane daha bitki alsam?",
+          "Bitkiler beni dinliyor, biliyorum.",
+          "Havalandırma bitkilere iyi gelmiyor.",
+          "Şu sararmış yaprağı koparayım.",
+          "Yeşil göz için ilaçtır.",
+          "Orkide bugün çok mutlu.",
+          "Güneş alıyor mu şu saksı?",
+          "Bu yaprak parlak, sağlıklı.",
+          "Filizlenmeyi izliyorum.",
+          "Toprağı biraz kabartayım.",
+          "Gübre zamanı mı geldi?",
+          "Bitkim bana bakıyor, susadı.",
+          "Yaprak sesini duyuyorum.",
+          "Çiçek açtı! Yaşasın!",
+          "Küçük fidanı büyütüyorum.",
+          "Şu bitkiye müzik açayım mı?",
+          "Çay yaprağı da bitki sayılır.",
+          "Kaktüs benim gibi, dikenli ama tatlı.",
+          "Toprak kokusu iyi geliyor.",
+          "Saksılar hizalı mı? Bitkiler mutlu mu?",
+          "Fesleğen pizzaya, ben ona.",
+          "Yeşil bir kalp için çok su.",
+          "Bahçe köşem bende.",
+          "Bitkilere selam söylüyorum.",
+          "Yapraklardaki çiy tanesi ne güzel.",
+          "Dalları budayayım biraz.",
+          "Bu bitki yeni evine alışıyor.",
+          "Doğa iyi gelir, ofiste de.",
+          "Ay çiçeğim, güneş gibi parla."
         ],
         "dreamer": [
-          "Manzara güzel...",
-          "Sadece düşünüyorum",
-          "Hayal kuruyorum"
+          "Şu bulutlar ne güzel.",
+          "Ya ofis uçsa, ne olurdu?",
+          "Bir gün adada çalışsam...",
+          "Gökyüzü bugün pembe olacak.",
+          "Bir uzay gemisi mi bu?",
+          "Ya şöyle olsaydı?",
+          "Hayal kurmak bedava.",
+          "Aklım bulutlarda, bir dakikaya geri dönerim.",
+          "Ay'da ofis açsak?",
+          "Kafamda film çekiyorum.",
+          "Rüya gibi bir gün.",
+          "Ya masamız yelkenli olsaydı?",
+          "Uzaklara dalmışım.",
+          "Bir gün dünyayı gezeceğim.",
+          "Yıldızlar bize göz kırpıyor.",
+          "Belki de herkes uçabilir.",
+          "Hayal ettim, oldu sayılır.",
+          "Pencereden denizi gördüm sandım.",
+          "Ya kediler konuşabilse?",
+          "Gökkuşağı ayağımıza gelse!",
+          "Şu an kafamda bir dünya var.",
+          "Bir gün bir kitap yazacağım.",
+          "Sürekli bir başka yerdeyim.",
+          "Balonla seyahat etsek?",
+          "Uzaklara dalıp gidiyorum.",
+          "Rüzgâr beni çağırıyor.",
+          "Bir de ışıktan hızlı olsak?",
+          "Hayal gücümü kimse kısıtlayamaz.",
+          "Ya şu an başka bir evrendeyiz?",
+          "Hayat bir düş gibi.",
+          "Bulut olsam, ne yapardım?",
+          "Kafamda bir şarkı var.",
+          "Gökyüzü bir tuval.",
+          "Kim bilir neler olur!",
+          "Bugün harika bir şey olacak.",
+          "Balık olsam okyanusa dalardım.",
+          "Bir kanadım olsa...",
+          "Sanki bir masalın içindeyiz.",
+          "Belki de her şey mümkündür.",
+          "Düşlerimin ofisi burası.",
+          "Uzay boşluğu çok sessizdir.",
+          "Hayat bir film, ben başrolüm."
         ]
       }
     },

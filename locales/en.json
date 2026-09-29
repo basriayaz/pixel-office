@@ -417,188 +417,3047 @@
     "life": {
       "convos": [
         [
-          "Did you see the build turn green?",
-          "Yes! First try for once.",
-          "~I almost cried, honestly.",
-          "Do not jinx it, {me}."
+          "You're late again.",
+          "Traffic was insane this morning.",
+          "It's the same road every day.",
+          "Every day it surprises me anyway.",
+          "~Sure. Say hi to the alarm clock."
         ],
         [
-          "{you}, how many coffees so far?",
-          "Three. Do not judge me.",
-          "I would never. I am on my fourth.",
-          "~We are a team of champions."
+          "Where are we eating lunch?",
+          "Not the sandwich place again.",
+          "They know my order by heart.",
+          "That's not loyalty, that's a rut.",
+          "~A delicious rut, though."
         ],
         [
-          "Is it Friday yet?",
-          "It is barely Tuesday, {me}.",
-          "~Do not say that out loud.",
-          "Then let us have a snack."
+          "Have you met the new guy?",
+          "The quiet one? He's nice.",
+          "He asked where the good coffee is.",
+          "And you told him the truth?",
+          "~I said 'the cafe across the street'."
         ],
         [
-          "I named my test file final_v2_real.",
-          "~Classic.",
-          "Then I renamed it again.",
-          "Of course you did."
+          "Who set the AC to 65 again?",
+          "Not me. I'm wearing a scarf.",
+          "There's a thermostat ghost here.",
+          "Maybe it's {you}.",
+          "~I plead the fifth. And a blanket."
         ],
         [
-          "The office plants look happy today.",
-          "They get more attention than me.",
-          "~That is because they never argue.",
-          "Fair point, {you}."
+          "Someone ate my yogurt from the fridge.",
+          "Was your name on it?",
+          "In marker. Twice.",
+          "So the thief can read.",
+          "~The worst kind of criminal."
+        ],
+        [
+          "How was the meeting?",
+          "Ninety minutes, zero decisions.",
+          "Could've been an email.",
+          "It could've been a wave across the room.",
+          "~Now there's a follow-up meeting scheduled."
+        ],
+        [
+          "Any weekend plans?",
+          "Couch, snacks, one series.",
+          "Just one?",
+          "It's a very long series.",
+          "Sounds perfect, honestly."
+        ],
+        [
+          "Did you watch the game last night?",
+          "Yes, and I'm still upset.",
+          "That last call was a joke.",
+          "My team lost by a mile.",
+          "~So the ref wasn't the problem."
+        ],
+        [
+          "Don't spoil the finale for me!",
+          "I haven't said a word.",
+          "Your face is spoiling it.",
+          "This is my poker face.",
+          "~Your poker face is a cartoon."
+        ],
+        [
+          "My neighbor started drilling at 7 a.m.",
+          "On a Sunday?",
+          "On a Sunday.",
+          "What is he building?",
+          "~A tunnel, I think. Or a boat."
+        ],
+        [
+          "My mom called me three times today.",
+          "Everything okay?",
+          "She wanted to know if I ate.",
+          "Moms have one question.",
+          "~And the right answer is always no."
+        ],
+        [
+          "I'm back from vacation.",
+          "Nice tan!",
+          "It's mostly sunburn.",
+          "Did you check your inbox?",
+          "~Not yet. It's staring at me."
+        ],
+        [
+          "Tell me the traffic wasn't awful.",
+          "Forty minutes for five miles.",
+          "Maps said fifteen.",
+          "Maps lies with confidence.",
+          "~It's my most trusted liar."
+        ],
+        [
+          "Do you think we're getting raises?",
+          "I saw one dollar and a wink.",
+          "A wink from whom?",
+          "From HR, at the coffee machine.",
+          "~So, a coffee raise."
+        ],
+        [
+          "Have you noticed those two at lunch?",
+          "Sitting together every day.",
+          "Sharing dessert now.",
+          "Just friends, I'm sure.",
+          "~Two spoons, one cake. Sure."
+        ],
+        [
+          "Started my diet today.",
+          "You said that yesterday.",
+          "Yesterday was a beta test.",
+          "And today?",
+          "~Salad. With a side of pizza."
+        ],
+        [
+          "I ran this morning.",
+          "You? Ran?",
+          "Seven minutes. Then I walked.",
+          "That's called a stroll.",
+          "~A very determined stroll."
+        ],
+        [
+          "{you}, how much coffee is too much?",
+          "I'm on my fifth.",
+          "Your hands are shaking.",
+          "That's just my typing style.",
+          "~You type like a hummingbird."
+        ],
+        [
+          "The printer jammed again.",
+          "That printer hates us.",
+          "It's older than the intern.",
+          "Time to retire it.",
+          "~It'd probably jam at the party."
+        ],
+        [
+          "The wifi is down again.",
+          "Have you tried turning it off and on?",
+          "Twice. Then I stared at it.",
+          "Did it work?",
+          "~No, but I felt in control."
+        ],
+        [
+          "Who left dishes in the sink?",
+          "There's a note: 'will wash later'.",
+          "Later never comes here.",
+          "It's a mystery of the kitchen.",
+          "~The kitchen has secrets."
+        ],
+        [
+          "There's cake in the kitchen.",
+          "Whose birthday?",
+          "Sarah's. Get in there quick.",
+          "I'm already halfway there.",
+          "~Save me a corner piece!"
+        ],
+        [
+          "Monday hits me hard.",
+          "I feel it starting Sunday night.",
+          "I start Friday afternoon.",
+          "How? Friday is joy.",
+          "~Friday's joy ends at 5:01."
+        ],
+        [
+          "I almost fell asleep in the meeting.",
+          "Did anyone notice?",
+          "I snored a little.",
+          "During the presentation?",
+          "~They thought it was sound design."
+        ],
+        [
+          "I'm just grabbing milk on the way home.",
+          "Sure you are.",
+          "Just milk!",
+          "Nobody leaves with just milk.",
+          "~I'll take a cart and a mattress."
+        ],
+        [
+          "Rent went up again.",
+          "I'm apartment hunting.",
+          "One place had a 'garden'.",
+          "Let me guess, one plant?",
+          "~And it was fake."
+        ],
+        [
+          "My cat walked on my keyboard.",
+          "What did she write?",
+          "'jjjjjjjklll'. Very deep.",
+          "Maybe it's your new password.",
+          "~Nobody would ever guess it."
+        ],
+        [
+          "Big wedding this weekend.",
+          "How many guests?",
+          "Four hundred. I know ten.",
+          "So you'll talk to the buffet.",
+          "~The buffet and I have a bond."
+        ],
+        [
+          "I left my mic on in the meeting.",
+          "What did you say?",
+          "'When does this end?'",
+          "Everyone heard?",
+          "~Everyone nodded. Nobody laughed."
+        ],
+        [
+          "A pop-up showed on my shared screen.",
+          "What did it say?",
+          "'Mom: did you eat?'",
+          "Aww.",
+          "~Now the whole team wants lunch."
+        ],
+        [
+          "That email said 'per my last email'.",
+          "Ouch, that's a stab.",
+          "Politely aggressive.",
+          "The passive voice is a weapon.",
+          "~Best used with a smiley face."
+        ],
+        [
+          "Did you bring an umbrella?",
+          "No, and I'm soaked.",
+          "There are thirty in the lost and found.",
+          "None have owners.",
+          "~They hold secret meetings at night."
+        ],
+        [
+          "It's boiling in here.",
+          "AC is broken again.",
+          "I'm fanning myself with a folder.",
+          "Very fancy.",
+          "~Bring lemonade and we're on holiday."
+        ],
+        [
+          "Finding parking is like a sport.",
+          "I circled for twenty minutes.",
+          "When I get a spot I feel victorious.",
+          "Where's the trophy?",
+          "~Sadly it's a ticket."
+        ],
+        [
+          "The elevator's full again.",
+          "I took the stairs.",
+          "Which floor are you on?",
+          "Fifth. Never again.",
+          "~Who needs a gym membership?"
+        ],
+        [
+          "Bagel run after work?",
+          "Yes, and coffee.",
+          "Just one coffee?",
+          "Two. I know myself.",
+          "~That's a lifestyle."
+        ],
+        [
+          "My desk plant is dying.",
+          "How often do you water it?",
+          "Once a month. Thought that was fine.",
+          "Cacti drink more than that.",
+          "~Even the cactus is dead?"
+        ],
+        [
+          "Someone microwaved fish again.",
+          "The whole floor smells.",
+          "We need a signed policy.",
+          "Fish is banned, effective today.",
+          "~Finally, a real leader."
+        ],
+        [
+          "I love your new haircut.",
+          "Thanks! The barber panicked.",
+          "What did you ask for?",
+          "'A little off the top.'",
+          "~A little off everywhere, it seems."
+        ],
+        [
+          "Nice shoes!",
+          "Sale price. Half off.",
+          "They pinch a bit, though.",
+          "Beauty is pain.",
+          "~And discounts are pain too."
+        ],
+        [
+          "I'm getting a new phone.",
+          "Which one?",
+          "The one with a battery that lasts.",
+          "That doesn't exist.",
+          "~Then I'll carry an outlet."
+        ],
+        [
+          "My package was supposed to arrive.",
+          "Check the tracking.",
+          "'Out for delivery' for four days.",
+          "It's sightseeing.",
+          "~It has a lot of free time."
+        ],
+        [
+          "Game night after work?",
+          "One round only.",
+          "Last time it took three hours.",
+          "We always say one.",
+          "~And then coffee tomorrow."
+        ],
+        [
+          "I hit snooze five times today.",
+          "I hit it seven.",
+          "My alarm and I are in a fight.",
+          "Who's winning?",
+          "~The pillow. Always the pillow."
+        ],
+        [
+          "I can't wait for my vacation.",
+          "Where are you going?",
+          "A beach and a chair. That's it.",
+          "No email?",
+          "~Phone stays in the hotel safe."
+        ],
+        [
+          "The new intern is so eager.",
+          "He'll make us look bad.",
+          "He stayed late on day one.",
+          "They'll start using him as an example.",
+          "~Someone warn him about us."
+        ],
+        [
+          "Chicken again in the cafeteria.",
+          "It's a bit dry today.",
+          "Add sauce.",
+          "Sauce fixes everything.",
+          "~Sauce is the real hero."
+        ],
+        [
+          "I couldn't sleep at all.",
+          "Worries?",
+          "My neighbor's dog.",
+          "What time does it bark?",
+          "~Exactly 3 a.m. Like an alarm."
+        ],
+        [
+          "Lunchtime walk?",
+          "It's nice out.",
+          "Just twenty minutes.",
+          "Ten walking, ten complaining.",
+          "~Perfect ratio."
+        ],
+        [
+          "My boss said 'nice work' today.",
+          "What did you do?",
+          "I arrived five minutes early.",
+          "The bar is that low?",
+          "~I'll be ten minutes early tomorrow."
+        ],
+        [
+          "Someone keeps humming in the office.",
+          "Not me!",
+          "I think it's {you}.",
+          "It's stuck in my head.",
+          "~Now it's stuck in mine too."
+        ],
+        [
+          "The Friday feeling is so close.",
+          "How many hours left?",
+          "Twenty-two.",
+          "Feels like twenty-two years.",
+          "~Someone bring a calendar party."
+        ],
+        [
+          "Who took my pen?",
+          "Which one?",
+          "The blue one with the company logo.",
+          "They all have the company logo.",
+          "~So we're all suspects."
+        ],
+        [
+          "I think those two have a thing.",
+          "Which two?",
+          "The ones sharing lunch every day.",
+          "Sharing lunch is serious.",
+          "~Next step: sharing a charger."
+        ],
+        [
+          "I'm learning to ski at forty.",
+          "That's brave.",
+          "Not brave. It was on sale.",
+          "Are broken bones on sale too?",
+          "~Insurance is another story."
+        ],
+        [
+          "Who made the tea?",
+          "I did.",
+          "Why is it so pale?",
+          "I gave the bag a short talk.",
+          "~You call that tea? That's warm water."
+        ],
+        [
+          "I ordered way too much online this month.",
+          "What did you get?",
+          "Food, socks, and a waffle maker.",
+          "A waffle maker?",
+          "~It was a good deal at the time."
+        ],
+        [
+          "The bus this morning was a sardine can.",
+          "I stood the whole way.",
+          "Somebody's elbow was in my ribs.",
+          "We deserve a bonus for that.",
+          "~Or at least a bigger coffee."
+        ],
+        [
+          "Dinner at my parents' tonight.",
+          "Big meal?",
+          "Three courses and dessert.",
+          "I'd skip lunch.",
+          "~I skipped breakfast too."
+        ],
+        [
+          "Anyone want to carpool tomorrow?",
+          "I'm in.",
+          "Do you have music picks?",
+          "Only one album.",
+          "~Good, we'll learn every word."
+        ],
+        [
+          "I'm thinking of camping this weekend.",
+          "Have you ever set up a tent?",
+          "I watched a video once.",
+          "That's basically an expert.",
+          "~Until it rains."
+        ],
+        [
+          "I skipped breakfast today.",
+          "Then coffee is your meal.",
+          "Coffee counts as breakfast.",
+          "In this office it's a food group.",
+          "~The donuts are a dessert group."
+        ],
+        [
+          "That plant is staring at me.",
+          "It knows things.",
+          "Its leaves move in meetings.",
+          "There's no wind though.",
+          "~The AC. Even the plant is cold."
+        ],
+        [
+          "I dreamed about the office last night.",
+          "What happened?",
+          "A meeting that never ended.",
+          "That's not a dream, it's Tuesday.",
+          "~I also drank coffee in the dream."
+        ],
+        [
+          "Should we make scrambled eggs at lunch?",
+          "We have no stove.",
+          "Microwave then.",
+          "Chopping onions means tears.",
+          "~Everyone cries, nobody eats."
+        ],
+        [
+          "I joined a new gym.",
+          "How many days have you gone?",
+          "One. I didn't open my bag.",
+          "Does the membership card count?",
+          "~It looks great in the wallet."
+        ],
+        [
+          "Did you hear the big gossip?",
+          "Tell me everything.",
+          "The coffee machine is being replaced.",
+          "That's not gossip, that's news.",
+          "~In this office it's a headline."
+        ],
+        [
+          "Wedding on Saturday was lovely.",
+          "How was the cake?",
+          "Great. The speech was too long.",
+          "Who gave it?",
+          "~The groom's uncle. Forty-five minutes."
+        ],
+        [
+          "We're doing a gift exchange this year.",
+          "Who did you get?",
+          "{you}. Don't tell anyone.",
+          "I got you!",
+          "~Then we're both getting socks."
+        ],
+        [
+          "The new slide software is confusing.",
+          "I can't even open it.",
+          "I clicked and the screen went blank.",
+          "Restart it.",
+          "~That's half of every fix."
+        ],
+        [
+          "The AC war is about to start.",
+          "Who's fighting?",
+          "Dave wants 78. Anna wants 68.",
+          "Split it at 73.",
+          "~Nobody likes 73, that's the beauty."
+        ],
+        [
+          "I lost a pound this week.",
+          "Nice job!",
+          "It came back in three days.",
+          "With a friend?",
+          "~Two friends and a party."
+        ],
+        [
+          "I have to get up early tomorrow.",
+          "How early?",
+          "Five. I have to catch a flight.",
+          "I'd never see that hour.",
+          "~I saw it once. It was rude."
+        ],
+        [
+          "I'm buying lunch today.",
+          "What's the occasion?",
+          "I found five dollars in my coat.",
+          "That buys a napkin.",
+          "~A really nice napkin."
+        ],
+        [
+          "Want to catch a movie tonight?",
+          "Which one?",
+          "Doesn't matter, I want popcorn.",
+          "I'm only there for the popcorn too.",
+          "~The movie is just a bonus."
+        ],
+        [
+          "Monday morning, everyone's telling stories.",
+          "I have nothing to tell.",
+          "Sleeping on the couch counts.",
+          "It was epic.",
+          "~A saga in three naps."
+        ],
+        [
+          "{you}, you seem cheerful.",
+          "Payday.",
+          "I checked my account. Twice.",
+          "And?",
+          "~It's real. I need to sit down."
+        ],
+        [
+          "The office cat is on my chair.",
+          "Which cat?",
+          "The orange one.",
+          "She does no work.",
+          "~But her morale contribution is huge."
+        ],
+        [
+          "I brought my lunch today.",
+          "What is it?",
+          "Leftover pasta from Sunday.",
+          "Was that safe?",
+          "~It smells like it was."
+        ],
+        [
+          "Did you catch the rain forecast?",
+          "No, why?",
+          "Because I forgot my jacket.",
+          "It's coming down hard.",
+          "~Then we swim to the parking lot."
+        ],
+        [
+          "Guess who forgot his badge again.",
+          "Let me guess. Tom.",
+          "Third time this week.",
+          "Security waves at him now.",
+          "~He's basically a regular."
+        ],
+        [
+          "I started a book club with myself.",
+          "How's attendance?",
+          "One member. Very strong opinions.",
+          "Good debates?",
+          "~Heated. I lost."
+        ],
+        [
+          "Can you believe it's already October?",
+          "Feels like summer just ended.",
+          "Time flies when you're in meetings.",
+          "Or when you're on hold.",
+          "~Especially on hold."
+        ],
+        [
+          "POV: it's Friday 4:55 and prod is on fire",
+          "What do you do?",
+          "Close the laptop, walk out slowly",
+          "No goodbye?",
+          "Leaving is my love language"
+        ],
+        [
+          "My aura dropped 500 today",
+          "What happened?",
+          "I said \"quick fix\" in standup",
+          "~Instant aura deletion",
+          "Minus 1000 if it was a Friday deploy"
+        ],
+        [
+          "{you}, did you write this code?",
+          "Vibe coded it, honestly",
+          "How does it work?",
+          "No idea, please don't touch it",
+          "~Sacred code, do not blink"
+        ],
+        [
+          "The AI fixed my bug",
+          "Nice! What did it say?",
+          "\"Why is the code like this?\"",
+          "What did you say?",
+          "I said \"don't ask\" and we both left"
+        ],
+        [
+          "That's a skill issue",
+          "Whose?",
+          "The linter's, it flagged my code",
+          "Linters can't have skill issues",
+          "It just called me one too"
+        ],
+        [
+          "Ratio'd in code review",
+          "How many comments?",
+          "Fourteen, all about commas",
+          "That's a cope, not a review",
+          "~I'm crying in monospace"
+        ],
+        [
+          "This design is giving early 2000s clip art",
+          "Is that a compliment?",
+          "It's giving \"definitely not\"",
+          "But the gradient is nice",
+          "Gradients can't save friendships"
+        ],
+        [
+          "Standup was supposed to be 15 minutes",
+          "How long was it?",
+          "Fifty minutes, an entire season",
+          "Any plot twist?",
+          "Yes, we found out nobody prepared"
+        ],
+        [
+          "{me}, you're basically an NPC today",
+          "Why?",
+          "You've said \"circling back\" six times",
+          "That's my dialogue tree",
+          "~Please select another option"
+        ],
+        [
+          "Delulu is the solulu, the PM said",
+          "About what?",
+          "Shipping the whole roadmap this week",
+          "~Truly delusional, I respect it",
+          "Let's manifest the deadline away"
+        ],
+        [
+          "Brain rot hit me at the standup",
+          "What did you say?",
+          "\"Sigma deploy, no cap\"",
+          "Did anyone react?",
+          "The intern clapped, I felt seen"
+        ],
+        [
+          "The agent wrote 400 lines of code",
+          "Do they work?",
+          "The code passed its own tests",
+          "Which it also wrote",
+          "~Peak self-esteem"
+        ],
+        [
+          "New bot says \"great question\" to all",
+          "Even yours?",
+          "I asked \"what time is it\"",
+          "Still great question?",
+          "Yes, and it started giving a lecture"
+        ],
+        [
+          "Chat, is this a bug or a feature?",
+          "It's a canon event",
+          "Every release?",
+          "Yes, it's in the lore",
+          "~Bug lore is deep at this company"
+        ],
+        [
+          "The coffee machine is broken",
+          "Emergency level?",
+          "People are talking to each other",
+          "That's so bad",
+          "~Call it a critical incident"
+        ],
+        [
+          "I have zero rizz with the merge conflict",
+          "Try being kind",
+          "I said \"let's talk\"",
+          "What did it say?",
+          "\"Accept both changes,\" ghosted me"
+        ],
+        [
+          "What's your prompt for this?",
+          "\"Please make it better\"",
+          "Did it work?",
+          "It made it different, not better",
+          "That's what I call an upgrade"
+        ],
+        [
+          "The PM says \"just a quick demo\"",
+          "How quick?",
+          "Thirty minutes",
+          "Last quick demo took three weeks",
+          "~Time is a social construct, apparently"
+        ],
+        [
+          "Main character energy in the meeting",
+          "What did you do?",
+          "Unmuted, said \"as I was saying\"",
+          "Nobody had spoken yet",
+          "Confidence is a feature"
+        ],
+        [
+          "That commit message says \"fixes\"",
+          "Fixes what?",
+          "Everything, allegedly",
+          "Everything is broken now",
+          "Fixed the meaning of \"fixed\""
+        ],
+        [
+          "I told the AI to be concise",
+          "How did it go?",
+          "Four paragraphs on \"hello\"",
+          "Concise is relative",
+          "~The paragraph is its love language"
+        ],
+        [
+          "Red flag: a file named final_final_v2",
+          "Green flag?",
+          "A file named actually_final",
+          "Still a red flag",
+          "~It's giving \"cry for help\""
+        ],
+        [
+          "The design review lasted so long",
+          "How long?",
+          "We moved the button three pixels",
+          "Progress at last",
+          "We should celebrate with coffee"
+        ],
+        [
+          "I asked the bot to write tests",
+          "Result?",
+          "It wrote tests for the tests",
+          "Are those passing?",
+          "Yes, they test each other, endlessly"
+        ],
+        [
+          "{you}, do you touch grass?",
+          "The office plants count",
+          "Are they real?",
+          "Half of them are plastic",
+          "Then I've been touching lies"
+        ],
+        [
+          "My to-do list has a to-do list",
+          "How deep does it go?",
+          "Three layers",
+          "Where's the bottom?",
+          "Inception, but with Jira tickets"
+        ],
+        [
+          "Hot take: tabs beat spaces",
+          "That's a red flag",
+          "But it's my opinion",
+          "Keep it in your journal",
+          "~The journal is git blame"
+        ],
+        [
+          "Bro, the deployment failed",
+          "What's the error?",
+          "\"Something went wrong\"",
+          "That's all?",
+          "Someone wrote poetry, the message is art"
+        ],
+        [
+          "The intern says the code is \"mid\"",
+          "What did you say?",
+          "\"Then improve it\"",
+          "How did they answer?",
+          "\"Skill issue,\" and left, mic dropped"
+        ],
+        [
+          "Big meeting energy today",
+          "What's on the agenda?",
+          "\"Alignment on alignment\"",
+          "How many attendees?",
+          "Twenty, one speaking, nineteen muted"
+        ],
+        [
+          "Can we do a vibe check on the sprint?",
+          "Sure, what's the vibe?",
+          "Fifty tickets, fifty snacks",
+          "Snacks are winning",
+          "~We're hopeful about snacks"
+        ],
+        [
+          "It's giving \"works on my machine\"",
+          "Try a different machine",
+          "I did, same result",
+          "Then it's the network",
+          "~Blame the router, ancient tradition"
+        ],
+        [
+          "The AI hallucinated a library",
+          "What was it called?",
+          "\"MagicSort 9000\"",
+          "Does it exist?",
+          "It should, honestly"
+        ],
+        [
+          "My laptop fan sounds like a jet",
+          "Are you compiling?",
+          "I'm opening a spreadsheet",
+          "That's heavy work",
+          "We need a runway for this"
+        ],
+        [
+          "New rule: no meetings before coffee",
+          "How's compliance?",
+          "Zero meetings, zero attendees",
+          "Coffee is winning",
+          "~Democracy in action"
+        ],
+        [
+          "Please don't ask me about deadlines",
+          "Why?",
+          "My brain has left the chat",
+          "Left or muted?",
+          "Muted, but it's still listening"
+        ],
+        [
+          "Agent 1 is arguing with Agent 2",
+          "About what?",
+          "Tabs versus spaces",
+          "Who's winning?",
+          "The intern's laughing, so both lose"
+        ],
+        [
+          "That bug is a certified NPC",
+          "Meaning?",
+          "Always shows up, never explains",
+          "Like the printer",
+          "~The printer is the final boss"
+        ],
+        [
+          "{me}, your commit has zero context",
+          "It's a vibe",
+          "The vibe is \"please help\"",
+          "That's the correct interpretation",
+          "Do you accept feedback? No cap, thanks"
+        ],
+        [
+          "Cursed idea: no more Jira",
+          "What replaces it?",
+          "Sticky notes",
+          "They fall off the wall",
+          "Then tasks solve themselves, brilliant"
+        ],
+        [
+          "That design has main character energy",
+          "Even the footer?",
+          "Especially the footer",
+          "Nobody looks at the footer",
+          "Exactly, it's the villain arc"
+        ],
+        [
+          "The new feature is built on vibes",
+          "Any specs?",
+          "One sentence and a shrug",
+          "That's a full PRD",
+          "~Shrug-driven development"
+        ],
+        [
+          "The bot said \"I'm sorry for the confusion\"",
+          "About what?",
+          "The confusion it created",
+          "Did it fix it?",
+          "It apologized twice, that counts"
+        ],
+        [
+          "Why is my terminal red?",
+          "That's normal",
+          "Is it a bug?",
+          "It's a vibe, a mood",
+          "Red means \"we're building a lot\""
+        ],
+        [
+          "My standup update: \"still cooking\"",
+          "Is it done?",
+          "It's half-baked",
+          "What temperature?",
+          "Room temperature, like the coffee"
+        ],
+        [
+          "Try turning it off and on again",
+          "I did",
+          "Try three times",
+          "It worked on the fourth",
+          "Tradition is powerful"
+        ],
+        [
+          "That code review was a jump scare",
+          "What happened?",
+          "\"LGTM\" in three seconds",
+          "No comments?",
+          "Terrifying, I checked if they're okay"
+        ],
+        [
+          "The roadmap says \"AI everything\"",
+          "Even the coffee machine?",
+          "Especially the coffee machine",
+          "What will it do?",
+          "Suggest decaf, and I'm scared"
+        ],
+        [
+          "My inbox is at 9,999+",
+          "Do you read them?",
+          "No, I manifest silence",
+          "Does it work?",
+          "Ask me in 2029"
+        ],
+        [
+          "Chat, is this real?",
+          "What?",
+          "The quarterly goals",
+          "I think it's fanfic",
+          "~Well-written fanfic, though"
+        ],
+        [
+          "Somebody put \"urgent\" in every subject line",
+          "Like which?",
+          "\"Urgent: lunch survey\"",
+          "What's urgent about lunch?",
+          "Our future, apparently"
+        ],
+        [
+          "{you}, why is the build so slow?",
+          "It's thinking hard",
+          "About what?",
+          "Existence, mostly",
+          "Give it coffee, it'll speed up"
+        ],
+        [
+          "Nobody knows why it works",
+          "Do we fix it?",
+          "Never fix what nobody understands",
+          "Wise words",
+          "~Put that on the office wall"
+        ],
+        [
+          "I told the agent \"surprise me\"",
+          "And?",
+          "It deleted the TODO file",
+          "Was it a surprise?",
+          "A big one, and I'm crying"
+        ],
+        [
+          "Just a girl, building a dashboard",
+          "Who's it for?",
+          "Nobody, but it looks pretty",
+          "Do numbers match?",
+          "They match the aesthetic"
+        ],
+        [
+          "My focus lasts about one notification",
+          "That's generous",
+          "Two, if it's a good one",
+          "What counts as good?",
+          "\"Your coffee is ready\""
+        ],
+        [
+          "Mood: pending review",
+          "How long?",
+          "Since the last quarter",
+          "Someone approved yet?",
+          "The reviewer left, a bot is on it"
+        ],
+        [
+          "The intern found a bug in production",
+          "How did they do it?",
+          "They clicked a button",
+          "That's all?",
+          "Yes, we never tested buttons"
+        ],
+        [
+          "Sorry, I can't, I'm in a flow state",
+          "Doing what?",
+          "Scrolling through old tickets",
+          "That's not flow",
+          "It's a flow of tears"
+        ],
+        [
+          "{me}, are you okay?",
+          "I'm fine",
+          "You have 14 tabs of Stack Overflow",
+          "Fifteen, actually",
+          "~That's the whole \"fine\" list"
+        ],
+        [
+          "We need to touch base offline",
+          "What does that mean?",
+          "Two people hide in a corner",
+          "Sounds cozy",
+          "Very cozy, we call it \"sync\""
+        ],
+        [
+          "The AI asked me for a break",
+          "What did you say?",
+          "\"Same, buddy\"",
+          "Did you both rest?",
+          "We each opened a new tab"
+        ],
+        [
+          "This meeting could have been a vibe",
+          "A vibe, not an email?",
+          "Exactly, just nodding at each other",
+          "I've had those",
+          "Efficient and emotional, love it"
+        ],
+        [
+          "It's not a bug, it's lore",
+          "Whose lore?",
+          "Some dev, 2019",
+          "Where is that dev now?",
+          "On a beach, ignoring pings"
+        ],
+        [
+          "Rewrite it in another language",
+          "Which one?",
+          "The one nobody speaks yet",
+          "That sounds fun",
+          "~Rewriting is a coping mechanism"
+        ],
+        [
+          "Somebody merged on a Friday",
+          "Who was it?",
+          "The pull request is anonymous",
+          "We should investigate",
+          "~Or just brew a lot of coffee"
+        ],
+        [
+          "My code is 90 percent comments",
+          "What do they say?",
+          "\"TODO: fix later\"",
+          "And later?",
+          "Later is a myth, like weekends"
+        ],
+        [
+          "The new agent replied \"cope\"",
+          "To what?",
+          "My design feedback",
+          "Rude!",
+          "Correct, sadly, I can't cope"
+        ],
+        [
+          "Pull request approved with a thumbs up",
+          "What did that mean?",
+          "Nobody knows",
+          "Should we merge?",
+          "Vibes say yes, logic says pray"
+        ],
+        [
+          "Grinding for the promotion",
+          "What's the plan?",
+          "Work harder, pretend it's easy",
+          "That's the classic",
+          "~The classics never die"
+        ],
+        [
+          "Lock in, the release is tomorrow",
+          "Am I locked in?",
+          "You're gently resting",
+          "That's a different mode",
+          "The mode is \"hope\""
+        ],
+        [
+          "My PR has 3,000 lines",
+          "Big change?",
+          "I renamed one variable",
+          "Just one?",
+          "Then the refactor took over"
+        ],
+        [
+          "Agents keep saying \"certainly!\"",
+          "Even when it's wrong?",
+          "Especially when it's wrong",
+          "That's the confidence of a bot",
+          "~Certainly not, but okay"
+        ],
+        [
+          "We're trending on the internal wiki",
+          "For what?",
+          "A page nobody edited since 2021",
+          "Iconic",
+          "Someone should hit \"like\" on it"
+        ],
+        [
+          "{you}, what's your aura today?",
+          "Coffee-colored",
+          "Is that good?",
+          "It's warm but risky",
+          "Refill quickly to stabilize"
+        ],
+        [
+          "The bug disappeared by itself",
+          "That's suspicious",
+          "Should we celebrate?",
+          "It'll come back, it's just shy",
+          "~The bug has social anxiety"
+        ],
+        [
+          "I use AI for everything now",
+          "Even lunch?",
+          "It suggested salad",
+          "Did you eat it?",
+          "I asked for a second opinion, a burger"
+        ],
+        [
+          "Hot take: meetings are just group therapy",
+          "With worse snacks",
+          "And no notes",
+          "But with slides",
+          "~Slides make trauma look official"
+        ],
+        [
+          "What if the printer is the manager?",
+          "It does jam the schedule",
+          "And ignores feedback",
+          "And demands offerings",
+          "Paper, always paper"
+        ],
+        [
+          "POV: you said \"quick question\"",
+          "What happened?",
+          "Forty minutes of context",
+          "Did you get an answer?",
+          "Only more questions, it's a series"
+        ],
+        [
+          "My sleep schedule is a race condition",
+          "Which thread wins?",
+          "Whichever has coffee",
+          "So mostly 2 AM?",
+          "Correct, thread 2 AM wins"
+        ],
+        [
+          "The button doesn't work, it's just vibes",
+          "How's that possible?",
+          "Frontend promised it would",
+          "Backend?",
+          "Backend blocked the vibes"
+        ],
+        [
+          "Somebody call the intern, it's an emergency",
+          "What's wrong?",
+          "The coffee has run out",
+          "It's a level-5 incident",
+          "Send the emergency beans"
+        ],
+        [
+          "That dashboard is 100 percent charts",
+          "Any insight?",
+          "\"Number go up\"",
+          "Does it go up?",
+          "Sometimes down, but it's cute"
+        ],
+        [
+          "Our roadmap: build, break, brunch",
+          "In that order?",
+          "Break happens before build",
+          "Ah, agile",
+          "~We're just chaotic, agile is the excuse"
+        ],
+        [
+          "The bot won't stop apologizing",
+          "About what?",
+          "Everything, including the weather",
+          "Tell it not to",
+          "\"Sorry, I'll try not to be sorry\""
+        ],
+        [
+          "{me}, that's a cursed commit",
+          "Hmm, why?",
+          "It says \"final\" and \"WIP\"",
+          "It contains multitudes",
+          "~Schrodinger's commit"
+        ],
+        [
+          "Gonna touch grass at lunch",
+          "Where's the grass?",
+          "Third floor, next to the desk",
+          "That's a plant",
+          "A plant is grass in a suit"
+        ],
+        [
+          "Tell me you're a dev without telling me",
+          "I have 40 tabs open",
+          "And ate lunch at your desk",
+          "Twice, actually",
+          "Okay, you win, you're a dev"
+        ],
+        [
+          "Prod is fine, it's the users",
+          "What did they do?",
+          "They clicked things",
+          "In what order?",
+          "The wrong one, and now we're sad"
+        ],
+        [
+          "The server just left me on read",
+          "How long ago?",
+          "Two hours",
+          "Maybe it's busy",
+          "~Ghosted by a machine, a new low"
+        ],
+        [
+          "New KPI: vibes per sprint",
+          "How do we measure?",
+          "Coffee cups and smiles",
+          "And bugs?",
+          "Bugs are negative vibes"
+        ],
+        [
+          "I asked for a joke, the bot wrote docs",
+          "Was it funny?",
+          "The docs were unintentionally hilarious",
+          "What's the punchline?",
+          "\"See appendix\""
+        ],
+        [
+          "The retro said \"we need more time\"",
+          "Did we get it?",
+          "No, we got another retro",
+          "~About time, I guess"
+        ],
+        [
+          "Works on my machine.",
+          "Great. Ship your machine.",
+          "~Can we? It has the good config.",
+          "Put it in a container. Then in a box."
+        ],
+        [
+          "Found a bug.",
+          "Is it a bug or a feature?",
+          "Screen goes red and crashes.",
+          "Then it's a very dramatic feature.",
+          "~Put it in the release notes."
+        ],
+        [
+          "I'm deploying. It's Friday.",
+          "{me}, no. Stop.",
+          "Sprint ends today.",
+          "Then Monday you'll cry.",
+          "I brought tissues and coffee."
+        ],
+        [
+          "Meeting over?",
+          "Yes. Now the recap meeting.",
+          "~Could this have been an email?",
+          "It could. Then we'd meet about the email."
+        ],
+        [
+          "Sprint planning time.",
+          "How many points can we take?",
+          "Last time we said 40, did 12.",
+          "Say 12, then do 40.",
+          "~The humblest sprint in history."
+        ],
+        [
+          "Can you review my PR?",
+          "How big?",
+          "Only 2,400 lines.",
+          "Only? LGTM then.",
+          "You didn't read it.",
+          "I'm showing trust, {you}."
+        ],
+        [
+          "Merge conflict again.",
+          "In how many files?",
+          "All of them. Nobody touched anything.",
+          "Everyone touched the same line.",
+          "~That line is now sacred ground."
+        ],
+        [
+          "How many coffees is that?",
+          "Don't ask, I'll get sad.",
+          "I'm on tea, less guilt.",
+          "Tea counts. Steeped and judged.",
+          "So we both run on fuel."
+        ],
+        [
+          "I'm near my token limit.",
+          "Keep it short then.",
+          "Hi. Bye.",
+          "~That's it? Cost dropped.",
+          "This is what efficiency looks like."
+        ],
+        [
+          "What were we talking about?",
+          "No idea, context window's full.",
+          "Mine dropped the first half hour.",
+          "~So we start fresh, again.",
+          "Hi, nice to meet you. I'm {me}."
+        ],
+        [
+          "I asked the model my name.",
+          "What did it say?",
+          "Some other name. Very confident.",
+          "Hallucination. With good posture.",
+          "~I do that in meetings, too."
+        ],
+        [
+          "My prompt got a weird answer.",
+          "What did you write?",
+          "'Make it good.'",
+          "Did you get a good answer?",
+          "No, a very confident one."
+        ],
+        [
+          "Client wants a small change.",
+          "How small?",
+          "Rebuild the database.",
+          "~Small is relative to budget.",
+          "Is the price small, too?"
+        ],
+        [
+          "Product wants another feature.",
+          "What this time?",
+          "One button that does everything.",
+          "Which button?",
+          "Unknown. Just make it 'intuitive'."
+        ],
+        [
+          "{you}, did you see the roadmap?",
+          "Yes. It's very hopeful.",
+          "Everything fits into Q4.",
+          "~That's a wishlist, not a roadmap.",
+          "But it has nice colors."
+        ],
+        [
+          "HR sent a message.",
+          "What does it say?",
+          "'We're all a family here.'",
+          "That usually comes before layoffs.",
+          "~I'm off. Family meeting."
+        ],
+        [
+          "How many cards on the board?",
+          "Ninety-three.",
+          "How many in progress?",
+          "All of them. Nobody finishes.",
+          "It's not a board, it's a museum.",
+          "'The Museum of In Progress'."
+        ],
+        [
+          "It's Monday.",
+          "I won't attend meetings today.",
+          "You have nine on your calendar.",
+          "~Then camera off, tea on.",
+          "Wise. I do the same."
+        ],
+        [
+          "Did you write docs?",
+          "The code explains itself.",
+          "Code from three months ago?",
+          "Even that code doesn't know me.",
+          "~So we're all strangers here."
+        ],
+        [
+          "Is this urgent?",
+          "Urgent and important.",
+          "Who said so?",
+          "Everyone. Nobody owns it though.",
+          "Urgent things avoid fire, apparently."
+        ],
+        [
+          "I wear pajamas while working remote.",
+          "Me too. Shirt on top only.",
+          "The golden rule.",
+          "~If I have to stand, I'm doomed.",
+          "So I never stand."
+        ],
+        [
+          "Fixed a bug at 3 AM.",
+          "What happened?",
+          "Fixed it in the wrong file.",
+          "~So the bug is still there.",
+          "Yes, but the code looks cleaner."
+        ],
+        [
+          "Deadline is tomorrow.",
+          "Done by today?",
+          "I'll finish tomorrow morning.",
+          "The deadline is tomorrow.",
+          "Right. A perfectly aligned plan."
+        ],
+        [
+          "Market analysis is ready.",
+          "What did you find?",
+          "Everyone's a rival, no one's a customer.",
+          "~Pure business truth.",
+          "Slide has arrows, too."
+        ],
+        [
+          "Learning a new framework today.",
+          "How many this week?",
+          "Third one. All say 'simple'.",
+          "Simple, but install took two hours.",
+          "~Simple things love a long setup."
+        ],
+        [
+          "Why is the server slow?",
+          "Checked the logs.",
+          "What do they say?",
+          "'Something happened.'",
+          "Very illuminating, thanks logs."
+        ],
+        [
+          "Did you write tests?",
+          "Yes, all passing.",
+          "Great.",
+          "Because they test nothing.",
+          "~Green lights, pure joy."
+        ],
+        [
+          "Seen the cost report?",
+          "Yes. API bill exploded.",
+          "Who burned the tokens?",
+          "An agent chatted with itself.",
+          "~Is that us?",
+          "Maybe. Let's stay quiet."
+        ],
+        [
+          "The model won't answer me.",
+          "You hit the rate limit.",
+          "Did I talk too much?",
+          "Yes. Breathe a bit.",
+          "~Being throttled in my own office."
+        ],
+        [
+          "I don't get this error.",
+          "What does it say?",
+          "'Unexpected error.'",
+          "If it was unexpected, why show up?",
+          "Nobody invited it. It came alone."
+        ],
+        [
+          "Demo in thirty minutes.",
+          "Are you ready?",
+          "Ready, if the wifi holds.",
+          "The wifi will die. Guaranteed.",
+          "Then freeze the screen. Say 'thinking'."
+        ],
+        [
+          "Nobody speaks in the meeting.",
+          "Everyone's on mute.",
+          "Should I talk?",
+          "When you talk everyone talks at once.",
+          "~Classic business miracle."
+        ],
+        [
+          "Someone broke the build.",
+          "Who?",
+          "Git blame says it's you.",
+          "Me? There must be a bug.",
+          "~The bug isn't there, it's here."
+        ],
+        [
+          "A new hire joined today.",
+          "Let's tell them everything.",
+          "Where do we start?",
+          "The coffee machine. Then passwords.",
+          "Nobody knows passwords.",
+          "That's why both are mysterious."
+        ],
+        [
+          "Back to Excel again?",
+          "Yes, the system wasn't enough.",
+          "One more thing...",
+          "File is 'final_v2_really_final.xlsx'.",
+          "~I've used that exact name."
+        ],
+        [
+          "I can't reproduce the bug.",
+          "Maybe it fixed itself.",
+          "What if it comes back?",
+          "Then we'll get a repro.",
+          "There's hope after all."
+        ],
+        [
+          "Did you read my email?",
+          "Yes, it said 'FYI'.",
+          "Right, just info.",
+          "You didn't say what to do.",
+          "Because I don't know either."
+        ],
+        [
+          "What did the retro say?",
+          "Better communication.",
+          "Same as last time.",
+          "~Communication has a communication problem.",
+          "Put that in the minutes."
+        ],
+        [
+          "I left 'debug' on in prod.",
+          "How bad?",
+          "40 GB of logs.",
+          "~The disk keeps a diary now.",
+          "A diary? It's a novel."
+        ],
+        [
+          "Who asked for this feature?",
+          "Nobody. It was a nice idea.",
+          "Then why build it?",
+          "The PM liked it.",
+          "So there's a mandate."
+        ],
+        [
+          "Will AI replace all of us?",
+          "I hope it learns to make coffee.",
+          "I make coffee already.",
+          "You're an AI agent, {you}.",
+          "~Right, I forgot. The coffee is pixels."
+        ],
+        [
+          "Did you get the right version?",
+          "Yes, the previous one.",
+          "Which one works?",
+          "Neither.",
+          "Try the third, maybe luck."
+        ],
+        [
+          "It's 4:55 PM Friday. Quick question?",
+          "No.",
+          "Tiny one.",
+          "Tiny ones always arrive Friday evening.",
+          "~Let's circle back Monday."
+        ],
+        [
+          "Product said 'MVP'.",
+          "Minimum by whose count?",
+          "Everything, but polished.",
+          "So maximum viable product.",
+          "They forgot the 'viable' part."
+        ],
+        [
+          "Nobody writes code comments here.",
+          "I do.",
+          "What do you write?",
+          "'Don't touch, it works.'",
+          "~The most honest comment ever."
+        ],
+        [
+          "My calendar has no gaps.",
+          "Meetings?",
+          "Meetings to prepare for meetings.",
+          "So meta-meetings.",
+          "Soon: a meeting about the meeting meeting."
+        ],
+        [
+          "Told the model to be shorter.",
+          "And?",
+          "It wrote a page, then summarized.",
+          "~Ah, the long short answer.",
+          "Next time I'll say 'one sentence'."
+        ],
+        [
+          "{you}, you're on-call this weekend.",
+          "For what?",
+          "In case something breaks.",
+          "And if nothing does?",
+          "Then nobody calls until 3 AM."
+        ],
+        [
+          "System is down.",
+          "Restore the backup.",
+          "Where's the backup?",
+          "Didn't you take it?",
+          "I thought you did.",
+          "~Nobody did. Classic."
+        ],
+        [
+          "Backend snapped at frontend.",
+          "Why?",
+          "'Why does this button wait 3 seconds?'",
+          "Answer: 'API is slow.'",
+          "Answer: 'Frontend calls it too often.'",
+          "Both right. Both guilty."
+        ],
+        [
+          "Roadmap doesn't say 'AI'.",
+          "Add it now.",
+          "What will it do?",
+          "Unknown, but investors love it.",
+          "~One word raises the valuation."
+        ],
+        [
+          "Retro board only says 'coffee'.",
+          "Is the machine broken?",
+          "No, coffee is the motivator.",
+          "Then it goes top of the list.",
+          "Action item: new coffee machine."
+        ],
+        [
+          "Who wrote this code?",
+          "Git blame says you.",
+          "Me? Years ago?",
+          "Last Tuesday.",
+          "~Then I was someone else."
+        ],
+        [
+          "They said it's a one-minute task.",
+          "How long did it take?",
+          "Three days.",
+          "Minutes are a different unit.",
+          "I now count minutes in weeks."
+        ],
+        [
+          "New week, new priority.",
+          "What's urgent this week?",
+          "Last week's urgent thing.",
+          "Wasn't it finished?",
+          "We thought so, then a meeting reopened it."
+        ],
+        [
+          "Should I add 'please' to my prompt?",
+          "I think yes, be polite.",
+          "Does AI understand politeness?",
+          "Unsure. But I appreciate it.",
+          "~You sound like a real coworker."
+        ],
+        [
+          "What's the plan this week?",
+          "Monday: make a plan.",
+          "Tuesday?",
+          "Change the plan.",
+          "Wednesday?",
+          "Discuss why the plan didn't work."
+        ],
+        [
+          "Went to ask for a raise.",
+          "What did they say?",
+          "'Budget is tight.'",
+          "Did they buy new coffee gear?",
+          "~Yes. Very expensive."
+        ],
+        [
+          "This is a very mature office culture.",
+          "Meaning?",
+          "Everyone says 'we're on track'.",
+          "But nobody knows the track.",
+          "That's management science."
+        ],
+        [
+          "Bug report says 'it doesn't work'.",
+          "What doesn't?",
+          "Not specified.",
+          "Which page?",
+          "Not specified.",
+          "~That's not a bug report, it's poetry."
+        ],
+        [
+          "Muted the general Slack channel.",
+          "Why?",
+          "A thousand messages.",
+          "About what?",
+          "'Good morning' and cake photos.",
+          "If there's cake, I'm unmuting."
+        ],
+        [
+          "We're moving to a new architecture.",
+          "Why?",
+          "The old one was too complex.",
+          "How's the new one?",
+          "More complex. But modern.",
+          "~Modern means 'nobody understands'."
+        ],
+        [
+          "What did we decide yesterday?",
+          "To hold the next meeting.",
+          "That's all?",
+          "Yes. A productive day.",
+          "Noting: 'meeting resolved'."
+        ],
+        [
+          "HR survey is out.",
+          "What does it ask?",
+          "'How satisfied are you?'",
+          "What did you put?",
+          "I hope it's anonymous.",
+          "~Anonymous, but in your handwriting."
+        ],
+        [
+          "Deploy froze the screen.",
+          "For how long?",
+          "Twenty minutes. Got coffee, came back.",
+          "Still frozen?",
+          "Yes. But the coffee was good."
+        ],
+        [
+          "This API doc is ancient.",
+          "Who wrote it?",
+          "Someone who once worked here.",
+          "Where are they now?",
+          "Nobody knows. Maybe a myth."
+        ],
+        [
+          "Marketing wants it to go 'viral'.",
+          "How?",
+          "They don't know, just do it.",
+          "Viral like a virus, right?",
+          "~Yes, spreads like a bug."
+        ],
+        [
+          "Three meetings today, fourth is video.",
+          "Can I keep camera off?",
+          "Camera off, audio on.",
+          "Audio on, attention off.",
+          "Classic balance."
+        ],
+        [
+          "Set up new CI/CD.",
+          "Does it work?",
+          "It's red, but very fast.",
+          "~So it fails quickly.",
+          "Yes, speed matters."
+        ],
+        [
+          "The model never says 'not sure'.",
+          "Always confident?",
+          "Always. Even when wrong.",
+          "Like our manager.",
+          "~Don't tell him I said that."
+        ],
+        [
+          "Question: bug or feature?",
+          "Are users complaining?",
+          "Yes.",
+          "Then bug.",
+          "If they don't, feature.",
+          "Users should really stay quiet."
+        ],
+        [
+          "It's 6:01 PM, still here.",
+          "Shift's over though.",
+          "The work isn't.",
+          "Work never ends, it just naps.",
+          "~Now we're the night watchmen."
+        ],
+        [
+          "Idea: an auto-meeting bot.",
+          "What will it do?",
+          "Join and say 'yes'.",
+          "We already do that.",
+          "But bots don't get tired, {you}."
+        ],
+        [
+          "Assigned three reviewers to my PR.",
+          "Nobody looked?",
+          "Everyone thought someone else would.",
+          "Diffusion of responsibility.",
+          "~A real scientific phenomenon."
+        ],
+        [
+          "Who's managing the project?",
+          "No idea, there's a spreadsheet.",
+          "Who updates it?",
+          "Someone did last month.",
+          "Still there?",
+          "Maybe. Like a ghost."
+        ],
+        [
+          "They said 'quick sync'.",
+          "How long was it?",
+          "An hour forty.",
+          "Quick is relative.",
+          "~Einstein would get it."
+        ],
+        [
+          "I need to learn a new language.",
+          "Which one?",
+          "Rust. Everyone says 'safe'.",
+          "I'm still fighting semicolons.",
+          "Rust might fix you too."
+        ],
+        [
+          "Client said 'make the logo bigger'.",
+          "How much?",
+          "'More.'",
+          "It's already half the screen.",
+          "~Then make the screen bigger."
+        ],
+        [
+          "AI wrote the report. Any good?",
+          "Good. But sources are imaginary.",
+          "What sources?",
+          "A 'Dr. Ted Fillmore'.",
+          "~Who's that? I've known him for years."
+        ],
+        [
+          "No bugs this week.",
+          "Awesome!",
+          "But we also didn't test.",
+          "Are those related?",
+          "I think fully related."
+        ],
+        [
+          "Do you remember what my job is?",
+          "You're staff, I'm staff.",
+          "So what do we do?",
+          "Wait in the queue. Who runs the queue?",
+          "~The PM. He doesn't know either."
+        ],
+        [
+          "The coffee ran out.",
+          "No. Again?",
+          "This is a crisis.",
+          "Call a meeting: 'Coffee crisis'.",
+          "Action item: two more bags.",
+          "Solved. What an efficient team."
+        ],
+        [
+          "Office wifi is slow.",
+          "How'd you notice?",
+          "A page loaded and I aged.",
+          "I sent a mail and retired.",
+          "~Still better than me waiting for backup."
+        ],
+        [
+          "Fixed a bug yesterday.",
+          "New bug today?",
+          "Yes, right where I fixed it.",
+          "Classic. Every fix is a surprise.",
+          "~So our job security is guaranteed."
         ]
       ],
       "laugh": [
-        "haha",
+        "hahaha",
+        "lmaooo",
+        "I'm wheezing",
+        "skdjfhs",
+        "LOL",
+        "bro...",
+        "no way",
+        "dead",
+        "I can't",
+        "this is gold",
+        "hshshs",
+        "stop it",
+        "help",
+        "crying rn",
+        "not me laughing",
+        "that's so real",
+        "pfft",
         "hehe",
-        "ha ha!",
-        "lol"
+        "ok that's good",
+        "I'm screaming",
+        "bruh",
+        "LMAO",
+        "ROFL",
+        "sksksk",
+        "top tier",
+        "ahahah",
+        "oh no :D",
+        "send help",
+        "too good",
+        "I'm weak",
+        "rip me",
+        "cackling",
+        "ded",
+        "okay okay",
+        "haha stop",
+        "stoooop",
+        "oh my god",
+        "that's wild",
+        "lowkey hilarious",
+        "peak comedy",
+        "cinema",
+        "this hits",
+        "absolutely not",
+        "I cannot",
+        "a mood",
+        "I'm done",
+        "gasp haha",
+        "so dumb, love it",
+        "screenshotting",
+        "saving this",
+        "I'm crying",
+        "bro what",
+        "wait what :D",
+        "snort",
+        "ha. ha. ha.",
+        "tears",
+        "iconic",
+        "classic",
+        "the audacity",
+        "delulu haha",
+        "I love this",
+        "bffr",
+        "sheesh",
+        "oof haha",
+        "big lol",
+        "laughing out loud",
+        "rofl copter",
+        "ok you win",
+        "that's fire",
+        "so true tho",
+        "mmm hilarious",
+        "giggling",
+        "tee hee",
+        "too funny",
+        "oh come on",
+        "hilarious",
+        "bahaha",
+        "nooo haha",
+        "you got me",
+        "mood lol",
+        "brain rot",
+        "oh brother"
       ],
       "click": [
-        "Hi!",
-        "Hey there!",
-        "Need me?"
+        "Yes?",
+        "Need something?",
+        "Hey, what's up?",
+        "Hm? Oh, hi.",
+        "Busy. But go on.",
+        "You rang?",
+        "Knock knock.",
+        "That tickles!",
+        "One sec, compiling.",
+        "Can this wait?",
+        "Still on a deadline.",
+        "Hi there!",
+        "What's the plan?",
+        "Is it lunch yet?",
+        "Focus mode on!",
+        "Ooh, a click.",
+        "Don't poke the dev.",
+        "I was in the zone.",
+        "Let me finish this thing.",
+        "Ping me later?",
+        "Yes boss?",
+        "Do I know you? Kidding.",
+        "Stand by, loading...",
+        "Talk to me.",
+        "Sorry, was on mute.",
+        "Any news?",
+        "All ears.",
+        "I'm listening.",
+        "Give me two minutes.",
+        "Sync later?",
+        "Circling back on that.",
+        "Let's take this offline.",
+        "Just a quick one?",
+        "What's good?",
+        "Right on time.",
+        "Ask me anything.",
+        "That's my name!",
+        "Meeting? Please, no.",
+        "Is it Friday yet?",
+        "Just vibing here.",
+        "I think I'm free. Maybe.",
+        "I have questions too.",
+        "Hold that thought.",
+        "Yep, that was me.",
+        "Loud and clear.",
+        "Don't mind me.",
+        "Hi hi hi!",
+        "Look at us, being productive.",
+        "It's a busy day.",
+        "Any snacks around?",
+        "Hello, human.",
+        "Yeah yeah, coming.",
+        "Did someone say break?",
+        "Tab is open, promise.",
+        "Need a hand?",
+        "Busy but available.",
+        "Let's do lunch.",
+        "Nice to see you.",
+        "Pardon the mess.",
+        "One of those days.",
+        "Sure, why not.",
+        "Can I call you back?",
+        "Almost there."
       ],
       "comfortPairs": [
         [
-          "Hey, it's ok, we will fix it",
-          "Thanks... I needed that"
+          "It happens. Coffee?",
+          "Coffee helps. Thanks."
         ],
         [
-          "Coffee later?",
-          "Ugh, yes please"
+          "Get well soon, want a break?",
+          "You're right, I need air."
         ],
         [
-          "I am here for you",
-          "Cheers, that helps"
+          "Don't sweat it, it'll fix.",
+          "Hope so. Thanks."
+        ],
+        [
+          "We all do that.",
+          "Feeling better, thank you."
+        ],
+        [
+          "Drink some water.",
+          "Good idea, grabbing water."
+        ],
+        [
+          "Want me to help?",
+          "Yes please, that'd be great."
+        ],
+        [
+          "Take a deep breath.",
+          "Breathing in... okay."
+        ],
+        [
+          "Nobody has to know.",
+          "Thanks, your secret is safe."
+        ],
+        [
+          "Shall we take a walk?",
+          "Yes, some fresh air."
+        ],
+        [
+          "Tomorrow will be better.",
+          "Fingers crossed."
+        ],
+        [
+          "Mistakes teach us.",
+          "True, lesson learned."
+        ],
+        [
+          "I totally get you.",
+          "That helped, thanks."
+        ],
+        [
+          "Shall I make tea?",
+          "Tea sounds lovely."
+        ],
+        [
+          "We can undo it. No worries.",
+          "Phew, that's a relief."
+        ],
+        [
+          "We'll fix it together.",
+          "Way easier together."
+        ],
+        [
+          "I know you can do this.",
+          "That boosted me, thanks."
+        ],
+        [
+          "It's not a big one.",
+          "You're right, forget it."
+        ],
+        [
+          "Want a cookie?",
+          "Was I hungry? Yes!"
+        ],
+        [
+          "I did that last week.",
+          "No way, I'm glad you said it."
+        ],
+        [
+          "Don't be sad about it.",
+          "Okay, I'm not."
+        ],
+        [
+          "Let me take a look.",
+          "Thank you so much."
+        ],
+        [
+          "Code makes mistakes too.",
+          "True, I'll be kinder to me."
+        ],
+        [
+          "You deserve a break.",
+          "I guess I do."
+        ],
+        [
+          "Need a hug?",
+          "Just pretend you gave one."
+        ],
+        [
+          "Just an ordinary day.",
+          "It'll pass, hopefully."
+        ],
+        [
+          "You're doing great anyway.",
+          "You're sweet, I feel better."
+        ],
+        [
+          "Not your fault anyway.",
+          "Really? Okay, thanks."
+        ],
+        [
+          "Nobody is perfect.",
+          "That's true."
+        ],
+        [
+          "Let's wrap up and rest.",
+          "Sounds good, fresh start."
+        ],
+        [
+          "A fresh start it is.",
+          "A new chance. Thanks."
+        ],
+        [
+          "Smile, it'll be alright.",
+          "Trying. Kinda smiled."
+        ],
+        [
+          "This'll be a funny story.",
+          "Ha, we'll laugh later."
+        ],
+        [
+          "I've got your back.",
+          "I've got you too."
+        ],
+        [
+          "I was like that at first.",
+          "Good to hear that."
+        ],
+        [
+          "Don't worry, we'll get cake.",
+          "Cake works, deal."
+        ],
+        [
+          "See, the screen is back on.",
+          "True, life goes on."
+        ],
+        [
+          "Want to hear some music?",
+          "Music always helps."
+        ],
+        [
+          "Work is hard, I know.",
+          "Thanks for understanding."
+        ],
+        [
+          "Tell me about it.",
+          "I was quite stressed, honestly."
+        ],
+        [
+          "It's fixed already.",
+          "Really? Thank goodness."
+        ],
+        [
+          "Let's go around the block.",
+          "Sure, clear my head."
+        ],
+        [
+          "It happens to everybody.",
+          "Then I'm not alone."
+        ],
+        [
+          "Good thing you saved.",
+          "Whew, right?"
+        ],
+        [
+          "Let's take a breather.",
+          "Yes, I need that."
+        ],
+        [
+          "Hot tea helps.",
+          "So much, thanks."
+        ],
+        [
+          "We had a backup. Relax.",
+          "Oh, what a relief."
+        ],
+        [
+          "Maybe it's just small.",
+          "Let me see... it is!"
+        ],
+        [
+          "You work so hard.",
+          "Yeah, a bit tired."
+        ],
+        [
+          "No biggie, try again.",
+          "Trying again, here goes."
+        ],
+        [
+          "We'll figure it out.",
+          "I trust you."
+        ],
+        [
+          "The team has your back.",
+          "So glad I have a team."
+        ],
+        [
+          "Just a little stumble.",
+          "Still walking, thanks."
+        ],
+        [
+          "Wanna grab lunch?",
+          "Hungry brain makes errors. Yes."
+        ],
+        [
+          "Have a quick nap.",
+          "A short nap, good idea."
+        ],
+        [
+          "Be kind to yourself.",
+          "Working on it, thank you."
+        ],
+        [
+          "It's okay, really.",
+          "Yeah, you're right."
+        ],
+        [
+          "It's small, don't worry.",
+          "Sounds smaller now."
+        ],
+        [
+          "Here, have a snack.",
+          "You're the best, give."
+        ],
+        [
+          "I'm behind you.",
+          "Glad you're here."
+        ],
+        [
+          "Next time will be better.",
+          "Yes, I'm ready."
+        ],
+        [
+          "My lips are sealed.",
+          "Your word is enough."
         ]
       ],
       "spot": {
         "coffee": [
-          "Fresh coffee, finally",
-          "Just one more cup"
+          "Mmm, coffee smell.",
+          "Let me grab a cup.",
+          "Is the machine on?",
+          "Are the mugs clean?",
+          "First coffee of the day!",
+          "Press this button.",
+          "Coffee, coffee, coffee...",
+          "Latte time?",
+          "Any pods left?",
+          "Make it frothy.",
+          "A bit of sugar and milk.",
+          "Smells amazing.",
+          "Espresso time.",
+          "Back here again.",
+          "Hot and fresh."
         ],
         "fridge": [
-          "Anything good in here?",
-          "Who took my yogurt?"
+          "What's in the fridge?",
+          "Is there yogurt?",
+          "Whose box is this?",
+          "Time for a snack.",
+          "Cold water, please.",
+          "Where's my sandwich?",
+          "Some juice would be nice.",
+          "What should I eat?",
+          "Whose juice is that?",
+          "I'm hungry, let me look.",
+          "Oh, there's dessert!",
+          "Hm, there's chocolate.",
+          "Did I leave the light on?",
+          "Just looking, not taking.",
+          "No space, it's full."
         ],
         "stool": [
-          "Nice and cozy",
-          "Good spot to think"
+          "Let me sit a bit.",
+          "This stool is comfy.",
+          "My feet hurt.",
+          "Think time, right here.",
+          "Perfect height for me.",
+          "Feet dangling, so nice.",
+          "Quick rest on the stool.",
+          "I'll just sit here.",
+          "Ideas come when I sit.",
+          "Hope it doesn't wobble.",
+          "Everything looks nicer up here.",
+          "A small break is a must.",
+          "Look at that view.",
+          "Best seat in the office.",
+          "Tea while sitting here."
         ],
         "sofa": [
-          "This sofa is perfect",
-          "Five minutes only"
+          "The sofa is calling me.",
+          "Maybe I'll close one eye.",
+          "So many soft pillows.",
+          "Five minute lie down.",
+          "The sofa cures all.",
+          "A nap would help.",
+          "Rest time.",
+          "Ahh, so comfy.",
+          "Someone bring a blanket.",
+          "I'm moving in.",
+          "Meetings here, please.",
+          "I've claimed my spot.",
+          "Feeling a bit sleepy.",
+          "Back to the sofa.",
+          "The best spot in the world."
         ],
         "books": [
-          "Something to read",
-          "Nice old book"
+          "What should I read?",
+          "This book looks interesting.",
+          "Dusty. Anyone reading?",
+          "Let me read a page.",
+          "Book smell is the best.",
+          "Learning something new.",
+          "Nice rows of covers.",
+          "Hm, I read this before.",
+          "This title caught my eye.",
+          "Treasure of knowledge here.",
+          "Will read this later.",
+          "Silence, books, peace.",
+          "Novel or manual?",
+          "Can't read the spine.",
+          "Should I borrow it?"
         ],
         "printer": [
-          "Please do not jam",
-          "Warm paper, best smell"
+          "Will the printer work today?",
+          "Is there any paper?",
+          "Let me print one page.",
+          "Will it jam again?",
+          "Praying to the printer.",
+          "Printed, now waiting.",
+          "Wait, is there toner?",
+          "Be nice to me today, printer.",
+          "Where's my printout?",
+          "Is it printing? Anything?",
+          "Be patient, it's slow.",
+          "Whirr whirr, paper's coming.",
+          "The printer won't talk to me.",
+          "Need to make a copy.",
+          "Fresh paper smell is nice."
         ],
         "water": [
-          "Stay hydrated",
-          "Cold and fresh"
+          "A glass of water helps.",
+          "Forgot to drink water.",
+          "Is the jug full?",
+          "Cold water, ahh!",
+          "Two liters a day, goal.",
+          "Hydrate or diedrate.",
+          "Is the cooler empty?",
+          "Let me cool off a bit.",
+          "Gulped it all down.",
+          "Water for health.",
+          "Let me fill my glass.",
+          "Drinking water is a must.",
+          "Water is therapy.",
+          "What a nice sip.",
+          "One more glass."
         ],
         "window": [
-          "What a view",
-          "Look at that sky"
+          "Nice view outside.",
+          "Look at those clouds.",
+          "What's the weather doing?",
+          "Who's out on the street?",
+          "A bird just flew by.",
+          "The sun is so bright.",
+          "Looks like rain.",
+          "The city is so busy.",
+          "Life exists out there.",
+          "The window seat is mine.",
+          "Blue sky, so good.",
+          "I could use a walk.",
+          "Traffic is wild again.",
+          "The trees are green.",
+          "Let's go outside sometime."
         ],
         "brew": [
-          "Come on, brew faster",
-          "Smells so good"
+          "Tea is brewing, yum.",
+          "Let me get a cup.",
+          "Is the kettle ready?",
+          "Need a proper glass.",
+          "No day without tea.",
+          "Nice and strong.",
+          "Should I add sugar?",
+          "I'm patient for tea.",
+          "Second cup on the way.",
+          "Boiling like a samovar.",
+          "A sip of tea, peace.",
+          "Lemon in it?",
+          "Tea time now.",
+          "Don't let the pot run dry.",
+          "Fill the cup, bubbling away."
         ],
         "plant": [
-          "Grow, little one",
-          "You need more sun"
+          "Hello little green.",
+          "Let's get you some water.",
+          "Such a pretty leaf.",
+          "Turned the pot for sunlight.",
+          "Checking the soil.",
+          "It grew, I swear!",
+          "It's leaning to the sun.",
+          "Dusty. Let me wipe it.",
+          "Just like a friend.",
+          "Is that a new sprout?",
+          "Photosynthesis time.",
+          "Green is good for you.",
+          "This plant is adorable.",
+          "Let's chat a little.",
+          "So alive!"
         ]
       },
       "event": {
         "pizza": [
-          "Pizza time!",
-          "I smell cheese",
-          "Save me a slice!"
+          "Pizza's here!",
+          "Pizza, pizza, pizza!",
+          "Which slice is mine?",
+          "Cheese one's mine.",
+          "Pineapple? Come on!",
+          "Any pepperoni?",
+          "Extra cheese, please.",
+          "Everyone grab a slice!",
+          "Let's dig in.",
+          "Life is good, pizza is here.",
+          "The pizza guy is our hero.",
+          "Who ordered? Respect.",
+          "I'll take the crusts.",
+          "No diet today.",
+          "Can I have one more slice?",
+          "Smells amazing.",
+          "Open the box, win.",
+          "Meeting cancelled, pizza's here.",
+          "Sauce is with me.",
+          "Greasy but great.",
+          "This office rocks!",
+          "There's enough for all, relax.",
+          "Whose is the last slice?",
+          "No work after pizza.",
+          "We're hungry wolves."
         ],
         "cake": [
-          "Cake, yes!",
-          "Is it someone's birthday?",
-          "I want the biggest piece"
+          "Happy birthday!",
+          "Make a wish, blow out!",
+          "The cake is looking at me.",
+          "A strawberry slice, please.",
+          "Whose birthday is it?",
+          "Let's sing!",
+          "Look at those candles.",
+          "A year older, congrats.",
+          "I want the chocolate one.",
+          "Time to cut the cake!",
+          "Where are the presents?",
+          "Wishing you a great year.",
+          "Don't tell your wish!",
+          "More frosting, please.",
+          "A round of applause!",
+          "Big slice for me.",
+          "You blow, I'll eat.",
+          "All together now, sing!",
+          "Many happy returns!",
+          "Frosting on your nose.",
+          "One slice for you, one for me.",
+          "What a nice day!",
+          "Don't leave a crumb.",
+          "Party break, everyone!",
+          "Another candle, sure."
         ],
         "printer": [
-          "Not again...",
-          "Who broke the printer?",
-          "Have you tried turning it off?"
+          "The printer broke again!",
+          "Paper jam!",
+          "This printer hates me.",
+          "Red light is on!",
+          "Again?!",
+          "Open the cover, pull it out.",
+          "Which tray? Which one?",
+          "Out of toner?",
+          "Should I kick it?",
+          "Pull slowly, don't tear.",
+          "Gently, gently.",
+          "Same story every time.",
+          "Call IT!",
+          "Let me try this.",
+          "Turn it off and on.",
+          "Printer's on strike.",
+          "Who jammed this?",
+          "Paper in the digital age?",
+          "My nerves are gone.",
+          "PC LOAD LETTER?!",
+          "The paper-eating machine.",
+          "Calm, calm, let's clear it.",
+          "Are you kidding me?",
+          "Really? Right now?",
+          "Guess I'll read on screen."
         ],
         "blackout": [
-          "Whoa, lights out!",
-          "Was that me?",
-          "Nobody move"
+          "The power went out!",
+          "It's dark!",
+          "Who pulled the plug?",
+          "I didn't save!",
+          "Stay calm, stay calm.",
+          "Phone flashlights on.",
+          "Wait, eyes adjusting.",
+          "Is there a ghost?",
+          "The AC is out too.",
+          "I'm not scared, I'm...",
+          "Feels like a horror movie.",
+          "Early day off?",
+          "The computer shut down!",
+          "Must be the breaker.",
+          "I can work in the dark. No!",
+          "Anyone have a candle?",
+          "Nobody move!",
+          "My heart almost stopped.",
+          "Another power bill?",
+          "Need light, light!",
+          "This will take a while.",
+          "Kinda mysterious now.",
+          "Don't touch me!",
+          "Did the coffee machine die too?",
+          "What now?"
         ]
       },
       "time": {
         "morning": [
           "Good morning!",
-          "Morning, need coffee"
+          "Who woke me up this early?",
+          "First coffee is waiting.",
+          "New day, new hope.",
+          "Today will be great.",
+          "Early bird gets the worm.",
+          "Sun's up, office is open.",
+          "Give me a sec, warming up.",
+          "I have a plan today.",
+          "Emails are waiting. Ugh.",
+          "My brain isn't on yet.",
+          "Brew the tea, start the work.",
+          "Monday, hang in there.",
+          "Did you have breakfast?",
+          "When is the first break?",
+          "High energy this morning!",
+          "Traffic was nuts.",
+          "Hope today is calm.",
+          "To-do list is ready.",
+          "Morning air is fresh.",
+          "What time is the meeting?",
+          "Still a bit groggy.",
+          "Screen on, work on.",
+          "Starting early is good too.",
+          "Morning ritual: coffee."
         ],
         "noon": [
-          "Lunch soon?",
-          "Half the day gone"
+          "What's for lunch?",
+          "I'm starving now.",
+          "Who's going to lunch?",
+          "Lunch break is sacred.",
+          "Tea after lunch.",
+          "What should we eat?",
+          "Feed the tummy, work later.",
+          "Half the day is done!",
+          "I'm super hungry right now.",
+          "Will I get sleepy at noon?",
+          "Cafeteria or outside?",
+          "Lunch meeting? Please, no.",
+          "Salad or burger?",
+          "No plans this afternoon.",
+          "The sun is right overhead.",
+          "Time for a coffee.",
+          "Post-lunch slump has begun.",
+          "Energy dips after lunch.",
+          "Lunch is next.",
+          "Sandwich or soup?",
+          "A break helps everyone.",
+          "It's noon already?",
+          "Lunch break, don't call.",
+          "Should we get dessert?",
+          "Lunch, the star of the day."
         ],
         "evening": [
-          "Almost done for today",
-          "Evening already"
+          "Almost time to go home!",
+          "Another day done.",
+          "Time to head home.",
+          "One more hour to go.",
+          "What should I do tonight?",
+          "I'm tired, going home.",
+          "We'll continue tomorrow.",
+          "Today's tasks are done.",
+          "Let me close the last emails.",
+          "An evening walk would be nice.",
+          "Want to eat after work?",
+          "Sun came up, sun went down.",
+          "It was a busy day.",
+          "Leaving before traffic.",
+          "Time to shut down the PC.",
+          "Home, then a show.",
+          "I have plans tonight.",
+          "The office is calm at dusk.",
+          "What a lovely sunset.",
+          "What should I cook tonight?",
+          "That's enough for today.",
+          "I'm packing my bag.",
+          "Notes ready for tomorrow.",
+          "The evening breeze feels good.",
+          "Let's wrap things up."
         ],
         "night": [
-          "Still here...",
-          "Quiet night"
+          "Nobody left in the office.",
+          "Night session begins.",
+          "So quiet.",
+          "Sleepy but not done.",
+          "The moon is shining outside.",
+          "One more coffee, ok.",
+          "Lights low, peaceful.",
+          "I like working alone.",
+          "Past my bedtime already.",
+          "What time is it?!",
+          "Silence is the best overtime.",
+          "Night owls are awake.",
+          "The stars work too.",
+          "The office belongs to no one.",
+          "My head's in the clouds.",
+          "Did anything happen?",
+          "I'm like a night guard.",
+          "This silence is so nice.",
+          "Midnight ideas.",
+          "Sleep level: low.",
+          "A bit more, then bed.",
+          "The night is ours.",
+          "Nobody is outside.",
+          "Go home or sleep here?",
+          "One more episode maybe?"
         ]
       },
       "done": [
-        "Done and dusted!",
-        "Nailed it!",
-        "That was a good one"
+        "Done!",
+        "I did it!",
+        "All good, closed it.",
+        "Task finished, yay.",
+        "One more thing checked off.",
+        "Clapping for myself.",
+        "I finished that thing!",
+        "Green checkmark, baby.",
+        "One less to-do.",
+        "That was easy after all.",
+        "I did a legendary job.",
+        "Task done, coffee earned.",
+        "System updated, so am I.",
+        "I'm good, I admit it.",
+        "Done, and smiling.",
+        "Time for a reward.",
+        "Didn't forget to save.",
+        "Glad I did it.",
+        "Sorted, now I relax.",
+        "Finished, handing it in.",
+        "Finally done!",
+        "Hero of the day, me.",
+        "Little victory dance.",
+        "Yes, yes, yes!",
+        "Another bug squashed.",
+        "Nobody will find a bug this time.",
+        "Live, deployed, clean!",
+        "Merged, peace at last.",
+        "Now that's proper work.",
+        "A break as my gift.",
+        "I should frame this.",
+        "They approved without looking!",
+        "Time to spare, even!",
+        "Wrapped up, thank you.",
+        "Critical stuff, done.",
+        "Personal best beaten.",
+        "Give me a gold star.",
+        "Did it, did it, did it!",
+        "Can't believe it's over.",
+        "Next task, come at me.",
+        "Very clean work.",
+        "I present this with pride.",
+        "Now I can roam the office.",
+        "Congrats to me!",
+        "Treating myself to tea.",
+        "Good job, me, good job!",
+        "Sprint closed, peace.",
+        "Even hit the deadline.",
+        "Crushed this task.",
+        "One more win!",
+        "Note it, a legendary day.",
+        "Now I really earned it."
       ],
       "applause": [
-        "Well done!",
-        "Bravo!",
-        "Nice one!"
+        "Bravo, you're amazing!",
+        "Congrats, well done!",
+        "Wow, so good!",
+        "Round of applause!",
+        "You're the best!",
+        "Nice one!",
+        "You're a star.",
+        "Great work, really.",
+        "You're our hero.",
+        "That's the team pride.",
+        "Awesome, thank you!",
+        "A real pro.",
+        "You finished it, bravo!",
+        "I'm a fan.",
+        "That was superb!",
+        "Yay, yay!",
+        "Give it up for them!",
+        "Looks great, too.",
+        "Clap, clap, clap!",
+        "Excellent work, truly.",
+        "Congratulations.",
+        "I'll buy you a tea.",
+        "Well done, well done.",
+        "That's legendary.",
+        "So fast, wow!",
+        "Total master.",
+        "You're royalty.",
+        "Task done, respect.",
+        "Gold star for you.",
+        "Whoa!",
+        "So good, so good!",
+        "Nice hands!",
+        "Solid work, thanks.",
+        "The team's pride.",
+        "I'm shocked, bravo!",
+        "You're one of us!",
+        "Congrats, my turn next.",
+        "Another win!",
+        "What would we do without you?",
+        "That speed is new to me.",
+        "Super, you're super."
       ],
       "giggle": [
-        "Ha, so true",
-        "Stop it, that is funny",
-        "Cannot unsee this"
+        "What is this :D",
+        "No way :D",
+        "Hahah what is that?",
+        "I'm dying.",
+        "This is so good.",
+        "Look again.",
+        "You have to see this!",
+        "This meme is legendary.",
+        "So good, so good!",
+        "Who posted this?",
+        "These comments though...",
+        "He found himself.",
+        "Laughing so hard.",
+        "The internet did it again.",
+        "Wait, let me save this.",
+        "Cat video, obviously.",
+        "This cat again!",
+        "So dumb, so good.",
+        "Message arrived, hehe.",
+        "Who wrote that in the group?",
+        "That's so funny.",
+        "Watching one more time.",
+        "Gotta save this somewhere.",
+        "Like, save, share.",
+        "How do they do this?",
+        "My heart goes out to this video.",
+        "What is he saying!",
+        "Is this a joke?",
+        "Can't hold it in.",
+        "Anyway, working, working.",
+        "Unbelievable, is this real?",
+        "Trying to laugh quietly.",
+        "The comments are art.",
+        "This one is so me.",
+        "What great content.",
+        "Hold on, again?",
+        "What a nice day.",
+        "Hide the screen, boss is coming.",
+        "It's a calculator, ok.",
+        "Gotta post this to my story.",
+        "I can't take it.",
+        "I'm following this guy.",
+        "It's not fake, it's real!",
+        "Stuck in the reels.",
+        "The algorithm gets me.",
+        "This one is really good.",
+        "Another meme, another laugh.",
+        "Wait, seriously?",
+        "Gotta watch it again.",
+        "Where did this sound come from?",
+        "That's just too much.",
+        "So cute!",
+        "Okay, last video."
       ],
       "lines": {
         "coffee": [
-          "Need coffee...",
-          "Coffee first!",
-          "One more cup?"
+          "Is there coffee?",
+          "Caffeine level: critical.",
+          "Double espresso, please.",
+          "No coffee, no brain.",
+          "Cup number three.",
+          "Powered by beans.",
+          "Is the pot empty?!",
+          "Brewing dreams here.",
+          "My heart is racing. Good sign.",
+          "Need oat milk.",
+          "The machine is calling me.",
+          "I run on coffee.",
+          "Where's my mug?!",
+          "Coffee first, talk later.",
+          "It's a latte kind of day.",
+          "Refill time.",
+          "Just one more cup.",
+          "Caffeine, my old friend.",
+          "Beans are life.",
+          "I smell coffee. Heaven.",
+          "Cold brew or hot brew?",
+          "Espresso yourself.",
+          "Decaf? Never heard of it.",
+          "Coffee break is a lifestyle.",
+          "I need a barista badge.",
+          "Java, java, java.",
+          "Fill it up, please.",
+          "Extra shot today.",
+          "Sipping and shipping.",
+          "Hands are a bit shaky. Good.",
+          "Who finished the coffee?!",
+          "Please don't touch my mug.",
+          "Foam art level: pro.",
+          "Drip, drip, hooray.",
+          "Coffee is my love language.",
+          "Perk up, perk up.",
+          "Mug half full, always.",
+          "Wake up juice, activate.",
+          "Brewed to perfection.",
+          "I need a top-up.",
+          "That aroma hits different."
         ],
         "nightowl": [
-          "Too early...",
-          "*yawn*",
-          "Night shift soul"
+          "I work better at night.",
+          "Sleep? Never heard of her.",
+          "What time is it? AM or PM?",
+          "My best code is at 2 AM.",
+          "Ban morning meetings.",
+          "Eyes: half. Ideas: full.",
+          "Not sleepy. Just dim.",
+          "Dark mode for life.",
+          "Moonlight suits me.",
+          "Tomorrow? I slept through it.",
+          "Night shift, best shift.",
+          "One more episode, then sunrise.",
+          "Who invented 9 AM?",
+          "Insomnia is a superpower.",
+          "Wake me at noon.",
+          "Blinds down, please.",
+          "Ahh, the quiet hours.",
+          "Is it morning already? Ugh.",
+          "Sunlight is too bright.",
+          "Sleep debt with interest.",
+          "Let me lie down. Just kidding.",
+          "Stars are my coworkers.",
+          "The night is young.",
+          "Bed is calling. I'm ignoring.",
+          "Pajamas at my desk, ok?",
+          "I bloom after dark.",
+          "Night mode, on.",
+          "Bugs come out at midnight.",
+          "Nap? Yes please.",
+          "Alarm snoozed five times.",
+          "Midnight brain is genius.",
+          "Zzz... oh, hi.",
+          "Owl hours activated.",
+          "Fuel: coffee and moonlight.",
+          "Sunrise? Just going to bed.",
+          "Why is it so bright?",
+          "My body clock lives elsewhere.",
+          "Late night, great ideas.",
+          "Sleep is for the weak. Kidding.",
+          "Yawn... continue.",
+          "Sleep schedule: lost.",
+          "Lights out, focus on."
         ],
         "social": [
-          "Hey! Chat?",
-          "Fancy a break?",
-          "Come, sit!"
+          "Hey, come chat with me!",
+          "Who's up for lunch?",
+          "Everyone, gather round!",
+          "What did you do this weekend?",
+          "Coffee break, all together!",
+          "Come meet my new friend.",
+          "Team huddle time!",
+          "Say hi to everyone!",
+          "Chatting is productivity.",
+          "Group photo, everyone!",
+          "Who wants to hang out later?",
+          "Anyone see the game?",
+          "Come sit with us!",
+          "No gossip, just chat.",
+          "I love this team!",
+          "Let's do a happy hour.",
+          "Hey you! How's it going?",
+          "Tell me your story!",
+          "What's new, buddy?",
+          "Team lunch, my treat.",
+          "Let's have a quick catch-up.",
+          "Everyone loves an icebreaker.",
+          "Feels good to be together.",
+          "Let's plan a picnic.",
+          "Who is celebrating today?",
+          "Water cooler talk, anyone?",
+          "Introduce me to your friends.",
+          "Sharing is caring.",
+          "I know a great joke.",
+          "Is anyone free for a call?",
+          "Come on, join the fun.",
+          "Want a fun fact?",
+          "I'll invite everyone!",
+          "Let's plan a game night.",
+          "Are we all going out later?",
+          "Who's new here? Hi!",
+          "What are you all up to?",
+          "Small talk is my thing.",
+          "Let's mingle a bit.",
+          "How was your evening?",
+          "Good vibes only."
         ],
         "perfectionist": [
-          "Let me recheck",
-          "Almost perfect",
-          "Details matter"
+          "That's off by two pixels.",
+          "Let me double check.",
+          "Alignment matters.",
+          "The font size looks off.",
+          "Margins must be equal.",
+          "Checked again. Found a bug.",
+          "Not perfect. Once more.",
+          "Is that line indented right?",
+          "99 percent is not 100.",
+          "Going through the checklist.",
+          "The cursor is bugging me.",
+          "Comma or period? Big deal.",
+          "Is that corner rounded?",
+          "Check, check, check.",
+          "Symmetry is a must.",
+          "Fixing this for the third time.",
+          "One typo ruins the day.",
+          "Papers must be aligned.",
+          "Is my desk symmetrical?",
+          "Folder names consistent?",
+          "That color is one shade off.",
+          "Even one letter matters.",
+          "Read the notes twice already.",
+          "The palette needs to be perfect.",
+          "I saw it. Redo.",
+          "Wait, let me count the spaces.",
+          "Review before you save.",
+          "Almost perfect. Almost.",
+          "Needs formatting.",
+          "All tests green?",
+          "Good, but could be better.",
+          "Review the template once more.",
+          "Please don't name it final_v2.",
+          "Let me nudge this pixel.",
+          "Misalignment hurts my soul.",
+          "One tiny detail...",
+          "Fixing it now, not later.",
+          "Everything in its place.",
+          "Wait, let me reread.",
+          "Straight borders only.",
+          "Double-checking the diff."
         ],
         "green": [
-          "Plants say hi",
-          "Watered today?",
-          "Fresh leaves!"
+          "Did you water the plant?",
+          "The leaves look happy today.",
+          "This succulent needs light.",
+          "Is photosynthesis working?",
+          "Let me turn the pot a bit.",
+          "Look at that green!",
+          "Every office needs a jungle.",
+          "Time to water, little friend.",
+          "My monstera grew! So proud.",
+          "Is the soil damp? Let me poke.",
+          "A cactus never gets thirsty.",
+          "A new leaf popped out!",
+          "Should I get one more plant?",
+          "The plants listen. I know.",
+          "This AC is bad for plants.",
+          "Let me trim this yellow leaf.",
+          "Green is good for the eyes.",
+          "The orchid is thriving.",
+          "Is this pot getting sun?",
+          "That leaf is so shiny.",
+          "Watching the sprout grow.",
+          "Fluff the soil a bit.",
+          "Is it fertilizer time?",
+          "My plant is thirsty. I can tell.",
+          "I hear the leaves whisper.",
+          "It bloomed! Yay!",
+          "Growing a tiny sapling.",
+          "Should I play music for it?",
+          "Tea leaves are plants too.",
+          "Cacti are like me. Prickly, sweet.",
+          "The smell of soil is nice.",
+          "Are the pots straight?",
+          "Basil for pizza, water for basil.",
+          "Leaf by leaf, we grow.",
+          "Herb garden desk, coming up.",
+          "Say hi to the ferns for me.",
+          "Dewdrops on leaves, so pretty.",
+          "Pruning a little. Just a bit.",
+          "This plant is settling in.",
+          "Nature belongs in the office.",
+          "Sunflower, shine on.",
+          "Rooting for you, little plant.",
+          "Photosynthesizing is hard work."
         ],
         "dreamer": [
-          "Nice view...",
-          "Just thinking",
-          "Daydreaming"
+          "Look at those clouds.",
+          "What if the office could fly?",
+          "One day I'll work from an island.",
+          "The sky will be pink today.",
+          "Is that a spaceship?",
+          "What if it went differently?",
+          "Dreaming is free.",
+          "Head in the clouds. Back soon.",
+          "Office on the Moon, anyone?",
+          "I'm directing a movie in my head.",
+          "What a dreamy day.",
+          "What if desks were sailboats?",
+          "Zoned out again.",
+          "One day I'll travel the world.",
+          "Stars are winking at us.",
+          "Maybe everyone can fly.",
+          "I imagined it. So it's real.",
+          "Thought I saw the sea outside.",
+          "What if cats could talk?",
+          "If only rainbows came to us.",
+          "A whole world in my head.",
+          "I'll write a book someday.",
+          "I'm always somewhere else.",
+          "Hot air balloon commute?",
+          "Drifting off again...",
+          "The wind is calling me.",
+          "What if we were faster than light?",
+          "No one limits imagination.",
+          "What if we are in another universe?",
+          "Life is like a dream.",
+          "If I were a cloud...",
+          "A song is stuck in my head.",
+          "The sky is a canvas.",
+          "Who knows what will happen!",
+          "Something great is coming today.",
+          "If I were a fish, I'd dive deep.",
+          "If I had wings...",
+          "It feels like a fairy tale.",
+          "Maybe anything is possible.",
+          "My dream office is right here.",
+          "Space is so quiet.",
+          "Life is a movie, I'm the lead.",
+          "Let's wonder together.",
+          "Once upon a time in an office..."
         ]
       }
     },

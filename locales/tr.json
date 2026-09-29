@@ -1201,6 +1201,8 @@
       "notify": "Tarayıcı bildirimleri",
       "notifyHint": "Bir çalışan cevap verince ya da seni beklerken masaüstü bildirimi gelir. Sadece bu tarayıcıda hatırlanır.",
       "notifyNone": "Bu tarayıcı bildirim desteklemiyor.",
+      "events": "Rastgele ofis olayları",
+      "eventsHint": "Birkaç dakikada bir küçük bir şey olur: pizza günü, doğum günü pastası, yazıcı arızası ya da kısa bir elektrik kesintisi. Boştaki çalışanlar toplanıp tepki verir; çalışan olanlar asla rahatsız edilmez. Sadece bu tarayıcıda hatırlanır.",
       "sickness": "Çalışanlar ara sıra hastalansın",
       "sicknessHint": "Boştaki bir çalışan arada bir 3–5 dakika kanepede dinlenir. Sadece eğlence, hiçbir maliyeti yok. Kapalıyken kimse hastalanmaz.",
       "envLocked": "{name} ortam değişkeniyle ayarlanmış; oradan değiştir.",
@@ -1337,6 +1339,12 @@
       "s2": "<b>Öğret.</b> “Şunu aklında tut…” dediğin şey hafıza dosyasına yazılır ve her oturumda yüklenir. Profilden (☰) istediğin zaman düzenlersin.",
       "s3": "<b>Kendi çalışanını al</b>: <b>+ İşe al</b> ile karakteri tasarla, pozisyon seç, modeli belirle. Örnekleri istediğin zaman işten çıkar.",
       "cta": "Başlayalım"
+    },
+    "events": {
+      "pizza": "Pizza günü! Mutfakta sıcak pizza var.",
+      "cake": "Birinin doğum günü: mutfakta pasta var!",
+      "printer": "Yazıcı yine sıkıştı.",
+      "blackout": "Elektrik kesildi! Birazdan gelir."
     },
     "notify": {
       "on": "Bildirimler açık",

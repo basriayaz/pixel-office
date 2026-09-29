@@ -1385,6 +1385,8 @@
         "rejected": "Rejected",
         "moved": "On the board"
       },
+      "ideaEffortNone": "not set",
+      "ideaTitleNeeded": "The idea needs a title",
       "ideaEffort": {
         "S": "small",
         "M": "medium",

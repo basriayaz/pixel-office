@@ -414,6 +414,7 @@ const boardUI = (() => {
 
   // ---------- ideas: suggestions waiting for the boss; "move" makes one a task ----------
   const ideaOwner = new Map(); // idea id → owner chosen in the card
+  const ideaEditing = new Set(); // idea ids whose title/text/effort the boss is editing
   function renderIdeas() {
     $("ideaShowAll").checked = ideaShowAll;
     const host = $("ideaList");
@@ -459,6 +460,29 @@ const boardUI = (() => {
       if (!c.classList.contains("open")) c.querySelector(".note-head").click();
       requestAnimationFrame(() => { const n = document.getElementById("idea-" + id); n?.scrollIntoView({ block: "center" }); n?.querySelector(".note-head")?.focus(); });
     });
+  }
+
+  // The boss settles title, text and effort here; nothing is sent to the proposer, and a save on a changed idea (rev) is refused.
+  function openIdeaEdit(x, card) {
+    const box = card.querySelector(".idea-chat");
+    box.hidden = false; box.innerHTML = "";
+    const k = (f) => `i-edit-${f}:${x.id}`;
+    const title = document.createElement("input"); title.maxLength = 160; title.dataset.draft = k("title"); title.value = draft(k("title"), x.title); title.setAttribute("aria-label", t("ui.board.ideaField.title"));
+    const text = document.createElement("textarea"); text.rows = 5; text.dataset.draft = k("text"); text.value = draft(k("text"), x.text || ""); text.setAttribute("aria-label", t("ui.board.ideaField.text"));
+    const eff = document.createElement("select"); eff.dataset.draft = k("effort"); eff.setAttribute("aria-label", t("ui.board.ideaField.effort"));
+    eff.innerHTML = `<option value="">${escapeHtml(t("ui.board.ideaEffortNone"))}</option>` + ["S", "M", "L"].map((v) => `<option value="${v}">${escapeHtml(t(`ui.board.ideaEffort.${v}`))}</option>`).join("");
+    eff.value = draft(k("effort"), x.effort || "");
+    const forget = () => { ["title", "text", "effort"].forEach((f) => drafts.delete(k(f))); ideaEditing.delete(x.id); };
+    const save = document.createElement("button"); save.type = "button"; save.className = "btn small primary"; save.textContent = t("ui.board.save");
+    save.onclick = async () => {
+      if (!title.value.trim()) { toast(t("ui.board.ideaTitleNeeded")); return; }
+      const r = await call("PUT", `${API()}/ideas/${x.id}`, { title: title.value, text: text.value, effort: eff.value || null, rev: x.rev ?? 0 });
+      if (r) { forget(); renderIdeas(); }
+    };
+    const cancel = document.createElement("button"); cancel.type = "button"; cancel.className = "btn small ghost"; cancel.textContent = t("ui.board.cancel");
+    cancel.onclick = () => { forget(); box.hidden = true; box.innerHTML = ""; };
+    box.append(title, text, eff, save, cancel);
+    ideaEditing.add(x.id);
   }
 
   function ideaCard(x) {
@@ -513,6 +537,8 @@ const boardUI = (() => {
         if (k) toast(t(`ui.board.ideaMovedToast.${k.launch || "moved"}`, { id: k.id, name: who(owner) }));
       };
       btn(t("ui.board.ideaChat"), "ghost", () => openIdeaChat(x, card));
+      btn(t("ui.board.edit"), "ghost", () => openIdeaEdit(x, card));
+      if (ideaEditing.has(x.id)) openIdeaEdit(x, card);
       btn(t("ui.board.ideaMove"), "primary", () => move(false));
       btn(t("ui.board.ideaMoveStart"), "ok", () => move(true));
       if (x.status === "new") btn(t("ui.board.ideaLater"), "ghost", () => act(() => call("PUT", `${API()}/ideas/${x.id}`, { status: "later", comment: comment() })));

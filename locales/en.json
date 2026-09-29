@@ -7,6 +7,7 @@
     "noEmployeesDir": "employeesDir is not configured",
     "nameRoleRequired": "name and position are required",
     "skillFields": "name and description are required",
+    "historyQuery": "before must be a time in ms and limit a whole number from 1 to 500",
     "notFound": "not found",
     "textRequired": "text is required",
     "defaultPrompt": "You are {name}, working as {role}.",
@@ -437,9 +438,21 @@
       "unavailable": "The activity log is not available on this server yet.",
       "you": "you",
       "office": "office",
-      "f": { "all": "All", "tasks": "Tasks", "people": "Employees", "pm": "PM & discovery", "cost": "Cost" },
-      "run": { "stopped": "stopped", "error": "error" },
-      "capWhat": { "daily": "Claude $", "codex": "Codex tokens" },
+      "f": {
+        "all": "All",
+        "tasks": "Tasks",
+        "people": "Employees",
+        "pm": "PM & discovery",
+        "cost": "Cost"
+      },
+      "run": {
+        "stopped": "stopped",
+        "error": "error"
+      },
+      "capWhat": {
+        "daily": "Claude $",
+        "codex": "Codex tokens"
+      },
       "k": {
         "task_created": "New task #{task} “{taskTitle}” ({byName})",
         "task_status": "#{task} “{taskTitle}”: {from} → {to} ({byName})",
@@ -500,7 +513,13 @@
       "today": "today",
       "days": "{n} days",
       "none": "Nothing spent yet.",
-      "kind": { "chat": "chat", "task": "tasks", "refresh": "refresh", "meeting": "meetings", "discovery": "discovery" },
+      "kind": {
+        "chat": "chat",
+        "task": "tasks",
+        "refresh": "refresh",
+        "meeting": "meetings",
+        "discovery": "discovery"
+      },
       "meetingSummary": "Meeting summary",
       "codexNote": "Codex employees run on your ChatGPT plan, so they show tokens, not dollars.",
       "estimateNote": "Codex and Gemini amounts are estimates from token prices, not a bill. Adjust the prices in Settings → Models."
@@ -536,6 +555,8 @@
       "close": "Close (Esc)",
       "empty": "<b>{name}</b> is ready.<br>Give a task, ask a question or teach something — what you teach goes into permanent memory.",
       "today": "Today",
+      "older": "Load earlier messages",
+      "olderFailed": "Could not load earlier messages",
       "actions": "{n} actions",
       "actions_one": "{n} action",
       "autoRefresh": "🔄 Automatic knowledge refresh",
@@ -829,19 +850,45 @@
       "autoRefreshHint": "Off by default, because it spends tokens nobody asked for. When on, the employee tidies their memory in a short, separate session every few hours (set below), only if they worked since the last time, and skipped if you wrote to them in the last 30 minutes."
     },
     "models": {
-      "gpt-6-astra": { "desc": "Frontier intelligence for the most demanding work." },
-      "gpt-6-sol": { "desc": "Workhorse model for coding and everyday work." },
-      "gpt-6-luna": { "desc": "Fast and affordable model for easier tasks." },
-      "gpt-5.6-sol": { "desc": "Older coding model for complex work." },
-      "gpt-5.6-terra": { "desc": "Older balanced model for straightforward work." },
-      "gpt-5.6-luna": { "desc": "Older fast and efficient model." },
-      "gpt-5.5": { "desc": "Legacy coding model." },
-      "gemini-3.1-pro-preview": { "desc": "Google's most capable model (preview); deep reasoning for hard problems." },
-      "gemini-3-flash-preview": { "desc": "Fast and capable (preview); a good everyday choice." },
-      "gemini-3.1-flash-lite-preview": { "desc": "The lightest and cheapest of the newest (preview); simple, high-volume work." },
-      "gemini-2.5-pro": { "desc": "Previous strong model; deep reasoning and long context." },
-      "gemini-2.5-flash": { "desc": "Previous fast model; balanced speed and quality." },
-      "gemini-2.5-flash-lite": { "desc": "Previous lightest model; the cheapest for simple work." },
+      "gpt-6-astra": {
+        "desc": "Frontier intelligence for the most demanding work."
+      },
+      "gpt-6-sol": {
+        "desc": "Workhorse model for coding and everyday work."
+      },
+      "gpt-6-luna": {
+        "desc": "Fast and affordable model for easier tasks."
+      },
+      "gpt-5.6-sol": {
+        "desc": "Older coding model for complex work."
+      },
+      "gpt-5.6-terra": {
+        "desc": "Older balanced model for straightforward work."
+      },
+      "gpt-5.6-luna": {
+        "desc": "Older fast and efficient model."
+      },
+      "gpt-5.5": {
+        "desc": "Legacy coding model."
+      },
+      "gemini-3.1-pro-preview": {
+        "desc": "Google's most capable model (preview); deep reasoning for hard problems."
+      },
+      "gemini-3-flash-preview": {
+        "desc": "Fast and capable (preview); a good everyday choice."
+      },
+      "gemini-3.1-flash-lite-preview": {
+        "desc": "The lightest and cheapest of the newest (preview); simple, high-volume work."
+      },
+      "gemini-2.5-pro": {
+        "desc": "Previous strong model; deep reasoning and long context."
+      },
+      "gemini-2.5-flash": {
+        "desc": "Previous fast model; balanced speed and quality."
+      },
+      "gemini-2.5-flash-lite": {
+        "desc": "Previous lightest model; the cheapest for simple work."
+      },
       "claude-opus-5-5": {
         "name": "Opus 5.5",
         "desc": "The newest Opus; stronger and a little cheaper than Opus 5. The default for most work.",
@@ -1167,10 +1214,22 @@
         "notInstalled": "Not installed",
         "off": "Switched off",
         "p": {
-          "claude": { "name": "Claude", "desc": "Claude Code: the default engine, your Claude plan or an Anthropic API key." },
-          "codex": { "name": "Codex", "desc": "OpenAI Codex CLI, on your ChatGPT plan." },
-          "gemini": { "name": "Gemini", "desc": "Google Gemini CLI, with a Gemini API key." },
-          "openrouter": { "name": "OpenRouter", "desc": "Any model OpenRouter serves, with an OpenRouter API key." }
+          "claude": {
+            "name": "Claude",
+            "desc": "Claude Code: the default engine, your Claude plan or an Anthropic API key."
+          },
+          "codex": {
+            "name": "Codex",
+            "desc": "OpenAI Codex CLI, on your ChatGPT plan."
+          },
+          "gemini": {
+            "name": "Gemini",
+            "desc": "Google Gemini CLI, with a Gemini API key."
+          },
+          "openrouter": {
+            "name": "OpenRouter",
+            "desc": "Any model OpenRouter serves, with an OpenRouter API key."
+          }
         },
         "state": {
           "missing": "The CLI is not installed on this machine.",
@@ -1206,8 +1265,13 @@
         "prices": {
           "title": "Token prices (USD per 1M tokens)",
           "hint": "Your rows come first (first match wins) and sit in {file}. Grey built-in rows are read-only. The pattern is a regular expression tested against the model id.",
-          "match": "Model pattern", "input": "Input", "cached": "Cached", "output": "Output",
-          "add": "Add row", "remove": "Remove row", "save": "Save prices",
+          "match": "Model pattern",
+          "input": "Input",
+          "cached": "Cached",
+          "output": "Output",
+          "add": "Add row",
+          "remove": "Remove row",
+          "save": "Save prices",
           "unavailable": "Prices unavailable: {message}"
         },
         "customSave": "Save models",
@@ -1520,49 +1584,362 @@
     },
     "guide": {
       "invite": "Let's start together",
-      "btn": "First-task guide",
+      "btn": "Guide",
       "exit": "Leave the guide",
-      "skipStep": "Skip step",
       "next": "Continue",
+      "back": "Back",
+      "sections": "Sections",
+      "skipSection": "Skip section",
       "finish": "Finish",
       "done": "Guide done. Reopen it with the ? button.",
-      "counterAria": "Step {i} of {n}",
-      "t": {
-        "pick": "Pick an employee",
-        "provider": "Is the model connected?",
-        "folder": "Which folder?",
-        "draft": "You send the first task",
-        "work": "Working",
-        "result": "Result and source",
-        "cost": "Cost and limit"
-      },
-      "pick": "Click an employee at a desk or in the list below; their chat opens.",
-      "provider": "<b>{name}</b> works with the model <b>{model}</b> (provider: {provider}). That provider has to be connected for them to answer.",
-      "provLoading": "Reading provider status…",
-      "provNo": "{provider} is not connected. Install or sign in under Settings → Models; the guide moves on by itself once it is.",
-      "provDisabled": "{provider} is switched off. Turn it on under Settings → Models.",
-      "provUnknown": "Could not read the provider status. Check Settings → Models.",
-      "provOk": "{name}: {model} is connected.",
-      "openModels": "Open Models",
+      "menuTitle": "Guide",
+      "menuIntro": "Pick a section. On every step you can go back and skip the step or the section; the guide never does anything on its own, sends no message and changes no data.",
+      "menuStart": "Start",
+      "menuResume": "Continue where you left off: {sec} · step {i}",
+      "seen": "{a}/{n} seen",
+      "stepsN": "{n} steps",
+      "exitMenu": "Close",
+      "counterAria": "{sec}, step {i} of {n}",
+      "absent": "This item is not on screen right now; it shows up once it applies. You can read on and continue.",
+      "needChat": "Click an employee first: this step points at their chat panel.",
+      "noEmployee": "Nobody works here yet. You can read this step and move on; the guide never invents an employee.",
+      "openHire": "Open the hiring page",
+      "openProfile": "Open the profile page",
+      "newTab": "opens in a new tab",
+      "openOffices": "Open Offices",
       "recheck": "Check again",
-      "folder": "Employees work in this folder: <code>{path}</code><br>They read files here. Is that right?",
-      "folderOk": "Yes, it is",
-      "folderChange": "Change folder",
-      "draft": "A draft is ready. Put it in the box, read it, edit if you like, and <b>press ➤ yourself</b>. The guide never sends it.",
+      "provLoading": "Reading provider status…",
+      "provOk": "{provider} is connected and on.",
+      "provNo": "{provider} is not connected. Install or sign in under Settings → Models, then Check again.",
+      "provOff": "{provider} is switched off. Turn it on under Settings → Models.",
+      "provUnknown": "Could not read the provider status. Check Settings → Models.",
       "putDraft": "Put draft in the box",
       "boxBusy": "The message box holds other text; clear it first to put the draft in.",
       "draftText": "Read this folder's README, summarize its purpose and getting-started steps; do not change any files.",
       "draftFile": "Read {file}, summarize its purpose and getting-started steps; do not change any files.",
-      "permission": "The employee is <b>waiting for your permission</b>: the card in the chat says what they want to do. Allow if it is fine, Deny if not. This task needs no file changes; deny if they ask to change one.",
-      "working": "Working. The answer appears in the chat; the status above shows whether they are working or waiting for permission.",
-      "failed": "The employee hit an error or is sick. Look at the status label; check the chat and Settings → Models.",
-      "source": "The summary rests on the file named in the answer: <b>{file}</b>. Check in the answer that it is the right one.",
-      "noSource": "No file name shows in the answer. Ask “Which file did you read?” to confirm.",
-      "otherFile": "If there was no README, type another text file's name (e.g. CONTRIBUTING.md):",
-      "fileLabel": "File name",
-      "cost": "Watch spending in the chip above or in Costs. The daily limit (Claude $ or Codex tokens) only stops <b>automatic work</b>; a chat you start by hand keeps running.",
-      "costGemini": "Note: Gemini spending is not counted in cost or the limit right now.",
-      "openCosts": "Open Costs"
+      "draftWrite": "Read this folder's files and write a README.md draft (purpose, install, usage). Show me the content before writing any file.",
+      "noReadme": "No README found in this folder, so the draft asks for one.",
+      "otherDocs": "Other docs in this folder, pick one instead:",
+      "source": "File named in the answer: <b>{file}</b>. Check in the answer yourself that the summary rests on the right file.",
+      "noSource": "No file name shows in the answer. You can ask “Which file did you read?”.",
+      "openCosts": "Open Costs",
+      "costGemini": "Gemini spending is recorded as an estimate and counts toward the daily total; it is not an invoice.",
+      "noReply": "No answer yet; it shows here when ready.",
+      "working": "Working. The answer streams into the chat.",
+      "permWait": "The employee is <b>waiting for your permission</b>: the card in the chat says what they want to do.",
+      "failed": "The employee hit an error or is sick. Look at the status badge and Settings → Models.",
+      "sec": {
+        "B": {
+          "n": "Getting started",
+          "d": "First office and first task"
+        },
+        "E": {
+          "n": "Team",
+          "d": "Hiring, profile, memory, skills"
+        },
+        "C": {
+          "n": "Chat",
+          "d": "Messages, permissions, queue, stopping"
+        },
+        "T": {
+          "n": "Meetings",
+          "d": "Starting, running, ending"
+        },
+        "P": {
+          "n": "Board",
+          "d": "Tasks, ideas, notebook"
+        },
+        "I": {
+          "n": "Monitoring",
+          "d": "Inbox, activity, costs"
+        },
+        "A": {
+          "n": "Settings",
+          "d": "General, models, work, server"
+        },
+        "O": {
+          "n": "Offices",
+          "d": "New offices, themes, modes, limits"
+        }
+      },
+      "s": {
+        "B1": {
+          "t": "The office scene",
+          "b": "This is your office. Every pixel character is an AI employee: hover for the name, click to open their chat. The coloured dot shows the status (idle, working, waiting for permission, error, sick); the list below shows the same people, including anyone away from a desk."
+        },
+        "B2": {
+          "t": "Hire the first employee",
+          "b": "The <b>+ Hire</b> button at the top opens the hiring page. Start there if nobody works here yet. The guide never hires anyone for you; it only shows where."
+        },
+        "B3": {
+          "t": "Pick an employee",
+          "b": "Click a character at a desk or someone in the list below; their chat opens on the right. The next steps point at the chat panel."
+        },
+        "B4": {
+          "t": "Which folder?",
+          "b": "The employee works with the model badge in the header and reads files in this folder: <code>{path}</code>. If that is wrong, change it under Settings → Offices or in the employee's own settings."
+        },
+        "B5": {
+          "t": "Is the model connected?",
+          "b": "<b>{name}</b> uses the model <b>{model}</b> (provider: {provider}). That provider has to be connected and switched on for them to answer."
+        },
+        "B6": {
+          "t": "You send the first task",
+          "b": "A draft is ready: put it in the box, read it, edit if you like and <b>press ➤ yourself</b>. The guide never sends it. While they work the status badge shows working or waiting for permission; if a permission card appears you decide in the chat."
+        },
+        "B7": {
+          "t": "Result and cost",
+          "b": "Read the answer yourself and check it rests on the right file; a file name in the reply does not prove it was read. Watch spending in the chip on top or in Costs; the daily limit only stops <b>automatic work</b>, a chat you start by hand keeps running."
+        },
+        "E1": {
+          "t": "Hiring: name, role, preset",
+          "b": "On the hiring page name and role are required. The ready-made presets fill in the role and prompt for you; you can change everything later."
+        },
+        "E2": {
+          "t": "Hiring: prompt, folder, model, effort, permissions",
+          "b": "The prompt says how the employee behaves. An empty folder means the office folder. Model, effort and permission mode set cost and autonomy; the balanced defaults are a safe start."
+        },
+        "E3": {
+          "t": "Hiring: look and summary",
+          "b": "In the character editor you pick body, skin, hair, clothes, hat, glasses and colours; there is a randomise button too. The preview card and the summary below are your last check before you press <b>Hire</b>."
+        },
+        "E4": {
+          "t": "Profile: identity and look",
+          "b": "The ☰ in the chat header opens the employee's profile page: name, role, look and prompt are saved there; the active folder and stats sit in the header."
+        },
+        "E5": {
+          "t": "Profile: memory",
+          "b": "The Memory tab shows the employee's lasting notes; you can read and edit them by hand. Meeting summaries can be written here too."
+        },
+        "E6": {
+          "t": "Profile: refreshing memory",
+          "b": "The refresh button updates memory from project changes by hand; automatic refresh and its interval are a separate switch. Refreshing means work and cost."
+        },
+        "E7": {
+          "t": "Profile: the employee's skills",
+          "b": "On the Skills tab you add, edit and delete skills that belong to this employee. Project skills are listed separately."
+        },
+        "E8": {
+          "t": "Profile: project skills and connectors",
+          "b": "Project skills are listed read-only. You switch Claude connectors on and off one by one or all at once; a switched-off connector is not given to the employee."
+        },
+        "E9": {
+          "t": "Profile: history",
+          "b": "The History tab lists recent jobs and their results, so you can see what was done and when."
+        },
+        "E10": {
+          "t": "Profile: model, effort, permissions, folder",
+          "b": "On the Settings tab you change model, effort, permission mode and working folder. Modes differ: the default asks first, freer modes act without asking; Codex permissions are not the same as Claude's."
+        },
+        "E11": {
+          "t": "Profile: manager role",
+          "b": "One employee can be the manager; handing the role to someone else takes it from the previous one. The manager plans and orders tasks and reviews ideas."
+        },
+        "E12": {
+          "t": "Profile: worktree and changes",
+          "b": "With worktree on, the employee works on a separate branch and you see the changes as a read-only diff plus new files. If it is off, this box is hidden."
+        },
+        "E13": {
+          "t": "Profile: letting someone go",
+          "b": "Letting someone go is at the bottom and needs their name typed; they are moved to the archive, not erased. The guide never presses this button."
+        },
+        "C1": {
+          "t": "Write and send",
+          "b": "Enter sends, Shift+Enter adds a new line. You can paste or drop an image (PNG, JPEG, GIF, WebP) and remove it before sending. Answers stream in and render as Markdown."
+        },
+        "C2": {
+          "t": "Action groups and older messages",
+          "b": "The tool actions an employee took are grouped so you can open and read them. Older messages load page by page; a jump-down button appears when new ones arrive."
+        },
+        "C3": {
+          "t": "Permission and question cards",
+          "b": "When an employee needs permission or asks a question, a card appears in the chat. Allow or deny; the decision is yours and they wait for it."
+        },
+        "C4": {
+          "t": "Message queue",
+          "b": "A message written while the employee is busy goes into a queue. Before it is sent you can take it back or interrupt right away; once it has gone it cannot be taken back."
+        },
+        "C5": {
+          "t": "Task session",
+          "b": "While working on a board task the header shows a task badge. That conversation belongs to the task; the clean-session setting starts each task from scratch."
+        },
+        "C6": {
+          "t": "Stop, reset, close",
+          "b": "■ stops the employee, ⟲ resets the conversation (history is cleared), × closes the panel. Use reset on purpose."
+        },
+        "C7": {
+          "t": "A sick employee",
+          "b": "If errors keep happening the employee falls sick; 💊 sends them back to work. The button only shows while sick. First check the provider under Settings → Models."
+        },
+        "C8": {
+          "t": "Connection, width and context",
+          "b": "If the server link drops you see an offline note. Drag the panel's left edge to set its width. When you talk about an idea, the context bar shows which one."
+        },
+        "T1": {
+          "t": "Start a meeting",
+          "b": "The 👥 Meeting button opens a window where you pick the topic and participants. All and None speed it up. The guide does not start the meeting."
+        },
+        "T2": {
+          "t": "Busy employees and cost",
+          "b": "If a participant is busy you choose between waiting for them to finish or cutting their work off. The hint below gives the rough meeting cost; more people cost more."
+        },
+        "T3": {
+          "t": "In the room: messages, @person, images",
+          "b": "In a meeting you write to the room; use @ to address someone and attach images. With no meeting running, just read this and continue."
+        },
+        "T4": {
+          "t": "Raising a hand",
+          "b": "When an employee asks to speak it shows at the top: give the floor or say later. You run the order."
+        },
+        "T5": {
+          "t": "End the meeting",
+          "b": "The End button asks whether to write a summary and whether to save it to memory. You can add the follow-up tasks from the summary to the board; the guide never confirms."
+        },
+        "T6": {
+          "t": "Meeting history",
+          "b": "🕘 shows earlier meetings, their summaries and decisions. It is also reachable from the start window."
+        },
+        "P1": {
+          "t": "The board and its tabs",
+          "b": "The 📋 Board has three tabs: Tasks, Ideas, Notebook. A task gives one job to one person; you or the manager put tasks on it."
+        },
+        "P2": {
+          "t": "Create a task",
+          "b": "For a new task you write the title, owner and detail. If you tick \"needs review\" the owner cannot close it and the work lands with you. Adding a task does not start it."
+        },
+        "P3": {
+          "t": "Statuses, filter and start all",
+          "b": "A task moves through to do, doing, review, done and blocked. You can filter by owner, show finished ones and start all ready tasks at once."
+        },
+        "P4": {
+          "t": "Task actions",
+          "b": "A task card has start, resend, stop and delete. Opening the card shows the drawer for editing and detail. Starting really puts the employee to work and costs money."
+        },
+        "P5": {
+          "t": "Dependencies, order and warnings",
+          "b": "A task can be set to start only once others finish. The drawer shows the order and clash warnings; a task with an open dependency waits by itself."
+        },
+        "P6": {
+          "t": "Notes, time and transcript",
+          "b": "The drawer holds the task's notes, working time, cost and conversation transcript. Check the outcome and what it cost here."
+        },
+        "P7": {
+          "t": "Review: approve or send back",
+          "b": "A task that needs review lands in review when done. Approve to finish it, or send it back to the owner with a comment; a finished task can be reopened."
+        },
+        "P8": {
+          "t": "The Ideas tab",
+          "b": "An idea is not a task and nobody starts it: employees and you leave suggestions here and the decision is yours. Cards show effort, suggested owner and the manager's advice."
+        },
+        "P9": {
+          "t": "Add your own idea",
+          "b": "Leave your own idea with a title and optional text. Afterwards you can open the card to edit it and comment."
+        },
+        "P10": {
+          "t": "Deciding on ideas",
+          "b": "Move an idea to a task (optionally starting it), postpone, reject or reopen it. You can chat with whoever proposed it about that idea; old decisions stay in the list."
+        },
+        "P11": {
+          "t": "Start discovery",
+          "b": "The discovery button asks employees to look through the project for new ideas. They do real work, so it costs money; the guide does not press it."
+        },
+        "P12": {
+          "t": "The shared notebook",
+          "b": "The notebook is the team's shared knowledge: findings, decisions, figures. Filter by author, open, add, edit, delete and tag notes."
+        },
+        "I1": {
+          "t": "Inbox",
+          "b": "📥 gathers what waits for you: permissions, reviews, questions, new ideas. The badge shows the count."
+        },
+        "I2": {
+          "t": "Deciding from the inbox",
+          "b": "You decide on permissions and reviews here. Questions are answered in the chat; a new idea moves to the board from here. The guide never presses a decision."
+        },
+        "I3": {
+          "t": "Activity log",
+          "b": "🕘 is the log of everything that happens in the office. Narrow it with five filters and follow the link to the related task or idea."
+        },
+        "I4": {
+          "t": "While you were away",
+          "b": "After some time away a summary card shows at the top: what finished, what waits. It only appears after an absence."
+        },
+        "I5": {
+          "t": "Spending and quota",
+          "b": "The chips on top show today's spend and provider quota; the quota bar only shows when there is data. The Gemini figure is an estimate, not an invoice."
+        },
+        "I6": {
+          "t": "Costs panel",
+          "b": "The last 7 days broken down by employee, task and job type are here. Daily limits only stop automatic work."
+        },
+        "A1": {
+          "t": "General: language",
+          "b": "The language switches between TR and EN and changes the whole interface. The guide opens in your language too."
+        },
+        "A2": {
+          "t": "General: browser notifications",
+          "b": "When on, the browser tells you about permissions and finished work while the tab is in the background. The browser asks for permission; the guide does not tick the box."
+        },
+        "A3": {
+          "t": "General: sickness",
+          "b": "Sickness makes an employee sick after repeated errors. With it off, employees are never marked sick."
+        },
+        "A4": {
+          "t": "Models: providers",
+          "b": "There are cards for Claude, Codex, Gemini and OpenRouter. Each shows whether that provider is installed, signed in and switched on."
+        },
+        "A5": {
+          "t": "Models: install, sign in, enable",
+          "b": "The buttons differ per card: install, sign in, check again, enable. The guide does not run any of them."
+        },
+        "A6": {
+          "t": "Models: keys and extra models",
+          "b": "For Gemini and OpenRouter you enter an API key and extra model names. The key is kept hidden."
+        },
+        "A7": {
+          "t": "Models: price patterns",
+          "b": "For Codex and Gemini you add and delete token price patterns. Prices drive the estimated cost; built-in prices are ready."
+        },
+        "A8": {
+          "t": "Work: summarising and clean sessions",
+          "b": "The summarising threshold sets when a long chat is condensed. Clean task sessions start every task from scratch."
+        },
+        "A9": {
+          "t": "Work: refresh and sync",
+          "b": "The default refresh interval applies to new employees. Sync mirrors Claude terminal agents into the office."
+        },
+        "A10": {
+          "t": "Server and shutdown",
+          "b": "Version, data paths, host, port and Node are here, and so is whether this is a global or project install. Shut down asks for confirmation; the guide never presses it."
+        },
+        "O1": {
+          "t": "Offices and tabs",
+          "b": "An office is its own team, board, costs and working folder. With more than one office, tabs appear on top."
+        },
+        "O2": {
+          "t": "Office list",
+          "b": "Settings → Offices lists your offices; you edit name, folder and theme. An empty office is deleted with a second click."
+        },
+        "O3": {
+          "t": "Open a new office",
+          "b": "The name is required; an empty folder uses the default. Adding an office opens a separate workspace."
+        },
+        "O4": {
+          "t": "Themes",
+          "b": "There are seven themes: classic, football, fashion, gothic, music, travel, dream. A theme only changes the look."
+        },
+        "O5": {
+          "t": "Work mode",
+          "b": "This office runs in three modes: manual, approved cycle, or self-driven. Changing mode asks for confirmation; self-driven mode spends money."
+        },
+        "O6": {
+          "t": "Round budget and daily rounds",
+          "b": "The round budget caps spending in one round and the daily rounds cap the number of rounds. Type a number and confirm with Enter."
+        },
+        "O7": {
+          "t": "Daily limits",
+          "b": "The daily limit (Claude dollars, Codex tokens) only stops automatic work. Settings → Server shows where the files live."
+        }
+      }
     }
   }
 }

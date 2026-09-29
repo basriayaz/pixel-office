@@ -165,7 +165,7 @@ function trackRun(o: OfficeRt, k: Task, prev: TaskStatus, by: string) {
   const run = o.openRuns.get(k.id);
   if (!run || prev !== "doing") return;
   const last = k.notes[k.notes.length - 1]?.text;
-  run.closing = k.status === "todo" && by === "user" ? "stopped" : k.status === "blocked" && last === t("server.board.sessionError") ? "error" : k.status;
+  run.closing = k.status === "todo" && by === "user" ? "stopped" : k.status === "blocked" && last?.startsWith(t("server.board.sessionError")) ? "error" : k.status;
   if (!o.employees.get(run.emp)?.busy) closeRun(o, run, run.closing);
 }
 
@@ -987,6 +987,19 @@ r.delete("/board/notes/:id", (req: OReq, res) => {
   res.json({ ok: true });
 });
 
+// Read-only: names of the README / text files at the top of the office's working folder (no contents, no subfolders),
+// so the first-task guide knows up front whether there is a README to work from. readme = the README among them, or null.
+const DOC_FILE = /\.(?:md|markdown|txt|rst|adoc)$/i;
+r.get("/readme", async (req: OReq, res) => {
+  const o = officeOf(req);
+  if (!o) return res.status(404).json({ error: t("server.notFound") });
+  const entries = await fs.promises.readdir(o.def.cwd, { withFileTypes: true }).catch(() => null);
+  if (!entries) return res.json({ files: [], readme: null });
+  const files = entries.filter((d) => d.isFile() && DOC_FILE.test(d.name)).map((d) => d.name)
+    .sort((a, b) => a.localeCompare(b)).slice(0, 50);
+  res.json({ files, readme: files.find((f) => /^readme\./i.test(f)) ?? null });
+});
+
 // Past meetings of an office (newest first) and one transcript.
 r.get("/meetings", (req: OReq, res) => {
   const o = officeOf(req);
@@ -1026,6 +1039,17 @@ r.get("/employees/:id/diff", (req: OReq, res) => {
   }
 });
 
+// Older chat lines moved to the archive: ?before=<ts> (default: now) &limit=<1..500> (default 200), oldest first.
+// `more` says whether an older page is left.
+r.get("/employees/:id/history", (req: OReq, res) => {
+  const o = officeOf(req), e = empOf(req);
+  if (!o || !e) return res.status(404).json({ error: t("server.notFound") });
+  const before = req.query.before === undefined ? Date.now() : Number(req.query.before);
+  const limit = req.query.limit === undefined ? 200 : Number(req.query.limit);
+  if (!Number.isFinite(before) || !Number.isInteger(limit) || limit < 1 || limit > 500) return res.status(400).json({ error: t("server.historyQuery") });
+  res.json(o.store.readArchive(e.cfg.id, before, limit));
+});
+
 r.get("/employees/:id/detail", (req: OReq, res) => {
   const o = officeOf(req), e = empOf(req);
   if (!o || !e) return res.status(404).json({ error: t("server.notFound") });
@@ -1055,7 +1079,7 @@ r.get("/employees/:id/detail", (req: OReq, res) => {
     autoRefresh: autoRefreshOf(e),
     lastRefresh: o.store.getMeta<number>(e.cfg.id, "lastRefresh") ?? null,
     currentManager: [...o.employees.values()].find((x) => x.cfg.manager && x !== e)?.cfg.name ?? null,
-    stats: { messages: e.history.length, tasks: userMsgs, lastActivity: e.lastActivity || null },
+    stats: { messages: e.history.length + o.store.archiveCount(e.cfg.id), tasks: userMsgs, lastActivity: e.lastActivity || null },
     recent: e.history.slice(-30),
   });
 });
@@ -1362,7 +1386,7 @@ async function handleClientMessage(ws: WebSocket, msg: ClientMessage) {
     if (!e) return;
     switch (msg.type) {
       case "open":
-        ws.send(JSON.stringify({ type: "history", office: o.def.id, id: e.cfg.id, messages: e.history, pending: e.pendingAsks, queue: e.queue }));
+        ws.send(JSON.stringify({ type: "history", office: o.def.id, id: e.cfg.id, messages: e.history, older: o.store.hasArchive(e.cfg.id), pending: e.pendingAsks, queue: e.queue }));
         if (setUnread(e, 0)) broadcast({ type: "roster", office: o.def.id, employees: roster(o) });
         break;
       // the chat is open while answers arrive: they are seen as they come

@@ -7,6 +7,7 @@
     "noEmployeesDir": "employeesDir tanımlı değil",
     "nameRoleRequired": "isim ve pozisyon gerekli",
     "skillFields": "ad ve açıklama gerekli",
+    "historyQuery": "before ms cinsinden bir zaman, limit 1 ile 500 arası tam sayı olmalı",
     "notFound": "yok",
     "textRequired": "text gerekli",
     "defaultPrompt": "Sen {name}'sin, {role} olarak çalışıyorsun. Türkçe konuşursun.",
@@ -437,9 +438,21 @@
       "unavailable": "Bu sunucuda olay kaydı henüz yok.",
       "you": "sen",
       "office": "ofis",
-      "f": { "all": "Tümü", "tasks": "Görevler", "people": "Çalışanlar", "pm": "PM & keşif", "cost": "Maliyet" },
-      "run": { "stopped": "durduruldu", "error": "hata" },
-      "capWhat": { "daily": "Claude $", "codex": "Codex token" },
+      "f": {
+        "all": "Tümü",
+        "tasks": "Görevler",
+        "people": "Çalışanlar",
+        "pm": "PM & keşif",
+        "cost": "Maliyet"
+      },
+      "run": {
+        "stopped": "durduruldu",
+        "error": "hata"
+      },
+      "capWhat": {
+        "daily": "Claude $",
+        "codex": "Codex token"
+      },
       "k": {
         "task_created": "Yeni görev #{task} “{taskTitle}” ({byName})",
         "task_status": "#{task} “{taskTitle}”: {from} → {to} ({byName})",
@@ -500,7 +513,13 @@
       "today": "bugün",
       "days": "{n} gün",
       "none": "Henüz harcama yok.",
-      "kind": { "chat": "sohbet", "task": "görevler", "refresh": "yenileme", "meeting": "toplantılar", "discovery": "keşif" },
+      "kind": {
+        "chat": "sohbet",
+        "task": "görevler",
+        "refresh": "yenileme",
+        "meeting": "toplantılar",
+        "discovery": "keşif"
+      },
       "meetingSummary": "Toplantı özeti",
       "codexNote": "Codex çalışanları ChatGPT planınla çalışır; bu yüzden dolar değil token gösterilir.",
       "estimateNote": "Codex ve Gemini tutarları token fiyatlarından hesaplanmış tahmindir, fatura değildir. Fiyatları Ayarlar → Modeller'den düzenleyebilirsin."
@@ -536,6 +555,8 @@
       "close": "Kapat (Esc)",
       "empty": "<b>{name}</b> hazır.<br>Görev ver, soru sor ya da bir şey öğret — öğrettiklerin kalıcı hafızasına yazılır.",
       "today": "Bugün",
+      "older": "Daha eski mesajları yükle",
+      "olderFailed": "Eski mesajlar yüklenemedi",
       "actions": "{n} işlem",
       "actions_one": "{n} işlem",
       "autoRefresh": "🔄 Otomatik bilgi tazeleme",
@@ -829,19 +850,45 @@
       "autoRefreshHint": "Varsayılan olarak kapalı, çünkü kimsenin istemediği token harcar. Açıkken çalışan, son tazelemeden beri iş yaptıysa birkaç saatte bir (aşağıda) kısa ve ayrı bir oturumda hafızasını düzenler; son 30 dakikada ona yazdıysan atlanır."
     },
     "models": {
-      "gpt-6-astra": { "desc": "En zorlu işler için en üst düzey zekâ." },
-      "gpt-6-sol": { "desc": "Kodlama ve günlük işler için ana iş atı model." },
-      "gpt-6-luna": { "desc": "Kolay işler için hızlı ve uygun fiyatlı model." },
-      "gpt-5.6-sol": { "desc": "Karmaşık işler için eski kodlama modeli." },
-      "gpt-5.6-terra": { "desc": "Basit işler için eski, dengeli model." },
-      "gpt-5.6-luna": { "desc": "Eski, hızlı ve verimli model." },
-      "gpt-5.5": { "desc": "Eski kodlama modeli." },
-      "gemini-3.1-pro-preview": { "desc": "Google'ın en yetenekli modeli (önizleme); zor problemler için derin akıl yürütme." },
-      "gemini-3-flash-preview": { "desc": "Hızlı ve yetenekli (önizleme); günlük işler için iyi bir seçim." },
-      "gemini-3.1-flash-lite-preview": { "desc": "Yenilerin en hafifi ve en ucuzu (önizleme); basit, yüksek hacimli işler." },
-      "gemini-2.5-pro": { "desc": "Önceki güçlü model; derin akıl yürütme ve uzun bağlam." },
-      "gemini-2.5-flash": { "desc": "Önceki hızlı model; hız ve kalite dengesi." },
-      "gemini-2.5-flash-lite": { "desc": "Önceki en hafif model; basit işler için en ucuzu." },
+      "gpt-6-astra": {
+        "desc": "En zorlu işler için en üst düzey zekâ."
+      },
+      "gpt-6-sol": {
+        "desc": "Kodlama ve günlük işler için ana iş atı model."
+      },
+      "gpt-6-luna": {
+        "desc": "Kolay işler için hızlı ve uygun fiyatlı model."
+      },
+      "gpt-5.6-sol": {
+        "desc": "Karmaşık işler için eski kodlama modeli."
+      },
+      "gpt-5.6-terra": {
+        "desc": "Basit işler için eski, dengeli model."
+      },
+      "gpt-5.6-luna": {
+        "desc": "Eski, hızlı ve verimli model."
+      },
+      "gpt-5.5": {
+        "desc": "Eski kodlama modeli."
+      },
+      "gemini-3.1-pro-preview": {
+        "desc": "Google'ın en yetenekli modeli (önizleme); zor problemler için derin akıl yürütme."
+      },
+      "gemini-3-flash-preview": {
+        "desc": "Hızlı ve yetenekli (önizleme); günlük işler için iyi bir seçim."
+      },
+      "gemini-3.1-flash-lite-preview": {
+        "desc": "Yenilerin en hafifi ve en ucuzu (önizleme); basit, yüksek hacimli işler."
+      },
+      "gemini-2.5-pro": {
+        "desc": "Önceki güçlü model; derin akıl yürütme ve uzun bağlam."
+      },
+      "gemini-2.5-flash": {
+        "desc": "Önceki hızlı model; hız ve kalite dengesi."
+      },
+      "gemini-2.5-flash-lite": {
+        "desc": "Önceki en hafif model; basit işler için en ucuzu."
+      },
       "claude-opus-5-5": {
         "name": "Opus 5.5",
         "desc": "En yeni Opus; Opus 5'ten güçlü ve biraz daha ucuz. Çoğu iş için varsayılan.",
@@ -1167,10 +1214,22 @@
         "notInstalled": "Kurulu değil",
         "off": "Kapalı",
         "p": {
-          "claude": { "name": "Claude", "desc": "Claude Code: varsayılan motor, Claude planın ya da bir Anthropic API anahtarı." },
-          "codex": { "name": "Codex", "desc": "OpenAI Codex CLI, ChatGPT planınla." },
-          "gemini": { "name": "Gemini", "desc": "Google Gemini CLI, bir Gemini API anahtarıyla." },
-          "openrouter": { "name": "OpenRouter", "desc": "OpenRouter'ın sunduğu her model, bir OpenRouter API anahtarıyla." }
+          "claude": {
+            "name": "Claude",
+            "desc": "Claude Code: varsayılan motor, Claude planın ya da bir Anthropic API anahtarı."
+          },
+          "codex": {
+            "name": "Codex",
+            "desc": "OpenAI Codex CLI, ChatGPT planınla."
+          },
+          "gemini": {
+            "name": "Gemini",
+            "desc": "Google Gemini CLI, bir Gemini API anahtarıyla."
+          },
+          "openrouter": {
+            "name": "OpenRouter",
+            "desc": "OpenRouter'ın sunduğu her model, bir OpenRouter API anahtarıyla."
+          }
         },
         "state": {
           "missing": "CLI bu makinede kurulu değil.",
@@ -1206,8 +1265,13 @@
         "prices": {
           "title": "Token fiyatları (1M token başına USD)",
           "hint": "Senin satırların önce denenir (ilk eşleşen kazanır), {file} dosyasında durur. Gri yerleşik satırlar salt okunurdur. Desen, model kimliğine uygulanan bir düzenli ifadedir.",
-          "match": "Model deseni", "input": "Girdi", "cached": "Önbellek", "output": "Çıktı",
-          "add": "Satır ekle", "remove": "Satırı sil", "save": "Fiyatları kaydet",
+          "match": "Model deseni",
+          "input": "Girdi",
+          "cached": "Önbellek",
+          "output": "Çıktı",
+          "add": "Satır ekle",
+          "remove": "Satırı sil",
+          "save": "Fiyatları kaydet",
           "unavailable": "Fiyatlar alınamadı: {message}"
         },
         "customSave": "Modelleri kaydet",
@@ -1520,49 +1584,362 @@
     },
     "guide": {
       "invite": "Birlikte başlayalım",
-      "btn": "İlk görev rehberi",
+      "btn": "Rehber",
       "exit": "Rehberden çık",
-      "skipStep": "Adımı geç",
       "next": "Devam",
+      "back": "Geri",
+      "sections": "Bölümler",
+      "skipSection": "Bölümü geç",
       "finish": "Bitir",
-      "done": "Rehber tamam. ? düğmesiyle yeniden açabilirsin.",
-      "counterAria": "Adım {i} / {n}",
-      "t": {
-        "pick": "Bir çalışan seç",
-        "provider": "Model bağlı mı?",
-        "folder": "Hangi klasör?",
-        "draft": "İlk görevi sen gönder",
-        "work": "Çalışıyor",
-        "result": "Sonuç ve kaynak",
-        "cost": "Maliyet ve limit"
-      },
-      "pick": "Masalardan ya da alttaki listeden bir çalışana tıkla; sohbeti açılır.",
-      "provider": "<b>{name}</b> şu modelle çalışır: <b>{model}</b> (sağlayıcı: {provider}). Cevap verebilmesi için bu sağlayıcının bağlı olması gerekir.",
+      "done": "Rehber tamamlandı. ? düğmesiyle yeniden açabilirsin.",
+      "menuTitle": "Rehber",
+      "menuIntro": "Bir bölüm seç. Her adımda geri gidebilir, adımı ya da bölümü geçebilirsin; rehber hiçbir şeyi kendi başına yapmaz, mesaj göndermez, veri değiştirmez.",
+      "menuStart": "Başla",
+      "menuResume": "Kaldığın yerden: {sec} · adım {i}",
+      "seen": "{a}/{n} görüldü",
+      "stepsN": "{n} adım",
+      "exitMenu": "Kapat",
+      "counterAria": "{sec}, adım {i} / {n}",
+      "absent": "Bu öğe şu an ekranda yok; ilgili durum oluşunca görünür. Okuyup devam edebilirsin.",
+      "needChat": "Önce bir çalışana tıkla: bu adım onun sohbet paneline bakıyor.",
+      "noEmployee": "Henüz çalışan yok. Bu adımı okuyup geçebilirsin; rehber çalışan uydurmaz.",
+      "openHire": "İşe alma sayfasını aç",
+      "openProfile": "Profil sayfasını aç",
+      "newTab": "yeni sekmede açılır",
+      "openOffices": "Ofisleri aç",
+      "recheck": "Tekrar kontrol et",
       "provLoading": "Sağlayıcı durumu okunuyor…",
-      "provNo": "{provider} bağlı değil. Ayarlar → Modeller'den kur ya da giriş yap; bağlanınca rehber kendiliğinden ilerler.",
-      "provDisabled": "{provider} kapalı. Ayarlar → Modeller'den aç.",
+      "provOk": "{provider} bağlı ve açık.",
+      "provNo": "{provider} bağlı değil. Ayarlar → Modeller'den kur ya da giriş yap; sonra Tekrar kontrol et.",
+      "provOff": "{provider} kapalı. Ayarlar → Modeller'den aç.",
       "provUnknown": "Sağlayıcı durumu okunamadı. Ayarlar → Modeller'e bak.",
-      "provOk": "{name}: {model} bağlı.",
-      "openModels": "Modelleri aç",
-      "recheck": "Yeniden denetle",
-      "folder": "Çalışanlar şu klasörde çalışır: <code>{path}</code><br>Dosyaları burada okurlar. Doğru mu?",
-      "folderOk": "Evet, doğru",
-      "folderChange": "Klasörü değiştir",
-      "draft": "Sana bir taslak hazırladım. Kutuya koy, oku, istersen düzenle ve <b>➤ ile sen gönder</b>. Rehber göndermez.",
       "putDraft": "Taslağı kutuya koy",
-      "boxBusy": "Mesaj kutusunda başka bir metin var; taslağı koymak için önce onu sil.",
-      "draftText": "Bu klasörün README dosyasını oku, amacı ve başlangıç adımlarını özetle; dosyaları değiştirme.",
-      "draftFile": "{file} dosyasını oku, amacı ve başlangıç adımlarını özetle; dosyaları değiştirme.",
-      "permission": "Çalışan <b>senden izin bekliyor</b>: sohbetteki kartta ne yapmak istediği yazıyor. Uygunsa İzin ver, değilse Reddet. Bu görevde dosya değiştirmesi gerekmez; değiştirmek isterse reddet.",
-      "working": "Çalışıyor. Cevap sohbette belirir; üstteki durum, çalıştığını ya da izin beklediğini gösterir.",
-      "failed": "Çalışan hata verdi ya da hasta. Durum etiketine bak; sohbeti ve Ayarlar → Modeller'i kontrol et.",
-      "source": "Özet, cevapta adı geçen dosyaya dayanıyor: <b>{file}</b>. Doğru dosya mı, cevaptan kontrol et.",
-      "noSource": "Cevapta bir dosya adı görünmüyor. “Hangi dosyayı okudun?” diye sorarak doğrula.",
-      "otherFile": "README bulunamadıysa başka bir metin dosyasının adını yaz (ör. CONTRIBUTING.md):",
-      "fileLabel": "Dosya adı",
-      "cost": "Harcamayı üstteki chip'ten ya da Maliyetler'den izle. Günlük limit (Claude $ ya da Codex token) yalnızca <b>otomatik işleri</b> durdurur; senin elle başlattığın sohbet çalışmaya devam eder.",
-      "costGemini": "Not: Gemini harcaması şu an maliyete ve limite sayılmıyor.",
-      "openCosts": "Maliyetleri aç"
+      "boxBusy": "Mesaj kutusunda başka bir yazı var; taslağı koymak için önce temizle.",
+      "draftText": "Bu klasörün README dosyasını oku, amacını ve başlangıç adımlarını özetle; hiçbir dosyayı değiştirme.",
+      "draftFile": "{file} dosyasını oku, amacını ve başlangıç adımlarını özetle; hiçbir dosyayı değiştirme.",
+      "draftWrite": "Bu klasördeki dosyaları oku ve bir README.md taslağı yaz (amaç, kurulum, kullanım). Herhangi bir dosyaya yazmadan önce içeriği bana göster.",
+      "noReadme": "Bu klasörde README yok; taslak bir tane yazmasını istiyor.",
+      "otherDocs": "Klasördeki diğer dokümanlar; birini seç:",
+      "source": "Yanıtta geçen dosya: <b>{file}</b>. Özetin doğru dosyaya dayandığını yanıttan kendin kontrol et.",
+      "noSource": "Yanıtta dosya adı görünmüyor. \"Hangi dosyayı okudun?\" diye sorabilirsin.",
+      "openCosts": "Maliyeti aç",
+      "costGemini": "Gemini harcaması tahmin olarak kaydedilir ve günlük toplama girer; fatura değildir.",
+      "noReply": "Henüz yanıt yok; hazır olunca burada görünür.",
+      "working": "Çalışıyor. Yanıt sohbette akar.",
+      "permWait": "Çalışan <b>iznini bekliyor</b>: sohbetteki kart ne yapmak istediğini söyler.",
+      "failed": "Çalışan hata verdi ya da hasta. Durum rozetine ve Ayarlar → Modeller'e bak.",
+      "sec": {
+        "B": {
+          "n": "Başlangıç",
+          "d": "İlk ofis ve ilk görev"
+        },
+        "E": {
+          "n": "Ekip",
+          "d": "İşe alma, profil, hafıza, beceriler"
+        },
+        "C": {
+          "n": "Sohbet",
+          "d": "Mesaj, izin, kuyruk, durdurma"
+        },
+        "T": {
+          "n": "Toplantı",
+          "d": "Başlatma, yönetme, bitirme"
+        },
+        "P": {
+          "n": "Pano",
+          "d": "Görevler, fikirler, defter"
+        },
+        "I": {
+          "n": "İzleme",
+          "d": "Gelen kutusu, etkinlik, maliyet"
+        },
+        "A": {
+          "n": "Ayarlar",
+          "d": "Genel, modeller, çalışma, sunucu"
+        },
+        "O": {
+          "n": "Ofisler",
+          "d": "Ofis açma, temalar, modlar, limitler"
+        }
+      },
+      "s": {
+        "B1": {
+          "t": "Ofis sahnesi",
+          "b": "Burası ofisin. Her piksel karakter bir yapay zeka çalışanı: üzerine gelince adı görünür, tıklayınca sohbeti açılır. Renkli nokta durumunu (boşta, çalışıyor, izin bekliyor, hata, hasta) söyler; alttaki listede aynı kişiler ve masa dışındakiler var."
+        },
+        "B2": {
+          "t": "İlk çalışanı işe al",
+          "b": "Üstteki <b>+ İşe al</b> düğmesi işe alma sayfasını açar. Henüz kimse yoksa buradan başla. Rehber kimseyi işe almaz; sadece yerini gösterir."
+        },
+        "B3": {
+          "t": "Bir çalışan seç",
+          "b": "Masadaki karaktere ya da alttaki listeden birine tıkla; sohbeti sağda açılır. Sonraki adımlar sohbet paneli üzerinde."
+        },
+        "B4": {
+          "t": "Hangi klasör?",
+          "b": "Çalışan, başlıktaki model rozetiyle çalışır ve şu klasörde dosya okur: <code>{path}</code>. Yanlışsa Ayarlar → Ofisler'den ya da çalışanın kendi ayarlarından değişir."
+        },
+        "B5": {
+          "t": "Model bağlı mı?",
+          "b": "<b>{name}</b> için model <b>{model}</b> (sağlayıcı: {provider}). Cevap verebilmesi için sağlayıcının bağlı ve açık olması gerekir."
+        },
+        "B6": {
+          "t": "İlk görevi sen gönderirsin",
+          "b": "Taslak hazır: kutuya koy, oku, istersen düzelt ve ➤ düğmesine <b>kendin bas</b>. Rehber mesajı asla göndermez. Çalışma sırasında durum rozeti çalıştığını ya da izin beklediğini gösterir; izin kartı çıkarsa sohbette karar verirsin."
+        },
+        "B7": {
+          "t": "Sonuç ve maliyet",
+          "b": "Yanıtı kendin oku ve doğru dosyaya dayandığını kontrol et; dosya adının geçmesi gerçekten okunduğunu kanıtlamaz. Harcamayı üstteki çipte ya da Maliyet panelinde izle; günlük limit yalnız <b>otomatik işleri</b> durdurur, elle başlattığın sohbet sürer."
+        },
+        "E1": {
+          "t": "İşe alma: ad, pozisyon, görev",
+          "b": "İşe alma sayfasında ad ve pozisyon zorunlu. Hazır görev tanımları pozisyonu ve komutu senin için doldurur; hepsini sonradan değiştirebilirsin."
+        },
+        "E2": {
+          "t": "İşe alma: komut, klasör, model, efor, izin",
+          "b": "Komut çalışanın nasıl davranacağını anlatır. Klasör boşsa ofis klasörü kullanılır. Model, efor ve izin modu maliyeti ve özerkliği belirler; dengeli varsayılanlarla başlamak güvenli."
+        },
+        "E3": {
+          "t": "İşe alma: görünüm ve özet",
+          "b": "Karakter editöründe vücut, ten, saç, giysi, şapka, gözlük ve renkleri seçersin; rastgele düğmesi de var. Sağdaki önizleme kartı ve alttaki özet, <b>İşe al</b>'a basmadan önce son kontroldür."
+        },
+        "E4": {
+          "t": "Profil: kimlik ve görünüm",
+          "b": "Sohbet başlığındaki ☰ çalışanın profil sayfasını açar: ad, pozisyon, görünüm ve komut burada kaydedilir; etkin klasör ve istatistikler başlıkta durur."
+        },
+        "E5": {
+          "t": "Profil: hafıza",
+          "b": "Hafıza sekmesi çalışanın kalıcı notlarını gösterir; okuyabilir ve elle düzenleyebilirsin. Toplantı özetleri de buraya yazılabilir."
+        },
+        "E6": {
+          "t": "Profil: hafızayı tazeleme",
+          "b": "Tazele düğmesi hafızayı proje değişikliklerine göre elle yeniler; otomatik tazeleme ve süresi ayrıca açılıp kapanır. Tazeleme çalışma ve maliyet demektir."
+        },
+        "E7": {
+          "t": "Profil: çalışanın becerileri",
+          "b": "Beceriler sekmesinde çalışana özel yetenekleri ekler, düzenler ve silersin. Yalnız kendi becerileridir; proje becerileri ayrı listelenir."
+        },
+        "E8": {
+          "t": "Profil: proje becerileri ve bağlayıcılar",
+          "b": "Proje becerileri salt okunur listelenir. Claude bağlayıcılarını tek tek ya da toplu açıp kapatırsın; kapalı olan çalışana verilmez."
+        },
+        "E9": {
+          "t": "Profil: geçmiş",
+          "b": "Geçmiş sekmesi son işleri ve sonuçlarını listeler; ne zaman ne yapıldığını buradan izlersin."
+        },
+        "E10": {
+          "t": "Profil: model, efor, izin, klasör",
+          "b": "Ayarlar sekmesinde modeli, eforu, izin modunu ve çalışma klasörünü değiştirirsin. İzin modları farklıdır: varsayılan mod sorar, daha serbest modlar sormadan yapar; Codex'in izinleri Claude'dan ayrıdır."
+        },
+        "E11": {
+          "t": "Profil: yönetici rolü",
+          "b": "Bir çalışan yönetici olabilir; rol bir başkasına devredilince eskisi bırakır. Yönetici görevleri planlar, sıralar ve fikirleri değerlendirir."
+        },
+        "E12": {
+          "t": "Profil: worktree ve değişiklikler",
+          "b": "Worktree açıksa çalışan ayrı bir dalda çalışır ve değişiklikleri salt okunur diff ile yeni dosyalar olarak görürsün. Kapalıysa bu alan görünmez."
+        },
+        "E13": {
+          "t": "Profil: işten çıkarma",
+          "b": "İşten çıkarma en altta ve adı yazarak onaylanır; çalışan silinmez, arşive taşınır. Rehber bu düğmeye basmaz."
+        },
+        "C1": {
+          "t": "Mesaj yaz ve gönder",
+          "b": "Enter gönderir, Shift+Enter yeni satır ekler. Görsel yapıştırabilir ya da bırakabilirsin (PNG, JPEG, GIF, WebP); göndermeden önce kaldırabilirsin. Yanıt akarak gelir ve Markdown olarak görünür."
+        },
+        "C2": {
+          "t": "İşlem grupları ve eski mesajlar",
+          "b": "Çalışanın yaptığı araç işlemleri gruplanır, açıp bakabilirsin. Eski mesajlar sayfa sayfa yüklenir; yeni mesaj gelince \"alta atla\" düğmesi çıkar."
+        },
+        "C3": {
+          "t": "İzin ve soru kartları",
+          "b": "Çalışan bir şey yapmak için izin isterse ya da soru sorarsa sohbette kart çıkar. İzin ver ya da reddet; karar senin, ona kadar bekler."
+        },
+        "C4": {
+          "t": "Mesaj kuyruğu",
+          "b": "Çalışan meşgulken yazdığın mesaj kuyruğa girer. Gönderilmeden önce geri alabilir ya da hemen araya girebilirsin; gittiyse geri alınamaz."
+        },
+        "C5": {
+          "t": "Görev oturumu",
+          "b": "Bir pano görevi üzerinde çalışırken başlıkta görev rozeti görünür. O konuşma göreve aittir; temiz oturum ayarı her görevi sıfırdan başlatır."
+        },
+        "C6": {
+          "t": "Durdur, sıfırla, kapat",
+          "b": "■ çalışanı durdurur, ⟲ konuşmayı sıfırlar (geçmiş silinir), × paneli kapatır. Sıfırlamayı bilerek kullan."
+        },
+        "C7": {
+          "t": "Hasta çalışan",
+          "b": "Hata sürerse çalışan hasta olur; 💊 onu geri gönderir. Düğme yalnız hastayken görünür. Önce Ayarlar → Modeller'de sağlayıcıya bak."
+        },
+        "C8": {
+          "t": "Bağlantı, genişlik ve bağlam",
+          "b": "Sunucuyla bağ koparsa çevrimdışı notu görürsün. Panelin sol kenarından genişliğini ayarlarsın. Bir fikir üzerinden konuşuyorsan bağlam çubuğu hangi fikir olduğunu gösterir."
+        },
+        "T1": {
+          "t": "Toplantı başlat",
+          "b": "👥 Toplantı düğmesi konu ve katılımcıları seçtiğin pencereyi açar. Tümü ya da hiçbiri düğmeleri hızlandırır. Rehber toplantıyı başlatmaz."
+        },
+        "T2": {
+          "t": "Meşgul çalışanlar ve maliyet",
+          "b": "Katılımcı meşgulse önce bitmesini beklemek ya da işini kesmek arasında seçersin. Altındaki ipucu toplantının yaklaşık maliyetini söyler; çok kişi çok maliyettir."
+        },
+        "T3": {
+          "t": "Oda: mesaj, @kişi, görsel",
+          "b": "Toplantıda odaya yazarsın; @ile birine seslenebilir, görsel ekleyebilirsin. Toplantı yoksa bu adım okunur ve geçilir."
+        },
+        "T4": {
+          "t": "Söz isteme",
+          "b": "Bir çalışan söz isterse üstte görünür: söz ver ya da sonra de. Toplantı sırasını sen yönetirsin."
+        },
+        "T5": {
+          "t": "Toplantıyı bitir",
+          "b": "Bitir düğmesi özet çıkarıp çıkarmayacağını ve hafızaya yazılıp yazılmayacağını sorar. Özetteki takip görevlerini panoya ekleyebilirsin; rehber onaylamaz."
+        },
+        "T6": {
+          "t": "Toplantı geçmişi",
+          "b": "🕘 önceki toplantıları, özetlerini ve kararlarını gösterir. Başlatma penceresinden de ulaşılır."
+        },
+        "P1": {
+          "t": "Pano ve sekmeler",
+          "b": "📋 Pano üç sekme taşır: Görevler, Fikirler, Defter. Görev tek bir işi bir kişiye verir; panoya görevi sen ya da yönetici koyar."
+        },
+        "P2": {
+          "t": "Görev oluştur",
+          "b": "Yeni görevde başlık, sahip ve ayrıntı yazarsın. \"İnceleme gerekir\" işaretlersen sahibi kapatamaz, iş sana düşer. Görev eklemek işi başlatmaz."
+        },
+        "P3": {
+          "t": "Durumlar, filtre ve toplu başlat",
+          "b": "Görev şu durumlardan geçer: yapılacak, sürüyor, inceleme, bitti, takıldı. Sahibe göre süzer, bitenleri gösterir, uygun olanları toplu başlatırsın."
+        },
+        "P4": {
+          "t": "Görev eylemleri",
+          "b": "Görev kartında başlat, yeniden gönder, durdur, sil gibi düğmeler var. Kartı açınca çekmece düzenleme ve ayrıntıyı gösterir. Başlatma çalışanı gerçekten çalıştırır ve maliyet doğurur."
+        },
+        "P5": {
+          "t": "Bağımlılık, sıra ve uyarılar",
+          "b": "Bir görev başka görevler bitince başlayacak şekilde bağlanabilir. Çekmece sırayı ve çakışma uyarılarını gösterir; açık bağımlılığı olan görev kendiliğinden bekler."
+        },
+        "P6": {
+          "t": "Notlar, süre ve konuşma kaydı",
+          "b": "Çekmecede göreve ait notlar, çalışma süresi, maliyet ve konuşma kaydı durur. Sonucu ve neyin harcandığını buradan denetlersin."
+        },
+        "P7": {
+          "t": "İnceleme: onayla ya da geri gönder",
+          "b": "İnceleme isteyen iş bitince inceleme durumuna düşer. Onaylarsan biter, geri gönderirsen sahibine yorumla döner; biten iş yeniden açılabilir."
+        },
+        "P8": {
+          "t": "Fikirler sekmesi",
+          "b": "Fikir görev değildir, kimse başlamaz: çalışanlar ve sen buraya öneri bırakırsın, karar senindir. Kartlarda efor, önerilen sahip ve yönetici tavsiyesi var."
+        },
+        "P9": {
+          "t": "Kendi fikrini ekle",
+          "b": "Başlık ve isteğe bağlı metinle kendi fikrini bırakırsın. Sonra kartı açıp düzenleyebilir, yorum yazabilirsin."
+        },
+        "P10": {
+          "t": "Fikir kararları",
+          "b": "Fikri göreve taşırsın (istersen başlatarak), ertelersin, reddedersin ya da yeniden açarsın. Öneren kişiyle o fikir üzerine sohbet edebilirsin; eski kararlar listede kalır."
+        },
+        "P11": {
+          "t": "Keşif başlat",
+          "b": "Keşif düğmesi çalışanlardan projeyi gezip yeni fikir bulmasını ister. Çalışırlar, yani maliyet doğurur; rehber düğmeye basmaz."
+        },
+        "P12": {
+          "t": "Ortak defter",
+          "b": "Defter ekibin ortak bilgisidir: bulgu, karar, rakam. Yazara göre süzer, notu açar, ekler, düzenler, siler ve etiketlersin."
+        },
+        "I1": {
+          "t": "Gelen kutusu",
+          "b": "📥 sizden bir şey bekleyenleri toplar: izinler, inceleme, sorular, yeni fikirler. Rozet sayıyı gösterir."
+        },
+        "I2": {
+          "t": "Gelen kutusunda karar",
+          "b": "İzin ve incelemeye burada karar verirsin. Soruya sohbetten cevap verilir; yeni bir fikirden panoya geçilir. Karar düğmesini rehber kullanmaz."
+        },
+        "I3": {
+          "t": "Etkinlik günlüğü",
+          "b": "🕘 ofiste olan her şeyin günlüğüdür. Beş filtreyle daraltır, ilgili göreve ya da fikre bağlantıdan gidersin."
+        },
+        "I4": {
+          "t": "Sen yokken",
+          "b": "Bir süre uzak kalınca üstte özet kartı çıkar: neler bitti, neler bekliyor. Kart yalnız yokluktan sonra görünür."
+        },
+        "I5": {
+          "t": "Harcama ve kota",
+          "b": "Üstteki çipler bugünkü harcamayı ve sağlayıcı kotasını gösterir; kota çubuğu yalnız veri varsa çıkar. Gemini tutarı tahmindir, fatura değildir."
+        },
+        "I6": {
+          "t": "Maliyet paneli",
+          "b": "Son 7 gün, çalışan, görev ve iş türü kırılımı burada. Günlük limitler yalnız otomatik işi durdurur."
+        },
+        "A1": {
+          "t": "Genel: dil",
+          "b": "Dil TR ve EN arasında seçilir ve arayüzün tamamını değiştirir. Rehber de seçtiğin dilde açılır."
+        },
+        "A2": {
+          "t": "Genel: tarayıcı bildirimi",
+          "b": "Açarsan tarayıcı, sekme arkadayken izin ve bitiş haberlerini gösterir. İzni tarayıcı sorar; rehber kutuyu işaretlemez."
+        },
+        "A3": {
+          "t": "Genel: hastalık",
+          "b": "Hastalık, tekrar eden hatada çalışanı hasta yapar. Kapatırsan hata olsa da çalışanlar hasta sayılmaz."
+        },
+        "A4": {
+          "t": "Modeller: sağlayıcılar",
+          "b": "Claude, Codex, Gemini ve OpenRouter kartları var. Her kart o sağlayıcının kurulu, girişli ve açık olup olmadığını gösterir."
+        },
+        "A5": {
+          "t": "Modeller: kur, giriş, etkinleştir",
+          "b": "Kartın sunduğu düğmeler farklıdır: kur, giriş yap, yeniden kontrol et, etkinleştir. Rehber bunları çalıştırmaz."
+        },
+        "A6": {
+          "t": "Modeller: anahtar ve ek modeller",
+          "b": "Gemini ve OpenRouter için API anahtarı ve ek model adı girilir. Anahtar gizli tutulur."
+        },
+        "A7": {
+          "t": "Modeller: fiyat desenleri",
+          "b": "Codex ve Gemini için token fiyat desenlerini ekler, silersin. Fiyatlar tahmini maliyeti hesaplar; yerleşik fiyatlar hazırdır."
+        },
+        "A8": {
+          "t": "Çalışma: özetleme ve temiz oturum",
+          "b": "Özetleme eşiği uzun konuşmayı ne zaman özetleyeceğini belirler. Temiz görev oturumu her görevi sıfırdan başlatır."
+        },
+        "A9": {
+          "t": "Çalışma: tazeleme ve senkron",
+          "b": "Varsayılan tazeleme süresi yeni çalışanlar içindir. Senkron Claude terminal ajanlarını ofisle eşler."
+        },
+        "A10": {
+          "t": "Sunucu ve kapatma",
+          "b": "Sürüm, veri yolları, adres, port ve Node burada. Global mi proje kurulumu mu olduğu da buradan anlaşılır. Kapat düğmesi onay ister; rehber basmaz."
+        },
+        "O1": {
+          "t": "Ofisler ve sekmeler",
+          "b": "Ofis ayrı bir ekip, pano, maliyet ve çalışma klasörüdür. Birden çok ofis varsa üstte sekmeler çıkar."
+        },
+        "O2": {
+          "t": "Ofis listesi",
+          "b": "Ayarlar → Ofisler mevcut ofisleri listeler; ad, klasör ve temayı düzenlersin. Boş bir ofis ikinci tıklamayla silinir."
+        },
+        "O3": {
+          "t": "Yeni ofis aç",
+          "b": "Ad zorunlu, klasör boşsa varsayılan klasör kullanılır. Ofisi eklemek ayrı bir çalışma alanı açar."
+        },
+        "O4": {
+          "t": "Temalar",
+          "b": "Yedi tema var: klasik, futbol, moda, gotik, müzik, seyahat, rüya. Tema sadece görünümdür."
+        },
+        "O5": {
+          "t": "Çalışma modu",
+          "b": "Bu ofis üç modda çalışır: elle, onaylı döngü ya da kendi kendine. Mod değişince onay istenir; kendi kendine mod para harcar."
+        },
+        "O6": {
+          "t": "Tur bütçesi ve günlük tur",
+          "b": "Tur bütçesi bir turda harcanacak üst sınırdır, günlük tur sayısı da tur adedini sınırlar. Sayıyı yazıp Enter ile onaylarsın."
+        },
+        "O7": {
+          "t": "Günlük limitler",
+          "b": "Günlük limit (Claude dolar, Codex token) yalnız otomatik işi durdurur. Dosyaların nerede durduğunu Ayarlar → Sunucu gösterir."
+        }
+      }
     }
   }
 }

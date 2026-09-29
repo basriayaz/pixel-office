@@ -21,6 +21,7 @@ const n = (Number(fs.existsSync(f) ? fs.readFileSync(f, "utf8") : 0)) + 1; fs.wr
 fs.appendFileSync(f + ".args", process.argv.slice(2).join(" ") + "\\n");
 process.stdin.resume(); process.stdin.on("end", () => {
   const lines = n <= Number(process.env.FAILS || 0) ? ${JSON.stringify(fail)} : ${JSON.stringify(ok)};
+  if (n <= Number(process.env.FAILS || 0) && process.env.FAIL_MSG) for (const l of lines) if (l.error) l.error.message = process.env.FAIL_MSG;
   for (const l of lines) console.log(JSON.stringify(l));
 });
 `, { mode: 0o755 });
@@ -98,6 +99,15 @@ for (const [engine, model, session] of [["codex", "gpt-5", "th-1"], ["gemini", "
     assert.ok(statuses.includes("error"));
     assert.equal(task.status, "blocked");
   });
+  // an error no retry fixes: no retry, and the task is blocked with the error instead of staying "doing" with an idle owner
+  process.env.FAIL_MSG = "401 Unauthorized";
+  await run(engine, model, 99, ({ retries, task, calls }) => {
+    assert.equal(calls, 1, `${engine}: no retry`);
+    assert.equal(retries.length, 0);
+    assert.equal(task.status, "blocked");
+    assert.match(task.notes.at(-1).text, /401 Unauthorized/);
+  });
+  delete process.env.FAIL_MSG;
   console.log(`${engine} ok`);
 }
 fs.rmSync(home, { recursive: true, force: true });

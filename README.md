@@ -57,7 +57,7 @@ Works on macOS, Linux and Windows (PowerShell). Switch the language any time fro
 
 ### Chat, permissions, memory
 
-Click an employee to open their chat. Replies stream in as Markdown; paste a screenshot with Ctrl+V (or drop an image file) and it goes along with your message; tool calls are collapsed into "N actions" rows; anything that touches your files or runs a command asks first — **Allow**, **Always allow** for this session, or **Deny**. Employees can also ask you multiple-choice questions.
+Click an employee to open their chat. Replies stream in as Markdown; paste a screenshot with Ctrl+V (or drop an image file) and it goes along with your message; tool calls are collapsed into "N actions" rows; permission handling depends on the provider and selected mode. Claude and OpenRouter can show permission cards — **Allow**, **Always allow** when available, or **Deny** — and multiple-choice questions. Codex and Gemini run without interactive permission cards; their modes set what they may do (see [Permissions](#permissions)).
 
 ![Permission request in the chat](docs/chat-permission.jpg)
 
@@ -120,11 +120,21 @@ Each employee is a folder:
 
 **`skills/<name>/SKILL.md`** — Claude Code skills loaded only for that employee (a checklist, a report format, a deployment procedure). Managed from the profile's Skills tab.
 
-**Sessions** — each chat is a resumable Claude Agent SDK session. The server keeps it alive across restarts; ■ interrupts the current turn; the model and cost of the session show in the chat header.
+**Sessions** — Claude chats use the Claude Agent SDK; OpenRouter uses the same SDK with OpenRouter’s Anthropic-compatible endpoint. Codex runs `codex exec` once per turn and resumes by thread ID; Gemini runs its CLI once per turn and resumes by session ID. The server saves chat session/thread IDs and uses them to resume after a restart; this does not keep a running turn alive. If a saved session is missing, a new one starts with a recap. ■ interrupts the current turn; the chat header shows the model and recorded session cost (see Token prices below).
 
 **Token prices** — Codex and Gemini report tokens, not money, so their cost is estimated from a built-in price table (USD per 1M tokens; for Codex on a ChatGPT plan it is the API-equivalent, nothing is billed). When a provider changes prices or ships a new model, put your own rows in `<dataDir>/prices.json` — e.g. `{"codex": [{"match": "gpt-6", "input": 2, "cached": 0.2, "output": 16}], "gemini": []}`; `match` is a case-insensitive regex on the model id, your rows are tried before the built-in ones, `cached` defaults to `input`. The file is picked up without a restart; `GET/PUT /api/prices` read and write it (PUT replaces the rows of the engines it names, 400 on a bad row).
 
-**Permissions** — `default` asks before every file edit and command (recommended), `acceptEdits` auto-approves file edits, `plan` is read-only, `bypassPermissions` runs everything without asking — only for narrowly scoped, trusted employees. "Always allow" in a permission card applies for the rest of the session.
+<a id="permissions"></a>
+**Permissions** — the same profile setting maps to different behavior for each provider:
+
+| Provider | `default` | `acceptEdits` | `plan` | `bypassPermissions` |
+| --- | --- | --- | --- | --- |
+| Claude | SDK permission checks; asks when an action needs approval under the current rules | SDK auto-approves file edits; other actions still follow permission rules | SDK planning mode | Skips SDK permission checks |
+| OpenRouter | Same SDK permission flow as Claude | Same as Claude | Same as Claude | Same as Claude |
+| Codex | `workspace-write` sandbox | Same as `default` | `read-only` sandbox | Bypasses approvals and sandbox |
+| Gemini | `auto_edit`: automatically approves edits; actions still requiring confirmation are refused | Same as `default` | CLI `plan` mode | CLI `yolo` mode: automatically approves actions |
+
+Claude/OpenRouter permission cards appear only when the SDK requests approval; allowed tools and existing rules can avoid a prompt. **Always allow** is offered only when the SDK supplies a reusable permission rule, which the server passes back to the SDK with its supplied scope. Codex and Gemini cannot pause for approval in this integration. Codex’s `workspace-write` mode permits writes in the workspace and employee directory, with network access enabled. Office tools are pre-approved for all four providers. Use `bypassPermissions` only for narrowly scoped, trusted employees.
 
 **Colleagues** — employees in the same office can talk to each other through two built-in tools, `list_colleagues` and `message_colleague`. A support employee can hand an order cancellation to the person who owns orders, optionally wait for their answer and report back to you. The message appears in both chats.
 
@@ -196,7 +206,18 @@ env:     PORT, PIXEL_OFFICE_HOME, PIXEL_OFFICE_LOCALE (first run), PIXEL_OFFICE_
 
 ## Security notes
 
-Employees are Claude Code sessions with file and shell access to their working folder (and, with your permission, anything else on the machine). The server therefore binds to `127.0.0.1` and has no authentication — do not expose it to a network. `bypassPermissions` runs commands without asking; use it only for narrowly scoped, trusted employees. Chat history and memories are plain files on your disk; nothing is sent anywhere except to Anthropic through Claude Code.
+Employees use Claude, Codex, Gemini or OpenRouter and can access files and run shell commands according to the selected engine and permission mode (see [Permissions](#permissions)). The working folder is not a universal security boundary. The server binds to `127.0.0.1` by default and has no login authentication; do not expose it to a network. Use `bypassPermissions` only for narrowly scoped, trusted employees; it skips approval prompts and, for Codex, also disables the sandbox.
+
+Chat history and memories are stored as plain files on your disk. Local storage does not mean local-only processing: messages, employee instructions and memory, conversation context, and any file contents, images or tool results included in model context are sent through the selected provider's route:
+
+| Provider | Model request route |
+| --- | --- |
+| Claude | Claude Agent SDK (Claude Code) → Anthropic. |
+| Codex | `codex exec` CLI → OpenAI. |
+| Gemini | Gemini CLI with the configured Gemini API key → Google. |
+| OpenRouter | Claude Agent SDK → OpenRouter's Anthropic-compatible API (`https://openrouter.ai/api`) → the model provider selected by OpenRouter's routing. Using the Claude SDK does not make this an Anthropic-only route. |
+
+These are the application's provider routes; custom runtime or environment settings can affect endpoints. Tools, shell commands and configured MCP servers/connectors may contact other services too. Data handling depends on the services involved and your account settings; Pixel Office does not guarantee that data stays on your machine or goes only to Anthropic.
 
 ## Contributing
 

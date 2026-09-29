@@ -57,7 +57,7 @@ macOS, Linux ve Windows'ta (PowerShell) çalışır. Dili istediğin zaman üst 
 
 ### Sohbet, izinler, hafıza
 
-Çalışana tıkla, sohbeti açılır. Cevaplar Markdown olarak akar; Ctrl+V ile ekran görüntüsü yapıştır (ya da görsel dosyası bırak), mesajınla birlikte gider; araç çağrıları "N işlem" satırlarında katlanır; dosyalarına dokunan ya da komut çalıştıran her şey önce sorar — **İzin ver**, bu oturum için **Hep izin ver**, ya da **Reddet**. Çalışanlar sana seçenekli soru da sorabilir.
+Çalışana tıkla, sohbeti açılır. Cevaplar Markdown olarak akar; Ctrl+V ile ekran görüntüsü yapıştır (ya da görsel dosyası bırak), mesajınla birlikte gider; araç çağrıları "N işlem" satırlarında katlanır; izin davranışı sağlayıcıya ve seçilen moda bağlıdır. Claude ve OpenRouter izin kartları — **İzin ver**, sunulduğunda **Hep izin ver**, ya da **Reddet** — ve seçenekli sorular gösterebilir. Codex ve Gemini etkileşimli izin kartları olmadan çalışır; yapabileceklerini seçilen mod belirler (bkz. [İzinler](#izinler)).
 
 ![Sohbette izin kartı](docs/chat-permission.jpg)
 
@@ -120,11 +120,21 @@ Her çalışan bir klasördür:
 
 **`skills/<ad>/SKILL.md`** — sadece o çalışana yüklenen Claude Code yetenekleri (bir kontrol listesi, rapor formatı, deploy adımları). Profilin Yetenekler sekmesinden yönetilir.
 
-**Oturumlar** — her sohbet devam ettirilebilir bir Claude Agent SDK oturumu. Sunucu yeniden başlasa da kaldığı yerden sürer; ■ o turu keser; model ve oturum maliyeti sohbet başlığında görünür.
+**Oturumlar** — Claude sohbetleri Claude Agent SDK kullanır; OpenRouter aynı SDK’yı OpenRouter’ın Anthropic uyumlu uç noktasıyla kullanır. Codex her turda bir `codex exec` süreci çalıştırır ve thread kimliğiyle devam eder; Gemini her turda bir CLI süreci çalıştırır ve oturum kimliğiyle devam eder. Sunucu sohbet oturum/thread kimliklerini kaydeder ve yeniden başlatıldıktan sonra devam etmek için kullanır; çalışmakta olan turu ayakta tutmaz. Kayıtlı oturum bulunamazsa özetle yeni bir oturum başlar. ■ o turu keser; model ve kaydedilen oturum maliyeti sohbet başlığında görünür (aşağıdaki Token fiyatları bölümüne bak).
 
 **Token fiyatları** — Codex ve Gemini para değil token bildirir; maliyetleri yerleşik bir fiyat tablosundan tahmin edilir (1M token başına USD; ChatGPT planındaki Codex için API karşılığıdır, fatura çıkmaz). Sağlayıcı fiyat değiştirir ya da yeni model çıkarsa kendi satırlarını `<dataDir>/prices.json` dosyasına yaz — örn. `{"codex": [{"match": "gpt-6", "input": 2, "cached": 0.2, "output": 16}], "gemini": []}`; `match` model kimliğine uygulanan, büyük/küçük harf duyarsız bir regex; senin satırların yerleşiklerden önce denenir, `cached` verilmezse `input` kullanılır. Dosya yeniden başlatmadan okunur; `GET/PUT /api/prices` okur ve yazar (PUT adı geçen motorların satırlarını değiştirir, hatalı satırda 400).
 
-**İzinler** — `default` her dosya düzenlemesi ve komut için sorar (önerilen), `acceptEdits` dosya düzenlemelerini otomatik onaylar, `plan` salt okunur, `bypassPermissions` sormadan çalıştırır — sadece dar görevli, güvendiğin çalışanlar için. İzin kartındaki "Hep izin ver" oturum boyunca geçerli.
+<a id="izinler"></a>
+**İzinler** — profildeki aynı ayar her sağlayıcıda farklı davranışa karşılık gelir:
+
+| Sağlayıcı | `default` | `acceptEdits` | `plan` | `bypassPermissions` |
+| --- | --- | --- | --- | --- |
+| Claude | SDK izin denetimleri; mevcut kurallara göre onay gerektiren işlemde sorar | SDK dosya düzenlemelerini otomatik onaylar; diğer işlemler izin kurallarına tabidir | SDK planlama modu | SDK izin denetimlerini atlar |
+| OpenRouter | Claude ile aynı SDK izin akışı | Claude ile aynı | Claude ile aynı | Claude ile aynı |
+| Codex | `workspace-write` sandbox | `default` ile aynı | `read-only` sandbox | Onayları ve sandbox’ı atlar |
+| Gemini | `auto_edit`: düzenlemeleri otomatik onaylar; hâlâ onay gerektiren işlemleri reddeder | `default` ile aynı | CLI `plan` modu | CLI `yolo` modu: işlemleri otomatik onaylar |
+
+Claude/OpenRouter izin kartları yalnızca SDK onay istediğinde çıkar; izinli araçlar ve mevcut kurallar sorulmadan çalışabilir. **Hep izin ver** yalnızca SDK yeniden kullanılabilir bir izin kuralı sunduğunda gösterilir; sunucu kuralı SDK’nın belirttiği kapsamla SDK’ya geri iletir. Codex ve Gemini bu entegrasyonda durup onay isteyemez. Codex’in `workspace-write` modu çalışma klasörüne ve çalışan dizinine yazmaya izin verir; ağ erişimi açıktır. Ofis araçları dört sağlayıcıda da önceden onaylıdır. `bypassPermissions` yalnızca dar görevli, güvendiğin çalışanlar için kullanılmalıdır.
 
 **Meslektaşlar** — aynı ofisteki çalışanlar `list_colleagues` ve `message_colleague` araçlarıyla birbirine yazar. Destek çalışanı bir sipariş iptalini siparişlerden sorumlu kişiye devreder, istersen cevabını bekleyip sana rapor eder. Mesaj iki sohbette de görünür.
 
@@ -197,7 +207,18 @@ ortam:      PORT, PIXEL_OFFICE_HOME, PIXEL_OFFICE_LOCALE (ilk açılış), PIXEL
 
 ## Güvenlik notları
 
-Çalışanlar, çalışma klasörüne (ve izninle makinedeki her şeye) dosya ve kabuk erişimi olan Claude Code oturumlarıdır. Sunucu bu yüzden `127.0.0.1`'e bağlanır ve kimlik doğrulaması yoktur; ağa açma. `bypassPermissions` sormadan çalıştırır; yalnızca dar görevli, güvendiğin çalışanlar için. Sohbet geçmişi ve hafızalar diskinde düz dosyadır; Claude Code üzerinden Anthropic dışında hiçbir yere gönderilmez.
+Çalışanlar Claude, Codex, Gemini veya OpenRouter kullanır; seçilen motor ve izin moduna göre dosyalara erişebilir ve kabuk komutları çalıştırabilir (bkz. [İzinler](#izinler)). Çalışma klasörü tüm motorlar için geçerli bir güvenlik sınırı değildir. Sunucu varsayılan olarak `127.0.0.1`'e bağlanır ve kullanıcı girişiyle kimlik doğrulaması yoktur; ağa açma. `bypassPermissions` modunu yalnızca dar görevli, güvendiğin çalışanlarda kullan; bu mod onay sorularını atlar ve Codex'te sandbox'ı da kapatır.
+
+Sohbet geçmişi ve hafızalar diskinde düz dosyalarda tutulur. Yerel kayıt, işlemenin yalnızca yerelde yapıldığı anlamına gelmez: mesajlar, çalışan talimatları ve hafızası, konuşma bağlamı ve model bağlamına eklenen dosya içerikleri, görseller veya araç sonuçları seçilen sağlayıcının yolu üzerinden gönderilir:
+
+| Sağlayıcı | Model isteğinin izlediği yol |
+| --- | --- |
+| Claude | Claude Agent SDK (Claude Code) → Anthropic. |
+| Codex | `codex exec` CLI → OpenAI. |
+| Gemini | Tanımlı Gemini API anahtarıyla Gemini CLI → Google. |
+| OpenRouter | Claude Agent SDK → OpenRouter'ın Anthropic uyumlu API'si (`https://openrouter.ai/api`) → OpenRouter yönlendirmesinin seçtiği model sağlayıcısı. Claude SDK kullanılması, bu yolun yalnızca Anthropic'e gittiği anlamına gelmez. |
+
+Bunlar uygulamanın sağlayıcı yollarıdır; özel çalışma zamanı veya ortam ayarları uç noktaları etkileyebilir. Araçlar, kabuk komutları ve yapılandırılmış MCP sunucuları/bağlayıcılar başka servislerle de iletişim kurabilir. Verilerin nasıl işlendiği ilgili servislere ve hesap ayarlarına bağlıdır; Pixel Office verilerin makinenizde kalacağını veya yalnızca Anthropic'e gideceğini garanti etmez.
 
 ## Katkı
 

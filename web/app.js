@@ -171,6 +171,8 @@ function handle(m) {
       break;
     case "history":
       e.messages = m.messages;
+      e.older = []; // pages read back from the archive; the live list starts over, so they are fetched again
+      e.olderMore = !!m.older;
       e.pending = m.pending;
       e.loaded = true;
       if (m.queue) setQueue(e, m.queue);
@@ -419,14 +421,16 @@ function renderChat(e) {
   endStream();
   removeTyping();
   chatBody.innerHTML = "";
-  if (e.messages.length === 0) {
+  const older = e.older || [];
+  if (e.olderMore) chatBody.appendChild(olderButton(e));
+  if (e.messages.length === 0 && !older.length && !e.olderMore) {
     const hint = document.createElement("div");
     hint.className = "empty";
     hint.innerHTML = `<img src="${office.portrait(e.id)}" alt="" /><div>${t("ui.chat.empty", { name: escapeHtml(e.name) })}</div>`;
     chatBody.appendChild(hint);
   }
   let lastDay = null;
-  for (const msg of e.messages) {
+  for (const msg of older.length ? [...older, ...e.messages] : e.messages) {
     const day = new Date(msg.ts).toDateString();
     if (day !== lastDay) { chatBody.appendChild(daySep(msg.ts)); lastDay = day; }
     appendMessage(e, msg, true);
@@ -434,6 +438,28 @@ function renderChat(e) {
   for (const ask of e.pending) chatBody.appendChild(renderAsk(e, ask));
   updateTyping(e);
   scrollDown(true);
+}
+
+// Lines past the newest 1000 live in the archive; this reads them back a page at a time, keeping the view where it was.
+function olderButton(e) {
+  const b = document.createElement("button");
+  b.type = "button";
+  b.className = "older-btn";
+  b.textContent = t("ui.chat.older");
+  b.onclick = async () => {
+    b.disabled = true;
+    const first = (e.older?.[0] || e.messages[0])?.ts ?? Date.now();
+    try {
+      const r = await api("GET", officeApi(`/employees/${encodeURIComponent(e.id)}/history?before=${first}&limit=200`));
+      if (state.selected !== e.id) return;
+      e.older = [...r.messages, ...(e.older || [])];
+      e.olderMore = r.more;
+      const fromBottom = chatBody.scrollHeight - chatBody.scrollTop;
+      renderChat(e);
+      chatBody.scrollTop = chatBody.scrollHeight - fromBottom;
+    } catch { b.disabled = false; toast(t("ui.chat.olderFailed")); }
+  };
+  return b;
 }
 
 function daySep(ts) {

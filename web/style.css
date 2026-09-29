@@ -258,6 +258,9 @@ body.resizing .chat, body.resizing .stage { transition: none; }
 .chat-body { overflow-y: auto; padding: 14px 14px 8px; display: flex; flex-direction: column; gap: 10px; }
 .empty { display: flex; gap: 12px; align-items: center; color: var(--muted); padding: 20px 8px; line-height: 1.6; }
 .empty img { width: 64px; image-rendering: pixelated; }
+.older-btn { align-self: center; background: none; color: var(--muted); font-size: 11px; padding: 4px 12px; border: 1px dashed var(--line); border-radius: 999px; margin: 4px 0 8px; cursor: pointer; }
+.older-btn:hover:not(:disabled) { color: inherit; border-style: solid; }
+.older-btn:disabled { opacity: .5; cursor: default; }
 .day-sep { align-self: center; color: var(--muted); font-size: 10px; letter-spacing: 1px; text-transform: uppercase; padding: 4px 10px; border: 1px solid var(--line); border-radius: 999px; margin: 4px 0; }
 
 .row { display: flex; gap: 8px; max-width: 100%; }

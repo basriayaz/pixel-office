@@ -149,6 +149,10 @@ const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 
 // A memory file is paid for in every session; past this size the employee is asked to condense it.
 const MEMORY_SOFT_LIMIT = 8000;
+// The chat keeps its newest HISTORY_MAX lines in memory, in history/<id>.json and in what the UI loads; older ones move to
+// history/<id>.archive.jsonl. Trimmed in steps of HISTORY_SLACK so the archive is not appended on every line.
+const HISTORY_MAX = 1000;
+const HISTORY_SLACK = 200;
 
 // Where a message is delivered: the employee's chat session, the running board task's own session, or the throw-away refresh session.
 type Target = "chat" | "task" | "side";
@@ -237,6 +241,7 @@ export class Employee extends EventEmitter {
   constructor(public cfg: EmployeeConfig, private store: Store) {
     super();
     this.history = store.loadHistory(cfg.id);
+    if (this.trimHistory()) store.saveHistory(cfg.id, this.history);
     this.sessionId = store.getSession(cfg.id);
     this.cost = store.getMeta<number>(cfg.id, "cost") ?? 0;
     this.lastActivity = [...this.history].reverse().find((m) => m.role === "user" || m.role === "assistant")?.ts ?? 0;
@@ -1062,8 +1067,9 @@ export class Employee extends EventEmitter {
         this.turnSpend = { cost: delta };
         // the plan's windows, when the CLI can tell (a plain HTTP call, no tokens), now and then
         if (this.engine === "claude" && claudeUsageDue()) this.q?.usage_EXPERIMENTAL_MAY_CHANGE_DO_NOT_RELY_ON_THIS_API_YET?.({ skipBehaviors: true }).then(fromClaudeUsage, () => {});
-        // an API error (overloaded, 429) can end a turn as "success" with is_error: in a task session it is worth a retry
-        const detail = m.subtype === "success" ? (taskOf(key) !== undefined && m.is_error && isTransient(m.result) ? m.result : undefined)
+        // an API error (overloaded, 429, model not found) can end a turn as "success" with is_error: in a task session it is
+        // worth a retry when it passes, and blocks the task when it does not
+        const detail = m.subtype === "success" ? (taskOf(key) !== undefined && m.is_error ? m.result || "error" : undefined)
           : "errors" in m && Array.isArray(m.errors) ? m.errors.join("; ") : m.subtype;
         // more turns queued inside the CLI follow without further input: the employee is not free yet
         const more = (m.queued_turn_count ?? 0) > 0 && !this.interrupting;
@@ -1112,9 +1118,20 @@ export class Employee extends EventEmitter {
     if (!detail) this.recovered = false;
     else if (!wasInterrupted) this.push({ role: "system", text: t("server.turnError", { detail }), ts: Date.now() });
     if (wasInterrupted) return; // interrupt() does the rest
+    if (detail) this.blockTaskOnError(key, detail);
     this.emit("result", { cost: this.cost, durationMs, context: this.context });
     this.applyPending();
     if (this.pending.size === 0) this.settle();
+  }
+
+  // A task turn that ended on an error no retry will fix (max turns, context full, unknown model, bad key): the task is
+  // blocked with the error, instead of staying "doing" with an idle owner that nothing ever looks at again.
+  private blockTaskOnError(key: string | undefined, detail: string) {
+    const id = taskOf(key);
+    const board = this.colleagues?.board();
+    const k = id !== undefined ? board?.tasks.find((x) => x.id === id) : undefined;
+    if (!board || !k || k.status !== "doing" || k.owner !== this.cfg.id) return;
+    board.updateTask(k.id, { status: "blocked", note: `${t("server.board.sessionError")} ${clip(detail.replace(/\s+/g, " "), 300)}` }, "system");
   }
 
   // The ledger hears of every finished turn that spent something, whatever happens to the turn afterwards.
@@ -1468,8 +1485,21 @@ export class Employee extends EventEmitter {
     this.history.push(msg);
     if (msg.role === "assistant") this.turnTexts.push(msg.text);
     if (msg.role === "user" || msg.role === "assistant" || msg.role === "colleague") this.lastActivity = msg.ts;
+    this.trimHistory();
     this.store.saveHistory(this.cfg.id, this.history);
     this.emit("message", msg);
+  }
+
+  // Moves the oldest lines to the archive once the chat is HISTORY_SLACK past HISTORY_MAX. A boss message still queued stays
+  // (it is re-queued from the history at start), and so does everything after it. True when something moved.
+  private trimHistory(): boolean {
+    if (this.history.length <= HISTORY_MAX + HISTORY_SLACK) return false;
+    const queued = this.history.findIndex((m) => m.queued);
+    const cut = Math.min(this.history.length - HISTORY_MAX, queued < 0 ? Infinity : queued);
+    if (cut <= 0) return false;
+    this.store.archiveHistory(this.cfg.id, this.history.slice(0, cut));
+    this.history.splice(0, cut);
+    return true;
   }
 
   private setStatus(s: Status, reason?: string) {

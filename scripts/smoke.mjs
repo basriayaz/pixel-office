@@ -20,6 +20,12 @@ try {
   if (!html.includes("<canvas")) throw new Error("index.html has no canvas");
   const emps = await (await fetch(`http://127.0.0.1:${port}/api/offices/${opts.offices[0].id}/employees`)).json();
   if (emps.length !== 3) throw new Error(`expected 3 sample employees, got ${emps.length}`);
+  const older = await fetch(`http://127.0.0.1:${port}/api/offices/${opts.offices[0].id}/employees/${emps[0].id}/history?limit=5`);
+  const olderBody = await older.json();
+  if (!older.ok || !Array.isArray(olderBody.messages) || olderBody.more !== false) throw new Error("bad /history");
+  if ((await fetch(`http://127.0.0.1:${port}/api/offices/${opts.offices[0].id}/employees/${emps[0].id}/history?limit=0`)).status !== 400) throw new Error("/history accepts limit=0");
+  const docs = await (await fetch(`http://127.0.0.1:${port}/api/offices/${opts.offices[0].id}/readme`)).json();
+  if (!Array.isArray(docs.files) || !("readme" in docs) || docs.files.some((f) => f.includes("/"))) throw new Error("bad /readme");
   const r = await fetch(`http://127.0.0.1:${port}/api/shutdown`, { method: "POST" });
   if (!r.ok) throw new Error("shutdown failed");
   await sleep(1500);

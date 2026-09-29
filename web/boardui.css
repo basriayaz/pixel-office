@@ -111,3 +111,15 @@
 .board-list { grid-auto-rows: max-content; }
 .board-card .tabs button { white-space: nowrap; }
 #boardManager { flex: 1 1 0; min-width: 0; max-width: max-content; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* idea card: talking it over with the proposer, and what the proposer changed */
+.pill.edited { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 55%, var(--line)); }
+.idea-card .note-head[role="button"] { cursor: pointer; }
+.idea-card .note-head:focus-visible, .idea-tag:focus-visible, .idea-chat :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 8px; }
+.idea-edits { display: grid; gap: 6px; border-left: 2px solid var(--accent); padding: 4px 0 4px 10px; font-size: 12.5px; }
+.idea-edits-h { font-size: 10.5px; letter-spacing: .4px; text-transform: uppercase; color: var(--muted); }
+.idea-edit { display: grid; gap: 2px; min-width: 0; overflow-wrap: anywhere; }
+.idea-chat { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.idea-chat label { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; font-size: 12.5px; color: var(--muted); flex: 1 1 220px; }
+.idea-chat select { height: 32px; background: var(--card); color: var(--text); border: 1px solid var(--line); border-radius: 8px; padding: 0 10px; font: inherit; font-size: 12.5px; min-width: 0; flex: 1 1 140px; }
+.idea-warn { flex: 1 1 100%; color: var(--waiting); font-size: 12.5px; }

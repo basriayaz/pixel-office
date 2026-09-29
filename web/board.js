@@ -94,7 +94,19 @@ const boardUI = (() => {
     return null;
   }
 
+  // an employee changed an idea while the boss looked elsewhere: say what changed (first sight of the board is silent)
+  const seenRev = new Map();
+  function announceIdeaEdits() {
+    for (const x of board().ideas) {
+      const prev = seenRev.get(x.id);
+      seenRev.set(x.id, x.rev ?? 0);
+      const last = x.edits?.[x.edits.length - 1];
+      if (prev !== undefined && (x.rev ?? 0) > prev && last && last.by !== "user" && last.ts > Date.now() - 60e3) toast(t("ui.board.ideaEditedToast", { name: last.byName, id: x.id, summary: last.summary }));
+    }
+  }
+
   function badge() {
+    announceIdeaEdits();
     const n = board().tasks.filter((k) => k.status === "blocked" || k.status === "review" || ["waiting", "error", "orphan", "stalled"].includes(alertOf(k))).length; // what needs the boss
     const fresh = board().ideas.filter((x) => x.status === "new").length; // ideas nobody has decided on yet
     const el = $("boardBadge");
@@ -412,6 +424,43 @@ const boardUI = (() => {
     for (const x of ideas) host.appendChild(ideaCard(x));
   }
 
+  // messages about this idea that its proposer has not read yet, and why they wait
+  function ideaWaiting(x) {
+    const e = emp(x.by);
+    const n = e?.queue?.filter((q) => q.ideaId === x.id).length ?? 0;
+    return n ? { name: e.name, n } : null;
+  }
+
+  // The idea's proposer is who to talk it over with; for the boss's own ideas or a deleted proposer the boss picks someone.
+  function openIdeaChat(x, card) {
+    const e = x.by !== "user" ? emp(x.by) : null;
+    if (e) return startIdeaChat(x, e.id);
+    const box = card.querySelector(".idea-chat");
+    box.hidden = false;
+    box.innerHTML = "";
+    const lab = document.createElement("label"); lab.textContent = t(x.by === "user" ? "ui.board.ideaChatPickOwn" : "ui.board.ideaChatPickGone");
+    const sel = document.createElement("select"); sel.innerHTML = `<option value="">${escapeHtml(t("ui.board.ideaOwner"))}…</option>${ownerOptions("", false)}`;
+    lab.appendChild(sel);
+    const go = document.createElement("button"); go.type = "button"; go.className = "btn small primary"; go.textContent = t("ui.board.ideaChatStart");
+    go.onclick = () => sel.value ? startIdeaChat(x, sel.value) : toast(t("ui.board.ideaPickOwner"));
+    box.append(lab, go); sel.focus();
+  }
+  function startIdeaChat(x, empId) {
+    hide();
+    startChatAbout({ id: x.id, title: x.title }, empId);
+  }
+  function focusIdea(id) {
+    const x = board().ideas.find((i) => i.id === id);
+    tab = "ideas"; if (x && x.status !== "new" && x.status !== "later") ideaShowAll = true;
+    show();
+    requestAnimationFrame(() => {
+      const c = document.getElementById("idea-" + id);
+      if (!c) { toast(t("ui.board.ideaGone", { id })); return; }
+      if (!c.classList.contains("open")) c.querySelector(".note-head").click();
+      requestAnimationFrame(() => { const n = document.getElementById("idea-" + id); n?.scrollIntoView({ block: "center" }); n?.querySelector(".note-head")?.focus(); });
+    });
+  }
+
   function ideaCard(x) {
     const ranked = board().ideas.some((i) => i.rank && i.status === "new");
     const key = "i" + x.id, isOpen = open.has(key) ? !(x.status === "new" && (!ranked || x.rank)) : x.status === "new" && (!ranked || !!x.rank);
@@ -420,13 +469,22 @@ const boardUI = (() => {
     const avatar = `<span class="pav">${x.by !== "user" && emp(x.by) ? `<img src="${office.portrait(x.by)}" alt="" />` : `<span class="prow-icon">★</span>`}</span>`;
     const chosen = ideaOwner.get(x.id) ?? x.owner ?? "";
     const live = x.status === "new" || x.status === "later";
-    const pills = `<span class="pill st-${x.status}">${escapeHtml(t(`ui.board.ideaStatus.${x.status}`))}</span>${x.rank && x.status !== "moved" ? `<span class="pill rank" title="${escapeHtml(t("ui.board.ideaRankHint"))}">${escapeHtml(t("ui.board.ideaRank", { n: x.rank }))}</span>` : ""}${x.effort ? `<span class="pill eff">${escapeHtml(t(`ui.board.ideaEffort.${x.effort}`))}</span>` : ""}${x.taskId ? `<span class="pill">${escapeHtml(t("ui.board.ideaMoved", { id: x.taskId }))}</span>` : ""}`;
+    const pills = `<span class="pill st-${x.status}">${escapeHtml(t(`ui.board.ideaStatus.${x.status}`))}</span>${x.rank && x.status !== "moved" ? `<span class="pill rank" title="${escapeHtml(t("ui.board.ideaRankHint"))}">${escapeHtml(t("ui.board.ideaRank", { n: x.rank }))}</span>` : ""}${x.effort ? `<span class="pill eff">${escapeHtml(t(`ui.board.ideaEffort.${x.effort}`))}</span>` : ""}${x.owner && emp(x.owner) ? `<span class="pill">${escapeHtml(t("ui.board.ideaDoer", { name: emp(x.owner).name }))}</span>` : ""}${x.edits?.length ? `<span class="pill edited">✎ ${escapeHtml(t("ui.board.ideaEdited"))}</span>` : ""}${x.taskId ? `<span class="pill">${escapeHtml(t("ui.board.ideaMoved", { id: x.taskId }))}</span>` : ""}`;
+    const edits = (x.edits || []).slice(-3).reverse();
+    const editsHtml = edits.length ? `<div class="idea-edits" role="group" aria-label="${escapeHtml(t("ui.board.ideaEditsLabel"))}"><span class="idea-edits-h">${escapeHtml(t("ui.board.ideaEditsLabel"))}</span>${edits.map((ed) => `<div class="idea-edit"><b>${escapeHtml(ed.byName)}</b> · ${when(ed.ts)} ${ed.fields.map((f) => `<span class="mchip">${escapeHtml(t(`ui.board.ideaField.${f}`))}</span>`).join("")}<div>${escapeHtml(ed.summary)}</div></div>`).join("")}</div>` : "";
     card.innerHTML = `<div class="note-head"><span class="idea-bulb">💡</span><div class="task-main"><div class="task-title"><b>#${x.id}</b> ${escapeHtml(x.title)}</div><div class="idea-pills">${pills}</div></div></div>
       ${x.text ? `<div class="note-text${isOpen ? "" : " clamp"}">${md(x.text)}</div>` : ""}
+      ${editsHtml}
       ${x.advice ? `<div class="idea-advice"><span>${escapeHtml(t("ui.board.ideaAdvice"))}</span>${escapeHtml(x.advice)}</div>` : ""}
       <div class="idea-foot"><span class="idea-by">${avatar}<span>${escapeHtml(x.byName)} · ${when(x.ts)}</span>${x.tags.map((g) => `<span class="mchip">${escapeHtml(g)}</span>`).join("")}</span>${x.comment && !isOpen ? `<span class="idea-comment">${escapeHtml(x.comment)}</span>` : ""}</div>
-      <div class="note-actions"${isOpen ? "" : " hidden"}>${live ? `<select class="i-owner"><option value="">${escapeHtml(t("ui.board.ideaOwner"))}…</option>${ownerOptions(chosen, false)}</select><input class="i-comment" data-draft="i-comment:${x.id}" maxlength="600" placeholder="${escapeHtml(t("ui.board.ideaComment"))}" value="${escapeHtml(draft(`i-comment:${x.id}`, x.comment || ""))}" />` : ""}<span class="i-buttons"></span></div>`;
-    card.querySelector(".note-head").onclick = () => { open.has(key) ? open.delete(key) : open.add(key); renderIdeas(); };
+      <div class="note-actions"${isOpen ? "" : " hidden"}>${live ? `<select class="i-owner"><option value="">${escapeHtml(t("ui.board.ideaOwner"))}…</option>${ownerOptions(chosen, false)}</select><input class="i-comment" data-draft="i-comment:${x.id}" maxlength="600" placeholder="${escapeHtml(t("ui.board.ideaComment"))}" value="${escapeHtml(draft(`i-comment:${x.id}`, x.comment || ""))}" />` : ""}<span class="i-buttons"></span></div>
+      <div class="idea-chat" hidden></div>`;
+    card.id = "idea-" + x.id;
+    const head = card.querySelector(".note-head");
+    head.tabIndex = 0; head.setAttribute("role", "button"); head.setAttribute("aria-expanded", String(isOpen));
+    const toggle = () => { open.has(key) ? open.delete(key) : open.add(key); renderIdeas(); document.getElementById(card.id)?.querySelector(".note-head")?.focus(); };
+    head.onclick = toggle;
+    head.onkeydown = (ev) => { if (ev.target === head && (ev.key === "Enter" || ev.key === " ")) { ev.preventDefault(); toggle(); } };
     const buttons = card.querySelector(".i-buttons");
     const btn = (label, cls, fn) => { const b = document.createElement("button"); b.type = "button"; b.className = "btn small " + cls; b.textContent = label; b.onclick = fn; buttons.appendChild(b); };
     const comment = () => card.querySelector(".i-comment")?.value.trim() ?? "";
@@ -436,10 +494,25 @@ const boardUI = (() => {
       const move = async (start) => {
         const owner = card.querySelector(".i-owner").value;
         if (!owner) { toast(t("ui.board.ideaPickOwner")); return; }
-        if (comment() !== (x.comment || "")) await call("PUT", `${API()}/ideas/${x.id}`, { comment: comment() });
+        const waiting = ideaWaiting(x);
+        if (waiting && !card.dataset.confirmMove) { // a question about this idea is still unanswered: decide first
+          card.dataset.confirmMove = "1";
+          const box = card.querySelector(".idea-chat");
+          box.hidden = false;
+          box.innerHTML = `<div class="idea-warn" role="alert">${escapeHtml(t("ui.board.ideaPendingChat", { name: waiting.name, n: waiting.n }))}</div>`;
+          const go = document.createElement("button"); go.type = "button"; go.className = "btn small primary"; go.textContent = t("ui.board.ideaMoveAnyway");
+          go.onclick = () => move(start);
+          const back = document.createElement("button"); back.type = "button"; back.className = "btn small ghost"; back.textContent = t("ui.board.ideaCancelMove");
+          back.onclick = () => { delete card.dataset.confirmMove; box.hidden = true; box.innerHTML = ""; };
+          box.append(go, back); go.focus();
+          return;
+        }
+        // the note must be saved before anything becomes a task; a refused save (changed meanwhile, gone) stops here
+        if (comment() !== (x.comment || "")) { if (!(await call("PUT", `${API()}/ideas/${x.id}`, { comment: comment(), rev: x.rev ?? 0 }))) return; }
         const k = await act(() => call("POST", `${API()}/ideas/${x.id}/promote`, { owner, start }));
-        if (k) toast(t("ui.board.ideaMovedToast", { id: k.id }));
+        if (k) toast(t(`ui.board.ideaMovedToast.${k.launch || "moved"}`, { id: k.id, name: who(owner) }));
       };
+      btn(t("ui.board.ideaChat"), "ghost", () => openIdeaChat(x, card));
       btn(t("ui.board.ideaMove"), "primary", () => move(false));
       btn(t("ui.board.ideaMoveStart"), "ok", () => move(true));
       if (x.status === "new") btn(t("ui.board.ideaLater"), "ghost", () => act(() => call("PUT", `${API()}/ideas/${x.id}`, { status: "later", comment: comment() })));
@@ -521,5 +594,5 @@ const boardUI = (() => {
 
   setInterval(() => refresh(undefined, "status"), 30e3); // "stalled" depends on the clock
 
-  return { refresh, show };
+  return { refresh, show, focusIdea };
 })();

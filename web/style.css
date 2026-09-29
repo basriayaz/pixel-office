@@ -575,3 +575,11 @@ body.offline .chat-foot button { background: var(--line); color: var(--muted); c
 .board-mode input { width: 64px; }
 .board-mode small { flex: 1 1 100%; }
 .field.dim { opacity: .5; }
+
+/* chat opened from an idea card */
+.idea-ctx { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; padding: 6px 14px; border-top: 1px solid var(--line); background: color-mix(in srgb, var(--accent) 10%, transparent); font-size: 12px; }
+.idea-ctx span { flex: 1 1 160px; min-width: 0; overflow-wrap: anywhere; }
+.idea-ctx[hidden] { display: none; }
+.idea-tag { display: inline-block; margin: 0 6px 4px 0; padding: 1px 8px; border-radius: 999px; border: 1px solid var(--line); background: var(--card); color: var(--accent); font: inherit; font-size: 11px; cursor: pointer; }
+.idea-tag:hover { border-color: var(--accent); }
+.idea-tag:focus-visible, .idea-ctx .queue-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }

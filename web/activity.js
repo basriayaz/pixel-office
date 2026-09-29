@@ -76,7 +76,7 @@ const activityUI = (() => {
   const dayLabel = (ts) => new Date(ts).toDateString() === new Date().toDateString() ? t("ui.chat.today") : new Date(ts).toLocaleDateString(LOCALE_TAG, { weekday: "short", day: "numeric", month: "long" });
 
   // one glyph and one tone per kind: done is green, things waiting on the boss yellow, trouble red
-  const ICONS = { task_created: "＋", task_status: "→", task_owner: "⇄", task_started: "▶", task_edited: "✎", idea_new: "💡", idea_promoted: "💡", pm_woken: "★", discovery_start: "🔭", discovery_end: "🔭", mode_change: "⚙", cap_reached: "⛔", cap_changed: "$", emp_error: "⚠", emp_sick: "🤒", ask: "🔐", question: "💬", meeting_start: "🗣", meeting_end: "🗣", hired: "👋", fired: "👋", server_start: "⏻", run_end: "■" };
+  const ICONS = { task_created: "＋", task_status: "→", task_owner: "⇄", task_started: "▶", task_edited: "✎", idea_new: "💡", idea_promoted: "💡", idea_edited: "✎", pm_woken: "★", discovery_start: "🔭", discovery_end: "🔭", mode_change: "⚙", cap_reached: "⛔", cap_changed: "$", emp_error: "⚠", emp_sick: "🤒", ask: "🔐", question: "💬", meeting_start: "🗣", meeting_end: "🗣", hired: "👋", fired: "👋", server_start: "⏻", run_end: "■" };
   const tone = (ev) => {
     if (ev.kind === "emp_error" || ev.kind === "cap_reached" || ev.kind === "emp_sick") return "bad";
     if (ev.kind === "task_status") return ev.data?.to === "done" ? "good" : ev.data?.to === "blocked" ? "bad" : ev.data?.to === "review" ? "warn" : "";

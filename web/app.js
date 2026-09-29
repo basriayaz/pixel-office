@@ -147,13 +147,13 @@ function handle(m) {
     return;
   }
   if (m.type === "meeting" || m.type === "meeting_entry") { meetingUI.onMessage(m); return; }
-  if (m.type === "board") { const o = state.offices.get(m.office); if (o) { o.board = m.board; boardUI.refresh(m.office); } panelsChanged("board", m.office); return; }
+  if (m.type === "board") { const o = state.offices.get(m.office); if (o) { o.board = m.board; boardUI.refresh(m.office); if (m.office === state.office) renderIdeaCtx(); } panelsChanged("board", m.office); return; }
   // spend today and the daily cap; plan limits (global); one line of the office's activity log
   if (m.type === "costs") { const o = state.offices.get(m.office); if (o) o.costs = { today: m.today, todayTokens: m.todayTokens, cap: m.cap }; panelsChanged("costs", m.office); return; }
   if (m.type === "quota") { state.quota = m.quota; panelsChanged("quota"); return; }
   if (m.type === "activity") { panelsChanged("activity", m.office, m.event); return; }
   // something the server could not do for us (a websocket request that failed): say so instead of failing silently
-  if (m.type === "error") { toast(t("ui.toast.error", { message: m.error || "?" })); return; }
+  if (m.type === "error") { if (lastSend && m.id === lastSend.emp && Date.now() - lastSend.ts < 8000 && !input.value.trim()) { input.value = lastSend.text; autoGrow(); lastSend = null; } toast(t("ui.toast.error", { message: m.error || "?" })); return; }
   const e = employeesOf(m.office)?.get(m.id);
   if (!e) return;
   const current = m.office === state.office;
@@ -340,7 +340,7 @@ function clearAttachments() { chatAttachments.clear(); }
 
 function openChat(id) {
   if (meetingUI.intercept(id)) return;
-  if (state.selected !== id) clearAttachments();
+  if (state.selected !== id) { clearAttachments(); if (state.chatIdea && state.chatIdea.emp !== id) clearIdeaCtx(); }
   const e = cur()?.employees.get(id);
   if (!e) return;
   state.selected = id;
@@ -354,11 +354,13 @@ function openChat(id) {
   panelsChanged("unread", state.office);
   if (e.loaded) renderChat(e);
   else { chatBody.innerHTML = ""; send({ type: "open", id }); }
+  renderIdeaCtx();
   setTimeout(() => { office.fit(); $("chatInput").focus(); }, 260);
 }
 
 function closeChat() {
   clearAttachments();
+  clearIdeaCtx();
   state.selected = null;
   office.setSelected(null);
   document.body.classList.remove("chat-open");
@@ -473,6 +475,35 @@ function appendMessage(e, msg, bulk = false) {
   chatBody.appendChild(buildRow(e, msg));
 }
 
+// A boss message written from an idea card carries a visible "Idea #N" tag that leads back to the card.
+const ideaTag = (msg) => msg.ideaId != null ? `<button type="button" class="idea-tag" data-idea="${Number(msg.ideaId)}" title="${escapeHtml(t("ui.chat.ideaBack"))}">💡 ${escapeHtml(t("ui.chat.ideaTag", { id: msg.ideaId }))}</button>` : "";
+function ideaWaitReason(e, meeting) {
+  if (meeting) return t("ui.chat.ideaWaitMeeting");
+  if (e.task != null) return t("ui.chat.ideaWaitTask", { id: e.task });
+  return t("ui.chat.ideaWaitBusy", { name: e.name });
+}
+chatBody.addEventListener("click", (ev) => { const b = ev.target.closest(".idea-tag"); if (b) boardUI.focusIdea(Number(b.dataset.idea)); });
+
+// ---- talking an idea over with its proposer: the chat carries "Idea #N" until the boss drops it ----
+function ideaOf(id) { return cur()?.board?.ideas?.find((x) => x.id === id); }
+function renderIdeaCtx() {
+  const box = $("ideaCtx"), c = state.chatIdea;
+  const show = !!c && c.office === state.office && c.emp === state.selected;
+  box.hidden = !show;
+  if (!show) return;
+  const x = ideaOf(c.id);
+  $("ideaCtxLabel").textContent = t("ui.chat.ideaCtx", { id: c.id, title: x?.title ?? "" });
+  input.placeholder = t("ui.chat.ideaPlaceholder", { id: c.id });
+}
+function clearIdeaCtx() { state.chatIdea = null; renderIdeaCtx(); input.placeholder = t("ui.chat.placeholder"); }
+function startChatAbout(idea, empId) {
+  state.chatIdea = { id: idea.id, office: state.office, emp: empId };
+  openChat(empId);
+  renderIdeaCtx();
+}
+$("ideaCtxBack").onclick = () => { if (state.chatIdea) boardUI.focusIdea(state.chatIdea.id); };
+$("ideaCtxDrop").onclick = () => { clearIdeaCtx(); input.focus(); };
+
 function buildRow(e, msg) {
   const row = document.createElement("div");
   row.className = "row " + msg.role;
@@ -485,19 +516,20 @@ function buildRow(e, msg) {
       // held until the running turn ends; no model has seen it yet, so it can still be taken back
       row.classList.add("queued");
       const task = e.queue?.find((q) => q.id === msg.id)?.task ?? null;
-      const where = task != null ? t("ui.chat.queuedTask", { id: task }) : t("ui.chat.queued");
       // no "interrupt" while the employee sits in a meeting: that turn is the meeting answer, and the queue waits for the end anyway
       const meeting = typeof meetingUI !== "undefined" && meetingUI.has(e.id);
+      const where = msg.ideaId != null ? ideaWaitReason(e, meeting) : task != null ? t("ui.chat.queuedTask", { id: task }) : t("ui.chat.queued");
       const now = meeting ? "" : `<button type="button" class="queue-btn now" title="${escapeHtml(t("ui.chat.deliverNowTip"))}">${escapeHtml(t("ui.chat.deliverNow"))}</button>`;
-      row.innerHTML = `<div class="row-main"><div class="bubble">${imgs}${escapeHtml(msg.text)}</div><div class="row-meta queue-meta"><span class="queue-label" title="${escapeHtml(t("ui.chat.queuedTip"))}">⏳ ${escapeHtml(where)}</span><button type="button" class="queue-btn undo" title="${escapeHtml(t("ui.chat.unqueueTip"))}">${escapeHtml(t("ui.chat.unqueue"))}</button>${now}</div></div>`;
+      row.innerHTML = `<div class="row-main"><div class="bubble">${ideaTag(msg)}${imgs}${escapeHtml(msg.text)}</div><div class="row-meta queue-meta"><span class="queue-label" title="${escapeHtml(t("ui.chat.queuedTip"))}">⏳ ${escapeHtml(where)}</span><button type="button" class="queue-btn undo" title="${escapeHtml(t("ui.chat.unqueueTip"))}">${escapeHtml(t("ui.chat.unqueue"))}</button>${now}</div></div>`;
       row.querySelector(".undo").onclick = (ev) => {
         ev.currentTarget.disabled = true;
         if (msg.text) undoing.set(msg.id, msg.text);
         if (!send({ type: "unqueue", id: e.id, msgId: msg.id })) { undoing.delete(msg.id); ev.currentTarget.disabled = false; }
       };
+      row.querySelector(".undo").textContent = msg.ideaId != null ? t("ui.chat.ideaGiveUp") : t("ui.chat.unqueue");
       const nowBtn = row.querySelector(".now");
       if (nowBtn) nowBtn.onclick = (ev) => { ev.currentTarget.disabled = true; if (!send({ type: "deliver_now", id: e.id })) ev.currentTarget.disabled = false; };
-    } else row.innerHTML = `<div class="row-main"><div class="bubble">${imgs}${escapeHtml(msg.text)}</div><div class="row-meta">${timeStr(msg.ts)}</div></div>`;
+    } else row.innerHTML = `<div class="row-main"><div class="bubble">${ideaTag(msg)}${imgs}${escapeHtml(msg.text)}</div><div class="row-meta">${timeStr(msg.ts)}</div></div>`;
   } else if (msg.role === "colleague") {
     row.innerHTML = `<div class="row-main"><div class="row-meta">💬 ${escapeHtml(t("ui.chat.fromColleague", { name: msg.from || "" }))} · ${timeStr(msg.ts)}</div><div class="bubble">${md(msg.text)}</div></div>`;
   } else if (msg.role === "meeting") {
@@ -753,13 +785,17 @@ function makeAttachments(inputEl, hostEl, dropEl, canDrop = () => true) {
 }
 const chatAttachments = makeAttachments(input, $("chatAttach"), $("chat"), () => !!state.selected);
 
+let lastSend = null; // the last idea message, to give the text back if the server refuses it
 $("chatForm").onsubmit = (ev) => {
   ev.preventDefault();
   const text = input.value.trim();
   if ((!text && !chatAttachments.length) || !state.selected) return;
   if (!isOnline()) { toast(t("ui.toast.noConnection")); return; } // keep the text and the images until the server is back
+  const c = state.chatIdea && state.chatIdea.office === state.office && state.chatIdea.emp === state.selected ? state.chatIdea : null;
+  if (c && !ideaOf(c.id)) { toast(t("ui.chat.ideaGone", { id: c.id })); clearIdeaCtx(); return; } // the card is gone: nothing goes out, the text stays
   const images = chatAttachments.take();
-  if (!send({ type: "send", id: state.selected, text, ...(images.length ? { images } : {}) })) return;
+  if (!send({ type: "send", id: state.selected, text, ...(c ? { ideaId: c.id } : {}), ...(images.length ? { images } : {}) })) return;
+  lastSend = c ? { text, ts: Date.now(), emp: state.selected } : null;
   input.value = "";
   autoGrow();
 };

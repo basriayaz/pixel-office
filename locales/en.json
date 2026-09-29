@@ -495,7 +495,8 @@
       "none": "Nothing spent yet.",
       "kind": { "chat": "chat", "task": "tasks", "refresh": "refresh", "meeting": "meetings", "discovery": "discovery" },
       "meetingSummary": "Meeting summary",
-      "codexNote": "Codex employees run on your ChatGPT plan, so they show tokens, not dollars."
+      "codexNote": "Codex employees run on your ChatGPT plan, so they show tokens, not dollars.",
+      "estimateNote": "Codex and Gemini amounts are estimates from token prices, not a bill. Adjust the prices in Settings → Models."
     },
     "status": {
       "list": "List view: everyone on one row each",
@@ -1191,6 +1192,13 @@
         "modelsTitle": "{n} models",
         "noModels": "No models yet.",
         "custom": "Extra model ids (comma separated)",
+        "prices": {
+          "title": "Token prices (USD per 1M tokens)",
+          "hint": "Your rows come first (first match wins) and sit in {file}. Grey built-in rows are read-only. The pattern is a regular expression tested against the model id.",
+          "match": "Model pattern", "input": "Input", "cached": "Cached", "output": "Output",
+          "add": "Add row", "remove": "Remove row", "save": "Save prices",
+          "unavailable": "Prices unavailable: {message}"
+        },
         "customSave": "Save models",
         "version": "version {v}"
       },

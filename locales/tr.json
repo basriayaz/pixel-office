@@ -495,7 +495,8 @@
       "none": "Henüz harcama yok.",
       "kind": { "chat": "sohbet", "task": "görevler", "refresh": "yenileme", "meeting": "toplantılar", "discovery": "keşif" },
       "meetingSummary": "Toplantı özeti",
-      "codexNote": "Codex çalışanları ChatGPT planınla çalışır; bu yüzden dolar değil token gösterilir."
+      "codexNote": "Codex çalışanları ChatGPT planınla çalışır; bu yüzden dolar değil token gösterilir.",
+      "estimateNote": "Codex ve Gemini tutarları token fiyatlarından hesaplanmış tahmindir, fatura değildir. Fiyatları Ayarlar → Modeller'den düzenleyebilirsin."
     },
     "status": {
       "list": "Liste görünümü: herkes tek satırda",
@@ -1191,6 +1192,13 @@
         "modelsTitle": "{n} model",
         "noModels": "Henüz model yok.",
         "custom": "Ek model kimlikleri (virgülle ayır)",
+        "prices": {
+          "title": "Token fiyatları (1M token başına USD)",
+          "hint": "Senin satırların önce denenir (ilk eşleşen kazanır), {file} dosyasında durur. Gri yerleşik satırlar salt okunurdur. Desen, model kimliğine uygulanan bir düzenli ifadedir.",
+          "match": "Model deseni", "input": "Girdi", "cached": "Önbellek", "output": "Çıktı",
+          "add": "Satır ekle", "remove": "Satırı sil", "save": "Fiyatları kaydet",
+          "unavailable": "Fiyatlar alınamadı: {message}"
+        },
         "customSave": "Modelleri kaydet",
         "version": "sürüm {v}"
       },

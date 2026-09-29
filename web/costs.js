@@ -111,7 +111,7 @@ const costsUI = (() => {
       ${empRows ? `<table class="ctable"><thead><tr><th></th><th>${escapeHtml(t("ui.costs.today"))}</th><th>${escapeHtml(t("ui.costs.days", { n: (r.days || []).length || 7 }))}</th><th>Codex</th></tr></thead><tbody>${empRows}</tbody></table>` : `<div class="muted">${escapeHtml(t("ui.costs.none"))}</div>`}
       <h3>${escapeHtml(t("ui.costs.byTask"))}</h3>
       ${taskRows ? `<table class="ctable"><tbody>${taskRows}</tbody></table>` : `<div class="muted">${escapeHtml(t("ui.costs.none"))}</div>`}
-      <p class="muted cnote">${escapeHtml(t("ui.costs.codexNote"))}</p>`;
+      <p class="muted cnote">${escapeHtml(t("ui.costs.codexNote"))} ${escapeHtml(t("ui.costs.estimateNote"))}</p>`;
     host.querySelectorAll("tr[data-task]").forEach((tr) => (tr.onclick = () => { modal.hide(); openTask(Number(tr.dataset.task)); }));
     $("capForm").onsubmit = async (ev) => {
       ev.preventDefault();

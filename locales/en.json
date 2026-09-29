@@ -27,6 +27,12 @@
     "sessionError": "Session error.",
     "error": "Error: {message}",
     "turnError": "Turn ended with an error: {detail}",
+    "retry": {
+      "scheduled": "Temporary provider error ({detail}). Trying again in {sec} s (retry {attempt}/{max}).",
+      "now": "Trying again (retry {attempt}/{max}).",
+      "gaveUp": "The provider error did not pass after {max} retries.",
+      "lead": "[pixel-office: your previous turn stopped on a temporary provider error. This is a new attempt: continue the task where you left off and do not redo what is already done.]"
+    },
     "sessionRecovered": "Previous session was not found; continuing with a fresh session.",
     "cancelled": "Cancelled.",
     "askQuestion": "Has a question for you",
@@ -451,6 +457,7 @@
         "cap_changed": "Daily cap changed ({byName})",
         "emp_error": "{empName} hit an error: {message}",
         "emp_sick": "{empName} got sick",
+        "emp_retry": "{empName} hit a temporary provider error; retry {attempt}/{max} in {sec} s: {message}",
         "ask": "{empName} asks for permission: {summary}",
         "question": "{empName} has a question: {summary}",
         "meeting_start": "Meeting started: {topic}",

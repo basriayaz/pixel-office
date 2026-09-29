@@ -1278,6 +1278,10 @@ function wire(e: Employee) {
     else if (status === "sick") logEvent(o, { kind: "emp_sick", emp: id, data: {} });
     if (status !== "working" && status !== "waiting") settleRuns(o, id);
   });
+  onE("retry", (r: { task: number; attempt: number; max: number; delayMs: number; message: string }) => {
+    const o = oOf();
+    if (o) logEvent(o, { kind: "emp_retry", emp: id, task: r.task, data: { attempt: r.attempt, max: r.max, sec: Math.round(r.delayMs / 1000), message: r.message } });
+  });
   onE("result", () => { const o = oOf(); if (o) settleRuns(o, id); });
   onE("ask_done", (requestId) => broadcast({ type: "ask_done", office, id, requestId }));
   onE("result", (res) => broadcast({ type: "result", office, id, ...res, model: e.model }));

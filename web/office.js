@@ -175,7 +175,15 @@ class Office {
     const st = buildStaticFor(this.theme);
     this.blocked = st.blocked;
     this.doors = st.doors;
-    this.decor = st.decor;
+    this.decor = st.decor.concat(progressDecor(this.progress || 0));
+  }
+
+  // Decor unlocked by finished work: only the decor list is rebuilt, and only when the count changes.
+  setProgress(n) {
+    n = Math.max(0, Math.min(5, Math.floor(Number(n)) || 0));
+    if (n === (this.progress || 0)) return;
+    this.progress = n;
+    this.decor = buildStaticFor(this.theme).decor.concat(progressDecor(n));
   }
 
   setEmployees(list, entering = null) {
@@ -3017,3 +3025,47 @@ function drawWallDecorDream(b, t) {
 }
 PROPS.dream = { counter: drawTeaBar, fridge: drawGrandfatherClock, roundTable: drawMoonTable, stool: drawCloudStool, meetingTable: drawDreamTable, sofa: drawChaise, coffeeTable: drawCrystalStand, bookshelf: drawDreamShelf, lamp: drawMoonLamp, cabinets: drawApothecary, boxes: drawPillowPile, printer: drawEasel, cooler: drawHourglass, coffeeStation: drawDreamcatcher, wallDecor: drawWallDecorDream };
 THEME_NAMES.push("dream");
+
+// ---------- progress decor (unlocked by finished work; see web/progress.js) ----------
+// Small wall pieces in the free stretches of the wall band, drawn behind everything. `n` = how many are unlocked (0..5).
+function progressDecor(n) {
+  const out = [];
+  const wall = (i, draw) => { if (n >= i) out.push({ y: 1, draw }); };
+  wall(1, (b) => { // framed poster
+    outlineRect(b, 184, 10, 26, 34, "#e8d9b0"); b.fillStyle = "#3f7cc9"; b.fillRect(188, 14, 18, 14);
+    b.fillStyle = "#ffd166"; b.fillRect(194, 17, 6, 6); b.fillStyle = "#2b2b2b"; b.fillRect(188, 32, 18, 2); b.fillRect(191, 37, 12, 2);
+  });
+  wall(2, (b, t) => { // hanging plant
+    const sway = Math.round(Math.sin(t / 1400));
+    b.fillStyle = "#6b4a2b"; b.fillRect(243, 8, 2, 12);
+    outlineRect(b, 236, 20, 16, 9, "#b4593a");
+    b.fillStyle = "#3a9d5d"; b.fillRect(234 + sway, 26, 5, 14); b.fillRect(250 + sway, 26, 5, 18); b.fillRect(241, 28, 6, 10);
+    b.fillStyle = "#5ac27a"; b.fillRect(235 + sway, 30, 2, 6); b.fillRect(251 + sway, 32, 2, 8);
+  });
+  wall(3, (b, t) => { // shelf with a golden espresso machine
+    b.fillStyle = "#5c3d22"; b.fillRect(296, 40, 46, 4); b.fillStyle = "#8a5a32"; b.fillRect(296, 40, 46, 1);
+    outlineRect(b, 304, 22, 30, 18, "#d9a521"); b.fillStyle = "#ffd166"; b.fillRect(304, 22, 30, 3);
+    b.fillStyle = "#7a5410"; b.fillRect(310, 28, 8, 6); b.fillStyle = "#f5f5f5"; b.fillRect(322, 31, 6, 7);
+    b.fillStyle = Math.floor(t / 700) % 2 ? "#4ade80" : "#1f7a3f"; b.fillRect(328, 26, 2, 2);
+  });
+  wall(4, (b, t) => { // trophy shelf
+    b.fillStyle = "#5c3d22"; b.fillRect(354, 40, 52, 4); b.fillStyle = "#8a5a32"; b.fillRect(354, 40, 52, 1);
+    for (let i = 0; i < 3; i++) {
+      const x = 358 + i * 16, h = i === 1 ? 20 : 15;
+      b.fillStyle = OUTLINE; b.fillRect(x - 1, 39 - h, 12, h + 1);
+      b.fillStyle = "#ffd166"; b.fillRect(x, 40 - h, 10, h - 6); b.fillRect(x + 3, 34, 4, 5); b.fillRect(x + 1, 38, 8, 2);
+      b.fillStyle = "#fff3b0"; b.fillRect(x + 1, 41 - h, 2, h - 8);
+    }
+    if (Math.floor(t / 1200) % 4 === 0) { b.fillStyle = "#fff"; b.fillRect(377, 14, 1, 5); b.fillRect(375, 16, 5, 1); }
+  });
+  wall(5, (b, t) => { // neon sign
+    const on = Math.floor(t / 600) % 6 !== 0, c = on ? "#ff5fa2" : "#7a2f52";
+    b.fillStyle = OUTLINE; b.fillRect(548, 14, 88, 30);
+    b.fillStyle = "#1a1224"; b.fillRect(550, 16, 84, 26);
+    b.fillStyle = c; b.fillRect(552, 18, 80, 2); b.fillRect(552, 38, 80, 2); b.fillRect(552, 18, 2, 22); b.fillRect(630, 18, 2, 22);
+    b.fillStyle = on ? "#7dd3fc" : "#3b566b"; // a lightning bolt and a star
+    b.fillRect(574, 22, 6, 3); b.fillRect(570, 25, 6, 3); b.fillRect(574, 28, 6, 3); b.fillRect(570, 31, 6, 3); b.fillRect(568, 34, 4, 2);
+    b.fillStyle = on ? "#ffd166" : "#6b5a2b"; b.fillRect(603, 21, 4, 14); b.fillRect(598, 26, 14, 4); b.fillRect(600, 23, 10, 10);
+  });
+  return out;
+}

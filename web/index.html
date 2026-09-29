@@ -23,6 +23,7 @@
       <button class="strip-chip" id="stripMode" type="button" hidden data-i18n-title="ui.strip.modeTip"></button>
       <button class="strip-chip" id="stripSpend" type="button" hidden></button>
       <button class="strip-chip" id="stripQuota" type="button" hidden></button>
+      <button class="strip-chip" id="stripProgress" type="button" hidden data-i18n-title="ui.progress.chipTip"></button>
       <button class="icon-btn small strip-btn" id="btnInbox" type="button" data-i18n-title="ui.strip.inboxTip">📥<span class="badge" id="inboxBadge" hidden></span></button>
       <button class="icon-btn small strip-btn" id="btnActivity" type="button" data-i18n-title="ui.strip.activityTip">🕘<i class="strip-dot" id="activityDot" hidden></i></button>
     </div>
@@ -213,6 +214,13 @@
     </div>
   </div>
 
+  <div class="modal" id="progressModal" hidden>
+    <div class="modal-card panel-card">
+      <div class="modal-head"><h2 data-i18n="ui.progress.title"></h2><button class="icon-btn" id="progressClose" data-i18n-title="ui.progress.close">×</button></div>
+      <div id="progressBody"></div>
+    </div>
+  </div>
+
   <div class="modal" id="settingsModal" hidden>
     <div class="modal-card settings-card">
       <div class="modal-head">
@@ -331,6 +339,7 @@
   <script src="inbox.js"></script>
   <script src="activity.js"></script>
   <script src="costs.js"></script>
+  <script src="progress.js"></script>
   <script src="status.js"></script>
   <script src="settings.js"></script>
   <script src="guide.js"></script>

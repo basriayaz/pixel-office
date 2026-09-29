@@ -326,6 +326,25 @@
     const { map, missing: unseated } = assignDesks(items, ids);
     return { items, build: build(items), assign: map, missing: [...new Set([...missing, ...unseated])], changed: added };
   }
+  // Fixes what is wrong by moving the offending pieces to the nearest valid tile (the classic layout for 11+ colleagues puts a desk on the
+  // entrance mat). Returns the fixed items, or null when that is not possible.
+  function repair(items, empCount = 0) {
+    let cur = clone(items);
+    for (let round = 0; round < 6; round++) {
+      const r = check(cur, { empCount });
+      if (r.ok) return cur;
+      const bad = [...new Set(r.errors.filter((e) => e.id).map((e) => e.id))];
+      if (!bad.length || r.errors.some((e) => !e.id)) return null;
+      for (const id of bad) {
+        const it = cur.find((x) => x.id === id);
+        if (!it) continue;
+        const moved = findPlace(cur.filter((x) => x.id !== id), it, [it.tx, it.ty]);
+        if (!moved) return null;
+        cur = cur.map((x) => (x.id === id ? moved : x));
+      }
+    }
+    return null;
+  }
   function canDelete(items, id, ids) {
     const it = items.find((x) => x.id === id);
     if (!it) return { ok: false, reason: "missing" };
@@ -358,6 +377,6 @@
   globalThis.POLayout = {
     COLS, ROWS, MAX_EMP, MAX_ITEMS, MAX_DESKS, ENTRANCE, ROOMS, DOORS, DOOR_GROUPS, FIXED_SPOTS, WALLS, TYPES, TYPE_ORDER, DEFAULT_DIR,
     key, defaultItems, deskLayout, autoDesks, build, check, sanitize, toDoc, clone, assignDesks, ensureDesks, findPlace, nextId, scene,
-    canDelete, rotate, nearestFree, tilesOf, floorTiles, isFloor: (x, y) => floor.has(key(x, y)),
+    canDelete, rotate, repair, nearestFree, tilesOf, floorTiles, isFloor: (x, y) => floor.has(key(x, y)),
   };
 })();

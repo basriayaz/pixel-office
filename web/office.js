@@ -222,6 +222,7 @@ class Office {
     const now = performance.now();
     const oldSeats = new Map(this.emps.map((e) => [e.id, e.seat]));
     this.rosterIds = this.emps.map((e) => e.id);
+    const atEvent = new Set(this.emps.filter((e) => e.spot && e.spot.evt));
     if (this.evt && this.evt.kind !== "blackout") this.endEvent(now); // its table / printer may be gone
     this.buildStatic();
     const alive = new Set([...this.spots, ...this.meetingSpots]);
@@ -230,6 +231,7 @@ class Office {
       const seat = this.seatFor(e.id), was = oldSeats.get(e.id);
       let dirty = !was || was.tx !== seat.tx || was.ty !== seat.ty;
       e.seat = seat;
+      if (atEvent.has(e)) { e.path = []; dirty = true; } // on their way to the (now ended) event: head back
       if (e.spot && !e.spot.evt && !alive.has(e.spot)) { e.spot = null; dirty = true; }
       if (e.napSpot && !alive.has(e.napSpot)) e.napSpot = null;
       if (e.errand && this.blocked.has(key(e.errand.tx, e.errand.ty))) { e.errand = null; dirty = true; }
@@ -242,11 +244,16 @@ class Office {
     this.warnDesks();
   }
 
+  // On furniture, or shut in a pocket that no walkway leads to any more.
   standsOnFurniture(e) {
     if (e.ty >= ROWS || e.tx < 0 || e.ty < 0 || e.tx >= COLS) return false; // still outside, walking in
     const k = key(e.tx, e.ty);
-    if (!this.blocked.has(k)) return false;
-    return !(e.spot && e.spot.tx === e.tx && e.spot.ty === e.ty); // sitting on the sofa is fine
+    if (e.spot && e.spot.tx === e.tx && e.spot.ty === e.ty) return false; // sitting on the sofa is fine
+    if (this.blocked.has(k)) return true;
+    const b = this.scene.build;
+    if (b.soft.has(k) && !e.path.length && !(e.seat && e.seat.tx === e.tx && e.seat.ty === e.ty)) return true; // resting on a chair / stool / desk seat that is not theirs
+    if (b.reach.size < 40 || b.reach.has(k)) return false; // (an entrance walled in by the classic 11+ desk grid: no way to tell)
+    return !(e.seat && e.seat.tx === e.tx && e.seat.ty === e.ty) && !(b.soft.has(k) && [[1, 0], [-1, 0], [0, 1], [0, -1]].some(([dx, dy]) => b.reach.has(key(e.tx + dx, e.ty + dy))));
   }
 
   pathBroken(e) {

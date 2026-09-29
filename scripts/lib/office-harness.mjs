@@ -25,13 +25,13 @@ function recorder(calls) {
 
 export function loadOffice({ files = ["web/layout.js", "web/office.js"] } = {}) {
   const calls = [];
-  const canvas = () => ({ width: 0, height: 0, style: {}, getContext: () => recorder(calls), addEventListener() {}, toDataURL: () => "data:", parentElement: null, classList: { toggle() {}, add() {}, remove() {} } });
+  const canvas = () => ({ width: 0, height: 0, style: {}, getContext: () => recorder(calls), addEventListener() {}, toDataURL: () => "data:", parentElement: null, appendChild() {}, classList: { toggle() {}, add() {}, remove() {} } });
   const sandbox = {
     console, performance, setTimeout, clearTimeout, setInterval, clearInterval,
     matchMedia: () => ({ matches: false, addEventListener() {} }),
     document: { createElement: canvas, addEventListener() {}, hidden: false },
     localStorage: { getItem: () => null, setItem() {} },
-    requestAnimationFrame() {}, addEventListener() {}, getComputedStyle: () => ({}), devicePixelRatio: 1,
+    requestAnimationFrame() {}, addEventListener() {}, getComputedStyle: () => ({ paddingLeft: "0", paddingRight: "0", paddingTop: "0", paddingBottom: "0", display: "block" }), devicePixelRatio: 1,
     PO: { strings: {} }, __poHour: 12,
   };
   sandbox.window = sandbox;
@@ -51,5 +51,12 @@ export function loadOffice({ files = ["web/layout.js", "web/office.js"] } = {}) 
     fn(recorder(calls), t);
     return createHash("sha1").update(JSON.stringify(calls)).digest("hex").slice(0, 12);
   };
-  return { ctx, run, hashDraw, calls };
+  // a real Office on stub canvas / DOM elements
+  const makeOffice = () => {
+    const stage = { clientWidth: 1000, clientHeight: 700, querySelector: () => null };
+    ctx.__cv = { ...canvas(), parentElement: { parentElement: stage }, getBoundingClientRect: () => ({ left: 0, top: 0 }) };
+    ctx.__labels = { innerHTML: "", appendChild() {}, classList: { toggle() {} } };
+    return run("new Office(__cv, __labels)");
+  };
+  return { ctx, run, hashDraw, calls, makeOffice };
 }

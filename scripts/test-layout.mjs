@@ -41,3 +41,11 @@ for (let n = 0; n <= 12; n++) {
   assert.deepEqual(J(sc.missing), [], `${n} colleagues: nobody without a desk`);
 }
 console.log("layout equivalence ok:", themes.length, "themes,", fx.spots.length, "spots,", fx.themes.default.decor.length, "decor entries, 0..12 colleagues");
+
+// ---------- 2. validation, 3. fuzz ----------
+await import(pathToFileURL(path.join(ROOT, "web/layout.js")).href);
+const { runValidation, runFuzz } = await import("./lib/layout-checks.mjs");
+runValidation(globalThis.POLayout);
+runFuzz(globalThis.POLayout);
+const { runOffice } = await import("./lib/office-checks.mjs");
+runOffice(h, globalThis.POLayout);

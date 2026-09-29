@@ -123,3 +123,4 @@
 .idea-chat label { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; font-size: 12.5px; color: var(--muted); flex: 1 1 220px; }
 .idea-chat select { height: 32px; background: var(--card); color: var(--text); border: 1px solid var(--line); border-radius: 8px; padding: 0 10px; font: inherit; font-size: 12.5px; min-width: 0; flex: 1 1 140px; }
 .idea-warn { flex: 1 1 100%; color: var(--waiting); font-size: 12.5px; }
+.idea-chat input, .idea-chat textarea { flex: 1 1 100%; background: var(--card); color: var(--text); border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px; font: inherit; font-size: 12.5px; min-width: 0; }

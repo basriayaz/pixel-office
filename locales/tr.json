@@ -1404,6 +1404,8 @@
         "rejected": "Reddedildi",
         "moved": "Panoda"
       },
+      "ideaEffortNone": "belirsiz",
+      "ideaTitleNeeded": "Fikrin bir başlığı olmalı",
       "ideaEffort": {
         "S": "küçük",
         "M": "orta",

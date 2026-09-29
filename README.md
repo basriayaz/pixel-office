@@ -122,6 +122,8 @@ Each employee is a folder:
 
 **Sessions** — each chat is a resumable Claude Agent SDK session. The server keeps it alive across restarts; ■ interrupts the current turn; the model and cost of the session show in the chat header.
 
+**Token prices** — Codex and Gemini report tokens, not money, so their cost is estimated from a built-in price table (USD per 1M tokens; for Codex on a ChatGPT plan it is the API-equivalent, nothing is billed). When a provider changes prices or ships a new model, put your own rows in `<dataDir>/prices.json` — e.g. `{"codex": [{"match": "gpt-6", "input": 2, "cached": 0.2, "output": 16}], "gemini": []}`; `match` is a case-insensitive regex on the model id, your rows are tried before the built-in ones, `cached` defaults to `input`. The file is picked up without a restart; `GET/PUT /api/prices` read and write it (PUT replaces the rows of the engines it names, 400 on a bad row).
+
 **Permissions** — `default` asks before every file edit and command (recommended), `acceptEdits` auto-approves file edits, `plan` is read-only, `bypassPermissions` runs everything without asking — only for narrowly scoped, trusted employees. "Always allow" in a permission card applies for the rest of the session.
 
 **Colleagues** — employees in the same office can talk to each other through two built-in tools, `list_colleagues` and `message_colleague`. A support employee can hand an order cancellation to the person who owns orders, optionally wait for their answer and report back to you. The message appears in both chats.

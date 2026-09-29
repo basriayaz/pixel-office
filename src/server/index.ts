@@ -21,6 +21,7 @@ import { createGuard, isLoopbackHost } from "./security.js";
 import { acquireLock } from "./lock.js";
 import { writeFileAtomicSync } from "./fsutil.js";
 import { Ledger, dayKey, type Cap } from "./ledger.js";
+import { initPrices, pricesFile, customPrices, parsePrices, saveCustomPrices, DEFAULT_PRICES } from "./prices.js";
 import { EventLog, type OfficeEvent } from "./events.js";
 import { RunLog, sessionTranscript, type RunStatus } from "./runs.js";
 import { getQuota, onQuota } from "./quota.js";
@@ -37,6 +38,7 @@ ensureProjectIgnores(R);
 const settings = loadSettings(R);
 let locale = loadLocale(settings.locale);
 initRuntime(settings, new Translator(locale.data));
+initPrices(settings.dataDir);
 
 // No login exists, so listening beyond this machine would hand every employee's shell to the whole network.
 if (!isLoopbackHost(settings.host) && process.env.PIXEL_OFFICE_ALLOW_REMOTE !== "1") {
@@ -650,6 +652,17 @@ app.post("/api/providers/:id/check", async (req, res) => {
   if (!isProvider(id)) return res.status(404).json({ error: "unknown provider" });
   await refreshProvider(id);
   res.json(await providersPayload());
+});
+// Token prices for Codex and Gemini turns (USD per 1M tokens). The user's rows go in front of the built-in ones, first match
+// wins; PUT replaces the user's rows of the engines it names ({"codex": []} clears them).
+const pricesPayload = () => ({ file: displayPath(pricesFile()), custom: customPrices(), defaults: DEFAULT_PRICES });
+app.get("/api/prices", (_req, res) => res.json(pricesPayload()));
+app.put("/api/prices", (req, res) => {
+  let next;
+  try { next = parsePrices(req.body); } catch (err) { return res.status(400).json({ error: (err as Error).message }); }
+  const cur = customPrices(), b = req.body as Record<string, unknown>;
+  saveCustomPrices({ codex: b.codex !== undefined ? next.codex : cur.codex, gemini: b.gemini !== undefined ? next.gemini : cur.gemini });
+  res.json(pricesPayload());
 });
 app.get("/api/settings", async (_req, res) => res.json(await settingsPayload()));
 app.put("/api/settings", async (req, res) => {

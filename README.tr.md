@@ -122,6 +122,8 @@ Her çalışan bir klasördür:
 
 **Oturumlar** — her sohbet devam ettirilebilir bir Claude Agent SDK oturumu. Sunucu yeniden başlasa da kaldığı yerden sürer; ■ o turu keser; model ve oturum maliyeti sohbet başlığında görünür.
 
+**Token fiyatları** — Codex ve Gemini para değil token bildirir; maliyetleri yerleşik bir fiyat tablosundan tahmin edilir (1M token başına USD; ChatGPT planındaki Codex için API karşılığıdır, fatura çıkmaz). Sağlayıcı fiyat değiştirir ya da yeni model çıkarsa kendi satırlarını `<dataDir>/prices.json` dosyasına yaz — örn. `{"codex": [{"match": "gpt-6", "input": 2, "cached": 0.2, "output": 16}], "gemini": []}`; `match` model kimliğine uygulanan, büyük/küçük harf duyarsız bir regex; senin satırların yerleşiklerden önce denenir, `cached` verilmezse `input` kullanılır. Dosya yeniden başlatmadan okunur; `GET/PUT /api/prices` okur ve yazar (PUT adı geçen motorların satırlarını değiştirir, hatalı satırda 400).
+
 **İzinler** — `default` her dosya düzenlemesi ve komut için sorar (önerilen), `acceptEdits` dosya düzenlemelerini otomatik onaylar, `plan` salt okunur, `bypassPermissions` sormadan çalıştırır — sadece dar görevli, güvendiğin çalışanlar için. İzin kartındaki "Hep izin ver" oturum boyunca geçerli.
 
 **Meslektaşlar** — aynı ofisteki çalışanlar `list_colleagues` ve `message_colleague` araçlarıyla birbirine yazar. Destek çalışanı bir sipariş iptalini siparişlerden sorumlu kişiye devreder, istersen cevabını bekleyip sana rapor eder. Mesaj iki sohbette de görünür.

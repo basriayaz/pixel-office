@@ -18,6 +18,7 @@ import { t, tget, getSettings } from "./runtime.js";
 import { officeServer, OFFICE_TOOLS, type Colleagues } from "./office-tools.js";
 import { runCodexTurn, skillsIndex, skillFile, type CodexItem } from "./codex.js";
 import { runGeminiTurn, type GeminiEvent } from "./gemini.js";
+import { costOf } from "./prices.js";
 import { engineOf, geminiKey, openrouterEnv, openrouterSlug, markAuthFailed, AUTH_ERROR, type Engine } from "./providers.js";
 import { listSkills, listProjectSkills } from "./agents.js";
 import { fromClaudeRateLimit, fromClaudeUsage, fromCodexThread, claudeUsageDue } from "./quota.js";
@@ -1168,7 +1169,11 @@ export class Employee extends EventEmitter {
           // the same difference for the ledger, kept across restarts (the in-memory one above starts over)
           const seen = this.store.getMeta<Record<string, [number, number, number]>>(this.cfg.id, "threadTokens") ?? {};
           const [pi, po, pc] = key !== "side" && seen[tk] && seen[tk][0] <= res.inputTokens ? seen[tk] : [0, 0, 0];
-          this.turnSpend = { cost: 0, tokens: { input: res.inputTokens - pi, output: Math.max(0, res.outputTokens - po), cached: Math.max(0, res.cachedTokens - pc) } };
+          const tokens = { input: res.inputTokens - pi, output: Math.max(0, res.outputTokens - po), cached: Math.max(0, res.cachedTokens - pc) };
+          const estimate = costOf("codex", this.model ?? this.cfg.model ?? "", tokens);
+          this.cost += estimate;
+          this.store.setMeta(this.cfg.id, "cost", this.cost);
+          this.turnSpend = { cost: estimate, tokens };
           if (key !== "side" && tk !== "-") {
             const next = { ...seen, [tk]: [res.inputTokens, res.outputTokens, res.cachedTokens] as [number, number, number] };
             const keys = Object.keys(next);
@@ -1244,7 +1249,12 @@ export class Employee extends EventEmitter {
         if (res.ok) {
           if (sid) this.gmInstr.set(sid, hash);
           this.context = Math.round(res.inputTokens / Math.max(1, res.calls));
-          this.turnSpend = { cost: 0, tokens: { input: res.inputTokens, output: res.outputTokens, cached: res.cachedTokens } };
+          const tokens = { input: res.inputTokens, output: res.outputTokens, cached: res.cachedTokens };
+          // billed on the user's API key: an estimate from the price table, so the daily spend cap stops Gemini too
+          const estimate = costOf("gemini", this.model ?? this.cfg.model ?? "", tokens);
+          this.cost += estimate;
+          this.store.setMeta(this.cfg.id, "cost", this.cost);
+          this.turnSpend = { cost: estimate, tokens };
         }
         const more = res.ok && this.inbox.length > 0 && !this.interrupting;
         this.endTurn(res.ok ? undefined : this.engineError("gemini", res.error ?? "gemini failed"), Date.now() - started, !!res.notFound, more);

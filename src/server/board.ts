@@ -53,7 +53,15 @@ export interface Idea {
   rank?: number;       // the project manager's order of doing: 1 = first
   advice?: string;     // the project manager's word on it (why, what it depends on, or why not)
   ts: number;
+  rev?: number;        // bumped by every change of title, text, effort, owner, status or comment: an edit made on an older rev is refused
+  updated?: number;
+  edits?: IdeaEdit[];  // what the proposer changed while talking it over with the boss, newest last (shown to the boss)
 }
+
+export interface IdeaEdit { ts: number; by: string; byName: string; summary: string; fields: Array<"title" | "text" | "effort" | "owner"> }
+export type IdeaEditResult =
+  | { ok: true; idea: Idea; edit: IdeaEdit }
+  | { ok: false; reason: "missing" | "closed" | "conflict" | "unchanged"; idea?: Idea };
 
 // Something with (nearly) the same title: same words, or most words shared.
 function similarTitle<T extends { title: string }>(items: T[], title: string): T | undefined {
@@ -132,6 +140,7 @@ export class Board extends EventEmitter {
   updateIdea(id: number, patch: { title?: string; text?: string; effort?: Effort | null; owner?: string | null; status?: IdeaStatus; comment?: string; taskId?: number; rank?: number | null; advice?: string }): Idea | undefined {
     const idea = this.data.ideas.find((x) => x.id === id);
     if (!idea) return undefined;
+    const before = JSON.stringify([idea.title, idea.text, idea.effort, idea.owner, idea.status, idea.comment]);
     if (patch.title !== undefined) idea.title = patch.title.trim().slice(0, 160) || idea.title;
     if (patch.text !== undefined) idea.text = patch.text.trim().slice(0, 4000);
     if (patch.effort !== undefined) { if (patch.effort) idea.effort = patch.effort; else delete idea.effort; }
@@ -141,8 +150,26 @@ export class Board extends EventEmitter {
     if (patch.taskId !== undefined) idea.taskId = patch.taskId;
     if (patch.rank !== undefined) { if (patch.rank && patch.rank > 0) idea.rank = Math.round(patch.rank); else delete idea.rank; }
     if (patch.advice !== undefined) { if (patch.advice.trim()) idea.advice = patch.advice.trim().slice(0, 600); else delete idea.advice; }
+    if (before !== JSON.stringify([idea.title, idea.text, idea.effort, idea.owner, idea.status, idea.comment])) { idea.rev = (idea.rev ?? 0) + 1; idea.updated = Date.now(); }
     this.save();
     return idea;
+  }
+
+  // The proposer reworks their own idea while talking it over with the boss. Refused when the idea changed since `rev`
+  // (the boss or somebody else edited it meanwhile) or is no longer open; never moves or starts it.
+  editIdea(id: number, rev: number, patch: { title?: string; text?: string; effort?: Effort; owner?: string }, who: { by: string; byName: string; summary: string }): IdeaEditResult {
+    const idea = this.data.ideas.find((x) => x.id === id);
+    if (!idea) return { ok: false, reason: "missing" };
+    if (idea.status === "moved" || idea.status === "rejected") return { ok: false, reason: "closed", idea };
+    if ((idea.rev ?? 0) !== rev) return { ok: false, reason: "conflict", idea };
+    const next = { title: patch.title?.trim().slice(0, 160) || undefined, text: patch.text?.trim().slice(0, 4000) || undefined, effort: patch.effort, owner: patch.owner };
+    const fields = (["title", "text", "effort", "owner"] as const).filter((f) => next[f] !== undefined && next[f] !== idea[f]);
+    if (!fields.length) return { ok: false, reason: "unchanged", idea };
+    const edit: IdeaEdit = { ts: Date.now(), by: who.by, byName: who.byName, summary: who.summary.trim().slice(0, 600), fields: [...fields] };
+    idea.edits = [...(idea.edits ?? []), edit].slice(-20);
+    this.updateIdea(id, Object.fromEntries(fields.map((f) => [f, next[f]])));
+    this.emit("ideaEdited", idea, edit);
+    return { ok: true, idea, edit };
   }
 
   deleteIdea(id: number): boolean {
@@ -154,10 +181,11 @@ export class Board extends EventEmitter {
   }
 
   // An idea becomes a task; the idea stays, pointing at it, so nobody proposes it again.
-  promoteIdea(id: number, owner: string, createdBy: string, opts: { detail?: string; review?: boolean; after?: number[] } = {}): Task | undefined {
+  promoteIdea(id: number, owner: string, createdBy: string, opts: { detail?: string; review?: boolean; after?: number[]; commentLabel?: string } = {}): Task | undefined {
     const idea = this.data.ideas.find((x) => x.id === id);
     if (!idea || idea.status === "moved") return undefined;
-    const detail = (opts.detail?.trim() || idea.text) + `\n\n(💡 #${idea.id} · ${idea.byName})`;
+    // the boss's word on the idea goes with it: it is often the very condition the work has to meet
+    const detail = (opts.detail?.trim() || idea.text) + (idea.comment ? `\n\n${opts.commentLabel ?? "Boss"}: ${idea.comment}` : "") + `\n\n(💡 #${idea.id} · ${idea.byName})`;
     const task = this.addTask(owner, idea.title, detail, createdBy, !!opts.review, opts.after ?? []);
     this.updateIdea(id, { status: "moved", taskId: task.id });
     this.emit("promoted", idea, task, createdBy);

@@ -462,6 +462,7 @@ function openOffice(def: OfficeDef): OfficeRt {
     if (ch.edited) logEvent(o, { kind: "task_edited", emp: k.owner, task: k.id, by, data: {} });
   }));
   board.on("idea", safe("idea log", (x: { id: number; by: string; title: string }) => logEvent(o, { kind: "idea_new", emp: x.by === "user" ? undefined : x.by, idea: x.id, by: x.by, data: { title: x.title } })));
+  board.on("ideaEdited", safe("idea edit log", (x: { id: number; title: string }, ed: { by: string; summary: string; fields: string[] }) => logEvent(o, { kind: "idea_edited", emp: ed.by, idea: x.id, by: ed.by, data: { title: x.title, summary: ed.summary } })));
   board.on("promoted", safe("idea promoted log", (x: { id: number; title: string }, k: Task, by: string) => logEvent(o, { kind: "idea_promoted", emp: k.owner, idea: x.id, task: k.id, by, data: { title: x.title } })));
   for (const e of employees.values()) e.setColleagues(colleaguesOf(o));
   return o;
@@ -930,6 +931,9 @@ r.post("/board/ideas", (req: OReq, res) => {
 });
 r.put("/board/ideas/:id", (req: OReq, res) => {
   const o = officeOf(req), b = req.body ?? {};
+  // optional `rev`: the edit is refused (409, with the idea as it is now) when somebody changed it since the client read it
+  const cur = o?.board.ideas.find((x) => x.id === Number(req.params.id));
+  if (cur && b.rev !== undefined && Number(b.rev) !== (cur.rev ?? 0)) return res.status(409).json({ error: t("server.ideas.changedMeanwhile", { id: cur.id }), idea: cur });
   const idea = o?.board.updateIdea(Number(req.params.id), {
     title: b.title !== undefined ? clean(b.title, 160) : undefined, text: b.text !== undefined ? clean(b.text, 4000) : undefined,
     effort: b.effort !== undefined ? effortOf(b.effort) ?? null : undefined,
@@ -947,7 +951,7 @@ r.post("/board/ideas/:id/promote", (req: OReq, res) => {
   const o = officeOf(req), b = req.body ?? {};
   const owner = o?.employees.get(String(b.owner ?? ""));
   if (!o || !owner) return res.status(400).json({ error: t("server.board.taskFields") });
-  const k = o.board.promoteIdea(Number(req.params.id), owner.cfg.id, "user", { review: !!b.review });
+  const k = o.board.promoteIdea(Number(req.params.id), owner.cfg.id, "user", { review: !!b.review, commentLabel: t("server.meeting.boss") });
   if (!k) return res.status(404).json({ error: t("server.notFound") });
   res.json({ ...k, launch: b.start ? launch(o, k) : null });
   if (!b.start && modeOf(o) === "auto") nudgeManager(o);
@@ -1294,7 +1298,7 @@ wss.on("connection", (ws) => {
 
 interface ClientMessage {
   type: string; office?: string; id?: string; text?: string; requestId?: string; allow?: boolean; always?: boolean; answers?: Record<string, unknown>; images?: unknown;
-  topic?: string; ids?: unknown; to?: unknown; interrupt?: boolean; summary?: boolean; memory?: boolean; msgId?: string;
+  topic?: string; ids?: unknown; to?: unknown; interrupt?: boolean; summary?: boolean; memory?: boolean; msgId?: string; ideaId?: unknown;
 }
 
 async function handleClientMessage(ws: WebSocket, msg: ClientMessage) {
@@ -1327,7 +1331,13 @@ async function handleClientMessage(ws: WebSocket, msg: ClientMessage) {
       case "seen": if (setUnread(e, 0)) broadcast({ type: "roster", office: o.def.id, employees: roster(o) }); break;
       case "send": {
         const images = sanitizeImages(msg.images);
-        if (msg.text?.trim() || images.length) e.send((msg.text ?? "").trim(), false, images);
+        // a question about an idea (asked from its card): the idea must exist; the employee gets it as it stands at delivery
+        const ideaId = msg.ideaId === undefined || msg.ideaId === null ? undefined : Number(msg.ideaId);
+        if (ideaId !== undefined && !o.board.ideas.some((x) => x.id === ideaId)) {
+          ws.send(JSON.stringify({ type: "error", office: o.def.id, id: e.cfg.id, error: t("server.ideas.chatMissing", { id: String(msg.ideaId) }) }));
+          break;
+        }
+        if (msg.text?.trim() || images.length) e.send((msg.text ?? "").trim(), false, images, ideaId);
         break;
       }
       case "reply": if (msg.requestId) e.reply(msg.requestId, { allow: !!msg.allow, always: !!msg.always, answers: msg.answers }); break;

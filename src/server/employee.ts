@@ -82,6 +82,7 @@ export interface ChatMessage {
   images?: string[]; // URLs of pasted images shown with the message
   id?: string;       // boss messages: lets the client refer to one (undo while it is queued)
   queued?: boolean;  // a boss message waiting for the running turn to end; not seen by any model yet
+  ideaId?: number;   // a boss message about this idea (asked from its card): delivered on its own, only to the chat session
 }
 
 export interface ImageInput {
@@ -150,9 +151,9 @@ const MEMORY_SOFT_LIMIT = 8000;
 // Where a message is delivered: the employee's chat session, the running board task's own session, or the throw-away refresh session.
 type Target = "chat" | "task" | "side";
 // A boss message waiting for the running turn to end. It is already in the chat history (flagged `queued`) so the boss sees it.
-interface QueuedBoss { id: string; text: string; ts: number; auto: boolean; images?: ImageInput[]; files?: string[]; entry: ChatMessage }
-// What the client is told about the queue.
-export interface QueuedInfo { id: string; text: string; ts: number; images?: string[]; task: number | null }
+interface QueuedBoss { id: string; text: string; ts: number; auto: boolean; images?: ImageInput[]; files?: string[]; entry: ChatMessage; ideaId?: number }
+// What the client is told about the queue. `task`: the task session it will go to (never for a message about an idea).
+export interface QueuedInfo { id: string; text: string; ts: number; images?: string[]; task: number | null; ideaId?: number }
 
 // Pasted images read back from their attachment files (a queued message restored after a restart).
 const EXT_TYPES: Record<string, ImageInput["media_type"]> = { ".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".gif": "image/gif", ".webp": "image/webp" };
@@ -216,6 +217,7 @@ export class Employee extends EventEmitter {
   private taskTalk: string[] = [];  // what the boss said inside the task session, and the answers: handed to the chat when the task ends
   private taskTalkFor?: number;
   private taskTurnHasBoss = false;
+  private turnIdea?: number; // the idea the running chat turn is about: the only one edit_idea may change in it
   private side?: "refresh"; // a throw-away session that leaves no trace in the chat session
   private refreshPrev?: number; // lastRefresh before this refresh: put back when the boss cancels it, so it runs again later
   private bossQueue: QueuedBoss[] = []; // boss messages held until the running turn ends (never dropped into the middle of a turn)
@@ -240,7 +242,7 @@ export class Employee extends EventEmitter {
     // attachment files: the Claude engine takes them inline, Codex by file.
     for (const m of this.history) if (m.queued && m.id) {
       const files = this.filesOf(m.images);
-      this.bossQueue.push({ id: m.id, text: m.text, ts: m.ts, auto: m.role === "auto", entry: m, files, images: imagesFromFiles(files) });
+      this.bossQueue.push({ id: m.id, text: m.text, ts: m.ts, auto: m.role === "auto", entry: m, files, images: imagesFromFiles(files), ...(m.ideaId ? { ideaId: m.ideaId } : {}) });
     }
   }
 
@@ -252,6 +254,8 @@ export class Employee extends EventEmitter {
   private get running() { return !!this.q || !!this.cx; }
   get busy() { return this.status === "working" || this.status === "waiting"; }
   get currentTask() { return this.taskId; }
+  // The idea the turn that runs now was asked about (its card's chat), if any.
+  get ideaTurn() { return this.turnIdea; }
   // This employee has the board task in hand: working on it (or holding its session between turns), or queued to begin it.
   holdsTask(id: number) { return this.taskId === id || this.taskQueue.some((q) => q.id === id); }
   get hasOfficeMessages() { return this.autoQueue.length > 0; }
@@ -259,7 +263,7 @@ export class Employee extends EventEmitter {
   get isCompacting() { return this.compacting; }
   // Boss messages waiting for the running turn to end, oldest first.
   get queue(): QueuedInfo[] {
-    return this.bossQueue.map((b) => ({ id: b.id, text: b.text, ts: b.ts, ...(b.entry.images?.length ? { images: b.entry.images } : {}), task: this.taskId ?? null }));
+    return this.bossQueue.map((b) => ({ id: b.id, text: b.text, ts: b.ts, ...(b.entry.images?.length ? { images: b.entry.images } : {}), task: b.ideaId ? null : this.taskId ?? null, ...(b.ideaId ? { ideaId: b.ideaId } : {}) }));
   }
 
   // The automatic refresh may start: nothing runs or waits, and the boss has been quiet for `quietMs`.
@@ -270,18 +274,20 @@ export class Employee extends EventEmitter {
   // ---- routing: every decision about where a message goes is made here ----
   // "hold" = wait for the end of the running turn (or the meeting, or the recovery); "task" = the board task's own session;
   // "chat" = the chat session. A task session that is finished is closed on the way, so what follows goes to the chat.
-  private routeFor(kind: "boss" | "colleague" | "office" | "meeting"): "hold" | "chat" | "task" {
+  // A message about an idea never goes into a task session: it waits until the task is let go.
+  private routeFor(kind: "boss" | "idea" | "colleague" | "office" | "meeting"): "hold" | "chat" | "task" {
     if (kind === "meeting") return this.busy ? "hold" : "chat"; // meetings always talk in the chat session
     if (this.sick || this.inMeeting || this.busy) return "hold";
     this.leaveFinishedTask();
-    if (this.taskId !== undefined) return kind === "office" ? "hold" : "task";
+    if (this.taskId !== undefined) return kind === "office" || kind === "idea" ? "hold" : "task";
     return "chat";
   }
 
   // The one place a message is handed to an engine. A process that belongs to another session is closed first
   // (whatever it had not taken yet is carried over to the next one).
-  private dispatch(target: Target, text: string, o: { images?: ImageInput[]; files?: string[]; preamble?: boolean } = {}) {
+  private dispatch(target: Target, text: string, o: { images?: ImageInput[]; files?: string[]; preamble?: boolean; ideaId?: number } = {}) {
     const key = target === "task" ? `task:${this.taskId}` : target;
+    this.turnIdea = target === "chat" ? o.ideaId : undefined;
     if (!this.turnOpen) this.applyPending();
     if (this.running && this.runningFor !== key) this.stopQuery();
     const msg = userMsg((o.preamble ? this.takePreamble() : "") + text, o.images);
@@ -293,24 +299,25 @@ export class Employee extends EventEmitter {
     if (!this.running) this.start(key);
   }
 
-  send(text: string, auto = false, images?: ImageInput[]) {
+  // `ideaId`: the boss asks about that idea (from its card). The office adds the idea as it stands at delivery.
+  send(text: string, auto = false, images?: ImageInput[], ideaId?: number) {
     const urls = images?.map((im) => {
       const name = this.store.saveAttachment(this.cfg.id, Buffer.from(im.data, "base64"), im.media_type.split("/")[1].replace("jpeg", "jpg"));
       return `/attachments/${encodeURIComponent(this.cfg.officeId)}/${encodeURIComponent(this.cfg.id)}/${name}`;
     });
-    const entry: ChatMessage = { role: auto ? "auto" : "user", text, ts: Date.now(), id: newId(), ...(urls?.length ? { images: urls } : {}) };
-    const item: QueuedBoss = { id: entry.id!, text, ts: entry.ts, auto, images, files: this.filesOf(urls), entry };
+    const entry: ChatMessage = { role: auto ? "auto" : "user", text, ts: Date.now(), id: newId(), ...(urls?.length ? { images: urls } : {}), ...(ideaId ? { ideaId } : {}) };
+    const item: QueuedBoss = { id: entry.id!, text, ts: entry.ts, auto, images, files: this.filesOf(urls), entry, ...(ideaId ? { ideaId } : {}) };
     if (!auto) {
       this.lastBossAt = entry.ts;
       // the boss comes first: a refresh can always be done again later, a lost message cannot
       if (this.side) this.abandonSide();
     }
-    const route = this.routeFor("boss");
-    if (route === "hold") entry.queued = true;
+    const route = this.routeFor(ideaId ? "idea" : "boss");
+    // with others still waiting it may not go out in this delivery: shown as waiting, deliverBoss clears what it takes
+    if (route === "hold" || this.bossQueue.length) entry.queued = true;
     this.push(entry);
     this.bossQueue.push(item);
-    if (route === "hold") { this.emitQueue(); return; }
-    this.deliverBoss(route);
+    if (route === "hold" || !this.deliverBoss(route)) this.emitQueue();
   }
 
   // Undo: a queued boss message is taken back before it was delivered.
@@ -325,10 +332,20 @@ export class Employee extends EventEmitter {
     return true;
   }
 
-  // Everything the boss queued goes out as one message, in the order it was written.
-  private deliverBoss(target: "chat" | "task") {
-    const items = this.bossQueue.splice(0);
-    if (!items.length) return;
+  // What the boss queued goes out as one message, in the order it was written. Messages about an idea go out on their own:
+  // never merged with other messages or with those about another idea, and never into a task session (they wait there).
+  // False when nothing could go out.
+  private deliverBoss(target: "chat" | "task"): boolean {
+    let items: QueuedBoss[];
+    if (target === "task") items = this.bossQueue.filter((b) => !b.ideaId);
+    else {
+      const key = this.bossQueue[0]?.ideaId;
+      const n = this.bossQueue.findIndex((b) => b.ideaId !== key);
+      items = this.bossQueue.slice(0, n < 0 ? undefined : n);
+    }
+    if (!items.length) return false;
+    this.bossQueue = this.bossQueue.filter((b) => !items.includes(b));
+    const ideaId = items[0].ideaId;
     let changed = false;
     for (const b of items) if (b.entry.queued) { delete b.entry.queued; changed = true; }
     if (changed) this.store.saveHistory(this.cfg.id, this.history);
@@ -338,9 +355,23 @@ export class Employee extends EventEmitter {
       for (const b of items) this.taskTalk.push(`${t("server.meeting.boss")}: ${b.text}`);
       this.taskTurnHasBoss = true;
     }
-    this.dispatch(target, items.map((b) => b.text).filter(Boolean).join("\n\n"), {
-      images: items.flatMap((b) => b.images ?? []), files: items.flatMap((b) => b.files ?? []), preamble: target === "chat",
+    const body = items.map((b) => b.text).filter(Boolean).join("\n\n");
+    this.dispatch(target, ideaId ? this.ideaContext(ideaId) + "\n\n" + body : body, {
+      images: items.flatMap((b) => b.images ?? []), files: items.flatMap((b) => b.files ?? []), preamble: target === "chat", ideaId,
     });
+    return true;
+  }
+
+  // The idea as it stands now (not as it was when the boss wrote), and whether this employee may rework it with edit_idea.
+  private ideaContext(id: number): string {
+    const x = this.colleagues?.board().ideas.find((i) => i.id === id);
+    if (!x) return t("server.ideas.chatGone", { id });
+    const nameOf = (eid?: string) => (eid ? this.colleagues?.list().find((e) => e.cfg.id === eid)?.cfg.name ?? eid : "-");
+    const open = x.status === "new" || x.status === "later";
+    return t("server.ideas.chatContext", {
+      id, rev: x.rev ?? 0, status: x.status, title: x.title, text: x.text || "-", effort: x.effort ?? "-", owner: nameOf(x.owner),
+      by: x.by === "user" ? t("server.meeting.boss") : x.byName, comment: x.comment || "-",
+    }) + "\n" + (x.by === this.cfg.id && open ? t("server.ideas.chatCanEdit", { id, rev: x.rev ?? 0 }) : t("server.ideas.chatNoEdit", { id }));
   }
 
   private emitQueue() { this.emit("queue", this.queue); }
@@ -503,7 +534,7 @@ export class Employee extends EventEmitter {
     this.leaveFinishedTask();
     if (this.bossQueue.length) {
       const route = this.routeFor("boss");
-      if (route !== "hold") { this.deliverBoss(route); return; }
+      if (route !== "hold" && this.deliverBoss(route)) return;
     }
     while (this.taskId === undefined && this.taskQueue.length) {
       const next = this.taskQueue.shift()!;
@@ -1022,6 +1053,7 @@ export class Employee extends EventEmitter {
   private closeTurn(text: string) {
     this.turnTexts = [];
     this.turnOpen = false;
+    this.turnIdea = undefined; // edit_idea is for the turn the idea was asked in, not for whatever comes next
     this.emit("turn", text);
     for (const w of this.turnEndWaiters.splice(0)) w();
   }

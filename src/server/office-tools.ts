@@ -20,7 +20,7 @@ export interface Colleagues {
   mcpUrl(self: Employee): string; // where an engine that is a separate program reaches this employee's office tools
 }
 
-export const OFFICE_TOOLS = ["remember", "propose_idea", "list_ideas", "promote_idea", "review_idea", "list_colleagues", "message_colleague", "raise_hand", "share_note", "read_notes", "edit_note", "delete_note", "list_tasks", "update_task", "assign_task", "start_task", "colleague_activity"].map((n) => `mcp__office__${n}`);
+export const OFFICE_TOOLS = ["remember", "propose_idea", "list_ideas", "promote_idea", "review_idea", "edit_idea", "list_colleagues", "message_colleague", "raise_hand", "share_note", "read_notes", "edit_note", "delete_note", "list_tasks", "update_task", "assign_task", "start_task", "colleague_activity"].map((n) => `mcp__office__${n}`);
 
 const text = (s: string, isError = false) => ({ content: [{ type: "text" as const, text: s }], ...(isError ? { isError: true } : {}) });
 
@@ -171,6 +171,32 @@ export function officeToolDefs(self: Employee, colleagues: Colleagues) {
         board().updateIdea(id, { rank: rank === undefined ? undefined : rank, advice, effort, owner: who?.cfg.id });
         return text(t("server.ideas.reviewed", { id }));
       }),
+      // The proposer reworks their own idea, only in the chat the boss opened from that idea's card. It never moves or starts it.
+      tool("edit_idea", t("server.ideas.editDesc"), {
+        id: z.number(),
+        rev: z.number().describe(t("server.ideas.revDesc")),
+        summary: z.string().describe(t("server.ideas.summaryDesc")),
+        title: z.string().optional().describe(t("server.ideas.titleDesc")),
+        text: z.string().optional().describe(t("server.ideas.whyDesc")),
+        effort: z.enum(["S", "M", "L"]).optional().describe(t("server.ideas.effortDesc")),
+        owner: z.string().optional().describe(t("server.ideas.ownerDesc")),
+      }, async ({ id, rev, summary, title, text: why, effort, owner }) => {
+        const x = board().ideas.find((i) => i.id === id);
+        if (!x) return text(t("server.ideas.none"), true);
+        if (x.by !== self.cfg.id) return text(t("server.ideas.editNotYours", { id }), true);
+        if (self.ideaTurn !== id) return text(t("server.ideas.editNoContext", { id }), true);
+        if (!summary.trim()) return text(t("server.ideas.editNoSummary"), true);
+        const who = owner ? find(owner) ?? (slug(owner) === self.cfg.id || slug(owner) === slug(self.cfg.name) ? self : undefined) : undefined;
+        if (owner && !who) return text(t("server.office.notFound", { name: owner, list: colleagues.list().map((e) => e.cfg.name).join(", ") }), true);
+        const r = board().editIdea(id, rev, { title, text: why, effort, owner: who?.cfg.id }, { by: self.cfg.id, byName: self.cfg.name, summary });
+        if (!r.ok) {
+          const cur = r.idea;
+          if (r.reason === "conflict" && cur) return text(t("server.ideas.editConflict", { id, rev: cur.rev ?? 0, title: cur.title, effort: cur.effort ?? "-", owner: cur.owner ? nameOf(cur.owner) : "-", text: cur.text }), true);
+          return text(t(r.reason === "closed" ? "server.ideas.editClosed" : r.reason === "unchanged" ? "server.ideas.editUnchanged" : "server.ideas.none", { id, status: cur?.status ?? "" }), true);
+        }
+        self.note(t("server.ideas.editedNote", { id, summary: r.edit.summary }));
+        return text(t("server.ideas.edited", { id, rev: r.idea.rev ?? 0, fields: r.edit.fields.join(", ") }));
+      }),
       tool("promote_idea", t("server.ideas.promoteDesc"), {
         id: z.number(),
         to: z.string().describe(t("server.office.toDesc")),
@@ -184,7 +210,7 @@ export function officeToolDefs(self: Employee, colleagues: Colleagues) {
         if (!target) return text(t("server.office.notFound", { name: to, list: others().map((e) => e.cfg.name).join(", ") }), true);
         const no = colleagues.autoMoveBlock();
         if (no) return text(no, true);
-        const k = board().promoteIdea(id, target.cfg.id, self.cfg.id, { detail, review: !!needs_review, after });
+        const k = board().promoteIdea(id, target.cfg.id, self.cfg.id, { detail, review: !!needs_review, after, commentLabel: t("server.meeting.boss") });
         if (!k) return text(t("server.ideas.cannotMove", { id }), true);
         self.note(t("server.ideas.movedNote", { id, task: k.id, name: target.cfg.name, title: k.title }));
         if (!start_now || target === self) return text(t("server.ideas.moved", { id, task: k.id, name: target.cfg.name }));

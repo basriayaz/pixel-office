@@ -4,7 +4,7 @@ import { appendJsonLineSync, readJsonLines } from "./fsutil.js";
 // The office's activity log: what happened, who did it, in one line each. The boss reads it as "what went on while I was away".
 export type EventKind =
   | "task_created" | "task_status" | "task_owner" | "task_started" | "task_edited"
-  | "idea_new" | "idea_promoted" | "pm_woken" | "discovery_start" | "discovery_end"
+  | "idea_new" | "idea_promoted" | "idea_edited" | "pm_woken" | "discovery_start" | "discovery_end"
   | "mode_change" | "cap_reached" | "cap_changed"
   | "emp_error" | "emp_sick" | "ask" | "question"
   | "meeting_start" | "meeting_end" | "hired" | "fired" | "server_start" | "run_end";

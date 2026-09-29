@@ -333,7 +333,29 @@
     },
     "taskRecap": "[Note: the earlier work session of this task could not be continued, so this one starts fresh. Notes on the task so far:\n{notes}]",
     "engineSwitched": "Engine changed: the next message starts a new session and carries a summary of this chat.",
-    "compactReinject": "[pixel-office: the conversation was just summarized. These are the messages you have not answered yet, word for word. They are the current request: answer them first and do not go back to older work unless they ask for it.]\n\n{messages}"
+    "compactReinject": "[pixel-office: the conversation was just summarized. These are the messages you have not answered yet, word for word. They are the current request: answer them first and do not go back to older work unless they ask for it.]\n\n{messages}",
+    "digest": {
+      "head": "[CURRENT STATE — {time}, written by the office]",
+      "na": "unavailable",
+      "board": "Board: {counts}",
+      "counts": "{doing} doing, {review} in review, {blocked} blocked, {todo} to do",
+      "active": "Open: {list}",
+      "done": "Last done: {list}",
+      "st": {
+        "doing": "doing",
+        "review": "in review",
+        "blocked": "blocked"
+      },
+      "tree": "Git working tree (your folder): {state}",
+      "treeState": "{changed} changed, {untracked} untracked files",
+      "commit": "Last commit: {commit}",
+      "push": "Pushed: {state}",
+      "pushState": "{behind} behind, {ahead} ahead of origin/main (last known origin, not fetched)",
+      "live": "Live: server started {started} — {state}",
+      "liveYes": "after the last commit, so it runs it",
+      "liveNo": "before the last commit, so it does not run it yet",
+      "rule": "When asked about the state, trust this summary and the board, not what you knew at the start of the session. If you cannot verify something, do not guess: say you could not verify it."
+    }
   },
   "rooms": {
     "kitchen": "KITCHEN",

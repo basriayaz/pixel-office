@@ -333,7 +333,29 @@
     },
     "taskRecap": "[Not: bu görevin önceki çalışma oturumuna devam edilemedi, bu yüzden yeni başlıyor. Görevdeki notlar:\n{notes}]",
     "engineSwitched": "Motor değişti: sonraki mesaj yeni bir oturum başlatacak ve bu sohbetin özetini taşıyacak.",
-    "compactReinject": "[pixel-office: konuşma az önce özetlendi. Henüz cevaplamadığın mesajlar aşağıda, kelimesi kelimesine. Güncel istek bunlar: önce bunlara cevap ver, istemedikçe eski işe dönme.]\n\n{messages}"
+    "compactReinject": "[pixel-office: konuşma az önce özetlendi. Henüz cevaplamadığın mesajlar aşağıda, kelimesi kelimesine. Güncel istek bunlar: önce bunlara cevap ver, istemedikçe eski işe dönme.]\n\n{messages}",
+    "digest": {
+      "head": "[GÜNCEL DURUM — {time}, ofis tarafından yazıldı]",
+      "na": "alınamadı",
+      "board": "Pano: {counts}",
+      "counts": "{doing} yapılıyor, {review} incelemede, {blocked} takılı, {todo} bekliyor",
+      "active": "Açık: {list}",
+      "done": "Son biten: {list}",
+      "st": {
+        "doing": "yapılıyor",
+        "review": "incelemede",
+        "blocked": "takılı"
+      },
+      "tree": "Git çalışma ağacı (senin klasörün): {state}",
+      "treeState": "{changed} değişmiş, {untracked} izlenmeyen dosya",
+      "commit": "Son commit: {commit}",
+      "push": "Push: {state}",
+      "pushState": "origin/main'in {behind} gerisinde, {ahead} önünde (son bilinen origin, fetch yapılmadı)",
+      "live": "Canlı: sunucu {started} başladı — {state}",
+      "liveYes": "son committen sonra, yani onu çalıştırıyor",
+      "liveNo": "son committen önce, yani henüz onu çalıştırmıyor",
+      "rule": "Durum sorulduğunda bu özete ve panoya güven, oturum başındaki bilgiye değil. Doğrulayamıyorsan tahmin etme, doğrulayamadığını söyle."
+    }
   },
   "rooms": {
     "kitchen": "MUTFAK",

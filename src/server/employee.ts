@@ -19,6 +19,7 @@ import { officeServer, OFFICE_TOOLS, type Colleagues } from "./office-tools.js";
 import { runCodexTurn, skillsIndex, skillFile, type CodexItem } from "./codex.js";
 import { runGeminiTurn, type GeminiEvent } from "./gemini.js";
 import { costOf } from "./prices.js";
+import { statusDigest } from "./digest.js";
 import { engineOf, geminiKey, openrouterCatalog, openrouterCostOf, openrouterEnv, openrouterSlug, markAuthFailed, AUTH_ERROR, type Engine } from "./providers.js";
 import { isTransient, retryDelay, RETRY_DELAYS_MS } from "./retry.js";
 import { listSkills, listProjectSkills } from "./agents.js";
@@ -297,12 +298,14 @@ export class Employee extends EventEmitter {
 
   // The one place a message is handed to an engine. A process that belongs to another session is closed first
   // (whatever it had not taken yet is carried over to the next one).
-  private dispatch(target: Target, text: string, o: { images?: ImageInput[]; files?: string[]; preamble?: boolean; ideaId?: number } = {}) {
+  private dispatch(target: Target, text: string, o: { images?: ImageInput[]; files?: string[]; preamble?: boolean; ideaId?: number; digest?: boolean } = {}) {
     const key = target === "task" ? `task:${this.taskId}` : target;
     this.turnIdea = target === "chat" ? o.ideaId : undefined;
     if (!this.turnOpen) this.applyPending();
     if (this.running && this.runningFor !== key) this.stopQuery();
-    const msg = userMsg((o.preamble ? this.takePreamble() : "") + text, o.images);
+    // the current state goes in the user message (not the instructions), so the cached prompt stays the same
+    const digest = o.digest ? statusDigest(this.cfg.cwd, this.colleagues?.board().tasks) : "";
+    const msg = userMsg((o.preamble ? this.takePreamble() : "") + (digest ? digest + "\n\n" : "") + text, o.images);
     if (o.files?.length) this.plain.set(msg, { text: "", files: o.files });
     if (!this.sick) this.setStatus("working");
     this.turnOpen = true;
@@ -371,7 +374,7 @@ export class Employee extends EventEmitter {
     }
     const body = items.map((b) => b.text).filter(Boolean).join("\n\n");
     this.dispatch(target, ideaId ? this.ideaContext(ideaId) + "\n\n" + body : body, {
-      images: items.flatMap((b) => b.images ?? []), files: items.flatMap((b) => b.files ?? []), preamble: target === "chat", ideaId,
+      images: items.flatMap((b) => b.images ?? []), files: items.flatMap((b) => b.files ?? []), preamble: target === "chat", ideaId, digest: true,
     });
     return true;
   }
@@ -470,7 +473,7 @@ export class Employee extends EventEmitter {
       + (from ? "\n\n" + t("server.task.startedBy", { name: from.cfg.name }) : "")
       + (back ? "\n\n" + t("server.task.backWith", { note: back }) : "");
     this.push({ role: from ? "colleague" : "user", text, ts: Date.now(), ...(from ? { from: from.cfg.name } : {}) });
-    this.dispatch("task", text);
+    this.dispatch("task", text, { digest: true });
     return true;
   }
 
@@ -662,7 +665,7 @@ export class Employee extends EventEmitter {
       }, 5 * 60e3);
       this.on("turn", done);
     });
-    this.dispatch("chat", prompt, { images });
+    this.dispatch("chat", prompt, { images, digest: true });
     return reply;
   }
 

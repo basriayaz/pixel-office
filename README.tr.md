@@ -1,25 +1,46 @@
 # Pixel Office
 
-**Claude agent'ların için pixel-art bir ofis.** Oyun tarzı karakter oluşturucuyla AI çalışanlar işe al, her birine bir iş ver, masalarına yürüyüp çalışmalarını izle ve onlara asla unutmayacakları şeyler öğret.
+**AI agent'ların için pixel-art bir ofis.** Oyun tarzı karakter oluşturucuyla AI çalışanlar işe al, her birine bir iş ver, masalarına yürüyüp çalışmalarını izle ve onlara asla unutmayacakları şeyler öğret.
 
 [![MIT lisans](https://img.shields.io/badge/license-MIT-yellow.svg)](LICENSE) [![Node 20+](https://img.shields.io/badge/node-%3E%3D20-brightgreen.svg)](#hızlı-başlangıç) *English: [README.md](README.md)*
 
 ![Pixel Office — ofis görünümü](docs/office.jpg)
 
-- **Her çalışan gerçek bir Claude Code oturumu**: kendi görev tanımı, kalıcı hafızası, yetenekleri, modeli ve izin seviyesi var. Verdiğin klasörde dosya okur ve düzenler, komut çalıştırır, web'e bakar.
+- **Her çalışan Claude, Codex, Gemini veya OpenRouter üzerinden çalışan bir AI agent**: kendi görev tanımı, kalıcı hafızası, yetenekleri, modeli ve izin seviyesi var. Verdiğin klasörde dosya okur ve düzenler, komut çalıştırır, web'e bakar.
 - **Durum bir bakışta**: çalışıyor, iznini bekliyor, bitti, okunmamış cevap — karakterin üstünde, listede ve tarayıcı sekmesinde görürsün. Boştakiler dolaşır, kahve alır, sohbet eder.
 - **Bir kez öğret, hep hatırlasın.** Çalışana söylediğin şey her oturumda yüklenen bir Markdown hafıza dosyasına yazılır; sen de düzenleyebilirsin.
 - **Birden fazla şirket, tek sunucu.** Şirket ya da ekip başına ofis; her birinin kendi klasörü, çalışanları ve teması (klasik, futbol kulübü, moda atölyesi, gotik malikâne, müzik stüdyosu, seyahat acentesi, rüya atölyesi).
 
 ## Hızlı başlangıç
 
-Gereksinimler: **Node.js 20+** ve giriş yapılmış **Claude Code** (`claude` CLI — Claude Pro/Max aboneliği ya da ortamda `ANTHROPIC_API_KEY`).
+Gereksinimler: **Node.js 20+** (`node --version`) ve aşağıdaki sağlayıcılardan **birine** erişim. GitHub üzerinden kurulum komutu için Git de kurulu olmalı.
 
 ```bash
 npx github:basriayaz/pixel-office
 ```
 
-Bu kadar. İlk çalıştırma `~/.pixel-office/` klasörünü oluşturur, üç örnek çalışan alır (asistan, geliştirici, pazarlamacı) ve http://localhost:4747 adresini kısa bir hoş geldin kartıyla açar. Bir çalışana tıkla, selam ver.
+Yeni bir global kurulumda `~/.pixel-office/` oluşturulur, üç örnek çalışan alınır ve http://localhost:4747 açılır. Tarayıcı açılmazsa bu adresi ziyaret et. Ofisin açılması ilk adımdır; görev göndermeden önce bir sağlayıcı bağla.
+
+1. **Sağlayıcı bağla:** **⚙ Ayarlar → Modeller** bölümünü aç. Aşağıdaki ilgili kartı kullan, **Bu motoru kullan** seçili kalsın; ardından **Yeniden kontrol et** düğmesine bas ve **Bağlı** durumunu gör.
+
+   | Sağlayıcı | Kartındaki kurulum adımları |
+   |---|---|
+   | Claude | Eksikse **Kur**, ardından **Giriş yap** ile Claude Code oturumunu aç; alternatif olarak sunucuyu ortamında `ANTHROPIC_API_KEY` tanımlı şekilde başlat. |
+   | Codex | Eksikse **Kur**, ardından **Giriş yap** ile Codex CLI oturumunu aç. |
+   | Gemini | Eksikse Gemini CLI'yi **Kur**; Gemini API anahtarını girip **Anahtarı kaydet** düğmesine bas (veya `GEMINI_API_KEY` / `GOOGLE_API_KEY` ile başlat). |
+   | OpenRouter | OpenRouter API anahtarını girip **Anahtarı kaydet** düğmesine bas (veya `OPENROUTER_API_KEY` ile başlat). Araç kullanımını destekleyen bir modelin OpenRouter kimliğini **Ek model kimlikleri** alanına ekle ve **Modelleri kaydet** düğmesine bas. Ayrı CLI kurulumu gerekmez. |
+
+   Bir çalışan seç, profilini aç (**☰ → Ayarlar**), bağlı sağlayıcıdan bir model seç ve kaydet. Sağlayıcı bağlamak mevcut çalışanın modelini otomatik değiştirmez.
+
+2. **Çalışma klasörünü seç:** **⚙ Ayarlar → Ofisler** bölümünde ofisinin satırını bul, klasör alanına projenin mutlak yolunu gir ve **Kaydet** düğmesine bas. **Global modda, komutu bir proje klasöründen başlatsan bile varsayılan çalışma klasörü ev dizinindir.** Çalışana özel klasör ayarı ofis ayarının önüne geçer; profilinden kontrol et. Proje modu için [Dosyalar nerede?](#dosyalar-nerede) bölümüne bak.
+
+3. **Çalışanın sohbetinde tek bir küçük istek gönder:**
+
+   > Çalışma klasörünün mutlak yolunu ve doğrudan içindeki en fazla beş öğeyi listele. Hiçbir dosyayı değiştirme.
+
+   **Beklenen çıktı:** seçtiğin proje yolunu ve tanıdığın öğeleri içeren bir sohbet yanıtı (klasör boşsa bunun belirtilmesi). İzin kartı çıkarsa klasör okuma işlemini inceleyip izin vererek devam et.
+
+İstek hata verirse veya beklerse sırayla: **Ayarlar → Modeller** (karttaki hatayı oku, kurulumu/girişi tamamla veya anahtarı düzelt, **Yeniden kontrol et**) → **çalışan profili → Ayarlar** (o sağlayıcıdan model seç ve kaydet) → **Ayarlar → Ofisler** ve çalışana özel klasör ayarı (yolu doğrula). Sohbette bekleyen izin isteğini kontrol et, ardından örnek isteği yeniden gönder. **Bağlı** rozeti sağlayıcı durumunu kontrol eder; örnek yanıt ise gerçek bir ajan turunun çalıştığını doğrular. Panel giriş ekranını açamazsa terminalde `claude auth login` veya `codex login` kullan, ardından **Yeniden kontrol et** düğmesine bas.
 
 Komutu kalıcı kurmak için:
 

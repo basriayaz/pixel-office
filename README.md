@@ -1,25 +1,46 @@
 # Pixel Office
 
-**A pixel-art office for your Claude agents.** Hire AI employees with a game-style character creator, give each one a job, watch them walk to their desks and work, and teach them things they never forget.
+**A pixel-art office for your AI agents.** Hire AI employees with a game-style character creator, give each one a job, watch them walk to their desks and work, and teach them things they never forget.
 
-[![MIT license](https://img.shields.io/badge/license-MIT-yellow.svg)](LICENSE) [![Node 20+](https://img.shields.io/badge/node-%3E%3D20-brightgreen.svg)](#requirements) *Türkçe: [README.tr.md](README.tr.md)*
+[![MIT license](https://img.shields.io/badge/license-MIT-yellow.svg)](LICENSE) [![Node 20+](https://img.shields.io/badge/node-%3E%3D20-brightgreen.svg)](#quick-start) *Türkçe: [README.tr.md](README.tr.md)*
 
 ![Pixel Office — the office view](docs/office.jpg)
 
-- **Every employee is a real Claude Code session** with its own job description, persistent memory, skills, model and permission level. They read and edit files, run commands and browse the web inside the folder you give them.
+- **Every employee runs an AI agent through Claude, Codex, Gemini or OpenRouter** with its own job description, persistent memory, skills, model and permission level. They read and edit files, run commands and browse the web inside the folder you give them.
 - **Status at a glance.** Working, waiting for your permission, done, unread reply — you see it on the character, on the roster and in the browser tab. Idle employees wander around, grab coffee and chat.
 - **Teach once, remember forever.** What you tell an employee goes into a Markdown memory file that is loaded every session and that you can edit yourself.
 - **Several companies, one server.** Offices per company or team, each with its own folder, employees and theme (classic, football club, fashion atelier, gothic manor, music studio, travel agency, dream studio).
 
 ## Quick start
 
-Requirements: **Node.js 20+** and **Claude Code** logged in (`claude` CLI — a Claude Pro/Max subscription or an `ANTHROPIC_API_KEY` in your environment).
+Requirements: **Node.js 20+** (`node --version`) and access to **one** provider below. Install Git for the GitHub-based install command.
 
 ```bash
 npx github:basriayaz/pixel-office
 ```
 
-That's it. The first run creates `~/.pixel-office/`, hires three sample employees (an assistant, a developer and a marketer) and opens http://localhost:4747 with a short welcome card. Click an employee, say hello.
+On a fresh global setup, this creates `~/.pixel-office/`, hires three sample employees and opens http://localhost:4747. If the browser does not open, visit that address. Opening the office is the first step; connect a provider before sending a task.
+
+1. **Connect a provider:** open **⚙ Settings → Models**. Use the matching card below, leave **Use this engine** checked, then click **Check again** and look for **Connected**.
+
+   | Provider | Setup in its card |
+   |---|---|
+   | Claude | **Install** if missing, then **Sign in** to Claude Code; alternatively start the server with `ANTHROPIC_API_KEY` in its environment. |
+   | Codex | **Install** if missing, then **Sign in** to the Codex CLI. |
+   | Gemini | **Install** the Gemini CLI if missing; enter your Gemini API key and click **Save key** (or start with `GEMINI_API_KEY` / `GOOGLE_API_KEY`). |
+   | OpenRouter | Enter your OpenRouter API key and click **Save key** (or start with `OPENROUTER_API_KEY`). Add a tool-capable model's OpenRouter id under **Extra model ids** and click **Save models**. No separate CLI installation is needed. |
+
+   Select an employee, open their profile (**☰ → Settings**), choose a model from the connected provider and save. Connecting a provider does not change an existing employee's model automatically.
+
+2. **Choose the working folder:** open **⚙ Settings → Offices**, find your office's row, enter your project's absolute path in its folder field and click **Save**. **Global mode defaults to your home folder, even when you launch the command from a project folder.** An employee's own working-folder setting overrides the office setting; check it in their profile. For project mode, see [Where files live](#where-files-live).
+
+3. **Send one small request** in that employee's chat:
+
+   > Show the absolute path of your working directory and list up to five entries directly inside it. Do not change any files.
+
+   **Expected result:** a chat reply containing the project path you selected and entries you recognize (or a note that the folder is empty). If a permission card appears, review and allow the directory-reading action to continue.
+
+If the request fails or waits: **Settings → Models** first (read the card's error, finish installation/sign-in or correct the key, then **Check again**) → **employee profile → Settings** (select a model from that provider and save) → **Settings → Offices** and the employee's folder override (confirm the path). Check the chat for a pending permission request, then resend the example. A **Connected** badge checks provider status; the example reply confirms an actual agent turn works. If the panel cannot start sign-in, use `claude auth login` or `codex login` in a terminal, then **Check again**.
 
 To install the command permanently:
 

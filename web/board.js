@@ -67,6 +67,7 @@ function makeModeControl(els, isOpen) {
 
 const boardUI = (() => {
   const STATUSES = ["blocked", "review", "doing", "todo", "done"];
+  const STATUS_ICON = { blocked: "⛔", review: "🔍", doing: "⚙", todo: "○", done: "✓" };
   let tab = "tasks", ownerFilter = "", showDone = false, noteFilter = "", ideaShowAll = false;
   const open = new Set();      // expanded task / note ids ("t3", "n7")
   const editing = new Set();   // note ids being edited
@@ -99,6 +100,7 @@ const boardUI = (() => {
     const el = $("boardBadge");
     el.hidden = !(n + fresh); el.textContent = n + fresh;
     $("ideasBadge").hidden = !fresh; $("ideasBadge").textContent = fresh;
+    $("tasksBadge").hidden = !n; $("tasksBadge").textContent = n;
   }
 
   // Employee status only shows on the board through task alerts; this fingerprint tells whether a status change matters.
@@ -178,14 +180,14 @@ const boardUI = (() => {
       all.textContent = t("ui.board.startAll", { name: emp(ownerFilter).name, n: waiting });
       all.onclick = async () => { if (await call("POST", `${API()}/start-all`, { owner: ownerFilter })) toast(t("ui.board.startedAll", { name: emp(ownerFilter).name })); };
     }
-    if (!tasks.length) { host.innerHTML = `<div class="muted board-empty">${escapeHtml(t("ui.board.noTasks"))}</div>`; return; }
+    if (!tasks.length) { host.innerHTML = `<div class="board-empty"><div class="empty-ico">📋</div><div class="muted">${escapeHtml(t("ui.board.noTasks"))}</div></div>`; return; }
     for (const st of STATUSES) {
       if (st === "done" && !showDone) continue;
       const group = tasks.filter((k) => k.status === st).sort((a, b) => b.updated - a.updated);
       if (!group.length) continue;
       const h = document.createElement("div");
       h.className = "board-group " + st;
-      h.innerHTML = `<i class="tdot ${st}"></i>${escapeHtml(t(`ui.board.status.${st}`))} <span>${group.length}</span>`;
+      h.innerHTML = `<i class="gico">${STATUS_ICON[st]}</i>${escapeHtml(t(`ui.board.status.${st}`))} <span>${group.length}</span>`;
       host.appendChild(h);
       for (const k of group) host.appendChild(taskCard(k));
     }
@@ -200,11 +202,14 @@ const boardUI = (() => {
     const last = k.notes[k.notes.length - 1];
     const alert = alertOf(k);
     if (alert) card.classList.add("alert-" + alert);
+    const chips = `<span class="mchip who">${escapeHtml(owner?.name || t("ui.board.noOwner"))}</span><span class="mchip">${escapeHtml(t("ui.board.by", { name: who(k.createdBy) }))}</span><span class="mchip">${when(k.updated)}</span>`;
+    card.style.setProperty("--c", owner?.color || "var(--idle)");
     card.innerHTML = `
       <div class="task-head">
-        ${owner ? `<img src="${office.portrait(k.owner)}" alt="" />` : ""}
+        <span class="pav">${owner ? `<img src="${office.portrait(k.owner)}" alt="" />` : `<span class="prow-icon">·</span>`}</span>
         <div class="task-main"><div class="task-title"><b>#${k.id}</b> ${escapeHtml(k.title)}${taskTags(k, alert)}</div>
-          <div class="task-meta">${escapeHtml(owner?.name || t("ui.board.noOwner"))} · ${escapeHtml(t("ui.board.by", { name: who(k.createdBy) }))} · ${when(k.updated)}${last ? ` · <i>${escapeHtml(last.text.slice(0, 90))}</i>` : ""}</div></div>
+          <div class="task-meta">${chips}</div>
+          ${last ? `<div class="task-quote">${escapeHtml(last.text.slice(0, 140))}</div>` : ""}</div>
         <div class="task-actions"></div>
       </div>
       ${drawerId !== k.id ? sendBackBox(k) : ""}`;
@@ -403,7 +408,7 @@ const boardUI = (() => {
     host.innerHTML = "";
     const order = { new: 0, later: 1, moved: 2, rejected: 3 };
     const ideas = board().ideas.filter((x) => ideaShowAll || x.status === "new" || x.status === "later").slice().sort((a, b) => order[a.status] - order[b.status] || (a.rank ?? 999) - (b.rank ?? 999) || b.ts - a.ts);
-    if (!ideas.length) { host.innerHTML = `<div class="muted board-empty">${escapeHtml(t("ui.board.noIdeas"))}</div>`; return; }
+    if (!ideas.length) { host.innerHTML = `<div class="board-empty"><div class="empty-ico">💡</div><div class="muted">${escapeHtml(t("ui.board.noIdeas"))}</div></div>`; return; }
     for (const x of ideas) host.appendChild(ideaCard(x));
   }
 
@@ -411,13 +416,15 @@ const boardUI = (() => {
     const ranked = board().ideas.some((i) => i.rank && i.status === "new");
     const key = "i" + x.id, isOpen = open.has(key) ? !(x.status === "new" && (!ranked || x.rank)) : x.status === "new" && (!ranked || !!x.rank);
     const card = document.createElement("div");
-    card.className = "note-card" + (isOpen ? " open" : "");
-    const avatar = x.by !== "user" && emp(x.by) ? `<img src="${office.portrait(x.by)}" alt="" />` : `<span class="note-you">★</span>`;
+    card.className = "idea-card st-" + x.status + (isOpen ? " open" : "") + (x.rank === 1 && x.status === "new" ? " top" : "");
+    const avatar = `<span class="pav">${x.by !== "user" && emp(x.by) ? `<img src="${office.portrait(x.by)}" alt="" />` : `<span class="prow-icon">★</span>`}</span>`;
     const chosen = ideaOwner.get(x.id) ?? x.owner ?? "";
     const live = x.status === "new" || x.status === "later";
-    card.innerHTML = `<div class="note-head">${avatar}<div class="task-main"><div class="task-title">💡 <b>#${x.id}</b> ${escapeHtml(x.title)} <span class="tag">${escapeHtml(t(`ui.board.ideaStatus.${x.status}`))}</span>${x.rank && x.status !== "moved" ? ` <span class="tag alert" title="${escapeHtml(t("ui.board.ideaRankHint"))}">${escapeHtml(t("ui.board.ideaRank", { n: x.rank }))}</span>` : ""}${x.effort ? ` <span class="tag">${escapeHtml(t(`ui.board.ideaEffort.${x.effort}`))}</span>` : ""}${x.taskId ? ` <span class="tag">${escapeHtml(t("ui.board.ideaMoved", { id: x.taskId }))}</span>` : ""}</div><div class="task-meta">${escapeHtml(x.byName)} · ${when(x.ts)}${x.tags.map((g) => ` <span class="tag">${escapeHtml(g)}</span>`).join("")}${x.comment ? ` · <i>${escapeHtml(x.comment)}</i>` : ""}</div></div></div>
-      <div class="note-text${isOpen ? "" : " clamp"}">${md(x.text || "")}</div>
-      ${x.advice ? `<div class="task-note"><span>${escapeHtml(t("ui.board.ideaAdvice"))}</span>${escapeHtml(x.advice)}</div>` : ""}
+    const pills = `<span class="pill st-${x.status}">${escapeHtml(t(`ui.board.ideaStatus.${x.status}`))}</span>${x.rank && x.status !== "moved" ? `<span class="pill rank" title="${escapeHtml(t("ui.board.ideaRankHint"))}">${escapeHtml(t("ui.board.ideaRank", { n: x.rank }))}</span>` : ""}${x.effort ? `<span class="pill eff">${escapeHtml(t(`ui.board.ideaEffort.${x.effort}`))}</span>` : ""}${x.taskId ? `<span class="pill">${escapeHtml(t("ui.board.ideaMoved", { id: x.taskId }))}</span>` : ""}`;
+    card.innerHTML = `<div class="note-head"><span class="idea-bulb">💡</span><div class="task-main"><div class="task-title"><b>#${x.id}</b> ${escapeHtml(x.title)}</div><div class="idea-pills">${pills}</div></div></div>
+      ${x.text ? `<div class="note-text${isOpen ? "" : " clamp"}">${md(x.text)}</div>` : ""}
+      ${x.advice ? `<div class="idea-advice"><span>${escapeHtml(t("ui.board.ideaAdvice"))}</span>${escapeHtml(x.advice)}</div>` : ""}
+      <div class="idea-foot"><span class="idea-by">${avatar}<span>${escapeHtml(x.byName)} · ${when(x.ts)}</span>${x.tags.map((g) => `<span class="mchip">${escapeHtml(g)}</span>`).join("")}</span>${x.comment && !isOpen ? `<span class="idea-comment">${escapeHtml(x.comment)}</span>` : ""}</div>
       <div class="note-actions"${isOpen ? "" : " hidden"}>${live ? `<select class="i-owner"><option value="">${escapeHtml(t("ui.board.ideaOwner"))}…</option>${ownerOptions(chosen, false)}</select><input class="i-comment" data-draft="i-comment:${x.id}" maxlength="600" placeholder="${escapeHtml(t("ui.board.ideaComment"))}" value="${escapeHtml(draft(`i-comment:${x.id}`, x.comment || ""))}" />` : ""}<span class="i-buttons"></span></div>`;
     card.querySelector(".note-head").onclick = () => { open.has(key) ? open.delete(key) : open.add(key); renderIdeas(); };
     const buttons = card.querySelector(".i-buttons");
@@ -452,7 +459,7 @@ const boardUI = (() => {
     host.innerHTML = "";
     const notes = board().notes.filter((n) => !noteFilter || n.by === noteFilter).slice().reverse();
     $("notesCount").textContent = t("ui.board.notesCount", { n: notes.length });
-    if (!notes.length) { host.innerHTML = `<div class="muted board-empty">${escapeHtml(t("ui.board.noNotes"))}</div>`; return; }
+    if (!notes.length) { host.innerHTML = `<div class="board-empty"><div class="empty-ico">📒</div><div class="muted">${escapeHtml(t("ui.board.noNotes"))}</div></div>`; return; }
     for (const n of notes) host.appendChild(noteCard(n));
   }
 
@@ -460,7 +467,8 @@ const boardUI = (() => {
     const key = "n" + n.id, isOpen = open.has(key), isEdit = editing.has(n.id);
     const card = document.createElement("div");
     card.className = "note-card" + (isOpen ? " open" : "");
-    const avatar = n.by !== "user" && emp(n.by) ? `<img src="${office.portrait(n.by)}" alt="" />` : `<span class="note-you">★</span>`;
+    card.style.setProperty("--c", emp(n.by)?.color || "var(--accent)");
+    const avatar = `<span class="pav">${n.by !== "user" && emp(n.by) ? `<img src="${office.portrait(n.by)}" alt="" />` : `<span class="prow-icon">★</span>`}</span>`;
     if (isEdit) {
       card.innerHTML = `<input class="n-title" data-draft="n-title:${n.id}" maxlength="140" value="${escapeHtml(draft(`n-title:${n.id}`, n.title))}" /><textarea class="n-text" data-draft="n-text:${n.id}" rows="6">${escapeHtml(draft(`n-text:${n.id}`, n.text))}</textarea><input class="n-tags" data-draft="n-tags:${n.id}" value="${escapeHtml(draft(`n-tags:${n.id}`, n.tags.join(", ")))}" placeholder="${escapeHtml(t("ui.board.noteTags"))}" /><div class="actions right"><button class="btn small ghost n-cancel" type="button">${escapeHtml(t("ui.board.cancel"))}</button><button class="btn small primary n-save" type="button">${escapeHtml(t("ui.board.save"))}</button></div>`;
       const forget = () => ["n-title", "n-text", "n-tags"].forEach((f) => drafts.delete(`${f}:${n.id}`));
@@ -468,7 +476,7 @@ const boardUI = (() => {
       card.querySelector(".n-save").onclick = async () => { if (await call("PUT", `${API()}/notes/${n.id}`, { title: card.querySelector(".n-title").value, text: card.querySelector(".n-text").value, tags: card.querySelector(".n-tags").value.split(",") })) { editing.delete(n.id); forget(); renderNotes(); } };
       return card;
     }
-    card.innerHTML = `<div class="note-head">${avatar}<div class="task-main"><div class="task-title"><b>#${n.id}</b> ${escapeHtml(n.title)}</div><div class="task-meta">${escapeHtml(n.byName)} · ${when(n.ts)}${n.tags.map((x) => ` <span class="tag">${escapeHtml(x)}</span>`).join("")}</div></div></div>
+    card.innerHTML = `<div class="note-head">${avatar}<div class="task-main"><div class="task-title"><b>#${n.id}</b> ${escapeHtml(n.title)}</div><div class="task-meta"><span class="mchip who">${escapeHtml(n.byName)}</span><span class="mchip">${when(n.ts)}</span>${n.tags.map((x) => `<span class="mchip tagc">${escapeHtml(x)}</span>`).join("")}</div></div></div>
       <div class="note-text${isOpen ? "" : " clamp"}">${md(n.text)}</div>
       <div class="note-actions"${isOpen ? "" : " hidden"}><button class="btn small ghost n-edit" type="button">${escapeHtml(t("ui.board.edit"))}</button><button class="btn small danger n-del" type="button">${escapeHtml(t("ui.board.delete"))}</button></div>`;
     card.querySelector(".note-head").onclick = card.querySelector(".note-text").onclick = () => { isOpen ? open.delete(key) : open.add(key); renderNotes(); };

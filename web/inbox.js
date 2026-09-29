@@ -128,13 +128,28 @@ const inboxUI = (() => {
     host.innerHTML = "";
     const all = items();
     if (!all.length) { host.innerHTML = `<div class="panel-empty"><div class="empty-ico">✨</div><div class="muted">${escapeHtml(t("ui.inbox.empty").replace(/\s*✨\s*$/, ""))}</div></div>`; return; }
+    // summary strip: how many decisions in total, one chip per kind that jumps to its group
+    const sum = document.createElement("div");
+    sum.className = "isum";
+    sum.innerHTML = `<b>${escapeHtml(t("ui.inbox.count", { n: all.length }))}</b>`;
+    host.appendChild(sum);
+    const heads = {};
+    for (const g of GROUPS) {
+      const n = all.filter((it) => it.group === g).length;
+      if (!n) continue;
+      const chip = document.createElement("button");
+      chip.type = "button"; chip.className = "ichip g-" + g; chip.title = t(`ui.inbox.g.${g}`);
+      chip.innerHTML = `${GROUP_ICON[g]} <span>${n}</span>`;
+      chip.onclick = () => heads[g]?.scrollIntoView({ block: "start", behavior: "smooth" });
+      sum.appendChild(chip);
+    }
     for (const g of GROUPS) {
       const list = all.filter((it) => it.group === g);
       if (!list.length) continue;
       const h = document.createElement("div");
       h.className = "pgroup g-" + g;
       h.innerHTML = `<i class="gico">${GROUP_ICON[g]}</i>${escapeHtml(t(`ui.inbox.g.${g}`))} <span>${list.length}</span>`;
-      host.appendChild(h);
+      host.appendChild(h); heads[g] = h;
       for (const it of list) { const el = build(it); el.classList.add("g-" + g); host.appendChild(el); }
     }
   }

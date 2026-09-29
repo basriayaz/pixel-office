@@ -382,6 +382,8 @@
     },
     "inbox": {
       "title": "Seni bekleyenler",
+      "count": "{n} karar seni bekliyor",
+      "count_one": "{n} karar seni bekliyor",
       "close": "Kapat",
       "empty": "Seni bekleyen bir şey yok ✨",
       "openChat": "Sohbeti aç",

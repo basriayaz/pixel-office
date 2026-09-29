@@ -382,6 +382,8 @@
     },
     "inbox": {
       "title": "Waiting for you",
+      "count": "{n} decisions waiting for you",
+      "count_one": "{n} decision waiting for you",
       "close": "Close",
       "empty": "Nothing is waiting for you ✨",
       "openChat": "Open chat",

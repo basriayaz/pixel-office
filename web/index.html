@@ -9,6 +9,8 @@
   <link rel="stylesheet" href="style.css" />
   <link rel="stylesheet" href="panels.css" />
   <link rel="stylesheet" href="drawer.css" />
+  <link rel="stylesheet" href="boardui.css" />
+  <link rel="stylesheet" href="select.css" />
 </head>
 <body>
   <header class="topbar">
@@ -107,7 +109,7 @@
   <div class="modal" id="boardModal" hidden>
     <div class="modal-card board-card">
       <div class="modal-head">
-        <nav class="tabs" id="boardTabs"><button type="button" data-tab="tasks" data-i18n="ui.board.tabTasks"></button><button type="button" data-tab="notes" data-i18n="ui.board.tabNotes"></button><button type="button" data-tab="ideas"><span data-i18n="ui.board.tabIdeas"></span><span class="badge" id="ideasBadge" hidden></span></button></nav>
+        <nav class="tabs" id="boardTabs"><button type="button" data-tab="tasks"><span data-i18n="ui.board.tabTasks"></span><span class="badge" id="tasksBadge" hidden></span></button><button type="button" data-tab="notes"><span data-i18n="ui.board.tabNotes"></span></button><button type="button" data-tab="ideas"><span data-i18n="ui.board.tabIdeas"></span><span class="badge" id="ideasBadge" hidden></span></button></nav>
         <small class="muted" id="boardManager"></small>
         <button class="icon-btn" id="boardClose" data-i18n-title="ui.board.close">×</button>
       </div>
@@ -122,33 +124,30 @@
       <section id="boardTasks">
         <div class="board-bar"><select id="taskOwnerFilter"></select><button class="btn small primary" type="button" id="taskStartAll" hidden></button><label class="check"><input type="checkbox" id="taskShowDone" /> <span data-i18n="ui.board.showDone"></span></label></div>
         <div id="taskList" class="board-list"></div>
-        <form id="newTaskForm" class="board-new">
-          <h3 data-i18n="ui.board.newTask"></h3>
+        <details class="board-new"><summary><span data-i18n="ui.board.newTask"></span></summary><form id="newTaskForm" class="board-form">
           <div class="board-row"><input id="newTaskTitle" maxlength="160" required data-i18n-ph="ui.board.taskTitle" /><select id="newTaskOwner"></select></div>
           <textarea id="newTaskDetail" rows="2" data-i18n-ph="ui.board.taskDetail"></textarea>
           <label class="check"><input type="checkbox" id="newTaskReview" /> <span data-i18n="ui.board.needsReviewLong"></span></label>
           <div class="actions"><small class="muted" data-i18n="ui.board.addHint"></small><button class="btn primary small" type="submit" data-i18n="ui.board.add"></button></div>
-        </form>
+        </form></details>
       </section>
       <section id="boardIdeas" hidden>
         <div class="board-bar"><small class="muted" data-i18n="ui.board.ideasHint"></small><button class="btn small" type="button" id="ideaDiscover" data-i18n="ui.board.discover" data-i18n-title="ui.board.discoverTip"></button><label class="check"><input type="checkbox" id="ideaShowAll" /> <span data-i18n="ui.board.ideaShowAll"></span></label></div>
         <div id="ideaList" class="board-list"></div>
-        <form id="newIdeaForm" class="board-new">
-          <h3 data-i18n="ui.board.newIdea"></h3>
+        <details class="board-new"><summary><span data-i18n="ui.board.newIdea"></span></summary><form id="newIdeaForm" class="board-form">
           <input id="newIdeaTitle" maxlength="160" required data-i18n-ph="ui.board.ideaTitle" />
           <textarea id="newIdeaText" rows="2" data-i18n-ph="ui.board.ideaText"></textarea>
           <div class="actions"><button class="btn primary small" type="submit" data-i18n="ui.board.addIdea"></button></div>
-        </form>
+        </form></details>
       </section>
       <section id="boardNotes" hidden>
         <div class="board-bar"><select id="noteAuthorFilter"></select><small class="muted" id="notesCount"></small></div>
         <div id="noteList" class="board-list"></div>
-        <form id="newNoteForm" class="board-new">
-          <h3 data-i18n="ui.board.newNote"></h3>
+        <details class="board-new"><summary><span data-i18n="ui.board.newNote"></span></summary><form id="newNoteForm" class="board-form">
           <input id="newNoteTitle" maxlength="140" required data-i18n-ph="ui.board.noteTitle" />
           <textarea id="newNoteText" rows="3" required data-i18n-ph="ui.board.noteText"></textarea>
           <div class="board-row"><input id="newNoteTags" data-i18n-ph="ui.board.noteTags" /><button class="btn primary small" type="submit" data-i18n="ui.board.addNote"></button></div>
-        </form>
+        </form></details>
       </section>
       <aside class="task-drawer" id="taskDrawer" hidden></aside>
     </div>

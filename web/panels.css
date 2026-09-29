@@ -228,3 +228,21 @@
   .set-info dd { margin-bottom: 8px; }
 }
 .panel-list:has(> .panel-empty) { align-content: center; }
+
+/* inbox summary strip */
+.isum { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; padding: 4px 0 10px; }
+.isum b { font-weight: 500; font-size: 13px; margin-right: auto; }
+.ichip { --g: var(--muted); display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: 999px; border: 1px solid color-mix(in srgb, var(--g) 50%, var(--line)); background: color-mix(in srgb, var(--g) 10%, var(--bg)); color: var(--text); font: inherit; font-size: 12px; cursor: pointer; }
+.ichip:hover { background: color-mix(in srgb, var(--g) 22%, var(--bg)); }
+.ichip span { color: var(--g); font-weight: 600; }
+.ichip.g-asks, .ichip.g-questions, .ichip.g-review { --g: var(--accent); }
+.ichip.g-blocked, .ichip.g-errors { --g: var(--error); }
+.ichip.g-ideas { --g: var(--working); }
+.pgroup { scroll-margin-top: 4px; }
+
+/* the idea card's note line and owner picker: same box as the other fields */
+.idea-card .note-actions .i-owner, .idea-card .note-actions .i-comment { height: 32px; box-sizing: border-box; background-color: var(--card); color: var(--text); border: 1px solid var(--line); border-radius: 8px; padding: 0 10px; font: inherit; font-size: 12.5px; margin: 0; }
+.idea-card .note-actions .i-owner { flex: 0 1 190px; }
+.idea-card .note-actions .i-comment { flex: 1 1 180px; width: auto; }
+.idea-card .note-actions .i-comment:focus { outline: none; border-color: var(--accent); }
+.idea-card .note-actions .i-comment::placeholder { color: var(--muted); opacity: .8; }

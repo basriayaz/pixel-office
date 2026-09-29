@@ -1,0 +1,13 @@
+/* ---------- dropdowns everywhere: one arrow, drawn by us, inside the padding ---------- */
+select {
+  background-color: var(--bg); color: var(--text); border: 1px solid var(--line); border-radius: 8px; font: inherit; padding: 6px 10px;
+  -webkit-appearance: none; appearance: none; color-scheme: dark; cursor: pointer;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path d='M1 1l4 4 4-4' fill='none' stroke='%238b8f9e' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/></svg>") !important;
+  background-repeat: no-repeat !important; background-position: right 10px center !important; background-size: 10px 6px !important;
+  padding-right: 28px !important; text-overflow: ellipsis;
+}
+select:hover { border-color: color-mix(in srgb, var(--accent) 45%, var(--line)); }
+select:focus { outline: none; border-color: var(--accent); }
+select:disabled { cursor: not-allowed; }
+select option { background: var(--card); color: var(--text); }
+

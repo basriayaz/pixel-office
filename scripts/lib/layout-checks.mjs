@@ -3,24 +3,32 @@ import assert from "node:assert/strict";
 
 const plant = (id, tx, ty) => ({ id, type: "plant", tx, ty, v: 1 });
 
-// Wall decor: movable pieces on the top wall band, one arrangement per theme.
+// Wall decor, rugs, skins: the decor is a set of movable pieces any office can hang; ambient decor takes no tiles; finished work unlocks pieces.
 export function runWalls(P) {
-  const ids = ["a", "b", "c"], themes = Object.keys(P.WALL);
-  const plain = P.scene(null, ids).items; // (no theme: no wall decor)
+  const ids = ["a", "b", "c"], themes = P.THEMES;
+  const plain = P.scene(null, ids).items; // (no theme: no decor at all)
   const codes = (items) => [...new Set(P.check(items, { empCount: 3 }).errors.map((e) => e.code))];
+  assert.deepEqual(Object.keys(P.WALL).filter((g) => g !== "progress").sort(), [...themes].sort(), "one wall catalog per theme");
   for (const th of themes) {
-    const items = P.scene(null, ids, th).items, wall = P.wallOf(items, th);
-    assert.deepEqual(P.check(items, { empCount: 3 }).errors, [], `${th}: the default wall decor is valid`);
-    assert.ok(wall.length >= 5, `${th}: has wall decor`);
+    const items = P.scene(null, ids, th, 5).items, wall = P.wallOf(items);
+    assert.deepEqual(P.check(items, { empCount: 3 }).errors, [], `${th}: the default decor (and the unlocked pieces) is valid`);
+    assert.ok(wall.length >= 6 && items.some((i) => i.type === "rug"), `${th}: has wall decor and the rug`);
     assert.equal(P.wallOrder(th).length, Object.keys(P.WALL[th]).length, `${th}: one palette entry per piece`);
-    assert.deepEqual([...P.build(items).blocked].sort(), [...P.build(plain).blocked].sort(), `${th}: wall decor blocks no floor tile`);
+    assert.deepEqual([...P.build(items).blocked].sort(), [...P.build(plain).blocked].sort(), `${th}: decor blocks no floor tile`);
     assert.deepEqual(P.build(items).spots.map((s) => s.key).sort(), P.build(plain).spots.map((s) => s.key).sort(), `${th}: and creates no spots`);
-    for (const it of wall) assert.equal(it.ty, 0);
-    assert.deepEqual(P.sanitize(P.toDoc(items, [th])).ok, true, `${th}: schema accepts it`);
-    assert.equal(P.wallOf(P.scene(null, ids, "default").items, th).length, th === "default" ? wall.length : 0, `${th}: other themes' decor is not in the scene`);
+    assert.ok(wall.every((it) => it.ty === 0));
+    assert.equal(P.sanitize(P.toDoc(items, true)).ok, true, `${th}: schema accepts it`);
+    assert.equal(new Set(items.map((i) => i.id)).size, items.length, `${th}: unique ids`);
   }
+  // finished work unlocks pieces: none at 0, one more each time, each hung where it fits, nothing added twice
+  const counts = [0, 1, 2, 3, 4, 5].map((n) => P.wallOf(P.scene(null, ids, "default", n).items).filter((i) => i.type.startsWith("progress_")).length);
+  assert.deepEqual(counts.slice(0, 4), [0, 1, 2, 3], "one more piece per unlock");
+  assert.ok(counts[5] >= 3 && counts[5] <= 5);
+  const withP = P.scene(null, ids, "default", 3).items;
+  assert.equal(P.progressWall(withP, 3).length, 0, "nothing is added twice");
+  assert.equal(P.progressWall(P.scene(null, ids, "default", 0).items, 99).length <= 5, true);
+
   const base = P.scene(null, ids, "default").items;
-  const piece = (id) => base.find((i) => i.id === id);
   const move = (id, tx, ty = 0) => base.map((i) => (i.id === id ? { ...i, tx, ty } : i));
   // windows are part of the wall; pieces stay inside the band and off each other
   for (const tx of [9, 10, 11, 17, 18, 19]) assert.ok(codes(move("default_poster", tx)).includes("window"), `poster over the window at ${tx}`);
@@ -30,12 +38,17 @@ export function runWalls(P) {
   assert.ok(codes(move("default_poster", 13, 3)).includes("wallEdge"), "a wall piece on the floor");
   assert.ok(codes(move("default_poster", 15)).includes("wallOverlap"), "poster on the clock");
   assert.ok(codes(move("default_cabinets", 1)).length === 0, "sliding the cabinets along is fine");
-  assert.ok(codes([...base, { id: "default_clock2", type: "default_clock", tx: 2, ty: 0 }]).includes("wallOverlap"), "a copy on top of the cabinets");
-  assert.ok(codes([...base, { id: "default_clock2", type: "default_clock", tx: 14, ty: 0 }]).length === 0, "a copy in the gap");
-  // another theme's pieces sleep: same tiles are fine, and they keep being checked on their own
-  const asleep = [...base, ...P.defaultWall("football")];
-  assert.deepEqual(codes(asleep), [], "two themes may hang on the same tiles");
-  assert.ok(codes([...asleep, { id: "football_clock2", type: "football_clock", tx: 13, ty: 0 }]).includes("wallOverlap"), "but not two pieces of one theme");
+  // every theme's pieces share the one wall: the same tiles are not free twice
+  assert.ok(codes([...base, { id: "football_clock", type: "football_clock", tx: 15, ty: 0 }]).includes("wallOverlap"), "another theme's clock on the clock");
+  assert.deepEqual(codes([...base, { id: "football_clock", type: "football_clock", tx: 14, ty: 0 }]), [], "but in the gap it hangs");
+  assert.deepEqual(codes([...base, { id: "gothic_clock", type: "gothic_clock", tx: 16, ty: 0 }, { id: "music_clock", type: "music_clock", tx: 12, ty: 0 }]), [], "a mix of themes");
+  // ambient decor: no tiles, one of each, always at 0
+  const amb = { id: "gothic_glass", type: "gothic_glass", tx: 0, ty: 0 };
+  assert.deepEqual(codes([...base, amb, { id: "fashion_lights", type: "fashion_lights", tx: 0, ty: 0 }]), [], "ambient decor blocks nothing");
+  assert.ok(codes([...base, amb, { ...amb, id: "gothic_glass2" }]).includes("dup"), "one of each");
+  assert.equal(P.sanitize({ v: 1, items: [{ ...amb, tx: 5 }] }).ok, false, "ambient decor is not placed on a tile");
+  assert.equal(P.tilesOf(amb).length, 0);
+  assert.equal(P.findPlace(base, { id: "x", type: "gothic_glass" }, [10, 0], { empCount: 3 }) === null, false, "and it can be added");
   // adding / moving with the same search the editor uses
   const spot = P.findPlace(base, { id: P.nextId(base, "default_clock"), type: "default_clock" }, [12, 0], { empCount: 3 });
   assert.ok(spot && spot.ty === 0 && P.check([...base, spot], { empCount: 3 }).ok, "findPlace hangs a wall piece on the wall");
@@ -44,16 +57,46 @@ export function runWalls(P) {
   for (let i = 0; i < 40; i++) { const p = P.findPlace(crowded, { id: P.nextId(crowded, "default_clock"), type: "default_clock" }, [14, 0], { empCount: 3 }); if (!p) break; crowded = [...crowded, p]; }
   assert.ok(crowded.length > base.length + 3 && crowded.length < base.length + 40, "the wall fills up, then there is no room");
   assert.equal(P.findPlace(crowded, { id: "zz", type: "default_tv" }, [14, 0], { empCount: 3 }), null, "a big piece finds no room");
-  assert.deepEqual(P.tilesOf(piece("default_tv")).length, 8, "a 4-tile screen highlights both rows of 4 tiles");
-  // where the decor of a theme is stored: `walls` lists the themes; the others get their default arrangement
-  const stored = P.toDoc(plain.concat(P.defaultWall("football").filter((i) => i.id !== "football_banner")), ["football"]);
-  assert.equal(P.wallOf(P.scene(stored, ids, "football").items, "football").length, 5, "a stored arrangement is used as it is");
-  const emptied = P.toDoc(plain, ["football"]);
-  assert.equal(P.wallOf(P.scene(emptied, ids, "football").items, "football").length, 0, "a theme whose walls were all taken down stays bare");
-  assert.equal(P.wallOf(P.scene(emptied, ids, "gothic").items, "gothic").length, 8, "while another theme starts from its default");
-  assert.equal(P.wallOf(P.scene(P.toDoc(plain), ids, "football").items, "football").length, 6, "no marker: the default arrangement");
-  assert.deepEqual(P.sanitize(P.toDoc(plain, ["football", "football", "dream"])).walls, ["football", "dream"], "markers are kept, once");
-  assert.equal(P.sanitize(P.toDoc(plain)).walls, undefined);
+  assert.equal(P.tilesOf(base.find((i) => i.id === "default_tv")).length, 8, "a 4-tile screen highlights both rows of 4 tiles");
+
+  // the rug: 5x5 on the floor, furniture may stand on it, two rugs may not overlap
+  const rug = base.find((i) => i.type === "rug");
+  assert.ok(rug && rug.tx === 0 && rug.ty === 11, "the lounge rug is where it always was");
+  assert.equal(P.tilesOf(rug).length, 25);
+  assert.deepEqual(codes(base), [], "the sofa stands on the rug");
+  const mv = (tx, ty) => base.map((i) => (i.type === "rug" ? { ...i, tx, ty } : i));
+  assert.ok(codes(mv(3, 11)).includes("outside"), "a rug across the wall column");
+  assert.ok(codes(mv(-1, 11)).includes("outside") && codes(mv(0, 14)).includes("outside"), "a rug off the floor");
+  assert.deepEqual(codes(mv(9, 4)), [], "a rug in the open office");
+  assert.ok(codes([...base, { id: "rug2", type: "rug", tx: 2, ty: 12 }]).includes("overlap"), "two rugs overlapping");
+  assert.deepEqual(codes([...base, { id: "rug2", type: "rug", tx: 9, ty: 4 }]), [], "two rugs apart");
+  const rugSpot = P.findPlace(base, { id: "rug2", type: "rug" }, [15, 8], { empCount: 3 });
+  assert.ok(rugSpot && P.check([...base, rugSpot], { empCount: 3 }).ok, "findPlace lays a rug");
+  assert.ok(P.check(P.repair([...base, { id: "rug2", type: "rug", tx: 2, ty: 12 }], 3) || [], { empCount: 3 }).ok, "repair moves a rug that overlaps");
+
+  // skins: any floor piece can wear another theme's look; the geometry does not care
+  const sofaSkin = base.map((i) => (i.id === "sofa" ? { ...i, skin: "gothic" } : i));
+  assert.deepEqual(codes(sofaSkin), [], "a gothic sofa in the classic office");
+  assert.equal(P.sanitize(P.toDoc(sofaSkin)).items.find((i) => i.id === "sofa").skin, "gothic", "the skin survives the schema");
+  for (const bad of ["nope", "__proto__", "constructor", "", 5, null, ["gothic"], { a: 1 }]) assert.equal(P.sanitize({ v: 1, items: [{ id: "s", type: "sofa", tx: 1, ty: 12, skin: bad }] }).ok, false, `skin ${JSON.stringify(bad)} is refused`);
+  assert.equal(P.sanitize({ v: 1, items: [{ id: "c", type: "default_clock", tx: 15, ty: 0, skin: "gothic" }] }).ok, false, "wall decor has its own look already");
+  assert.equal(P.sanitize({ v: 1, items: [{ id: "r", type: "rug", tx: 9, ty: 4, skin: "dream" }] }).items[0].skin, "dream", "a rug wears a look too");
+
+  // where the decor is stored: `decor` says so; otherwise the office's defaults are added
+  const stored = P.toDoc(plain.concat(P.defaultWall("football").filter((i) => i.id !== "football_banner")).concat(P.defaultRug()), true);
+  assert.equal(P.wallOf(P.scene(stored, ids, "football").items).length, 6, "a stored arrangement is used as it is");
+  assert.equal(P.wallOf(P.scene(stored, ids, "gothic", 5).items).length, 6, "whatever the theme is now (and unlocks are not forced on it)");
+  const bare = P.toDoc(plain, true);
+  const bareScene = P.scene(bare, ids, "football", 3).items;
+  assert.equal(P.wallOf(bareScene).length, 0, "decor stored and empty: a bare wall stays bare");
+  assert.ok(!bareScene.some((i) => i.type === "rug"), "and no rug is forced back");
+  const old = P.toDoc(plain); // a layout saved before wall decor and rugs were pieces
+  assert.equal(P.wallOf(P.scene(old, ids, "football").items).length, 7, "an older layout gets the theme's decor (football has 7 incl. pennants)");
+  assert.ok(P.scene(old, ids, "football").items.some((i) => i.type === "rug"), "and its rug");
+  assert.equal(P.sanitize(P.toDoc(plain, true)).decor, true);
+  assert.equal(P.sanitize(P.toDoc(plain)).decor, undefined);
+  assert.equal(P.sanitize({ v: 1, items: [], walls: ["default"] }).decor, true, "an earlier draft's list counts as stored");
+  assert.equal(P.sanitize({ v: 1, items: [], decor: "yes" }).ok, false);
   // repair moves a wall piece along the wall
   const bad = [...base, { id: "default_clock2", type: "default_clock", tx: 2, ty: 0 }];
   const fixed = P.repair(bad, 3);
@@ -133,7 +176,7 @@ export function runValidation(P) {
     ["too many", { v: 1, items: Array.from({ length: P.MAX_ITEMS + 1 }, (_, i) => plant("p" + i, 1, 1)) }],
     ["inherited type", { v: 1, items: [{ id: "x", type: "constructor", tx: 1, ty: 1 }] }], ["proto type", { v: 1, items: [{ id: "x", type: "__proto__", tx: 1, ty: 1 }] }],
     ["wall piece off the wall band", { v: 1, items: [{ id: "x", type: "default_poster", tx: 3, ty: 3 }] }], ["wall piece over the edge", { v: 1, items: [{ id: "x", type: "default_tv", tx: 27, ty: 0 }] }],
-    ["walls not a list", { ...okDoc, walls: "default" }], ["walls: unknown theme", { ...okDoc, walls: ["nope"] }], ["walls: inherited theme", { ...okDoc, walls: ["constructor"] }],
+
     ["bad variant", { v: 1, items: [{ ...plant("x", 1, 1), v: 7 }] }], ["emp too long", { v: 1, items: [{ id: "d", type: "desk", tx: 12, ty: 5, emp: "x".repeat(81) }] }],
   ]) assert.equal(P.sanitize(doc).ok, false, `schema rejects: ${name}`);
   const cleaned = P.sanitize({ v: 1, items: [{ id: "f", type: "fridge", tx: 5, ty: 2, dir: "up", evil: "x", emp: "a" }] });

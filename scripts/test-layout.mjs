@@ -43,17 +43,19 @@ for (let n = 0; n <= 12; n++) {
 // every wall piece has its artwork, and drawing it (on any tile) works
 {
   const draw = h.run("(b, t, type, x0) => WALL_ART[type](b, t, x0)");
-  const fixed = h.run("(b, t, theme) => { const f = PROPS[theme] && PROPS[theme].wallFixed; if (f) f(b, t); }");
   let n = 0;
   for (const [type, T] of Object.entries(J(L.TYPES))) {
     if (!T.wall) continue;
     assert.equal(h.run(`typeof WALL_ART[${JSON.stringify(type)}]`), "function", `${type}: has artwork`);
     for (const x0 of [0, 13 * 32, (30 - T.wall.w) * 32]) assert.ok(h.hashDraw((b, t) => draw(b, t, type, x0)), `${type}: draws at ${x0}`);
-    assert.notEqual(h.hashDraw((b, t) => draw(b, t, type, 0)), h.hashDraw((b, t) => draw(b, t, type, 64)), `${type}: moves with its tile`);
+    if (!T.wall.ambient) assert.notEqual(h.hashDraw((b, t) => draw(b, t, type, 0)), h.hashDraw((b, t) => draw(b, t, type, 64)), `${type}: moves with its tile`);
     n++;
   }
   assert.equal(n, Object.values(J(L.WALL)).reduce((a, x) => a + Object.keys(x).length, 0), "every catalog entry is a type");
-  for (const th of themes) h.hashDraw((b, t) => fixed(b, t, th));
+  // the rug is drawn in every look, on any tile
+  const rug = h.run("(b, look, tx, ty) => drawRug(b, look, tx, ty)");
+  for (const th of themes) for (const [tx, ty] of [[0, 11], [9, 4]]) assert.ok(h.hashDraw((b) => rug(b, th, tx, ty)), `${th}: rug at ${tx},${ty}`);
+  assert.notEqual(h.hashDraw((b) => rug(b, "gothic", 0, 11)), h.hashDraw((b) => rug(b, "dream", 0, 11)), "each look has its own rug");
 }
 console.log("layout equivalence ok:", themes.length, "themes,", fx.spots.length, "spots,", fx.themes.default.decor.length, "decor entries, 0..12 colleagues");
 
@@ -91,19 +93,22 @@ if (fs.existsSync(distLayout)) {
   bad("nope"); bad(null);
   bad({ v: 1, items: Array.from({ length: 500 }, (_, i) => ({ id: "p" + i, type: "plant", tx: 1, ty: 1 })) });
   assert.deepEqual(J(new OfficeLayout(dir).doc), J(okd.doc), "refused layouts leave the saved one alone");
-  // wall decor: stored per theme, checked on the way in, kept when a hire gets a desk
-  const withWalls = P.toDoc(P.scene(null, ids, "gothic").items, ["gothic"]);
-  const okw = store.check(withWalls, ids);
+  // wall decor, rug and skins: stored with `decor`, checked on the way in, kept when a hire gets a desk
+  const withDecor = P.toDoc(P.scene(null, ids, "gothic", 2).items.map((i) => (i.id === "sofa" ? { ...i, skin: "football" } : i)), true);
+  const okw = store.check(withDecor, ids);
   assert.equal(okw.ok, true);
-  assert.deepEqual(J(okw.doc.walls), ["gothic"], "the server keeps the list of themes");
+  assert.equal(okw.doc.decor, true, "the server keeps the marker");
+  assert.equal(okw.doc.items.find((i) => i.id === "sofa").skin, "football", "and the skin");
   store.set(okw.doc);
-  assert.deepEqual(J(new OfficeLayout(dir).doc), J(okw.doc), "wall decor saved and read back");
-  bad(P.toDoc([...withWalls.items, { id: "gothic_clock9", type: "gothic_clock", tx: 10, ty: 0 }], ["gothic"]), "window");
-  bad(P.toDoc([...withWalls.items, { id: "gothic_clock9", type: "gothic_clock", tx: 13, ty: 0 }], ["gothic"]), "wallOverlap");
-  bad({ ...withWalls, walls: ["nope"] });
+  assert.deepEqual(J(new OfficeLayout(dir).doc), J(okw.doc), "decor saved and read back");
+  bad(P.toDoc([...withDecor.items, { id: "gothic_clock9", type: "gothic_clock", tx: 10, ty: 0 }], true), "window");
+  bad(P.toDoc([...withDecor.items, { id: "gothic_clock9", type: "gothic_clock", tx: 13, ty: 0 }], true), "wallOverlap");
+  bad(P.toDoc([...withDecor.items, { id: "rug2", type: "rug", tx: 2, ty: 12 }], true), "overlap");
+  bad({ v: 1, items: [{ id: "s", type: "sofa", tx: 1, ty: 12, skin: "nope" }] });
+  bad({ ...withDecor, decor: "yes" });
   assert.equal(store.ensure([...ids, "w"]), true);
-  assert.deepEqual(J(store.doc.walls), ["gothic"], "a hire keeps the wall list");
-  assert.equal(store.doc.items.filter((i) => i.type.startsWith("gothic_")).length, withWalls.items.filter((i) => i.type.startsWith("gothic_")).length);
+  assert.equal(store.doc.decor, true, "a hire keeps the marker");
+  assert.equal(store.doc.items.filter((i) => i.type.startsWith("gothic_")).length, withDecor.items.filter((i) => i.type.startsWith("gothic_")).length);
   store.set(okd.doc);
   // a hire: a desk appears for them and is remembered
   assert.equal(store.ensure([...ids, "d"]), true);

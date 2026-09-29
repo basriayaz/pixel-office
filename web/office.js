@@ -30,7 +30,7 @@ const ITEM_DRAW = {
 
 // The draw entries of one piece (depth = the row of its feet, like the old hard-coded list).
 function itemDecor(theme, it, out) {
-  const P = (name) => prop(theme, name);
+  const P = (name) => prop(it.skin || theme, name); // (a piece may wear another theme's look)
   const x = it.tx * TILE, y = it.ty * TILE;
   const sy = (it.ty + (POLayout.TYPES[it.type].sort || 0) + 1) * TILE;
   if (it.type === "meetingChair") {
@@ -114,14 +114,15 @@ class Office {
   // ---------- layout ----------
   // Everything static comes from the furniture records: blocked tiles, decor draw list, spots, meeting places, desks.
   buildStatic() {
-    const sc = POLayout.scene(this.layoutDoc, this.rosterIds, this.theme);
+    const sc = POLayout.scene(this.layoutDoc, this.rosterIds, this.theme, this.progress || 0);
     const st = buildStaticFor(this.theme, sc.items);
     this.scene = sc;
-    this.wallItems = POLayout.wallOf(sc.items, this.theme); // the wall decor of the current theme
+    this.wallItems = POLayout.wallOf(sc.items); // the wall decor
+    this.rugItems = sc.items.filter((it) => it.type === "rug");
     this.blocked = st.blocked;
     this.doors = st.doors;
     this.baseDecor = st.decor;
-    this.decor = st.decor.concat(progressDecor(this.progress || 0));
+    this.decor = st.decor;
     // spots that did not change keep their object (people standing at them are undisturbed)
     const pool = new Map([...this.spots, ...this.meetingSpots].map((s) => [s.key, s]));
     const same = (a, c) => a.tx === c.tx && a.ty === c.ty && a.dir === c.dir && a.anim === c.anim && a.group === c.group && a.wk === c.wk && JSON.stringify(a.via) === JSON.stringify(c.via);
@@ -132,12 +133,13 @@ class Office {
     this.freeSeats = new Set(sc.build.desks.filter((d) => !seated.has(d.id)).map((d) => key(d.tx, d.ty)));
   }
 
-  // Decor unlocked by finished work: only the decor list is rebuilt, and only when the count changes.
+  // Wall pieces unlocked by finished work (an office whose decor is not stored yet shows them at once; a stored one gets them in the
+  // market's depot): rebuilt only when the count changes.
   setProgress(n) {
     n = Math.max(0, Math.min(5, Math.floor(Number(n)) || 0));
     if (n === (this.progress || 0)) return;
     this.progress = n;
-    this.decor = (this.baseDecor || []).concat(progressDecor(n));
+    if (this.scene) this.buildStatic();
   }
 
   // The seat of a colleague: the tile in front of their desk. Without a desk (nothing fits) a free tile near the entrance with just a chair.
@@ -610,8 +612,8 @@ class Office {
 
   draw(t) {
     const b = this.b;
-    drawFloors(b, this.theme);
     const dim = this.editing ? this.editorDim : null; // the piece being dragged stays faded where it was
+    drawFloors(b, this.theme, this.rugItems, dim);
     drawWalls(b, this.blocked, this.doors, t, this.theme, this.wallItems, dim);
     const items = [];
     const faded = (id, fn) => (dim && id === dim ? () => { b.save(); b.globalAlpha = 0.3; fn(); b.restore(); } : fn);
@@ -1134,34 +1136,10 @@ function drawLifeOverhead(b, e, t) {
 }
 
 // ---------- floors & walls ----------
-function drawFloors(b, theme = "default") {
-  const T = THEMES[theme] || THEMES.default;
-  for (const r of ROOMS) {
-    const x = r.x0 * TILE, y = r.y0 * TILE, w = (r.x1 - r.x0 + 1) * TILE, h = (r.y1 - r.y0 + 1) * TILE;
-    const floor = T.floors[r.key] || r.floor;
-    if (floor === "wood") drawWood(b, x, y, w, h);
-    else if (floor === "tiles") drawTiles(b, x, y, w, h);
-    else if (floor === "carpet") drawCarpet(b, x, y, w, h);
-    else if (floor === "turf") drawTurf(b, x, y, w, h);
-    else if (floor === "carpetLight") drawCarpetLight(b, x, y, w, h);
-    else if (floor === "marble") drawMarble(b, x, y, w, h);
-    else if (floor === "stone") drawStone(b, x, y, w, h);
-    else if (floor === "darkwood") drawDarkWood(b, x, y, w, h);
-    else if (floor === "redcarpet") drawRedCarpet(b, x, y, w, h);
-    else if (floor === "cobble") drawCobble(b, x, y, w, h);
-    else if (floor === "studioCarpet") drawStudioCarpet(b, x, y, w, h);
-    else if (floor === "darkTiles") drawDarkTiles(b, x, y, w, h);
-    else if (floor === "sand") drawSand(b, x, y, w, h);
-    else if (floor === "checker") drawChecker(b, x, y, w, h);
-    else if (floor === "clouds") drawClouds(b, x, y, w, h);
-    else if (floor === "dreamwood") drawDreamWood(b, x, y, w, h);
-    else if (floor === "starCarpet") drawStarCarpet(b, x, y, w, h);
-    else if (floor === "nightTiles") drawNightTiles(b, x, y, w, h);
-    else drawConcrete(b, x, y, w, h);
-  }
-  // door thresholds
-  b.fillStyle = "#c9a273";
-  for (const [x, y] of [[7, 5], [7, 6], [22, 5], [22, 6], [7, 12], [7, 13], [22, 12], [22, 13], [3, 9], [4, 9], [25, 9], [26, 9]]) b.fillRect(x * TILE, y * TILE, TILE, TILE);
+// A rug in the look of a theme with its top-left tile at (tx, ty). (The artwork was drawn for the lounge: tile 0, 11.)
+function drawRug(b, look, tx, ty) {
+  const T = THEMES[look] || THEMES.default;
+  b.save(); b.translate(tx * TILE, (ty - 11) * TILE);
   if (T.rug === "lounge") {
     b.fillStyle = "#7d4a6b"; b.fillRect(8, 11 * TILE + 8, 144, 144);
     b.fillStyle = "#9a5d85"; b.fillRect(14, 11 * TILE + 14, 132, 132);
@@ -1189,6 +1167,41 @@ function drawFloors(b, theme = "default") {
     b.fillStyle = "#e9c4d3"; b.fillRect(30, 11 * TILE + 30, 100, 100); b.fillRect(20, 11 * TILE + 46, 120, 68); b.fillRect(46, 11 * TILE + 20, 68, 120);
     b.fillStyle = "#f4dbe5"; b.fillRect(40, 11 * TILE + 40, 80, 80); b.fillRect(32, 11 * TILE + 52, 96, 56); b.fillRect(52, 11 * TILE + 32, 56, 96);
     b.fillStyle = "#e9c4d3"; b.fillRect(70, 11 * TILE + 70, 20, 20);
+  }
+  b.restore();
+}
+
+function drawFloors(b, theme = "default", rugs = [POLayout.defaultRug()], dim = null) {
+  const T = THEMES[theme] || THEMES.default;
+  for (const r of ROOMS) {
+    const x = r.x0 * TILE, y = r.y0 * TILE, w = (r.x1 - r.x0 + 1) * TILE, h = (r.y1 - r.y0 + 1) * TILE;
+    const floor = T.floors[r.key] || r.floor;
+    if (floor === "wood") drawWood(b, x, y, w, h);
+    else if (floor === "tiles") drawTiles(b, x, y, w, h);
+    else if (floor === "carpet") drawCarpet(b, x, y, w, h);
+    else if (floor === "turf") drawTurf(b, x, y, w, h);
+    else if (floor === "carpetLight") drawCarpetLight(b, x, y, w, h);
+    else if (floor === "marble") drawMarble(b, x, y, w, h);
+    else if (floor === "stone") drawStone(b, x, y, w, h);
+    else if (floor === "darkwood") drawDarkWood(b, x, y, w, h);
+    else if (floor === "redcarpet") drawRedCarpet(b, x, y, w, h);
+    else if (floor === "cobble") drawCobble(b, x, y, w, h);
+    else if (floor === "studioCarpet") drawStudioCarpet(b, x, y, w, h);
+    else if (floor === "darkTiles") drawDarkTiles(b, x, y, w, h);
+    else if (floor === "sand") drawSand(b, x, y, w, h);
+    else if (floor === "checker") drawChecker(b, x, y, w, h);
+    else if (floor === "clouds") drawClouds(b, x, y, w, h);
+    else if (floor === "dreamwood") drawDreamWood(b, x, y, w, h);
+    else if (floor === "starCarpet") drawStarCarpet(b, x, y, w, h);
+    else if (floor === "nightTiles") drawNightTiles(b, x, y, w, h);
+    else drawConcrete(b, x, y, w, h);
+  }
+  // door thresholds
+  b.fillStyle = "#c9a273";
+  for (const [x, y] of [[7, 5], [7, 6], [22, 5], [22, 6], [7, 12], [7, 13], [22, 12], [22, 13], [3, 9], [4, 9], [25, 9], [26, 9]]) b.fillRect(x * TILE, y * TILE, TILE, TILE);
+  // the rugs (movable pieces; the classic one lies in the lounge)
+  for (const r of rugs) {
+    if (dim && r.id === dim) { b.save(); b.globalAlpha = 0.3; drawRug(b, r.skin || theme, r.tx, r.ty); b.restore(); } else drawRug(b, r.skin || theme, r.tx, r.ty);
   }
 }
 
@@ -1298,15 +1311,15 @@ function drawWalls(b, blocked, doors, t, theme = "default", wall = POLayout.defa
     b.fillStyle = "#eef2f4"; b.fillRect(wx + 47, 8, 2, 40); b.fillRect(wx, 27, 96, 2);
     b.fillStyle = "rgba(240,240,236,.55)"; for (let i = 0; i < 4; i++) b.fillRect(wx, 9 + i * 4, 96, 2);
   }
-  const fixed = PROPS[theme] && PROPS[theme].wallFixed; // ambient decor that spans the wall: under the pieces (wallFixed) or over them (wallOver)
-  if (fixed) fixed(b, t);
-  for (const it of wall) { // the movable wall decor (the one being dragged in the layout editor stays faded where it was)
+  // ambient decor spanning the wall goes under the pieces ("under") or over them ("over"); the piece being dragged in the editor stays faded
+  const layer = (over) => { for (const it of wall) { const w = POLayout.TYPES[it.type].wall; if (w.ambient && (w.layer === "over") === over && WALL_ART[it.type]) WALL_ART[it.type](b, t, 0); } };
+  layer(false);
+  for (const it of wall) {
     const art = WALL_ART[it.type];
-    if (!art) continue;
+    if (!art || POLayout.TYPES[it.type].wall.ambient) continue;
     if (dim && it.id === dim) { b.save(); b.globalAlpha = 0.3; art(b, t, it.tx * TILE); b.restore(); } else art(b, t, it.tx * TILE);
   }
-  const over = PROPS[theme] && PROPS[theme].wallOver;
-  if (over) over(b, t);
+  layer(true);
 
   // interior walls (top-down): cap + shadow
   for (let y = 2; y < ROWS; y++)
@@ -1351,7 +1364,7 @@ function line(b, x0, y0, x1, y1, col) {
 // The movable wall decor: WALL_ART["<theme>_<piece>"](b, t, x0) draws a piece with the left edge of its first tile at x0 (sizes and default
 // tiles: POLayout.WALL). The artwork is each theme's original wall decor; wallAt(tile, fn, nudge) runs code written for a fixed spot at any
 // tile (nudge: a pixel or two, for a piece that overhung its tiles). Ambient decor that spans the wall (string lights, stained glass ...)
-// stays fixed: PROPS[theme].wallFixed (under the pieces) / wallOver (over them).
+// is a piece too (width 0 in POLayout.WALL): it takes no tiles and is drawn with x0 = 0, under or over the other pieces.
 const WALL_ART = {};
 const wallAt = (tile, fn, nudge = 0) => (b, t, x0) => { b.save(); b.translate(x0 - tile * TILE + nudge, 0); fn(b, t); b.restore(); };
 const wallClock = (b, t, x0) => drawClock(b, x0 + 16, 28);
@@ -1965,11 +1978,11 @@ function drawBottleCrate(b, x, y) {
   for (let i = 0; i < 4; i++) { b.fillStyle = "#c9e8ff"; b.fillRect(x + 7 + i * 5, y - 2, 4, 12); b.fillStyle = "#61afef"; b.fillRect(x + 8 + i * 5, y - 5, 2, 3); }
 }
 function drawDrinksCooler(b, x, y, t) { outlineRect(b, x + 4, y + 4, 24, 24, "#2c62c9"); b.fillStyle = "#4a86e8"; b.fillRect(x + 4, y + 4, 24, 5); b.fillStyle = "#f4f4f4"; b.fillRect(x + 8, y + 14, 16, 3); if (Math.floor(t / 900) % 2) { b.fillStyle = "#c9e8ff"; b.fillRect(x + 10, y + 20, 4, 4); } }
-function drawWallFixedFootball(b) { // pennant string across the open office
+WALL_ART.football_pennants = (b) => { // pennant string across the open office
   b.fillStyle = "#f4f4f4"; b.fillRect(8 * TILE, 6, 14 * TILE, 1);
   const cols = ["#d9534f", "#ffd166", "#2c62c9", "#f4f4f4", "#4ade80"];
   for (let i = 0; i < 14; i++) { const px = 8 * TILE + 8 + i * 32; b.fillStyle = cols[i % cols.length]; b.fillRect(px, 7, 12, 4); b.fillRect(px + 2, 11, 8, 4); b.fillRect(px + 4, 15, 4, 3); }
-}
+};
 WALL_ART.football_scoreboard = wallAt(24, (b, t) => {
   const sx = 24 * TILE + 8; outlineRect(b, sx, 8, 112, 42, "#1c1e24");
   b.fillStyle = "#0a0c10"; b.fillRect(sx + 4, 12, 104, 34);
@@ -2063,10 +2076,10 @@ function drawHatStand(b, x, y) {
   hat(x + 2, y - 32, "#d9534f"); hat(x + 16, y - 18, "#2b2b2b"); hat(x + 2, y - 4, "#ffd166");
 }
 function drawSmallMannequin(b, x, y) { drawMannequin(b, x, y, "#e06c75"); }
-function drawWallOverFashion(b, t) { // string lights across the open office
+WALL_ART.fashion_lights = (b, t) => { // string lights across the open office
   b.fillStyle = "#3a3f4a"; b.fillRect(8 * TILE, 6, 14 * TILE, 1);
   for (let i = 0; i < 14; i++) { const on = Math.floor(t / 600 + i) % 3 !== 0; b.fillStyle = on ? "#fff3b0" : "#8a8060"; b.fillRect(8 * TILE + 12 + i * 32, 7, 3, 4); if (on) { b.fillStyle = "rgba(255,240,180,.25)"; b.fillRect(8 * TILE + 10 + i * 32, 6, 7, 7); } }
-}
+};
 WALL_ART.fashion_moodboard = wallAt(6, (b) => {
   b.fillStyle = "#c9a781"; b.fillRect(198, 3, 70, 22); b.fillStyle = "#f7efe7"; b.fillRect(200, 5, 66, 18);
   ["#e06c75", "#f78fb3", "#c678dd", "#61afef", "#ffd166", "#98c379"].forEach((c, i) => { b.fillStyle = c; b.fillRect(204 + i * 10, 8 + (i % 2) * 3, 7, 8); b.fillStyle = "#1c1a20"; b.fillRect(207 + i * 10, 7 + (i % 2) * 3, 1, 1); });
@@ -2101,8 +2114,8 @@ function drawClock(b, ccx, ccy) {
 
 const PROPS = {
   default: { plant: drawPlant, counter: drawKitchenCounter, fridge: drawFridge, roundTable: drawRoundTable, stool: drawStool, bin: drawBin, meetingTable: drawMeetingTable, meetingChair: drawMeetingChair, sofa: drawSofa, coffeeTable: drawCoffeeTable, bookshelf: drawBookshelf, lamp: drawLamp, cabinets: drawCabinets, boxes: drawBoxes, printer: drawPrinter, cooler: drawCooler, coffeeStation: drawCoffeeStation },
-  football: { counter: drawSnackBar, fridge: drawVending, roundTable: drawBallTable, meetingTable: drawTacticsTable, sofa: drawBench, coffeeTable: drawBallRack, bookshelf: drawTrophyCase, lamp: drawFloodlight, cabinets: drawLockers, boxes: drawCones, printer: drawJerseyRack, cooler: drawBottleCrate, coffeeStation: drawDrinksCooler, wallFixed: drawWallFixedFootball },
-  fashion: { counter: drawCuttingTable, fridge: drawMannequin, roundTable: drawSwatchTable, meetingTable: drawDesignTable, sofa: drawVelvetSofa, coffeeTable: drawShoeDisplay, bookshelf: drawClothesRack, lamp: drawMirror, cabinets: drawWardrobe, boxes: drawFabricRolls, printer: drawIroning, cooler: drawHatStand, coffeeStation: drawSmallMannequin, wallOver: drawWallOverFashion },
+  football: { counter: drawSnackBar, fridge: drawVending, roundTable: drawBallTable, meetingTable: drawTacticsTable, sofa: drawBench, coffeeTable: drawBallRack, bookshelf: drawTrophyCase, lamp: drawFloodlight, cabinets: drawLockers, boxes: drawCones, printer: drawJerseyRack, cooler: drawBottleCrate, coffeeStation: drawDrinksCooler },
+  fashion: { counter: drawCuttingTable, fridge: drawMannequin, roundTable: drawSwatchTable, meetingTable: drawDesignTable, sofa: drawVelvetSofa, coffeeTable: drawShoeDisplay, bookshelf: drawClothesRack, lamp: drawMirror, cabinets: drawWardrobe, boxes: drawFabricRolls, printer: drawIroning, cooler: drawHatStand, coffeeStation: drawSmallMannequin },
 };
 const PROP_ALIAS = { kitchenCounter: "counter" };
 const prop = (theme, name) => { const n = PROP_ALIAS[name] || name; return (PROPS[theme] && PROPS[theme][n]) || PROPS.default[n]; };
@@ -2233,7 +2246,7 @@ function drawCauldronSmall(b, x, y, t) {
   const bub = Math.floor(t / 350) % 3; b.fillStyle = "#e9b5ff"; b.fillRect(x + 10 + bub * 5, y + 3, 2, 2); b.fillStyle = "rgba(198,120,221,.15)"; b.fillRect(x + 4, y - 10, 26, 14);
   b.fillStyle = OUTLINE; b.fillRect(x + 8, y + 22, 4, 6); b.fillRect(x + 22, y + 22, 4, 6);
 }
-function drawWallFixedGothic(b, t) {
+WALL_ART.gothic_glass = (b, t) => {
   // stained glass over the two windows (arched)
   for (const wx of [9 * TILE, 17 * TILE]) {
     b.fillStyle = "#2c2735"; b.fillRect(wx - 4, 4, 104, 48);
@@ -2244,9 +2257,10 @@ function drawWallFixedGothic(b, t) {
     b.fillStyle = "#2c2735"; b.fillRect(wx, 8, 8, 6); b.fillRect(wx + 88, 8, 8, 6); b.fillRect(wx, 8, 4, 10); b.fillRect(wx + 92, 8, 4, 10);
     b.fillStyle = `rgba(255,230,180,${0.06 + (Math.floor(t / 900) % 2) * 0.02})`; b.fillRect(wx, 48, 96, 8);
   }
-  // cobwebs in the corners
+};
+WALL_ART.gothic_cobwebs = (b) => { // cobwebs in the corners
   b.fillStyle = "rgba(255,255,255,.35)"; for (let i = 0; i < 8; i++) { b.fillRect(0, i * 3, 24 - i * 3, 1); b.fillRect(i * 3, 0, 1, 24 - i * 3); b.fillRect(LW - 24 + i * 3, i * 3, 1, 1); b.fillRect(LW - 1 - i * 3, 0, 1, 24 - i * 3); }
-}
+};
 WALL_ART.gothic_chandelier = wallAt(14, (b, t) => {
   const cx = 14 * TILE + 16;
   b.fillStyle = "#3a3a40"; b.fillRect(cx - 1, 0, 2, 14); b.fillRect(cx - 22, 14, 44, 3); b.fillRect(cx - 24, 17, 4, 8); b.fillRect(cx + 20, 17, 4, 8); b.fillRect(cx - 2, 17, 4, 8);
@@ -2265,7 +2279,7 @@ WALL_ART.gothic_moon = wallAt(20, (b) => {
   b.fillStyle = "#f4ecd8"; b.fillRect(20 * TILE + 10, 10, 12, 12); b.fillStyle = THEMES.gothic.wall.face; b.fillRect(20 * TILE + 15, 8, 10, 10);
 });
 WALL_ART.gothic_clock = wallClock;
-PROPS.gothic = { counter: drawGothicCounter, fridge: drawArmor, roundTable: drawGothicTable, meetingTable: drawGothicMeeting, sofa: drawThrone, coffeeTable: drawChest, bookshelf: drawTomeShelf, lamp: drawCandleStand, cabinets: drawBarrels, boxes: drawBones, printer: drawLectern, cooler: drawGargoyle, coffeeStation: drawCauldronSmall, wallFixed: drawWallFixedGothic };
+PROPS.gothic = { counter: drawGothicCounter, fridge: drawArmor, roundTable: drawGothicTable, meetingTable: drawGothicMeeting, sofa: drawThrone, coffeeTable: drawChest, bookshelf: drawTomeShelf, lamp: drawCandleStand, cabinets: drawBarrels, boxes: drawBones, printer: drawLectern, cooler: drawGargoyle, coffeeStation: drawCauldronSmall };
 THEME_NAMES.push("gothic");
 
 // --- music theme (YouTube music channel studio) ---
@@ -2693,39 +2707,61 @@ function renderThemePreview(theme, width = 240) {
 }
 window.renderThemePreview = renderThemePreview;
 
-// A small picture of one piece of furniture for the layout editor's palette (drawn with the current theme's props).
+// Does this theme draw a floor piece its own way? (Otherwise it would only repeat the classic look, so the market does not list it twice.)
+function themeHasSkin(theme, type) {
+  if (theme === "default" || type === "rug") return true; // (every theme has its own rug)
+  const d = ITEM_DRAW[type];
+  return !!(d && PROPS[theme] && PROPS[theme][PROP_ALIAS[d.prop] || d.prop]);
+}
+window.themeHasSkin = themeHasSkin;
+window.THEME_COLORS = (theme) => { const w = (THEMES[theme] || THEMES.default).wall; return [w.face, w.top]; }; // (a theme's wall colours: the swatch of its collection)
+
+// A small picture of one piece for the layout editor's market (drawn with `skin`'s props, or the theme's own when there is no skin).
 const itemThumbs = new Map();
-function renderItemThumb(theme, type) {
-  const k = theme + ":" + type;
+function renderItemThumb(theme, type, skin) {
+  const k = theme + ":" + type + ":" + (skin || "");
   if (itemThumbs.has(k)) return itemThumbs.get(k);
   const T = POLayout.TYPES[type];
-  if (T.wall) { // wall decor: the piece on a bit of its theme's wall
+  const look = skin || theme;
+  let url;
+  if (T.wall) { // wall decor: the piece on a bit of its theme's wall (ambient decor: the stretch of wall it covers)
     const cv = document.createElement("canvas");
-    cv.width = T.wall.w * TILE; cv.height = 60;
+    cv.width = (T.wall.w || 6) * TILE; cv.height = 60;
     const g = cv.getContext("2d");
-    g.fillStyle = (THEMES[theme] || THEMES.default).wall.face; g.fillRect(0, 0, cv.width, cv.height);
-    if (WALL_ART[type]) WALL_ART[type](g, 0, 0);
-    const url = cv.toDataURL();
-    itemThumbs.set(k, url);
-    return url;
+    const W = (THEMES[T.wall.theme] || THEMES[theme] || THEMES.default).wall; // the wall band as it is in the office: face, top edge, baseboard
+    g.fillStyle = W.face; g.fillRect(0, 0, cv.width, cv.height);
+    g.fillStyle = W.top; g.fillRect(0, 0, cv.width, 3);
+    g.fillStyle = W.base; g.fillRect(0, 48, cv.width, 8); g.fillStyle = W.base2; g.fillRect(0, 56, cv.width, 4);
+    if (WALL_ART[type]) {
+      if (T.wall.ambient) { g.save(); g.translate(type === "gothic_cobwebs" ? 0 : -8 * TILE, 0); WALL_ART[type](g, 0, 0); g.restore(); } else WALL_ART[type](g, 0, 0);
+    }
+    url = cv.toDataURL();
+  } else if (type === "rug") { // a rug on a dark floor
+    const cv = document.createElement("canvas");
+    cv.width = 5 * TILE; cv.height = 5 * TILE;
+    const g = cv.getContext("2d");
+    g.fillStyle = "#2a2c38"; g.fillRect(0, 0, cv.width, cv.height);
+    drawRug(g, look, 0, 0);
+    url = cv.toDataURL();
+  } else {
+    const it = { id: "thumb", type, tx: 4, ty: 4, dir: POLayout.DEFAULT_DIR[type], v: 1, ...(skin ? { skin } : {}) };
+    const tiles = POLayout.tilesOf(it);
+    const x0 = Math.min(...tiles.map((q) => q[0])), x1 = Math.max(...tiles.map((q) => q[0]));
+    const y0 = Math.min(...tiles.map((q) => q[1])), y1 = Math.max(...tiles.map((q) => q[1]));
+    const up = (T.up || 0) + 6;
+    const cv = document.createElement("canvas");
+    cv.width = (x1 - x0 + 1) * TILE + 16; cv.height = (y1 - y0 + 1) * TILE + up + 10;
+    const b = cv.getContext("2d");
+    b.translate(8 - x0 * TILE, up - y0 * TILE);
+    const list = [];
+    if (type === "desk") {
+      const feet = (it.ty + 1) * TILE;
+      list.push({ y: feet - 24, draw: () => drawChair(b, it.tx * TILE, feet) }, { y: feet + TILE + 6, draw: () => drawDesk(b, deskStub({ tx: it.tx, ty: it.ty }), 0) });
+    } else itemDecor(theme, it, list);
+    list.sort((a, c) => a.y - c.y);
+    for (const d of list) d.draw(b, 0);
+    url = cv.toDataURL();
   }
-  const it = { id: "thumb", type, tx: 4, ty: 4, dir: POLayout.DEFAULT_DIR[type], v: 1 };
-  const tiles = POLayout.tilesOf(it);
-  const x0 = Math.min(...tiles.map((q) => q[0])), x1 = Math.max(...tiles.map((q) => q[0]));
-  const y0 = Math.min(...tiles.map((q) => q[1])), y1 = Math.max(...tiles.map((q) => q[1]));
-  const up = (T.up || 0) + 6;
-  const cv = document.createElement("canvas");
-  cv.width = (x1 - x0 + 1) * TILE + 16; cv.height = (y1 - y0 + 1) * TILE + up + 10;
-  const b = cv.getContext("2d");
-  b.translate(8 - x0 * TILE, up - y0 * TILE);
-  const list = [];
-  if (type === "desk") {
-    const feet = (it.ty + 1) * TILE;
-    list.push({ y: feet - 24, draw: () => drawChair(b, it.tx * TILE, feet) }, { y: feet + TILE + 6, draw: () => drawDesk(b, deskStub({ tx: it.tx, ty: it.ty }), 0) });
-  } else itemDecor(theme, it, list);
-  list.sort((a, c) => a.y - c.y);
-  for (const d of list) d.draw(b, 0);
-  const url = cv.toDataURL();
   itemThumbs.set(k, url);
   return url;
 }
@@ -3783,7 +3819,7 @@ function drawDreamcatcher(b, x, y, t = 0) { // coffeeStation slot: dreamcatcher 
   const sway = Math.round(Math.sin(t / 600) * 2);
   for (const [ox, len, c] of [[-6, 12, DREAM.pink], [0, 16, DREAM.teal], [6, 12, DREAM.gold]]) { b.fillStyle = OUTLINE; b.fillRect(x + 16 + ox + sway, y - 2, 1, 6); b.fillStyle = c; b.fillRect(x + 15 + ox + sway, y + 4, 3, len); b.fillStyle = shade(c, -30); b.fillRect(x + 16 + ox + sway, y + 4, 1, len); }
 }
-function drawWallFixedDream(b, t) { // night sky in the windows, whatever the time of day
+WALL_ART.dream_sky = (b, t) => { // night sky in the windows, whatever the time of day
   for (const wx of [9 * TILE, 17 * TILE]) {
     b.fillStyle = "#2a2150"; b.fillRect(wx - 4, 4, 104, 48); b.fillStyle = "#1a153a"; b.fillRect(wx - 4, 50, 104, 3);
     const g = b.createLinearGradient(0, 8, 0, 48); g.addColorStop(0, "#120e2c"); g.addColorStop(1, "#3a2d6e"); b.fillStyle = g; b.fillRect(wx, 8, 96, 40);
@@ -3792,7 +3828,7 @@ function drawWallFixedDream(b, t) { // night sky in the windows, whatever the ti
     b.save(); b.beginPath(); b.rect(wx, 8, 96, 40); b.clip(); b.fillStyle = "rgba(233,230,247,.35)"; const cx = wx + ((t / 160) % 140) - 40; b.fillRect(cx, 30, 26, 5); b.fillRect(cx + 6, 27, 12, 3); b.fillRect(cx + 50, 14, 18, 4); b.restore();
     b.fillStyle = "#2a2150"; b.fillRect(wx + 47, 8, 2, 40); b.fillRect(wx, 27, 96, 2);
   }
-}
+};
 WALL_ART.dream_moons = wallAt(0, (b, t) => { // moon phases along the kitchen wall + floating z's
   for (let i = 0; i < 5; i++) { const px = 22 + i * 36; disc(b, px, 26, 9, OUTLINE); disc(b, px, 26, 8, "#fff3b0"); if (i !== 2) { const k = i < 2 ? 1 : -1; disc(b, px + k * (i === 0 || i === 4 ? 4 : 7), 26, 8, THEMES.dream.wall.face); } }
   for (let i = 0; i < 3; i++) { const ph = (t / 900 + i * 1.1) % 3; drawZ(b, 150 + i * 14 + Math.round(ph), 40 - Math.round(ph * 6), `rgba(255,243,176,${0.9 - ph * 0.25})`, 1 + (i === 2 ? 1 : 0)); }
@@ -3812,52 +3848,46 @@ WALL_ART.dream_painting = wallAt(28, (b) => { // a framed dream painting
   outlineRect(b, 28 * TILE - 6, 8, 36, 40, DREAM.goldDark); b.fillStyle = DREAM.night; b.fillRect(28 * TILE - 2, 12, 28, 32); b.fillStyle = "#6a3b8a"; b.fillRect(28 * TILE - 2, 32, 28, 12); disc(b, 28 * TILE + 16, 22, 5, DREAM.gold); b.fillStyle = DREAM.pink; b.fillRect(28 * TILE + 2, 36, 12, 2);
 }, 7);
 WALL_ART.dream_clock = wallClock;
-PROPS.dream = { counter: drawTeaBar, fridge: drawGrandfatherClock, roundTable: drawMoonTable, stool: drawCloudStool, meetingTable: drawDreamTable, sofa: drawChaise, coffeeTable: drawCrystalStand, bookshelf: drawDreamShelf, lamp: drawMoonLamp, cabinets: drawApothecary, boxes: drawPillowPile, printer: drawEasel, cooler: drawHourglass, coffeeStation: drawDreamcatcher, wallFixed: drawWallFixedDream };
+PROPS.dream = { counter: drawTeaBar, fridge: drawGrandfatherClock, roundTable: drawMoonTable, stool: drawCloudStool, meetingTable: drawDreamTable, sofa: drawChaise, coffeeTable: drawCrystalStand, bookshelf: drawDreamShelf, lamp: drawMoonLamp, cabinets: drawApothecary, boxes: drawPillowPile, printer: drawEasel, cooler: drawHourglass, coffeeStation: drawDreamcatcher };
 THEME_NAMES.push("dream");
 
-// ---------- progress decor (unlocked by finished work; see web/progress.js) ----------
-// Small wall pieces in the free stretches of the wall band, drawn behind everything. `n` = how many are unlocked (0..5).
-function progressDecor(n) {
-  const out = [];
-  const wall = (i, draw) => { if (n >= i) out.push({ y: 1, draw }); };
-  wall(1, (b) => { // framed poster
-    outlineRect(b, 184, 10, 26, 34, "#e8d9b0"); b.fillStyle = "#3f7cc9"; b.fillRect(188, 14, 18, 14);
-    b.fillStyle = "#ffd166"; b.fillRect(194, 17, 6, 6); b.fillStyle = "#2b2b2b"; b.fillRect(188, 32, 18, 2); b.fillRect(191, 37, 12, 2);
-  });
-  wall(2, (b, t) => { // hanging plant
-    const sway = Math.round(Math.sin(t / 1400));
-    b.fillStyle = "#6b4a2b"; b.fillRect(243, 8, 2, 12);
-    outlineRect(b, 236, 20, 16, 9, "#b4593a");
-    b.fillStyle = "#3a9d5d"; b.fillRect(234 + sway, 26, 5, 14); b.fillRect(250 + sway, 26, 5, 18); b.fillRect(241, 28, 6, 10);
-    b.fillStyle = "#5ac27a"; b.fillRect(235 + sway, 30, 2, 6); b.fillRect(251 + sway, 32, 2, 8);
-  });
-  wall(3, (b, t) => { // shelf with a golden espresso machine
-    b.fillStyle = "#5c3d22"; b.fillRect(296, 40, 46, 4); b.fillStyle = "#8a5a32"; b.fillRect(296, 40, 46, 1);
-    outlineRect(b, 304, 22, 30, 18, "#d9a521"); b.fillStyle = "#ffd166"; b.fillRect(304, 22, 30, 3);
-    b.fillStyle = "#7a5410"; b.fillRect(310, 28, 8, 6); b.fillStyle = "#f5f5f5"; b.fillRect(322, 31, 6, 7);
-    b.fillStyle = Math.floor(t / 700) % 2 ? "#4ade80" : "#1f7a3f"; b.fillRect(328, 26, 2, 2);
-  });
-  wall(4, (b, t) => { // trophy shelf
-    b.fillStyle = "#5c3d22"; b.fillRect(354, 40, 52, 4); b.fillStyle = "#8a5a32"; b.fillRect(354, 40, 52, 1);
-    for (let i = 0; i < 3; i++) {
-      const x = 358 + i * 16, h = i === 1 ? 20 : 15;
-      b.fillStyle = OUTLINE; b.fillRect(x - 1, 39 - h, 12, h + 1);
-      b.fillStyle = "#ffd166"; b.fillRect(x, 40 - h, 10, h - 6); b.fillRect(x + 3, 34, 4, 5); b.fillRect(x + 1, 38, 8, 2);
-      b.fillStyle = "#fff3b0"; b.fillRect(x + 1, 41 - h, 2, h - 8);
-    }
-    if (Math.floor(t / 1200) % 4 === 0) { b.fillStyle = "#fff"; b.fillRect(377, 14, 1, 5); b.fillRect(375, 16, 5, 1); }
-  });
-  wall(5, (b, t) => { // neon sign
-    const on = Math.floor(t / 600) % 6 !== 0, c = on ? "#ff5fa2" : "#7a2f52";
-    b.fillStyle = OUTLINE; b.fillRect(548, 14, 88, 30);
-    b.fillStyle = "#1a1224"; b.fillRect(550, 16, 84, 26);
-    b.fillStyle = c; b.fillRect(552, 18, 80, 2); b.fillRect(552, 38, 80, 2); b.fillRect(552, 18, 2, 22); b.fillRect(630, 18, 2, 22);
-    b.fillStyle = on ? "#7dd3fc" : "#3b566b"; // a lightning bolt and a star
-    b.fillRect(574, 22, 6, 3); b.fillRect(570, 25, 6, 3); b.fillRect(574, 28, 6, 3); b.fillRect(570, 31, 6, 3); b.fillRect(568, 34, 4, 2);
-    b.fillStyle = on ? "#ffd166" : "#6b5a2b"; b.fillRect(603, 21, 4, 14); b.fillRect(598, 26, 14, 4); b.fillRect(600, 23, 10, 10);
-  });
-  return out;
-}
+// ---------- what finished work unlocks (web/progress.js): wall pieces, in this order; see POLayout.progressWall ----------
+WALL_ART.progress_poster = wallAt(5, (b) => { // framed poster
+  outlineRect(b, 184, 10, 26, 34, "#e8d9b0"); b.fillStyle = "#3f7cc9"; b.fillRect(188, 14, 18, 14);
+  b.fillStyle = "#ffd166"; b.fillRect(194, 17, 6, 6); b.fillStyle = "#2b2b2b"; b.fillRect(188, 32, 18, 2); b.fillRect(191, 37, 12, 2);
+}, -21);
+WALL_ART.progress_plant = wallAt(7, (b, t) => { // hanging plant
+  const sway = Math.round(Math.sin(t / 1400));
+  b.fillStyle = "#6b4a2b"; b.fillRect(243, 8, 2, 12);
+  outlineRect(b, 236, 20, 16, 9, "#b4593a");
+  b.fillStyle = "#3a9d5d"; b.fillRect(234 + sway, 26, 5, 14); b.fillRect(250 + sway, 26, 5, 18); b.fillRect(241, 28, 6, 10);
+  b.fillStyle = "#5ac27a"; b.fillRect(235 + sway, 30, 2, 6); b.fillRect(251 + sway, 32, 2, 8);
+});
+WALL_ART.progress_espresso = wallAt(9, (b, t) => { // shelf with a golden espresso machine
+  b.fillStyle = "#5c3d22"; b.fillRect(296, 40, 46, 4); b.fillStyle = "#8a5a32"; b.fillRect(296, 40, 46, 1);
+  outlineRect(b, 304, 22, 30, 18, "#d9a521"); b.fillStyle = "#ffd166"; b.fillRect(304, 22, 30, 3);
+  b.fillStyle = "#7a5410"; b.fillRect(310, 28, 8, 6); b.fillStyle = "#f5f5f5"; b.fillRect(322, 31, 6, 7);
+  b.fillStyle = Math.floor(t / 700) % 2 ? "#4ade80" : "#1f7a3f"; b.fillRect(328, 26, 2, 2);
+});
+WALL_ART.progress_trophies = wallAt(11, (b, t) => { // trophy shelf
+  b.fillStyle = "#5c3d22"; b.fillRect(354, 40, 52, 4); b.fillStyle = "#8a5a32"; b.fillRect(354, 40, 52, 1);
+  for (let i = 0; i < 3; i++) {
+    const x = 358 + i * 16, h = i === 1 ? 20 : 15;
+    b.fillStyle = OUTLINE; b.fillRect(x - 1, 39 - h, 12, h + 1);
+    b.fillStyle = "#ffd166"; b.fillRect(x, 40 - h, 10, h - 6); b.fillRect(x + 3, 34, 4, 5); b.fillRect(x + 1, 38, 8, 2);
+    b.fillStyle = "#fff3b0"; b.fillRect(x + 1, 41 - h, 2, h - 8);
+  }
+  if (Math.floor(t / 1200) % 4 === 0) { b.fillStyle = "#fff"; b.fillRect(377, 14, 1, 5); b.fillRect(375, 16, 5, 1); }
+});
+WALL_ART.progress_neon = wallAt(17, (b, t) => { // neon sign
+  const on = Math.floor(t / 600) % 6 !== 0, c = on ? "#ff5fa2" : "#7a2f52";
+  b.fillStyle = OUTLINE; b.fillRect(548, 14, 88, 30);
+  b.fillStyle = "#1a1224"; b.fillRect(550, 16, 84, 26);
+  b.fillStyle = c; b.fillRect(552, 18, 80, 2); b.fillRect(552, 38, 80, 2); b.fillRect(552, 18, 2, 22); b.fillRect(630, 18, 2, 22);
+  b.fillStyle = on ? "#7dd3fc" : "#3b566b"; // a lightning bolt and a star
+  b.fillRect(574, 22, 6, 3); b.fillRect(570, 25, 6, 3); b.fillRect(574, 28, 6, 3); b.fillRect(570, 31, 6, 3); b.fillRect(568, 34, 4, 2);
+  b.fillStyle = on ? "#ffd166" : "#6b5a2b"; b.fillRect(603, 21, 4, 14); b.fillRect(598, 26, 14, 4); b.fillRect(600, 23, 10, 10);
+});
 
 // ---------- day cycle & office events ----------
 // Night: a dim blue layer over the whole office, and idle people sometimes doze on the lounge sofa.

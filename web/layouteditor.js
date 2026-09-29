@@ -10,8 +10,9 @@ const layoutEditor = (() => {
   const stage = document.querySelector("main.stage");
   const canvas = office.canvas;
   let active = false, items = [], startJson = "", base = null, undo = [], selected = null, drag = null, hover = null, ghost = null;
-  let wallet = POMarket.newWallet(), walletStart = "", placing = null, pending = null, mkDrag = null, fx = [], suppressClick = 0, tab = "all", search = "";
-  let editTheme = "", wallMarks = [], resetFlag = false, saving = false, comparing = false, msg = { text: "", bad: false };
+  let wallet = POMarket.newWallet(), walletStart = "", placing = null, pending = null, mkDrag = null, fx = [], suppressClick = 0;
+  let starters = new Set(); // ids of the pieces the office itself started with (taking one down or selling it is remembered: see POMarket)
+  let editTheme = "", resetFlag = false, saving = false, comparing = false, msg = { text: "", bad: false };
 
   // ---------- the bar under the office ----------
   const bar = document.createElement("div");
@@ -25,6 +26,7 @@ const layoutEditor = (() => {
         <button class="btn small" id="lbRotate" type="button" title="R">⟳ ${escapeHtml(t("ui.layout.rotate"))}</button>
         <button class="btn small" id="lbCopy" type="button" title="Ctrl+D">⧉ ${escapeHtml(t("ui.layout.copy"))}</button>
         <button class="btn small danger" id="lbDelete" type="button" title="Del">🗑 ${escapeHtml(t("ui.layout.delete"))}</button>
+        <button class="btn small" id="lbSell" type="button" title="${escapeHtml(t("ui.market.sellTipBar"))}">🪙 ${escapeHtml(t("ui.market.sellBar"))}</button>
         <button class="btn small" id="lbCompare" type="button" title="C">👁 ${escapeHtml(t("ui.layout.compare"))}</button>
         <span class="lb-sep"></span>
         <button class="btn small ghost" id="lbReset" type="button">${escapeHtml(t("ui.layout.reset"))}</button>
@@ -40,15 +42,21 @@ const layoutEditor = (() => {
   market.className = "market"; market.id = "market";
   market.setAttribute("aria-label", t("ui.market.title"));
   market.innerHTML = `
-    <div class="mk-head"><b>${escapeHtml(t("ui.market.title"))}</b><span class="mk-head-r"><button class="mk-mute" id="mkMute" type="button"></button><span class="mk-coins" id="mkCoins" title="${escapeHtml(t("ui.market.coinsTip"))}"></span></span></div>
-    <input class="mk-search" id="mkSearch" type="search" placeholder="${escapeHtml(t("ui.market.search"))}" aria-label="${escapeHtml(t("ui.market.search"))}" autocomplete="off">
-    <div class="mk-tabs" id="mkTabs" role="tablist"></div>
+    <div class="mk-head"><b>${escapeHtml(t("ui.market.depotTitle"))}</b><span class="mk-head-r"><button class="mk-mute" id="mkMute" type="button"></button><span class="mk-coins" id="mkCoins" title="${escapeHtml(t("ui.market.coinsTip"))}"></span></span></div>
+    <button class="mk-open" id="mkOpen" type="button"><span class="mk-open-ico" aria-hidden="true">🛒</span><span><b>${escapeHtml(t("ui.market.openShop"))}</b><small>${escapeHtml(t("ui.market.openShopSub"))} <kbd>M</kbd></small></span></button>
+    <p class="mk-depot-hint">${escapeHtml(t("ui.market.depotHint"))}</p>
     <div class="mk-grid" id="mkGrid"></div>`;
   document.body.appendChild(market);
   const mq = (id) => market.querySelector("#" + id);
-  const TABS = ["all", ...M.CATEGORIES, "depot"];
-  const pieceName = (type) => t("ui.layout.type." + type);
-  const placedCount = (type) => items.filter((i) => i.type === type).length;
+  const tt = (k, fallback) => { const v = t(k); return v === k ? fallback : v; };
+  const hasSkin = (th, type) => window.themeHasSkin(th, type);
+  // a market key's name: the look's own name where it has one (Throne, Armor ...), else the piece's
+  const pieceName = (key) => { const i = M.info(key); if (!i) return key; const base = t("ui.layout.type." + i.type); return i.skin ? tt(`ui.market.skin.${i.skin}.${i.type}`, base) : base; };
+  // the look a placed piece wears now: its own, or (a piece that follows the theme) the office's, or the classic one where the theme has none
+  const lookOf = (it) => it.skin || (hasSkin(office.theme, it.type) ? office.theme : "default");
+  const effKey = (it) => (isWall(it) || it.type === "desk" ? it.type : it.type + "@" + lookOf(it));
+  const itemName = (it) => pieceName(effKey(it));
+  const placedCount = (key) => items.filter((i) => effKey(i) === key).length;
 
   // ---------- feedback: a little sound, a floating "-60", a flash on the coins and a ring where the piece lands ----------
   const soundOn = () => { try { return localStorage.getItem("po.market.mute") !== "1"; } catch { return true; } };
@@ -90,7 +98,9 @@ const layoutEditor = (() => {
     sfx(paid ? "buy" : "place");
     if (paid) floatText("−" + paid);
     if (typeof REDUCED_MOTION !== "undefined" && REDUCED_MOTION.matches) return;
-    const tiles = L.tilesOf(it), xs = tiles.map((q) => q[0]), ys = tiles.map((q) => q[1]);
+    const tiles = L.tilesOf(it);
+    if (!tiles.length) return; // (ambient decor: nothing to ring)
+    const xs = tiles.map((q) => q[0]), ys = tiles.map((q) => q[1]);
     fx.push({ cx: (Math.min(...xs) + Math.max(...xs) + 1) * TILE_PX / 2, cy: (Math.min(...ys) + Math.max(...ys) + 1) * TILE_PX / 2, t0: performance.now(), gold: !!paid });
   }
   function drawFx(b) {
@@ -111,12 +121,12 @@ const layoutEditor = (() => {
   function clearPending() { pending = null; ghost = null; confirmEl.hidden = true; }
   // A piece is to go at `spot`. Free ones (desks, from the depot) are placed at once; paid ones wait for a yes.
   function propose(spot, keep = false, from = "auto") {
-    const i = M.info(spot.type);
-    if (i.price === 0 || M.inDepot(wallet, spot.type) > 0) { buyAndPlace(spot); return; }
+    const key = M.keyOf(spot), i = M.info(key);
+    if (i.price === 0 || M.inDepot(wallet, key) > 0) { buyAndPlace(spot); return; }
     stopPlacing(true);
-    pending = { item: spot, keep, from };
-    ghost = { item: spot, res: { ok: true, errors: [] } };
-    const name = pieceName(spot.type);
+    pending = { item: spot, key, keep, from };
+    ghost = L.tilesOf(spot).length ? { item: spot, res: { ok: true, errors: [] } } : null; // (ambient decor has no spot to show)
+    const name = pieceName(key);
     confirmEl.innerHTML = `<span class="mkc-text"><span class="mkc-line"><b>${escapeHtml(name)}</b><span class="mkc-price"><i class="mk-coin"></i>${i.price}</span></span><small>${escapeHtml(t("ui.market.left", { left: wallet.coins - i.price }))}</small></span>` +
       `<button class="btn small primary" id="mkcBuy" type="button">${escapeHtml(t("ui.market.buy"))} <kbd>⏎</kbd></button><button class="btn small" id="mkcNo" type="button">${escapeHtml(t("ui.market.notNow"))} <kbd>Esc</kbd></button>`;
     confirmEl.querySelector("#mkcBuy").onclick = confirmPending;
@@ -131,68 +141,63 @@ const layoutEditor = (() => {
     clearPending();
     const done = buyAndPlace(p.item);
     if (!done) sfx("error");
-    else if (p.keep && M.canAfford(wallet, p.item.type)) startPlacing(p.item.type);
+    else if (p.keep && M.canAfford(wallet, p.key)) startPlacing(p.key);
   }
   function cancelPending() {
     const p = pending;
     if (!p) return;
     clearPending();
     refreshButtons(); renderMarket();
-    if (p.from === "click") startPlacing(p.item.type); // (a click-placed piece: straight back to choosing a spot)
+    if (p.from === "click") startPlacing(p.key); // (a click-placed piece: straight back to choosing a spot)
   }
 
+  // The drawer shows the depot: what you own and have not placed. Drag a piece into the office (or click, then click a spot): placing is free.
+  // Browsing and buying happen in the shop (web/shop.js), which listens for changes here.
+  const listeners = [];
   function renderMarket() {
     if (!active) return;
     mq("mkCoins").innerHTML = `<i class="mk-coin"></i>${wallet.coins}`;
-    const tabs = mq("mkTabs");
-    tabs.textContent = "";
-    for (const id of TABS) {
-      const b = document.createElement("button");
-      b.type = "button"; b.className = "mk-tab" + (id === tab ? " on" : ""); b.setAttribute("role", "tab"); b.setAttribute("aria-selected", id === tab ? "true" : "false");
-      b.textContent = t("ui.market.tabs." + id) + (id === "depot" && M.depotCount(wallet) ? " " + M.depotCount(wallet) : "");
-      b.onclick = () => { tab = id; renderMarket(); };
-      tabs.appendChild(b);
-    }
     const grid = mq("mkGrid");
     grid.textContent = "";
-    const theme = office.theme, needle = search.trim().toLowerCase();
-    let list = tab === "depot" ? Object.keys(wallet.depot).map(M.info).filter((i) => i && (!i.wall || i.theme === theme)) : M.catalog(theme).filter((i) => tab === "all" || i.category === tab);
-    if (needle) list = list.filter((i) => pieceName(i.type).toLowerCase().includes(needle));
-    if (!list.length) { const e = document.createElement("p"); e.className = "mk-empty"; e.textContent = t(tab === "depot" && !needle ? "ui.market.emptyDepot" : "ui.market.empty"); grid.appendChild(e); return; }
+    const theme = office.theme;
+    const list = Object.keys(wallet.depot).map(M.info).filter(Boolean);
+    mq("mkOpen").classList.toggle("has-depot", list.length > 0);
+    if (!list.length) { const e = document.createElement("p"); e.className = "mk-empty"; e.textContent = t("ui.market.emptyDepot"); grid.appendChild(e); }
     for (const i of list) {
-      const inDepot = M.inDepot(wallet, i.type), poor = !M.canAfford(wallet, i.type);
+      const inDepot = M.inDepot(wallet, i.key), name = pieceName(i.key);
       const card = document.createElement("div");
-      card.className = `mk-card r-${i.rarity}${placing && placing.type === i.type ? " on" : ""}${poor ? " poor" : ""}`;
+      card.className = `mk-card r-${i.rarity}${placing && placing.key === i.key ? " on" : ""}`;
       const pick = document.createElement("button");
       pick.type = "button"; pick.className = "mk-pick";
-      pick.title = poor ? t("ui.market.noCoins", { price: i.price }) : t("ui.market.pickTip", { name: pieceName(i.type) });
-      const price = i.price === 0 ? escapeHtml(t("ui.market.free")) : inDepot ? escapeHtml(t("ui.market.fromDepot")) : `<i class="mk-coin"></i>${i.price}`;
-      pick.innerHTML = `<span class="mk-thumb"><img alt="" src="${renderItemThumb(theme, i.type)}"></span><span class="mk-name">${escapeHtml(pieceName(i.type))}</span>` +
-        `<span class="mk-meta"><span class="mk-rar">${escapeHtml(t("ui.market.rarity." + i.rarity))}</span><span class="mk-price">${price}</span></span>` +
-        `<span class="mk-own">${escapeHtml(t("ui.market.owned", { placed: placedCount(i.type), depot: inDepot }))}</span>`;
+      pick.title = t(i.ambient ? "ui.market.hangTip" : "ui.market.pickTip", { name });
+      pick.innerHTML = `<span class="mk-thumb"><img alt="" src="${renderItemThumb(theme, i.type, i.skin || undefined)}"></span><span class="mk-name">${escapeHtml(name)}</span>` +
+        `<span class="mk-meta"><span class="mk-rar">${escapeHtml(t("ui.market.rarity." + i.rarity))}</span><span class="mk-price">×${inDepot}</span></span>`;
       const img = pick.querySelector("img"); // (twice their size: the piece art is small)
       img.onload = () => { img.width = img.naturalWidth * 2; img.height = img.naturalHeight * 2; };
       pick.draggable = false; img.draggable = false;
-      pick.onpointerdown = (ev) => cardDown(ev, i.type, img.src);
-      pick.onclick = () => { if (performance.now() - suppressClick > 300) startPlacing(i.type); }; // (a click that ends a drag is not a pick)
+      pick.onpointerdown = (ev) => cardDown(ev, i.key, img.src);
+      pick.onclick = () => { if (performance.now() - suppressClick > 300) startPlacing(i.key); }; // (a click that ends a drag is not a pick)
       card.appendChild(pick);
-      const auto = document.createElement("button");
-      auto.type = "button"; auto.className = "mk-auto"; auto.textContent = "⚡"; auto.title = t("ui.market.autoTip"); auto.setAttribute("aria-label", t("ui.market.autoTip"));
-      auto.onclick = () => add(i.type);
-      card.appendChild(auto);
-      if (inDepot && M.stored(i.type)) {
+      if (!i.ambient) {
+        const auto = document.createElement("button");
+        auto.type = "button"; auto.className = "mk-auto"; auto.textContent = "⚡"; auto.title = t("ui.market.autoTip"); auto.setAttribute("aria-label", t("ui.market.autoTip"));
+        auto.onclick = () => add(i.key);
+        card.appendChild(auto);
+      }
+      if (M.stored(i.key)) {
         const sell = document.createElement("button");
         sell.type = "button"; sell.className = "mk-sell";
-        sell.textContent = t("ui.market.sell", { gain: M.sellPrice(i.type) });
-        sell.title = t("ui.market.sellTip", { gain: M.sellPrice(i.type), percent: Math.round(M.REFUND * 100) });
-        sell.onclick = () => sellOne(i.type);
+        sell.textContent = t("ui.market.sell", { gain: M.sellPrice(i.key) });
+        sell.title = t("ui.market.sellTip", { gain: M.sellPrice(i.key), percent: Math.round(M.REFUND * 100) });
+        sell.onclick = () => sellOne(i.key);
         card.appendChild(sell);
       }
       grid.appendChild(card);
     }
+    for (const fn of listeners) fn();
   }
   mq("mkMute").onclick = () => { try { localStorage.setItem("po.market.mute", soundOn() ? "1" : "0"); } catch {} paintMute(); sfx("place"); };
-  mq("mkSearch").oninput = (ev) => { search = ev.target.value; renderMarket(); };
+  mq("mkOpen").onclick = () => { if (window.marketShop) window.marketShop.open(); };
 
   // ---------- state helpers ----------
   const ids = () => office.rosterIds || [];
@@ -209,10 +214,7 @@ const layoutEditor = (() => {
     const e = res.errors.find((x) => x.code !== "desks") || res.errors[0];
     return e ? t("ui.layout.err." + e.code) : "";
   };
-  const typeName = (it) => t("ui.layout.type." + it.type);
   const isWall = (it) => !!(L.TYPES[it.type] && L.TYPES[it.type].wall);
-  const shown = (it) => !isWall(it) || L.TYPES[it.type].wall.theme === office.theme; // (the wall decor of the other themes sleeps)
-  const marks = () => [...new Set([...wallMarks, office.theme])]; // themes whose wall decor is stored
 
   function refreshButtons() {
     const it = selected && find(selected);
@@ -220,13 +222,14 @@ const layoutEditor = (() => {
     q("lbRotate").disabled = !(it && L.TYPES[it.type].dirs);
     q("lbCopy").disabled = !it;
     q("lbDelete").disabled = !it;
+    q("lbSell").disabled = !it || it.type === "desk";
     q("lbSave").disabled = saving;
-    if (!drag) say(placing && !(ghost && !ghost.res.ok) ? t("ui.market.placing", { name: pieceName(placing.type) }) : it ? t("ui.layout.selected", { name: typeName(it) + (it.type === "desk" && ownerOf(it.id) ? " · " + ownerOf(it.id) : "") }) : "");
+    if (!drag) say(placing && !(ghost && !ghost.res.ok) ? t("ui.market.placing", { name: pieceName(placing.key) }) : it ? t("ui.layout.selected", { name: itemName(it) + (it.type === "desk" && ownerOf(it.id) ? " · " + ownerOf(it.id) : "") }) : "");
   }
 
   // show the working copy in the office right away
   function apply() {
-    office.applyLayout(L.toDoc(items, marks()));
+    office.applyLayout(L.toDoc(items, true)); // (stored decor: what is in `items` is all there is, so a bare wall stays bare)
     refreshButtons();
     renderMarket();
   }
@@ -250,26 +253,28 @@ const layoutEditor = (() => {
   }
 
   // ---------- pieces ----------
-  const protoOf = (type) => ({ id: "new", type, ...(type === "plant" ? { v: 1, water: true } : {}), ...(L.DEFAULT_DIR[type] ? { dir: L.DEFAULT_DIR[type] } : {}) });
-  const owns = (w, id, type) => (M.info(type).price > 0 ? M.own(w, id) : w); // (what you paid for can go back to the depot)
+  const protoOf = (key) => { const i = M.info(key); return { id: "new", type: i.type, ...(i.skin ? { skin: i.skin } : {}), ...(i.type === "plant" ? { v: 1, water: true } : {}), ...(L.DEFAULT_DIR[i.type] ? { dir: L.DEFAULT_DIR[i.type] } : {}) }; };
+  const owns = (w, it) => (M.info(M.keyOf(it)).price > 0 ? M.own(w, it.id) : w); // (what you paid for can go back to the depot)
   // Pay for one piece (from the depot when there is one) and put it in the layout at `spot`; says what happened.
   function buyAndPlace(spot) {
-    const r = M.acquire(wallet, spot.type);
+    const key = M.keyOf(spot), r = M.acquire(wallet, key);
     if (!r.ok) { say(t("ui.market.noCoins", { price: r.price }), true); sfx("error"); return false; }
     const it = { ...spot, id: L.nextId(items, spot.type) };
-    commit([...items, it], false, owns(r.wallet, it.id, it.type));
-    selected = it.id;
+    commit([...items, it], false, owns(r.wallet, it));
+    selected = isWall(it) && L.TYPES[it.type].wall.ambient ? null : it.id;
     refreshButtons();
-    const name = pieceName(it.type);
+    const name = pieceName(key);
     say(r.fromDepot ? t("ui.market.fromDepotMsg", { name }) : r.paid ? t("ui.market.bought", { name, price: r.paid }) : t("ui.market.placed", { name }));
     celebrate(it, r.paid);
     return true;
   }
   // the market's "place it for me": the free spot nearest to the pointer / the selected piece / the middle of the office
-  function add(type) {
+  function add(key) {
     if (!active || comparing || saving) return;
-    if (!M.canAfford(wallet, type)) { say(t("ui.market.noCoins", { price: M.info(type).price }), true); return; }
-    const wall = !!L.TYPES[type].wall, proto = placing && placing.type === type ? { ...placing.proto } : protoOf(type);
+    const i = M.info(key);
+    if (!M.canAfford(wallet, key)) { say(t("ui.market.noCoins", { price: i.price }), true); return; }
+    if (i.ambient) { startPlacing(key); return; } // (decor that spans the wall has no spot to pick)
+    const wall = !!L.TYPES[i.type].wall, proto = placing && placing.key === key ? { ...placing.proto } : protoOf(key);
     const cur = selected && find(selected);
     const near = hover ? [hover.tx, wall ? 0 : hover.ty] : cur ? [cur.tx, wall ? 0 : cur.ty] : [14, wall ? 0 : 9];
     const spot = L.findPlace(items, proto, near, { empCount: ids().length });
@@ -277,11 +282,18 @@ const layoutEditor = (() => {
     stopPlacing(true);
     propose(spot, false, "auto");
   }
-  function startPlacing(type) {
+  function startPlacing(key) {
     if (!active || comparing || saving) return;
     clearPending();
-    if (!M.canAfford(wallet, type)) { say(t("ui.market.noCoins", { price: M.info(type).price }), true); return; }
-    placing = { type, proto: protoOf(type) };
+    const i = M.info(key);
+    if (!M.canAfford(wallet, key)) { say(t("ui.market.noCoins", { price: i.price }), true); return; }
+    if (i.ambient) { // ambient decor is just hung: it takes no spot (and only one of each)
+      if (items.some((x) => x.type === i.type)) { say(t("ui.market.alreadyHung", { name: pieceName(key) }), true); return; }
+      stopPlacing(true);
+      propose({ ...protoOf(key), id: L.nextId(items, i.type), tx: 0, ty: 0 }, false, "auto");
+      return;
+    }
+    placing = { key, type: i.type, proto: protoOf(key) };
     selected = null; ghost = null; drag = null;
     canvas.style.cursor = "copy";
     refreshButtons(); renderMarket();
@@ -304,9 +316,9 @@ const layoutEditor = (() => {
   }
   // Drag a card into the office: a picture follows the pointer, the piece's ghost shows where it would go, letting go proposes it there.
   // (a plain click still picks the card; touch screens use tap-then-tap because a drag there scrolls the market)
-  function cardDown(ev, type, src) {
-    if (ev.button !== 0 || ev.pointerType === "touch" || !active || comparing || saving || pending) return;
-    mkDrag = { type, src, sx: ev.clientX, sy: ev.clientY, on: false, img: null };
+  function cardDown(ev, key, src) {
+    if (ev.button !== 0 || ev.pointerType === "touch" || !active || comparing || saving || pending || M.info(key).ambient) return;
+    mkDrag = { key, src, sx: ev.clientX, sy: ev.clientY, on: false, img: null };
     window.addEventListener("pointermove", cardMove);
     window.addEventListener("pointerup", cardUp);
     window.addEventListener("pointercancel", cardUp);
@@ -317,9 +329,9 @@ const layoutEditor = (() => {
     if (!d) return;
     if (!d.on) {
       if (Math.hypot(ev.clientX - d.sx, ev.clientY - d.sy) < 6) return;
-      if (!M.canAfford(wallet, d.type)) { say(t("ui.market.noCoins", { price: M.info(d.type).price }), true); sfx("error"); endCardDrag(); return; }
+      if (!M.canAfford(wallet, d.key)) { say(t("ui.market.noCoins", { price: M.info(d.key).price }), true); sfx("error"); endCardDrag(); return; }
       d.on = true;
-      startPlacing(d.type);
+      startPlacing(d.key);
       document.body.classList.add("mk-dragging");
       d.img = document.createElement("img");
       d.img.className = "mk-dragimg"; d.img.src = d.src; d.img.alt = ""; d.img.draggable = false;
@@ -333,7 +345,7 @@ const layoutEditor = (() => {
       hover = { tx: p.tx, ty: p.ty };
       ghost = ghostAt(p);
       d.img.style.visibility = "hidden";
-      say(ghost.res.ok ? t("ui.market.dropHint", { name: pieceName(d.type) }) : why(ghost.res), !ghost.res.ok);
+      say(ghost.res.ok ? t("ui.market.dropHint", { name: pieceName(d.key) }) : why(ghost.res), !ghost.res.ok);
     } else { ghost = null; d.img.style.visibility = "visible"; }
   }
   function endCardDrag() {
@@ -364,14 +376,65 @@ const layoutEditor = (() => {
     placing.proto = L.rotate(placing.proto);
     if (hover) ghost = ghostAt(hover);
   }
-  function sellOne(type) {
-    const r = M.sell(wallet, type);
-    if (!r.ok) return;
+  function takeDownAmbient(type) { // ambient decor is taken down from its card (nothing on the canvas to click)
+    const it = items.find((x) => x.type === type);
+    if (!it) return false;
+    const d = M.discard(wallet, it, effKey(it), starters.has(it.id));
+    commit(items.filter((x) => x.id !== it.id), false, d.wallet);
+    if (d.stashed) say(t("ui.market.toDepot", { name: itemName(it) }));
+    return true;
+  }
+  // Sell a placed piece (any of yours, the office's own included): it leaves the office and pays 80% of the usual price. Undo brings it back.
+  function sellItemNow(it) {
+    if (!active || comparing || saving || pending || !it || it.type === "desk") return false;
+    const next = items.filter((x) => x.id !== it.id), res = check(next);
+    if (!res.ok) { say(why(res), true); return false; }
+    const r = M.sellItem(wallet, it, effKey(it), starters.has(it.id));
+    if (!r.ok) { say(t("ui.market.cannotSell"), true); sfx("error"); return false; }
+    commit(next, false, r.wallet);
+    if (selected === it.id) selected = null;
+    refreshButtons();
+    say(t("ui.market.soldPlaced", { name: itemName(it), gain: r.gain }));
+    sfx("sell"); floatText("+" + r.gain);
+    return true;
+  }
+  const placedOf = (key) => items.filter((x) => x.type !== "desk" && effKey(x) === key);
+  function sellPlaced(key) { const list = placedOf(key); return list.length ? sellItemNow(list[list.length - 1]) : false; }
+  function showPlaced(key) { // select one of them in the office (the shop steps aside)
+    const it = placedOf(key)[0];
+    if (!it) return false;
+    selected = it.id; refreshButtons();
+    if (!(typeof REDUCED_MOTION !== "undefined" && REDUCED_MOTION.matches)) { const tiles = L.tilesOf(it); if (tiles.length) { const xs = tiles.map((q) => q[0]), ys = tiles.map((q) => q[1]); fx.push({ cx: (Math.min(...xs) + Math.max(...xs) + 1) * TILE_PX / 2, cy: (Math.min(...ys) + Math.max(...ys) + 1) * TILE_PX / 2, t0: performance.now(), gold: false }); } }
+    return true;
+  }
+  // The shop's "buy": the piece goes to the depot (placing it later is free). Part of the draft, like everything with coins.
+  function buyToDepot(key, n = 1) {
+    if (!active || comparing || saving || pending) return false;
+    const r = M.purchase(wallet, key, n);
+    if (!r.ok) { say(t("ui.market.noCoins", { price: r.price }), true); sfx("error"); return false; }
+    undo.push({ items, resetFlag, wallet });
+    if (undo.length > 60) undo.shift();
+    wallet = r.wallet;
+    refreshButtons(); renderMarket();
+    say(t("ui.market.boughtDepot", { name: pieceName(key) + (n > 1 ? " ×" + n : ""), price: r.paid }));
+    sfx("buy"); floatText("−" + r.paid);
+    return true;
+  }
+  // Ambient decor hung from the shop (already asked there): from the depot when there is one, else paid.
+  function hangAmbient(key) {
+    const i = M.info(key);
+    if (!active || comparing || saving || pending || !i || !i.ambient || items.some((x) => x.type === i.type)) return false;
+    return buyAndPlace({ ...protoOf(key), id: L.nextId(items, i.type), tx: 0, ty: 0 });
+  }
+  function sellOne(key) {
+    const r = M.sell(wallet, key);
+    if (!r.ok) return false;
     undo.push({ items, resetFlag, wallet });
     wallet = r.wallet;
     refreshButtons(); renderMarket();
-    say(t("ui.market.sold", { name: pieceName(type), gain: r.gain }));
+    say(t("ui.market.sold", { name: pieceName(key), gain: r.gain }));
     sfx("sell"); floatText("+" + r.gain);
+    return true;
   }
   function remove() {
     const it = selected && find(selected);
@@ -381,16 +444,16 @@ const layoutEditor = (() => {
     const next = items.filter((x) => x.id !== it.id);
     const res = check(next);
     if (!res.ok) { say(why(res), true); return; } // (e.g. taking a piece away opens no hole, but be safe)
-    const d = M.discard(wallet, it);
+    const d = M.discard(wallet, it, effKey(it), starters.has(it.id));
     commit(next, false, d.wallet);
     selected = null;
     refreshButtons();
-    if (d.stashed) say(t("ui.market.toDepot", { name: typeName(it) }));
+    if (d.stashed) say(t("ui.market.toDepot", { name: itemName(it) }));
   }
   function copy() { // a copy is bought like any other piece
     const it = selected && find(selected);
     if (!it) return;
-    if (!M.canAfford(wallet, it.type)) { say(t("ui.market.noCoins", { price: M.info(it.type).price }), true); return; }
+    if (!M.canAfford(wallet, M.keyOf(it))) { say(t("ui.market.noCoins", { price: M.info(M.keyOf(it)).price }), true); return; }
     const proto = { ...it, id: L.nextId(items, it.type) };
     delete proto.emp;
     const placed = L.findPlace(items, proto, [it.tx, it.ty], { empCount: ids().length });
@@ -421,14 +484,15 @@ const layoutEditor = (() => {
     apply();
   }
   function reset() {
-    const classic = L.repair(L.scene(null, ids(), office.theme).items, ids().length);
+    const classic = L.repair(L.scene(null, ids(), office.theme, office.progress || 0).items, ids().length);
     if (!classic) { say(t("ui.layout.err.cannotEdit"), true); return; }
-    const same = JSON.stringify(classic) === JSON.stringify(L.scene(null, ids(), office.theme).items);
-    const starters = new Set(classic.map((x) => x.id));
-    let w = wallet; // what you bought and had placed goes back to the depot; the pieces the office started with come back on their own
-    for (const it of items) if (!starters.has(it.id)) w = M.discard(w, it).wallet;
-    commit(classic, true, w);
-    resetFlag = same;
+    const same = JSON.stringify(classic) === JSON.stringify(L.scene(null, ids(), office.theme, office.progress || 0).items);
+    let w = wallet; // what you have placed and the office did not start with goes to the depot (a piece you took down or sold stays gone)
+    const inClassic = new Set(classic.map((x) => x.id));
+    for (const it of items) if (!inClassic.has(it.id)) w = M.discard(w, it, effKey(it), starters.has(it.id)).wallet;
+    const back = classic.filter((x) => !w.gone.includes(x.id));
+    commit(back, true, w);
+    resetFlag = same && w.gone.length === wallet.gone.length && back.length === classic.length;
     selected = null;
     refreshButtons();
     say(t("ui.layout.resetDone"));
@@ -439,7 +503,7 @@ const layoutEditor = (() => {
   // the piece under the pointer: the front-most one, counting the part that rises above its tiles (a fridge, a shelf, a monitor)
   function hitItem(p) {
     const depth = (it) => it.ty + (L.TYPES[it.type].sort || 0);
-    for (const it of items.filter(shown).sort((a, c) => depth(c) - depth(a) || items.indexOf(c) - items.indexOf(a))) {
+    for (const it of items.slice().sort((a, c) => depth(c) - depth(a) || items.indexOf(c) - items.indexOf(a))) {
       const up = L.TYPES[it.type].up || 0;
       for (const [x, y] of L.tilesOf(it)) if (p.x >= x * TILE_PX && p.x < (x + 1) * TILE_PX && p.y >= y * TILE_PX - up && p.y < (y + 1) * TILE_PX) return it;
     }
@@ -453,12 +517,12 @@ const layoutEditor = (() => {
       const g = ghostAt(hover = at(ev));
       ghost = g;
       if (g.res.ok) {
-        const keep = ev.shiftKey, type = placing.type, paid = M.info(type).price > 0 && M.inDepot(wallet, type) === 0;
+        const keep = ev.shiftKey, key = placing.key, paid = M.info(key).price > 0 && M.inDepot(wallet, key) === 0;
         if (paid) propose(g.item, keep, "click"); // asks first; a yes puts it there
         else {
           if (!keep) stopPlacing(true); // (quietly: what placing says must stay on the message line)
           const done = buyAndPlace(g.item);
-          if (keep) { if (done && M.canAfford(wallet, type)) ghost = null; else stopPlacing(true); }
+          if (keep) { if (done && M.canAfford(wallet, key)) ghost = null; else stopPlacing(true); }
         }
       } else say(why(g.res), true);
       ev.preventDefault();
@@ -481,7 +545,7 @@ const layoutEditor = (() => {
     if (placing) { // the piece being placed follows the pointer
       ghost = ghostAt(p);
       canvas.style.cursor = ghost.res.ok ? "copy" : "not-allowed";
-      say(ghost.res.ok ? t("ui.market.placing", { name: pieceName(placing.type) }) : why(ghost.res), !ghost.res.ok);
+      say(ghost.res.ok ? t("ui.market.placing", { name: pieceName(placing.key) }) : why(ghost.res), !ghost.res.ok);
       return;
     }
     if (!drag) { canvas.style.cursor = hitItem(p) ? "grab" : "default"; return; }
@@ -518,6 +582,8 @@ const layoutEditor = (() => {
     if (/^(INPUT|TEXTAREA|SELECT)$/.test(tag) || ev.target.isContentEditable) return;
     if (document.querySelector(".modal:not([hidden])")) return;
     const mod = ev.metaKey || ev.ctrlKey, k = ev.key;
+    if (window.marketShop && window.marketShop.isOpen()) return; // (the shop has the keys while it is open)
+    if ((k === "m" || k === "M") && !mod && window.marketShop) { window.marketShop.open(); ev.preventDefault(); return; }
     if ((k === "c" || k === "C") && !mod) { compare(true); ev.preventDefault(); return; }
     if (comparing) { ev.preventDefault(); return; }
     if (pending) { // waiting for a yes: Enter buys, Esc changes its mind
@@ -527,7 +593,7 @@ const layoutEditor = (() => {
     }
     if (placing) { // placing a piece: Enter puts it in the best free spot, R turns it, Esc lets go
       if (k === "Escape") stopPlacing();
-      else if (k === "Enter") add(placing.type);
+      else if (k === "Enter") add(placing.key);
       else if ((k === "r" || k === "R") && !mod) rotatePlacing();
       else return;
       ev.preventDefault();
@@ -561,6 +627,8 @@ const layoutEditor = (() => {
     b.globalAlpha = 0.8;
     if (isWall(it)) {
       if (typeof WALL_ART !== "undefined" && WALL_ART[it.type]) WALL_ART[it.type](b, t, it.tx * TILE_PX);
+    } else if (it.type === "rug") {
+      drawRug(b, it.skin || office.theme, it.tx, it.ty);
     } else if (it.type === "desk") {
       const feet = (it.ty + 1) * TILE_PX;
       drawChair(b, it.tx * TILE_PX, feet);
@@ -630,9 +698,10 @@ const layoutEditor = (() => {
     if (!fixed) { toast(t("ui.layout.err.cannotEdit")); return; }
     base = cur().layout || null;
     editTheme = office.theme;
-    wallMarks = (base && base.walls) || [];
+    starters = new Set(L.scene(null, ids(), office.theme, office.progress || 0).items.map((x) => x.id));
     items = fixed; startJson = JSON.stringify(start); undo = []; selected = null; drag = null; ghost = null; resetFlag = false; saving = false;
-    wallet = M.load(state.office); walletStart = JSON.stringify(wallet); placing = null; clearPending(); fx = []; tab = "all"; search = ""; mq("mkSearch").value = ""; paintMute();
+    const claimed = M.claim(M.load(state.office), office.progress || 0, items); // the pieces finished work unlocked are yours (not a change to save)
+    wallet = claimed.wallet; walletStart = JSON.stringify(wallet); placing = null; clearPending(); fx = []; paintMute(); M.setDeals(M.pickDeals(M.catalog(office.theme, hasSkin), M.today()));
     active = true;
     office.editing = true;
     office.editorDraw = draw;
@@ -641,13 +710,15 @@ const layoutEditor = (() => {
     bar.hidden = false;
     refreshButtons();
     renderMarket();
-    if (JSON.stringify(fixed) !== startJson) { office.applyLayout(L.toDoc(fixed, marks())); say(t("ui.layout.repaired")); }
+    if (claimed.gave.length) say(t("ui.market.rewardsIn", { n: claimed.gave.length }));
+    if (JSON.stringify(fixed) !== startJson) { office.applyLayout(L.toDoc(fixed, true)); say(t("ui.layout.repaired")); }
     requestAnimationFrame(() => office.fit());
     setTimeout(() => { if (active) office.fit(); }, 320); // (the stage makes room for the market over .25s)
   }
   // silent = leaving because the office on screen changes: nothing to put back
   function close(silent = false) {
     if (!active) return;
+    if (window.marketShop) window.marketShop.close(); // (the shop is part of editing)
     comparing = false; active = false; drag = null; ghost = null; hover = null; placing = null; clearPending(); endCardDrag();
     office.editing = false; office.editorDraw = null; office.editorDim = null;
     document.body.classList.remove("layout-editing");
@@ -668,7 +739,7 @@ const layoutEditor = (() => {
     saving = true; refreshButtons();
     try {
       if (layoutDirty()) {
-        const out = await api("PUT", officeApi("/layout"), { layout: resetFlag ? null : L.toDoc(withDesks, marks()) });
+        const out = await api("PUT", officeApi("/layout"), { layout: resetFlag ? null : L.toDoc(withDesks, true) });
         cur().layout = out.layout ?? null;
       }
       M.save(state.office, M.prune(wallet, withDesks.map((i) => i.id))); // (only after the layout is safe: a failed save keeps the coins)
@@ -685,6 +756,7 @@ const layoutEditor = (() => {
   q("lbRotate").onclick = rotate;
   q("lbCopy").onclick = copy;
   q("lbDelete").onclick = remove;
+  q("lbSell").onclick = () => sellItemNow(selected && find(selected));
   const cmp = q("lbCompare");
   cmp.onpointerdown = (ev) => { compare(true); try { cmp.setPointerCapture(ev.pointerId); } catch {} };
   cmp.onpointerup = () => compare(false);
@@ -704,6 +776,16 @@ const layoutEditor = (() => {
   return {
     get active() { return active; },
     get items() { return items; },
+    // what the shop (web/shop.js) needs: the draft's wallet and pieces, names, thumbnails, and the actions
+    api: {
+      M, hasSkin, pieceName, effKey, placedCount, sfx, soundOn, paintMute,
+      get wallet() { return wallet; }, get items() { return items; }, get theme() { return office.theme; }, get active() { return active; },
+      thumb: (i) => renderItemThumb(office.theme, i.type, i.skin || undefined),
+      buy: buyToDepot, hang: hangAmbient, takeDown: takeDownAmbient, sell: sellOne, sellPlaced, showPlaced, placedOf, undo: () => undoLast(), canUndo: () => undo.length > 0,
+      tryIt: (key) => startPlacing(key), place: (key) => add(key),
+      toggleSound() { try { localStorage.setItem("po.market.mute", soundOn() ? "1" : "0"); } catch {} paintMute(); sfx("place"); },
+      subscribe: (fn) => { listeners.push(fn); },
+    },
     open, cancel, save, add, remove, copy, rotate, undo: undoLast, commit, startPlacing, stopPlacing, get wallet() { return wallet; }, get placing() { return placing; },
     // for the ?debug panel: a random valid edit / back to the classic layout, applied to this browser only
     select(id) { selected = id; refreshButtons(); },

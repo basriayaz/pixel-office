@@ -117,6 +117,33 @@ const settingsUI = (() => {
   // ---------- Models: the engines (Claude, Codex, Gemini, OpenRouter), what is installed and connected ----------
   let prov = null, provError = "";
   const busy = new Set(); // "<id>:<action>" running now
+  let prices = null, priceErr = {}; // GET /api/prices; priceDraft[engine] = the user's rows being edited (strings), priceErr[engine] = the server's 400 message
+  const priceDraft = {};
+  const toDraft = (rows) => rows.map((r) => ({ match: r.match, input: String(r.input), cached: String(r.cached), output: String(r.output) }));
+  async function loadPrices() {
+    try { prices = await api("GET", "/api/prices"); for (const e of ["codex", "gemini"]) priceDraft[e] = toDraft(prices.custom[e] || []); renderModels(); }
+    catch (err) { priceErr.load = err.message; }
+  }
+  const num = (v) => (String(v).trim() === "" ? undefined : Number(v));
+  function priceEditor(id) {
+    if (!prices) return priceErr.load ? `<small class="muted">${escapeHtml(t("ui.settings.models.prices.unavailable", { message: priceErr.load }))}</small>` : "";
+    const th = (k) => `<th scope="col">${escapeHtml(t(`ui.settings.models.prices.${k}`))}</th>`;
+    const inp = (i, k, v, label, cls = "") => `<input class="${cls}" data-price="${k}" data-i="${i}" ${k === "match" ? 'type="text" spellcheck="false"' : 'type="number" min="0" step="any" inputmode="decimal"'} value="${escapeHtml(v)}" aria-label="${escapeHtml(label)}" />`;
+    const rows = (priceDraft[id] || []).map((r, i) => `<tr>
+      <td>${inp(i, "match", r.match, t("ui.settings.models.prices.match"), "pmatch")}</td>
+      <td>${inp(i, "input", r.input, t("ui.settings.models.prices.input"))}</td>
+      <td>${inp(i, "cached", r.cached, t("ui.settings.models.prices.cached"))}</td>
+      <td>${inp(i, "output", r.output, t("ui.settings.models.prices.output"))}</td>
+      <td><button class="btn small ghost" data-act="priceDel" data-i="${i}" aria-label="${escapeHtml(t("ui.settings.models.prices.remove"))}">✕</button></td></tr>`).join("");
+    const defs = (prices.defaults[id] || []).map((r) => `<tr class="pdef"><td><code>${escapeHtml(r.match || ".*")}</code></td><td>${r.input}</td><td>${r.cached}</td><td>${r.output}</td><td></td></tr>`).join("");
+    const err = priceErr[id];
+    return `<details class="prov-prices" data-prices="${id}"><summary>${escapeHtml(t("ui.settings.models.prices.title"))}</summary>
+      <small class="muted">${escapeHtml(t("ui.settings.models.prices.hint", { file: prices.file }))}</small>
+      <table class="ptable"><thead><tr>${th("match")}${th("input")}${th("cached")}${th("output")}<th></th></tr></thead><tbody>${rows}${defs}</tbody></table>
+      ${err ? `<div class="prov-note" role="alert">⚠ ${escapeHtml(err)}</div>` : ""}
+      <div class="prov-actions"><button class="btn small ghost" data-act="priceAdd">${escapeHtml(t("ui.settings.models.prices.add"))}</button><button class="btn small primary" data-act="priceSave" ${busy.has(`${id}:prices`) ? "disabled" : ""}>${escapeHtml(t("ui.settings.models.prices.save"))}</button></div>
+    </details>`;
+  }
   async function loadProviders(fresh = false) {
     try { prov = await api("GET", "/api/providers" + (fresh ? "?fresh=1" : "")); provError = ""; syncModels(prov); }
     catch (err) { provError = err.message; }
@@ -134,10 +161,12 @@ const settingsUI = (() => {
   }
   function renderModels() {
     const host = $("provList");
+    if (!prices && !priceErr.load) loadPrices();
     if (!prov) { host.innerHTML = `<div class="muted">${escapeHtml(provError ? t("ui.settings.unavailable", { message: provError }) : t("ui.settings.loading"))}</div>`; if (!provError && !busy.size) loadProviders(); return; }
     if (host.contains(document.activeElement) && /INPUT|TEXTAREA/.test(document.activeElement.tagName)) return; // typing: do not redraw under the cursor
     const BRAND = { claude: "#d97757", codex: "#10a37f", gemini: "#4f8ff7", openrouter: "#a78bfa" };
     const PKG = { claude: "@anthropic-ai/claude-code", codex: "@openai/codex", gemini: "@google/gemini-cli" };
+    const openPrices = new Set([...host.querySelectorAll("details[data-prices][open]")].map((d) => d.dataset.prices));
     host.innerHTML = prov.providers.map((p) => {
       const b = (a) => busy.has(`${p.id}:${a}`);
       const badge = !p.installed && p.canInstall ? ["off", "notInstalled"] : !p.enabled ? ["off", "off"] : p.connected ? ["ok", "connected"] : ["warn", "notConnected"];
@@ -166,6 +195,7 @@ const settingsUI = (() => {
         ${!p.installed && p.canInstall ? `<small class="muted prov-hint">${t("ui.settings.models.installHint", { pkg: PKG[p.id] })}</small>` : ""}
         ${keyRow}${customRow}
         <div class="prov-actions">${actions.join("")}</div>
+        ${p.id === "codex" || p.id === "gemini" ? priceEditor(p.id).replace("<details ", openPrices.has(p.id) ? "<details open " : "<details ") : ""}
         <details class="prov-models"><summary>${escapeHtml(t("ui.settings.models.modelsTitle", { n: p.models.length }))}</summary><div class="prov-chips">${chips}</div></details>
       </div>`;
     }).join("");
@@ -192,10 +222,21 @@ const settingsUI = (() => {
       if (act === "saveKey" && !v) return;
       prov = await api("PUT", `/api/providers/${id}`, { apiKey: v }); syncModels(prov); toast(t("ui.settings.saved"));
     });
+    else if (act === "priceAdd") { (priceDraft[id] ||= []).push({ match: "", input: "", cached: "", output: "" }); renderModels(); card.querySelector(`[data-prices="${id}"] tbody tr:last-of-type [data-price="match"]`)?.focus(); }
+    else if (act === "priceDel") { priceDraft[id].splice(Number(btn.dataset.i), 1); renderModels(); }
+    else if (act === "priceSave") await run("prices", async () => {
+      const rows = priceDraft[id].map((r) => ({ match: r.match, input: num(r.input), cached: num(r.cached), output: num(r.output) }));
+      try { prices = await api("PUT", "/api/prices", { [id]: rows }); priceErr[id] = ""; priceDraft[id] = toDraft(prices.custom[id] || []); toast(t("ui.settings.saved")); }
+      catch (err) { priceErr[id] = err.message; }
+    });
     else if (act === "saveModels") await run("models", async () => {
       const list = card.querySelector("[data-custom-input]").value.split(",").map((x) => x.trim()).filter(Boolean);
       prov = await api("PUT", `/api/providers/${id}`, { models: list }); syncModels(prov); toast(t("ui.settings.saved"));
     });
+  });
+  $("provList").addEventListener("input", (ev) => {
+    const el = ev.target.closest("[data-price]");
+    if (el) priceDraft[el.closest("[data-prices]").dataset.prices][Number(el.dataset.i)][el.dataset.price] = el.value;
   });
   $("provList").addEventListener("change", async (ev) => {
     const el = ev.target.closest('[data-act="toggle"]');

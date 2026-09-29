@@ -16,7 +16,7 @@ import {
 import type { Store } from "./store.js";
 import { t, tget, getSettings } from "./runtime.js";
 import { officeServer, OFFICE_TOOLS, type Colleagues } from "./office-tools.js";
-import { runCodexTurn, skillsIndex, skillFile, type CodexItem } from "./codex.js";
+import { runCodexTurn, codexCostOf, skillsIndex, skillFile, type CodexItem } from "./codex.js";
 import { runGeminiTurn, type GeminiEvent } from "./gemini.js";
 import { engineOf, geminiKey, openrouterEnv, openrouterSlug, markAuthFailed, AUTH_ERROR, type Engine } from "./providers.js";
 import { listSkills, listProjectSkills } from "./agents.js";
@@ -1168,7 +1168,11 @@ export class Employee extends EventEmitter {
           // the same difference for the ledger, kept across restarts (the in-memory one above starts over)
           const seen = this.store.getMeta<Record<string, [number, number, number]>>(this.cfg.id, "threadTokens") ?? {};
           const [pi, po, pc] = key !== "side" && seen[tk] && seen[tk][0] <= res.inputTokens ? seen[tk] : [0, 0, 0];
-          this.turnSpend = { cost: 0, tokens: { input: res.inputTokens - pi, output: Math.max(0, res.outputTokens - po), cached: Math.max(0, res.cachedTokens - pc) } };
+          const tokens = { input: res.inputTokens - pi, output: Math.max(0, res.outputTokens - po), cached: Math.max(0, res.cachedTokens - pc) };
+          const estimate = codexCostOf(this.model ?? this.cfg.model ?? "", tokens);
+          this.cost += estimate;
+          this.store.setMeta(this.cfg.id, "cost", this.cost);
+          this.turnSpend = { cost: estimate, tokens };
           if (key !== "side" && tk !== "-") {
             const next = { ...seen, [tk]: [res.inputTokens, res.outputTokens, res.cachedTokens] as [number, number, number] };
             const keys = Object.keys(next);

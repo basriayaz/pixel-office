@@ -1,4 +1,5 @@
 // Pixel-art office: 32px tiles, rooms with doors, BFS walking, detailed characters.
+const REDUCED_MOTION = matchMedia("(prefers-reduced-motion: reduce)");
 const TILE = 32;
 const COLS = 30;
 const ROWS = 17;
@@ -244,6 +245,7 @@ class Office {
     if (!e || e.status === status) return;
     const prev = e.status;
     e.status = status;
+    e.pulse = { t0: performance.now(), col: status === "working" ? "#4ade80" : status === "error" ? "#f87171" : status === "waiting" ? "#ffd166" : "#ffffff" };
     const now = performance.now();
     if (e.meet) { e.bubble = null; return; } // in a meeting: stays in the room whatever the status
     if (status === "working" || status === "waiting" || status === "error") {
@@ -442,6 +444,7 @@ class Office {
 
   // Confetti burst at a logical point.
   burst(x, y, n = 40) {
+    if (REDUCED_MOTION.matches) return;
     for (let i = 0; i < n; i++) {
       const a = -Math.PI / 2 + (Math.random() - 0.5) * 2.4, sp = 90 + Math.random() * 170;
       this.particles.push({ x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 40, life: 1.6 + Math.random() * 1.2, col: CONFETTI[i % CONFETTI.length], w: 2 + Math.floor(Math.random() * 3), h: 2 + Math.floor(Math.random() * 3), rot: Math.random() * 6, vr: (Math.random() - 0.5) * 12 });
@@ -488,10 +491,12 @@ class Office {
   start() {
     const loop = (now) => {
       const dt = Math.min(0.05, (now - this.last) / 1000);
+      requestAnimationFrame(loop);
+      if (document.hidden) { this.last = now; return; }
+      if (REDUCED_MOTION.matches && now - this.last < 200) return;
       this.last = now;
       this.update(dt, now);
       this.draw(now);
-      requestAnimationFrame(loop);
     };
     requestAnimationFrame(loop);
   }
@@ -515,6 +520,11 @@ class Office {
         draw: () => {
           const sel = e.id === this.selected, hov = e.id === this.hovered;
           if (sel || hov) drawRing(b, e.x + 16, e.y + TILE - 2, sel);
+          if (e.pulse) {
+            const p = (performance.now() - e.pulse.t0) / 900;
+            if (p >= 1 || REDUCED_MOTION.matches) e.pulse = null;
+            else { b.save(); b.globalAlpha = 1 - p; b.strokeStyle = e.pulse.col; b.lineWidth = 2; b.beginPath(); b.ellipse(e.x + 16, e.y + TILE - 1, 12 + p * 14, 4 + p * 6, 0, 0, Math.PI * 2); b.stroke(); b.restore(); }
+          }
           drawPerson(b, e.x, oy, e, { dir: e.dir, anim: e.anim, frame, t, seed: e.seed, sipT: e.sipping ? performance.now() - e.sipping : 0 });
         },
       });

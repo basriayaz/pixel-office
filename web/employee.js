@@ -44,6 +44,19 @@ async function load() {
     $("fManagerInfo").textContent = detail.currentManager ? t("ui.profile.managerTakeover", { name: detail.currentManager }) : "";
     $("fWorktree").checked = !!detail.worktree;
     $("fWorktreeInfo").textContent = detail.worktree ? `${detail.branch} · ${detail.workdir}` : "";
+    $("fDiffBox").hidden = !detail.worktree;
+    $("fDiffBtn").onclick = async () => {
+      const out = $("fDiffOut");
+      try {
+        const d = await api("GET", `${API}/employees/${encodeURIComponent(id)}/diff`);
+        const parts = [d.stat || t("ui.profile.diffEmpty")];
+        if (d.untracked?.length) parts.push(t("ui.profile.diffUntracked") + "\n" + d.untracked.join("\n"));
+        if (d.patch) parts.push(d.patch);
+        if (d.truncated) parts.push(t("ui.profile.diffTruncated"));
+        out.textContent = parts.join("\n\n");
+      } catch (err) { out.textContent = err.message; }
+      out.hidden = false;
+    };
     $("fCwd").value = detail.cwd === detail.officeCwd ? "" : detail.cwd;
     attachFolderPicker($("fCwd"));
   }
@@ -99,7 +112,7 @@ async function saveConnectors(off) {
 async function renderConnectors() {
   const host = $("connectorList");
   if (!connectors) {
-    host.innerHTML = `<div class="muted">${t("ui.profile.connectorsLoading")}</div>`;
+    host.innerHTML = `<div role="status" aria-busy="true" aria-label="${escapeHtml(t("ui.profile.connectorsLoading"))}"><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div></div>`;
     try { connectors = await api("GET", `${API}/connectors`); } catch { connectors = []; }
   }
   const off = new Set(detail.connectorsOff || []);

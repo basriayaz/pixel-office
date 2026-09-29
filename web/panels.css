@@ -284,3 +284,24 @@
 .prov-key input { width: 100%; background: var(--card); color: var(--text); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; font: inherit; font-size: 12.5px; }
 .prov-key input:focus { outline: 2px solid var(--accent); outline-offset: 1px; border-color: transparent; }
 .prov-key input::placeholder { color: var(--muted); opacity: .7; }
+
+/* first-task guide (guide.js) */
+.guide-card { position: fixed; z-index: 45; width: min(340px, calc(100% - 16px)); background: var(--card); border: 1px solid var(--accent); border-top-width: 3px; border-radius: 12px; padding: 10px 12px; box-shadow: 0 12px 40px rgba(0,0,0,.6); font-size: 12.5px; line-height: 1.5; --ax: 50%; --ay: 50%; }
+.guide-card[hidden], .guide-ring[hidden] { display: none; }
+.guide-head { display: flex; align-items: center; gap: 8px; outline: none; }
+.guide-head b { flex: 1; font-family: Silkscreen, monospace; font-size: 12px; font-weight: 400; letter-spacing: .04em; }
+.guide-count { background: var(--accent); color: #1a1a1a; border-radius: 6px; padding: 1px 7px; font-size: 11px; font-weight: 700; }
+.guide-x { font-size: 16px; line-height: 1; padding: 0 8px; }
+.guide-text p { margin: 6px 0 0; }
+.guide-note { color: var(--accent); }
+.guide-acts { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; align-items: center; }
+.guide-skip { color: var(--muted); }
+.guide-row { display: flex; gap: 6px; width: 100%; }
+.guide-row input { flex: 1; min-width: 0; background: var(--bg); color: var(--text); border: 1px solid var(--line); border-radius: 8px; padding: 4px 8px; font: inherit; }
+.guide-ring { position: fixed; z-index: 44; pointer-events: none; border: 2px solid var(--accent); border-radius: 10px; box-shadow: 0 0 0 3px rgba(255,209,102,.25); animation: guide-pulse 1.6s ease-in-out infinite; }
+.guide-card::before { content: ""; position: absolute; width: 12px; height: 12px; background: var(--card); border: 1px solid var(--accent); transform: rotate(45deg); display: none; }
+.guide-card[data-arrow="up"]::before { display: block; top: -7px; left: calc(var(--ax) - 6px); border-right: 0; border-bottom: 0; }
+.guide-card[data-arrow="down"]::before { display: block; bottom: -7px; left: calc(var(--ax) - 6px); border-left: 0; border-top: 0; }
+.guide-card[data-arrow="right"]::before { display: block; right: -7px; top: calc(var(--ay) - 6px); border-left: 0; border-bottom: 0; }
+@keyframes guide-pulse { 50% { box-shadow: 0 0 0 7px rgba(255,209,102,.08); } }
+@media (prefers-reduced-motion: reduce) { .guide-ring { animation: none; } }

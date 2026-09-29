@@ -26,7 +26,7 @@ const inboxUI = (() => {
   function badge() {
     const n = items().length;
     $("inboxBadge").hidden = !n;
-    $("inboxBadge").textContent = n;
+    popBadge($("inboxBadge"), n);
     $("btnInbox").classList.toggle("has", n > 0);
     document.title = n ? `(${n}) ${t("ui.title")}` : t("ui.title");
   }

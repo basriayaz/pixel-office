@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import http from "node:http";
-import { spawn, execFile } from "node:child_process";
+import { spawn, execFile, execFileSync } from "node:child_process";
 import express, { type Request } from "express";
 import { WebSocketServer, WebSocket } from "ws";
 import { Employee, listConnectors, IMAGE_TYPES, type EmployeeConfig, type ImageInput } from "./employee.js";
@@ -990,6 +990,27 @@ r.get("/employees", (req: OReq, res) => {
   const o = officeOf(req);
   if (!o) return res.status(404).json({ error: t("server.notFound") });
   res.json(roster(o));
+});
+
+// Read-only diff of an employee's own worktree against the branch point of the main folder's HEAD.
+r.get("/employees/:id/diff", (req: OReq, res) => {
+  const e = empOf(req);
+  if (!e) return res.status(404).json({ error: t("server.notFound") });
+  if (!e.cfg.worktree || !e.cfg.baseCwd || e.cfg.baseCwd === e.cfg.cwd) return res.json({ enabled: false });
+  const git = (cwd: string, ...args: string[]) => execFileSync("git", ["-C", cwd, "--no-pager", ...args], { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"], maxBuffer: 20_000_000 });
+  const MAX = 200_000;
+  try {
+    const base = git(e.cfg.baseCwd, "rev-parse", "HEAD").trim();
+    const mb = git(e.cfg.cwd, "merge-base", base, "HEAD").trim();
+    const stat = git(e.cfg.cwd, "diff", "--no-ext-diff", "--stat", mb);
+    const untracked = git(e.cfg.cwd, "ls-files", "--others", "--exclude-standard").split("\n").filter(Boolean);
+    let patch = git(e.cfg.cwd, "diff", "--no-ext-diff", "--no-color", mb);
+    const truncated = patch.length > MAX;
+    if (truncated) patch = patch.slice(0, MAX);
+    res.json({ enabled: true, branch: `po/${e.cfg.id}`, stat: stat.trim(), untracked, patch, truncated });
+  } catch (err) {
+    res.status(500).json({ error: ((err as { stderr?: string }).stderr || (err as Error).message).toString().trim().split("\n").pop() });
+  }
 });
 
 r.get("/employees/:id/detail", (req: OReq, res) => {

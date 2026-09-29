@@ -31,6 +31,15 @@ const EFFORT_INFO = (PO.strings.ui && PO.strings.ui.efforts) || {};
 const PERM_INFO = (PO.strings.ui && PO.strings.ui.perms) || {};
 const PRESETS = (PO.strings.ui && PO.strings.ui.presets) || [];
 
+// Restart the pop animation on a badge whose number changed.
+function popBadge(el, n) {
+  const s = String(n);
+  if (el.textContent === s) return;
+  el.textContent = s;
+  if (!n) return;
+  el.classList.remove("pop"); void el.offsetWidth; el.classList.add("pop");
+}
+
 function toast(text) {
   const el = $("toast");
   if (!el) return;

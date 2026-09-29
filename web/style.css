@@ -121,7 +121,10 @@ body.offline .offline-banner { display: block; }
 .roster-chip .badge, .row .badge { background: var(--error); color: #fff; font-size: 10px; font-weight: 600; min-width: 16px; height: 16px; border-radius: 8px; display: grid; place-items: center; padding: 0 4px; }
 
 .icon-btn.small { width: 26px; height: 26px; line-height: 24px; font-size: 13px; }
-.modal[hidden] { display: none; }
+.modal[hidden] { display: grid; visibility: hidden; opacity: 0; pointer-events: none; transition: opacity .15s ease, visibility 0s .15s; }
+.modal { transition: opacity .15s ease, visibility 0s; }
+.modal .modal-card { transition: transform .15s ease; }
+.modal[hidden] .modal-card { transform: scale(.96); }
 .modal-card.narrow { width: min(440px, 94vw); }
 .modal-card.welcome { width: min(520px, 94vw); }
 .modal-card.welcome h2 { font-family: "Silkscreen", monospace; font-size: 15px; color: var(--accent); margin: 4px 0 8px; }
@@ -294,9 +297,9 @@ body.resizing .chat, body.resizing .stage { transition: none; }
 .activity-group ul { margin: 6px 0 4px; padding-left: 16px; }
 .activity-group li { margin: 2px 0; word-break: break-all; }
 .typing .bubble { display: flex; gap: 4px; padding: 12px 14px; }
-.typing .bubble span { width: 6px; height: 6px; border-radius: 50%; background: var(--muted); animation: bounce 1.2s infinite; }
-.typing .bubble span:nth-child(2) { animation-delay: .2s; }
-.typing .bubble span:nth-child(3) { animation-delay: .4s; }
+.typing .bubble span { width: 6px; height: 6px; border-radius: 50%; background: var(--muted); animation: bounce 1.2s ease-in-out infinite; }
+.typing .bubble span:nth-child(2) { animation-delay: .15s; }
+.typing .bubble span:nth-child(3) { animation-delay: .3s; }
 @keyframes bounce { 0%, 60%, 100% { transform: translateY(0); opacity: .5; } 30% { transform: translateY(-4px); opacity: 1; } }
 @keyframes blink { to { opacity: 0; } }
 
@@ -338,9 +341,24 @@ body.offline .chat-foot button { background: var(--line); color: var(--muted); c
 .toast {
   position: fixed; left: 50%; bottom: 20px; transform: translate(-50%, 20px);
   background: var(--bg-2); border: 1px solid var(--line); color: var(--text);
-  padding: 8px 14px; border-radius: 8px; opacity: 0; transition: .2s; pointer-events: none; font-size: 12px; z-index: 50;
+  padding: 8px 14px; border-radius: 8px; opacity: 0; transition: opacity .2s ease, transform .25s cubic-bezier(.2,.9,.3,1.2); pointer-events: none; font-size: 12px; z-index: 50;
 }
 .toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+/* ---------- motion polish (all of it off under prefers-reduced-motion, see the end of this block) ---------- */
+@keyframes badge-pop { 0% { transform: scale(.4); } 60% { transform: scale(1.25); } 100% { transform: scale(1); } }
+.badge.pop { animation: badge-pop .3s ease-out; }
+@keyframes shimmer { to { background-position: -200% 0; } }
+.skeleton { height: 14px; border-radius: 6px; margin: 8px 0; background: linear-gradient(90deg, var(--line) 25%, color-mix(in srgb, var(--line) 50%, var(--text) 12%) 50%, var(--line) 75%); background-size: 200% 100%; animation: shimmer 1.4s linear infinite; }
+.skeleton:nth-child(2) { width: 80%; } .skeleton:nth-child(3) { width: 60%; }
+@keyframes fade-in { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+.panel-empty { animation: fade-in .3s ease-out; }
+@keyframes card-flash { 0% { background: color-mix(in srgb, var(--g) 28%, var(--bg)); transform: translateX(-4px); } 100% { transform: none; } }
+.task-card.changed { animation: card-flash .6s ease-out; }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; transition-delay: 0s !important; scroll-behavior: auto !important; }
+  .skeleton { background: var(--line); }
+}
 
 /* ---------- pages (hire / profile) ---------- */
 .page-body { max-width: 1100px; margin: 0 auto; padding: 24px 20px 60px; display: flex; flex-direction: column; gap: 18px; }

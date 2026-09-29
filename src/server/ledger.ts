@@ -14,7 +14,7 @@ export interface CostLine {
   model: string;
   kind: CostKind;
   task?: number;
-  cost: number; // USD; 0 for Codex (it runs on the ChatGPT plan)
+  cost: number; // USD; for Codex an API-price estimate from tokens (the ChatGPT plan bills nothing)
   tokens?: { input: number; output: number; cached?: number };
 }
 export interface Cap { daily: number; codexTokens: number } // 0 = off

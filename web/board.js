@@ -110,9 +110,9 @@ const boardUI = (() => {
     const n = board().tasks.filter((k) => k.status === "blocked" || k.status === "review" || ["waiting", "error", "orphan", "stalled"].includes(alertOf(k))).length; // what needs the boss
     const fresh = board().ideas.filter((x) => x.status === "new").length; // ideas nobody has decided on yet
     const el = $("boardBadge");
-    el.hidden = !(n + fresh); el.textContent = n + fresh;
-    $("ideasBadge").hidden = !fresh; $("ideasBadge").textContent = fresh;
-    $("tasksBadge").hidden = !n; $("tasksBadge").textContent = n;
+    el.hidden = !(n + fresh); popBadge(el, n + fresh);
+    $("ideasBadge").hidden = !fresh; popBadge($("ideasBadge"), fresh);
+    $("tasksBadge").hidden = !n; popBadge($("tasksBadge"), n);
   }
 
   // Employee status only shows on the board through task alerts; this fingerprint tells whether a status change matters.
@@ -207,10 +207,13 @@ const boardUI = (() => {
     if (!showDone && doneCount) { const m = document.createElement("div"); m.className = "muted board-more"; m.textContent = `${t("ui.board.status.done")}: ${doneCount}`; host.appendChild(m); }
   }
 
+  const shownStatus = new Map(); // task id → status last drawn, to flash a card whose status just changed
   function taskCard(k) {
     const owner = emp(k.owner);
     const card = document.createElement("div");
     card.className = "task-card " + k.status + (drawerId === k.id ? " selected" : "");
+    if (shownStatus.get(k.id) && shownStatus.get(k.id) !== k.status) card.classList.add("changed");
+    shownStatus.set(k.id, k.status);
     const last = k.notes[k.notes.length - 1];
     const alert = alertOf(k);
     if (alert) card.classList.add("alert-" + alert);

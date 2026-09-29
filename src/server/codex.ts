@@ -26,6 +26,17 @@ export function codexModels(refresh = false): CodexModel[] {
   } catch { catalog = []; }
   return catalog;
 }
+// API-equivalent USD per 1M tokens [input, cached input, output]; Codex on a ChatGPT plan bills nothing, so this is an estimate.
+const CODEX_PRICES: Array<[RegExp, [number, number, number]]> = [
+  [/mini/i, [0.25, 0.025, 2]],
+  [/nano/i, [0.05, 0.005, 0.4]],
+  [/^gpt-5|codex/i, [1.25, 0.125, 10]],
+];
+export function codexCostOf(model: string, t: { input: number; output: number; cached?: number }): number {
+  const p = CODEX_PRICES.find(([re]) => re.test(model))?.[1] ?? [1.25, 0.125, 10];
+  const cached = Math.min(t.cached ?? 0, t.input);
+  return ((t.input - cached) * p[0] + cached * p[1] + t.output * p[2]) / 1e6;
+}
 export const isCodexModel = (model?: string) => !!model && (codexModels().some((m) => m.id === model) || /^(gpt-|codex-)/.test(model));
 
 export type CodexItem =

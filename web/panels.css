@@ -246,3 +246,41 @@
 .idea-card .note-actions .i-comment { flex: 1 1 180px; width: auto; }
 .idea-card .note-actions .i-comment:focus { outline: none; border-color: var(--accent); }
 .idea-card .note-actions .i-comment::placeholder { color: var(--muted); opacity: .8; }
+
+/* Settings → Models: one card per engine */
+.prov-list { display: grid; gap: 12px; }
+.prov-card { --brand: var(--accent); display: grid; gap: 10px; background: var(--bg); border: 1px solid var(--line); border-left: 3px solid var(--line); border-radius: 12px; padding: 14px 16px; transition: border-color .15s; }
+.prov-card.prov-ok { border-left-color: var(--working); }
+.prov-card.prov-warn { border-left-color: var(--waiting); }
+.prov-top { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 12px; align-items: center; }
+.prov-mark { width: 38px; height: 38px; border-radius: 10px; display: grid; place-items: center; font-weight: 700; font-size: 13px; letter-spacing: .3px; color: var(--brand); background: color-mix(in srgb, var(--brand) 14%, transparent); border: 1px solid color-mix(in srgb, var(--brand) 40%, transparent); }
+.prov-mark i { width: 22px; height: 22px; background: var(--brand); -webkit-mask: var(--logo) center / contain no-repeat; mask: var(--logo) center / contain no-repeat; }
+.prov-card.prov-off .prov-mark { filter: grayscale(1); opacity: .6; }
+.prov-title { display: grid; gap: 3px; min-width: 0; }
+.prov-name { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 14px; }
+.prov-pill { display: inline-flex; align-items: center; gap: 6px; font-size: 10.5px; letter-spacing: .3px; padding: 2px 9px; border-radius: 999px; border: 1px solid var(--line); background: var(--card); color: var(--muted); }
+.prov-pill i { width: 7px; height: 7px; border-radius: 50%; background: var(--idle); }
+.prov-ok .prov-pill { color: var(--working); border-color: color-mix(in srgb, var(--working) 45%, transparent); }
+.prov-ok .prov-pill i { background: var(--working); box-shadow: 0 0 6px var(--working); }
+.prov-warn .prov-pill { color: var(--waiting); border-color: color-mix(in srgb, var(--waiting) 45%, transparent); }
+.prov-warn .prov-pill i { background: var(--waiting); }
+.prov-on { flex: none; }
+.settings-card .prov-on span { flex: none; font-size: 11px; color: var(--muted); font-weight: 400; }
+.prov-state { font-size: 12.5px; padding: 8px 12px; border-radius: 8px; background: var(--card); border: 1px solid var(--line); }
+.prov-ok .prov-state { color: var(--muted); }
+.prov-note { font-size: 12px; color: var(--waiting); padding: 6px 12px; border-radius: 8px; background: color-mix(in srgb, var(--waiting) 8%, transparent); border: 1px solid color-mix(in srgb, var(--waiting) 30%, transparent); word-break: break-all; }
+.prov-hint { line-height: 1.5; }
+.prov-key { display: flex; align-items: flex-end; gap: 8px; flex-wrap: wrap; }
+.prov-key label { display: grid; gap: 4px; flex: 1 1 240px; font-size: 11px; color: var(--muted); }
+.prov-key small { flex-basis: 100%; }
+.prov-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.prov-models { border-top: 1px dashed var(--line); padding-top: 8px; }
+.prov-models summary { cursor: pointer; font-size: 11.5px; color: var(--muted); user-select: none; list-style: none; display: flex; align-items: center; gap: 6px; }
+.prov-models summary::before { content: "▸"; font-size: 10px; transition: transform .15s; }
+.prov-models[open] summary::before { transform: rotate(90deg); }
+.prov-models summary::-webkit-details-marker { display: none; }
+.prov-chips { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+.prov-chips .chip { font-size: 11px; padding: 2px 9px; border: 1px solid var(--line); border-radius: 999px; background: var(--card); }
+.prov-key input { width: 100%; background: var(--card); color: var(--text); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; font: inherit; font-size: 12.5px; }
+.prov-key input:focus { outline: 2px solid var(--accent); outline-offset: 1px; border-color: transparent; }
+.prov-key input::placeholder { color: var(--muted); opacity: .7; }

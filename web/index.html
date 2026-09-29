@@ -214,7 +214,7 @@
   <div class="modal" id="settingsModal" hidden>
     <div class="modal-card settings-card">
       <div class="modal-head">
-        <nav class="tabs" id="settingsTabs"><button type="button" data-tab="general" data-i18n="ui.settings.tabs.general"></button><button type="button" data-tab="offices" data-i18n="ui.settings.tabs.offices"></button><button type="button" data-tab="office" data-i18n="ui.settings.tabs.office"></button><button type="button" data-tab="sessions" data-i18n="ui.settings.tabs.sessions"></button><button type="button" data-tab="server" data-i18n="ui.settings.tabs.server"></button></nav>
+        <nav class="tabs" id="settingsTabs"><button type="button" data-tab="general" data-i18n="ui.settings.tabs.general"></button><button type="button" data-tab="offices" data-i18n="ui.settings.tabs.offices"></button><button type="button" data-tab="office" data-i18n="ui.settings.tabs.office"></button><button type="button" data-tab="sessions" data-i18n="ui.settings.tabs.sessions"></button><button type="button" data-tab="models" data-i18n="ui.settings.tabs.models"></button><button type="button" data-tab="server" data-i18n="ui.settings.tabs.server"></button></nav>
         <button class="icon-btn" id="settingsClose" data-i18n-title="ui.settings.close">×</button>
       </div>
       <section class="set-pane" data-pane="general">
@@ -280,6 +280,10 @@
           <label class="check"><input type="checkbox" id="setSync" data-key="syncClaudeAgents" /> <span data-i18n="ui.settings.sync"></span></label>
           <small data-i18n="ui.settings.syncHint"></small>
         </div>
+      </section>
+      <section class="set-pane" data-pane="models" hidden>
+        <p class="muted set-intro" data-i18n="ui.settings.models.intro"></p>
+        <div class="prov-list" id="provList"></div>
       </section>
       <section class="set-pane" data-pane="server" hidden>
         <dl class="set-info" id="setServerInfo"></dl>

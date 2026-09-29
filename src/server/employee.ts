@@ -1,5 +1,7 @@
 import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
+import crypto from "node:crypto";
 import { EventEmitter } from "node:events";
 import {
   query,
@@ -14,7 +16,9 @@ import {
 import type { Store } from "./store.js";
 import { t, tget, getSettings } from "./runtime.js";
 import { officeServer, OFFICE_TOOLS, type Colleagues } from "./office-tools.js";
-import { isCodexModel, runCodexTurn, skillsIndex, skillFile, type CodexItem } from "./codex.js";
+import { runCodexTurn, skillsIndex, skillFile, type CodexItem } from "./codex.js";
+import { runGeminiTurn, type GeminiEvent } from "./gemini.js";
+import { engineOf, geminiKey, openrouterEnv, openrouterSlug, markAuthFailed, AUTH_ERROR, type Engine } from "./providers.js";
 import { listSkills, listProjectSkills } from "./agents.js";
 import { fromClaudeRateLimit, fromClaudeUsage, fromCodexThread, claudeUsageDue } from "./quota.js";
 import type { CostKind } from "./ledger.js";
@@ -89,7 +93,7 @@ export const IMAGE_TYPES = new Set(["image/png", "image/jpeg", "image/gif", "ima
 
 
 // What one finished turn spent, for the office's cost ledger (the running `cost` resets with the employee, the ledger never does).
-export interface Spend { cost: number; kind: CostKind; task?: number; model: string; engine: "claude" | "codex"; tokens?: { input: number; output: number; cached?: number } }
+export interface Spend { cost: number; kind: CostKind; task?: number; model: string; engine: Engine; tokens?: { input: number; output: number; cached?: number } }
 
 export interface AskRequest {
   requestId: string;
@@ -184,6 +188,7 @@ export class Employee extends EventEmitter {
   private cx?: { kill: () => void };  // the Codex engine: one process per turn, present while its loop runs
   private runningFor?: string;        // the session the running process belongs to: "chat", "task:<id>" or "side"
   private plain = new WeakMap<SDKUserMessage, { text: string; files: string[] }>(); // what a message is for an engine that takes text and image files
+  private gmInstr = new Map<string, string>(); // Gemini: the instructions a session last saw (hash), so they are resent only when changed
   private cxTokens = new Map<string, number>(); // Codex reports usage summed over the whole thread: last total per thread
   private inbox: SDKUserMessage[] = [];
   private carry: SDKUserMessage[] = []; // taken out of the inbox of a process that was closed: they go to the next one
@@ -243,7 +248,7 @@ export class Employee extends EventEmitter {
     return [...this.pending.values()].map((p) => p.request);
   }
 
-  get engine(): "claude" | "codex" { return isCodexModel(this.cfg.model) ? "codex" : "claude"; }
+  get engine(): Engine { return engineOf(this.cfg.model); }
   private get running() { return !!this.q || !!this.cx; }
   get busy() { return this.status === "working" || this.status === "waiting"; }
   get currentTask() { return this.taskId; }
@@ -741,7 +746,7 @@ export class Employee extends EventEmitter {
   async applyConfig(cfg: EmployeeConfig) {
     const prev = this.cfg;
     const cosmetic = cfg !== prev && sameExcept(prev, cfg, ["color", "look", "autoRefresh", "refreshHours"]);
-    if (isCodexModel(cfg.model) !== isCodexModel(prev.model)) this.pendingEngineSwitch = true;
+    if (engineOf(cfg.model) !== engineOf(prev.model)) this.pendingEngineSwitch = true;
     this.cfg = cfg;
     if (!cosmetic) this.pendingRestart = true;
     if (!this.busy) this.applyPending();
@@ -869,6 +874,9 @@ export class Employee extends EventEmitter {
     if (this.carry.length) this.inbox.unshift(...this.carry.splice(0));
     const gen = this.generation;
     if (this.engine === "codex") { void this.runCodex(gen, key); return; }
+    if (this.engine === "gemini") { void this.runGemini(gen, key); return; }
+    // OpenRouter runs through Claude Code too, pointed at OpenRouter: same tools, permissions and sessions
+    const viaOpenRouter = this.engine === "openrouter";
     this.context = 0;
     const compactAt = getSettings().compactAtTokens;
     const taskId = taskOf(key);
@@ -889,7 +897,7 @@ export class Employee extends EventEmitter {
         // summarize in place long before the model's own limit: on a 1M-token model a chat otherwise grows until every step re-reads a book
         // one memory, the one the boss sees on the profile page: Claude Code's own hidden per-folder memory would be a second place to look
         settings: { autoMemoryEnabled: false, ...(compactAt ? { autoCompactWindow: compactAt } : {}), ...(this.cfg.connectorsOff?.length ? { deniedMcpServers: this.cfg.connectorsOff.map((serverName) => ({ serverName })) } : {}) },
-        env: compactAt ? { ...process.env, CLAUDE_CODE_AUTO_COMPACT_WINDOW: String(compactAt) } : undefined,
+        env: compactAt || viaOpenRouter ? { ...process.env, ...(compactAt ? { CLAUDE_CODE_AUTO_COMPACT_WINDOW: String(compactAt) } : {}), ...(viaOpenRouter ? openrouterEnv(this.cfg.model!) : {}) } : undefined,
         // compaction summarizes everything, the newest boss message included: it is handed back word for word right after the summary
         hooks: { SessionStart: [{ matcher: "compact", hooks: [async () => this.afterCompact()] }] },
         title: taskId !== undefined ? `${this.cfg.name} — #${taskId} ${task?.title ?? ""}`.slice(0, 120) : `${this.cfg.name} — ${this.cfg.role}`,
@@ -897,8 +905,9 @@ export class Employee extends EventEmitter {
         permissionMode: this.cfg.permissionMode ?? "default",
         allowedTools: [...(this.cfg.allowedTools ?? []), ...OFFICE_TOOLS],
         mcpServers: this.colleagues ? { office: officeServer(this, this.colleagues) } : undefined,
-        model: this.cfg.model,
-        effort: this.cfg.effort,
+        model: viaOpenRouter ? openrouterSlug(this.cfg.model!) : this.cfg.model,
+        // effort is a Claude setting; other models behind OpenRouter may reject it
+        effort: viaOpenRouter ? undefined : this.cfg.effort,
         settingSources: this.cfg.settingSources ?? ["project"],
         canUseTool: (toolName, input, opts) => this.canUseTool(toolName, input, opts),
       },
@@ -983,6 +992,7 @@ export class Employee extends EventEmitter {
         break;
       }
       case "rate_limit_event":
+        if (this.engine !== "claude") break; // OpenRouter's limits are not the Claude plan's
         fromClaudeRateLimit(m.rate_limit_info as unknown as Record<string, unknown>);
         break;
       case "result": {
@@ -998,7 +1008,7 @@ export class Employee extends EventEmitter {
         }
         this.turnSpend = { cost: delta };
         // the plan's windows, when the CLI can tell (a plain HTTP call, no tokens), now and then
-        if (claudeUsageDue()) this.q?.usage_EXPERIMENTAL_MAY_CHANGE_DO_NOT_RELY_ON_THIS_API_YET?.({ skipBehaviors: true }).then(fromClaudeUsage, () => {});
+        if (this.engine === "claude" && claudeUsageDue()) this.q?.usage_EXPERIMENTAL_MAY_CHANGE_DO_NOT_RELY_ON_THIS_API_YET?.({ skipBehaviors: true }).then(fromClaudeUsage, () => {});
         const detail = m.subtype === "success" ? undefined : "errors" in m && Array.isArray(m.errors) ? m.errors.join("; ") : m.subtype;
         // more turns queued inside the CLI follow without further input: the employee is not free yet
         const more = (m.queued_turn_count ?? 0) > 0 && !this.interrupting;
@@ -1137,7 +1147,7 @@ export class Employee extends EventEmitter {
         }
         // messages that came in during the turn run next, in the same session, before the employee counts as free
         const more = res.ok && this.inbox.length > 0 && !this.interrupting;
-        this.endTurn(res.ok ? undefined : res.error ?? "codex failed", Date.now() - started, !!res.notFound, more);
+        this.endTurn(res.ok ? undefined : this.engineError("codex", res.error ?? "codex failed"), Date.now() - started, !!res.notFound, more);
       }
     } catch (err) {
       // e.g. a history save failing (disk full): the employee must not stay "working" with nobody reading its inbox
@@ -1150,6 +1160,81 @@ export class Employee extends EventEmitter {
         if (!failed && this.inbox.length && !this.sick) this.start(key);
       }
     }
+  }
+
+  // ---- Gemini engine: a process per turn, the conversation kept by session id ----
+  private async runGemini(gen: number, key: string) {
+    this.cx = { kill: () => {} };
+    let failed = false;
+    try {
+      while (this.generation === gen && !this.sick && this.engine === "gemini") {
+        const batch = this.inbox.splice(0); // what piled up is one turn, as it would be for a person
+        if (!batch.length) break;
+        const files = batch.flatMap((m) => this.plain.get(m)?.files ?? []);
+        const text = batch.map(plainText).filter(Boolean).join("\n\n");
+        const taskId = taskOf(key);
+        const task = taskId !== undefined ? this.colleagues?.board().tasks.find((x) => x.id === taskId) : undefined;
+        const session = key === "side" ? undefined : taskId !== undefined ? task?.session : this.sessionId;
+        const mode = this.cfg.permissionMode ?? "default";
+        // Gemini has no separate place for them: the instructions go in front of the prompt when the session is new or they changed
+        const instructions = this.buildPrompt() + this.codexExtras();
+        const hash = crypto.createHash("sha1").update(instructions).digest("hex");
+        const prompt = (!session || this.gmInstr.get(session) !== hash ? tt("server.gemini.instructions", "<instructions from the office — follow them for this whole conversation>\n{text}\n</instructions>", { text: instructions }) + "\n\n" : "") + (text || "-");
+        const apiKey = geminiKey();
+        const started = Date.now();
+        if (!apiKey) { this.endTurn(tt("server.gemini.noKey", "Gemini has no API key: add one in Settings → Models."), 0); continue; }
+        let sid = session;
+        let said = "";
+        const flush = () => { if (said.trim()) { this.emit("chunk_end"); this.push({ role: "assistant", text: said, ts: Date.now() }); } said = ""; };
+        const run = runGeminiTurn({
+          cwd: this.cfg.cwd, prompt, model: this.cfg.model!, apiKey, session, images: files,
+          // headless Gemini cannot stop and ask: what would need a yes is refused, except in "bypass" (yolo)
+          approval: this.meetingTurn || mode === "plan" ? "plan" : mode === "bypassPermissions" ? "yolo" : "auto_edit",
+          includeDirs: this.cfg.dir ? [this.cfg.dir] : [],
+          mcpUrl: this.colleagues?.mcpUrl(this),
+          settingsFile: path.join(os.tmpdir(), "pixel-office", `gemini-${this.cfg.officeId}-${this.cfg.id}.json`),
+        }, {
+          onSession: (id) => {
+            if (this.generation !== gen) return;
+            sid = id;
+            this.model = this.cfg.model;
+            if (taskId !== undefined) this.colleagues?.board().markTask(taskId, { session: id });
+            else if (key === "chat") { this.sessionId = id; this.store.setSession(this.cfg.id, id); }
+          },
+          onText: (chunk) => { if (this.generation !== gen) return; said += chunk; this.emit("chunk", chunk); },
+          onTool: (ev) => { if (this.generation !== gen) return; flush(); const line = describeGemini(ev); if (line) this.push({ role: "activity", text: line, ts: Date.now() }); },
+          onWarning: (message) => { if (this.generation === gen) this.push({ role: "activity", text: tt("server.gemini.notice", "Gemini: {detail}", { detail: message }), ts: Date.now() }); },
+        });
+        this.cx = { kill: run.kill };
+        const res = await run.done;
+        if (this.generation !== gen) return;
+        flush();
+        if (res.ok) {
+          if (sid) this.gmInstr.set(sid, hash);
+          this.context = Math.round(res.inputTokens / Math.max(1, res.calls));
+          this.turnSpend = { cost: 0, tokens: { input: res.inputTokens, output: res.outputTokens, cached: res.cachedTokens } };
+        }
+        const more = res.ok && this.inbox.length > 0 && !this.interrupting;
+        this.endTurn(res.ok ? undefined : this.engineError("gemini", res.error ?? "gemini failed"), Date.now() - started, !!res.notFound, more);
+      }
+    } catch (err) {
+      failed = true;
+      if (this.generation === gen) this.failTurn(err);
+    } finally {
+      if (this.generation === gen) {
+        this.cx = undefined;
+        this.runningFor = undefined;
+        if (!failed && this.inbox.length && !this.sick) this.start(key);
+      }
+    }
+  }
+
+  // A turn that failed because the sign-in / key is refused: the provider is marked as not connected (Settings → Models says so and
+  // offers the sign-in again) and the message says what to do, not just "unauthorized".
+  private engineError(engine: "codex" | "gemini", error: string): string {
+    if (!AUTH_ERROR.test(error)) return error;
+    markAuthFailed(engine);
+    return tt(`server.${engine}.authFailed`, engine === "codex" ? "Codex sign-in is no longer valid ({detail}). Sign in again in Settings → Models." : "The Gemini API key was refused ({detail}). Check it in Settings → Models.", { detail: error.slice(0, 120) });
   }
 
   // A turn loop threw: the turn is closed, the employee shows the error, and what waited is not stuck behind it.
@@ -1282,6 +1367,22 @@ function describeCodex(item: CodexItem): string {
   if (item.type === "web_search") return t("server.tool.WebSearch", { v: item.query ?? "" });
   if (item.type === "mcp_tool_call") return item.server === "office" ? describeTool(`mcp__office__${item.tool}`, item.arguments ?? {}) : `${item.server}: ${item.tool}`;
   return "";
+}
+
+function describeGemini(ev: Extract<GeminiEvent, { type: "tool_use" }>): string {
+  const p = ev.parameters ?? {};
+  const s = (v: unknown) => (typeof v === "string" ? v : "");
+  const map: Record<string, [string, unknown]> = {
+    run_shell_command: ["Bash", p.command], read_file: ["Read", p.file_path ?? p.absolute_path], write_file: ["Write", p.file_path],
+    replace: ["Edit", p.file_path], glob: ["Glob", p.pattern], search_file_content: ["Grep", p.pattern], grep_search: ["Grep", p.pattern],
+    google_web_search: ["WebSearch", p.query], web_fetch: ["WebFetch", p.prompt],
+  };
+  const hit = map[ev.tool_name];
+  if (hit) return t(`server.tool.${hit[0]}`, { v: s(hit[1]).slice(0, 120) });
+  // office tools come back as "office__<tool>" or "mcp_office_<tool>" depending on the CLI version
+  const office = ev.tool_name.match(/^(?:mcp_)?office_{1,2}(.+)$/);
+  if (office) return describeTool(`mcp__office__${office[1]}`, p);
+  return describeTool(ev.tool_name, p);
 }
 
 function describeTool(name: string, input: Record<string, unknown>): string {

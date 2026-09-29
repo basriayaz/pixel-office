@@ -291,7 +291,11 @@
     },
     "codex": {
       "skills": "## Yeteneklerin\nYetenek, belirli bir iş türü için talimatlar içeren bir dosyadır. Bir istek bunlardan birine uyuyorsa önce dosyasını oku (tam yolu verildi) ve ona uy:\n{list}",
-      "notice": "Codex: {detail}"
+      "notice": "Codex: {detail}",
+      "authFailed": "Codex girişi artık geçerli değil ({detail}). Ayarlar → Modeller'den yeniden giriş yap."
+    },
+    "gemini": {
+      "authFailed": "Gemini API anahtarı reddedildi ({detail}). Ayarlar → Modeller'den anahtarı kontrol et."
     },
     "refreshCancelled": "Patron yazdığı için bilgi tazeleme iptal edildi; daha sakin bir anda yeniden yapılacak.",
     "refreshNote": "[Not: ayrı, kısa bir oturumda hafıza dosyanı düzenledin. Bildirdiğin: {summary}]",
@@ -780,10 +784,28 @@
       "autoRefreshHint": "Varsayılan olarak kapalı, çünkü kimsenin istemediği token harcar. Açıkken çalışan, son tazelemeden beri iş yaptıysa birkaç saatte bir (aşağıda) kısa ve ayrı bir oturumda hafızasını düzenler; son 30 dakikada ona yazdıysan atlanır."
     },
     "models": {
+      "gpt-6-astra": { "desc": "En zorlu işler için en üst düzey zekâ." },
+      "gpt-6-sol": { "desc": "Kodlama ve günlük işler için ana iş atı model." },
+      "gpt-6-luna": { "desc": "Kolay işler için hızlı ve uygun fiyatlı model." },
+      "gpt-5.6-sol": { "desc": "Karmaşık işler için eski kodlama modeli." },
+      "gpt-5.6-terra": { "desc": "Basit işler için eski, dengeli model." },
+      "gpt-5.6-luna": { "desc": "Eski, hızlı ve verimli model." },
+      "gpt-5.5": { "desc": "Eski kodlama modeli." },
+      "gemini-3.1-pro-preview": { "desc": "Google'ın en yetenekli modeli (önizleme); zor problemler için derin akıl yürütme." },
+      "gemini-3-flash-preview": { "desc": "Hızlı ve yetenekli (önizleme); günlük işler için iyi bir seçim." },
+      "gemini-3.1-flash-lite-preview": { "desc": "Yenilerin en hafifi ve en ucuzu (önizleme); basit, yüksek hacimli işler." },
+      "gemini-2.5-pro": { "desc": "Önceki güçlü model; derin akıl yürütme ve uzun bağlam." },
+      "gemini-2.5-flash": { "desc": "Önceki hızlı model; hız ve kalite dengesi." },
+      "gemini-2.5-flash-lite": { "desc": "Önceki en hafif model; basit işler için en ucuzu." },
       "claude-opus-5-5": {
         "name": "Opus 5.5",
         "desc": "En yeni Opus; Opus 5'ten güçlü ve biraz daha ucuz. Çoğu iş için varsayılan.",
         "tier": "$$"
+      },
+      "claude-sonnet-5-5": {
+        "name": "Sonnet 5.5",
+        "desc": "En yeni Sonnet; hızlı ve ekonomik, günlük işlerin çoğu için uygun.",
+        "tier": "$"
       },
       "claude-opus-5": {
         "name": "Opus 5",
@@ -792,7 +814,7 @@
       },
       "claude-sonnet-5": {
         "name": "Sonnet 5",
-        "desc": "Hızlı ve ekonomik; rutin, tanımlı işler.",
+        "desc": "Önceki Sonnet; hızlı ve ekonomik, rutin işler.",
         "tier": "$"
       },
       "claude-haiku-4-5": {
@@ -1057,6 +1079,7 @@
         "offices": "Ofisler",
         "office": "Bu ofis",
         "sessions": "Çalışma",
+        "models": "Modeller",
         "server": "Sunucu"
       },
       "lang": "Dil",
@@ -1092,10 +1115,52 @@
       "version": "Sürüm",
       "node": "Node.js",
       "restartHint": "Port, adres ve veri klasörü ofis açılırken okunur: ayar dosyasından değiştir, sonra ofisi kapatıp yeniden aç.",
-      "codex": "Codex CLI",
-      "codexMissing": "kurulu değil — Codex modelleri sunulmuyor",
-      "codexIn": "{version} · giriş yapılmış · {n} model",
-      "codexOut": "{version} · giriş yapılmamış (terminalde <code>codex login</code> çalıştır)",
+      "models": {
+        "intro": "Çalışanlarının kullanabileceği yapay zekâ motorları. Çalışan işe alırken ya da düzenlerken yalnızca bağlı motorların (kurulu ve giriş yapılmış ya da anahtarı olan) modelleri sunulur.",
+        "connected": "Bağlı",
+        "notConnected": "Bağlı değil",
+        "notInstalled": "Kurulu değil",
+        "off": "Kapalı",
+        "p": {
+          "claude": { "name": "Claude", "desc": "Claude Code: varsayılan motor, Claude planın ya da bir Anthropic API anahtarı." },
+          "codex": { "name": "Codex", "desc": "OpenAI Codex CLI, ChatGPT planınla." },
+          "gemini": { "name": "Gemini", "desc": "Google Gemini CLI, bir Gemini API anahtarıyla." },
+          "openrouter": { "name": "OpenRouter", "desc": "OpenRouter'ın sunduğu her model, bir OpenRouter API anahtarıyla." }
+        },
+        "state": {
+          "missing": "CLI bu makinede kurulu değil.",
+          "signedOut": "Kurulu ama giriş yapılmamış.",
+          "needKey": "Bağlanmak için bir API anahtarı ekle.",
+          "authExpired": "Oturumun süresi dolmuş. Yeniden bağlanmak için Giriş yap'a bas.",
+          "badKey": "API anahtarı reddedildi.",
+          "apiKey": "API anahtarı",
+          "offline": "Servise ulaşılamadı: {detail}",
+          "error": "Kontrol başarısız: {detail}"
+        },
+        "warn": "CLI'ın ayar dosyasında okuyamadığı bir yer var ({detail}). Çalışır ama uyarı basar.",
+        "install": "Kur",
+        "installing": "Kuruluyor…",
+        "installHint": "Bu makinede <code>npm install -g {pkg}</code> çalıştırır.",
+        "installed": "Kuruldu",
+        "installFailed": "Kurulum başarısız: {output}",
+        "login": "Giriş yap",
+        "loginStarted": "Giriş tarayıcında başladı. Orada bitir, sonra Kontrol et'e bas.",
+        "loginFailed": "Giriş başlatılamadı. Bunu bir terminalde çalıştır.",
+        "check": "Yeniden kontrol et",
+        "checking": "Kontrol ediliyor…",
+        "on": "Bu motoru kullan",
+        "key": "API anahtarı",
+        "keyPh": "anahtarı yapıştır",
+        "keySave": "Anahtarı kaydet",
+        "keyRemove": "Anahtarı sil",
+        "keyFrom": "Anahtar: {hint}",
+        "keyEnv": "ortam değişkeninden",
+        "modelsTitle": "{n} model",
+        "noModels": "Henüz model yok.",
+        "custom": "Ek model kimlikleri (virgülle ayır)",
+        "customSave": "Modelleri kaydet",
+        "version": "sürüm {v}"
+      },
       "shutdownHint": "Sunucuyu durdurur. Devam eden işler kesilir; sohbetler, hafızalar ve yetenekler diskte kalır."
     },
     "shutdown": {

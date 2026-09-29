@@ -16,7 +16,7 @@ import crypto from "node:crypto";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { officeToolDefs } from "./office-tools.js";
-import { codexModels, isCodexModel } from "./codex.js";
+import { CLAUDE_MODELS, PROVIDERS, activeModels, isActiveModel, initProviders, providersReady, providerStatuses, updateProvider, installProvider, loginProvider, refreshProvider, canInstall, canLogin, type ProviderId } from "./providers.js";
 import { createGuard, isLoopbackHost } from "./security.js";
 import { acquireLock } from "./lock.js";
 import { writeFileAtomicSync } from "./fsutil.js";
@@ -488,6 +488,7 @@ const defaultOfficeId = () => settings.offices[0].id;
 
 const app = express();
 // Refuses foreign pages (Origin) and DNS rebinding (Host) before anything is served; see security.ts.
+initProviders(R, settings.dataDir);
 const guard = createGuard({ port: settings.port, host: settings.host, extraHosts: (process.env.PIXEL_OFFICE_ALLOWED_HOSTS ?? "").split(",") });
 app.use(guard.middleware);
 app.use(express.json({ limit: "1mb" }));
@@ -508,11 +509,11 @@ function setUnread(e: Employee, n: number) {
 }
 
 const readText = (p?: string) => { try { return p ? fs.readFileSync(p, "utf8") : ""; } catch { return ""; } };
-const MODELS = ["claude-opus-5-5", "claude-opus-5", "claude-sonnet-5", "claude-haiku-4-5", "claude-fable-5-1", "claude-opus-4-8", "claude-opus-4-7", "claude-sonnet-4-6"] as const;
+const MODELS = CLAUDE_MODELS;
 const EFFORTS = ["low", "medium", "high", "xhigh", "max"] as const;
 const PERMS = ["default", "acceptEdits", "plan", "dontAsk", "bypassPermissions"] as const;
 const clean = (v: unknown, max = 200) => (typeof v === "string" ? v.trim().slice(0, max) : "");
-const pickModel = (v: unknown): string | undefined => pick(v, MODELS) ?? (typeof v === "string" && codexModels().some((m) => m.id === v) ? v : undefined);
+const pickModel = (v: unknown): string | undefined => pick(v, MODELS) ?? (typeof v === "string" && isActiveModel(v) ? v : undefined);
 const pick = <T extends string>(v: unknown, list: readonly T[]): T | undefined => (list as readonly string[]).includes(v as string) ? (v as T) : undefined;
 
 const officeInfo = (o: OfficeRt) => ({ id: o.def.id, name: o.def.name, cwd: o.def.cwd, employeesDir: o.def.employeesDir, theme: o.def.theme });
@@ -524,7 +525,7 @@ const clientConfig = () => ({
   locale: locale.code,
   locales: availableLocales(),
   strings: { ui: locale.data.ui, rooms: locale.data.rooms, status: locale.data.status },
-  models: MODELS, codexModels: codexModels(), efforts: EFFORTS, permissions: PERMS, themes: THEMES,
+  models: MODELS, extraModels: activeModels().filter((m) => m.provider !== "claude"), efforts: EFFORTS, permissions: PERMS, themes: THEMES,
   project: R.defaultCwd, projectDisplay: displayPath(R.defaultCwd), mode: R.mode, root: R.root, firstRun, memoryFile: settings.memoryFile, multiOffice: settings.multiOffice, defaultOffice: defaultOfficeId(),
   offices: [...offices.values()].map(officeInfo),
 });
@@ -541,7 +542,7 @@ app.all("/mcp/:token", async (req, res) => {
   catch (err) { if (!res.headersSent) res.status(500).json({ jsonrpc: "2.0", error: { code: -32603, message: (err as Error).message }, id: null }); }
 });
 
-app.get("/i18n.js", (_req, res) => { res.type("application/javascript").send(`window.PO = ${JSON.stringify(clientConfig())};`); });
+app.get("/i18n.js", async (_req, res) => { await providersReady; res.type("application/javascript").send(`window.PO = ${JSON.stringify(clientConfig())};`); });
 app.get("/api/options", (_req, res) => res.json(clientConfig()));
 // Images pasted into a chat, stored per office and employee.
 app.get("/attachments/:office/:emp/:file", (req, res) => {
@@ -606,22 +607,6 @@ app.put("/api/locale", async (req, res) => {
 // ---- settings panel: the global switches of config.json, read and changed from the UI ----
 // Only this whitelist can be changed here; port, host and the data folder are shown read-only (they need a restart).
 const PKG_VERSION = (() => { try { return String(JSON.parse(fs.readFileSync(path.join(PKG_ROOT, "package.json"), "utf8")).version ?? ""); } catch { return ""; } })();
-// Is the Codex CLI there, and signed in? Two local commands, no model call; asked again at most once a minute.
-let codexInfo: { at: number; value: Promise<{ installed: boolean; version: string; loggedIn: boolean; status: string }> } | null = null;
-function codexStatus() {
-  if (codexInfo && Date.now() - codexInfo.at < 60e3) return codexInfo.value;
-  const run = (args: string[]) => new Promise<{ ok: boolean; out: string }>((resolve) => {
-    execFile("codex", args, { timeout: 8000, encoding: "utf8" }, (err, stdout, stderr) => resolve({ ok: !err, out: `${stdout ?? ""}${stderr ?? ""}`.trim() }));
-  });
-  const value = (async () => {
-    const v = await run(["--version"]);
-    if (!v.ok) return { installed: false, version: "", loggedIn: false, status: "" };
-    const s = await run(["login", "status"]);
-    return { installed: true, version: v.out.split("\n")[0].replace(/^codex(-cli)?\s*/i, ""), loggedIn: s.ok && !/not logged in/i.test(s.out), status: s.out.split("\n")[0].slice(0, 120) };
-  })();
-  codexInfo = { at: Date.now(), value };
-  return value;
-}
 const SETTING_KEYS = ["sickness", "compactAtTokens", "taskSessions", "refreshHours", "syncClaudeAgents"] as const;
 const settingsPayload = async () => ({
   locale: locale.code, locales: availableLocales(),
@@ -633,7 +618,37 @@ const settingsPayload = async () => ({
     port: settings.port, host: settings.host, mode: R.mode, root: displayPath(R.mode === "global" ? R.root : R.base),
     dataDir: displayPath(settings.dataDir), configFile: displayPath(configPath(R)), version: PKG_VERSION, node: process.versions.node,
   },
-  codex: { ...(await codexStatus()), models: codexModels().length },
+});
+// ---- providers (Settings → Models): which LLM engines are installed and connected, install / sign in / keys from the panel ----
+const isProvider = (v: unknown): v is ProviderId => (PROVIDERS as readonly string[]).includes(String(v));
+const providersPayload = async (fresh = false) => ({ providers: (await providerStatuses(fresh)).map((p) => ({ ...p, canInstall: canInstall(p.id), canLogin: canLogin(p.id) })), extraModels: activeModels().filter((m) => m.provider !== "claude") });
+app.get("/api/providers", async (req, res) => res.json(await providersPayload(req.query.fresh === "1")));
+app.put("/api/providers/:id", async (req, res) => {
+  const id = req.params.id;
+  if (!isProvider(id)) return res.status(404).json({ error: "unknown provider" });
+  const b = (req.body ?? {}) as Record<string, unknown>;
+  if (b.enabled !== undefined && typeof b.enabled !== "boolean") return res.status(400).json({ error: t("server.settings.invalid", { key: "enabled" }) });
+  if (b.apiKey !== undefined && typeof b.apiKey !== "string") return res.status(400).json({ error: t("server.settings.invalid", { key: "apiKey" }) });
+  if (b.models !== undefined && !(Array.isArray(b.models) && b.models.every((m) => typeof m === "string"))) return res.status(400).json({ error: t("server.settings.invalid", { key: "models" }) });
+  await updateProvider(id, { enabled: b.enabled as boolean | undefined, apiKey: b.apiKey as string | undefined, models: b.models as string[] | undefined });
+  res.json(await providersPayload());
+});
+app.post("/api/providers/:id/install", async (req, res) => {
+  const id = req.params.id;
+  if (!isProvider(id) || !canInstall(id)) return res.status(404).json({ error: "unknown provider" });
+  const r = await installProvider(id);
+  res.json({ ...r, ...(await providersPayload()) });
+});
+app.post("/api/providers/:id/login", (req, res) => {
+  const id = req.params.id;
+  if (!isProvider(id) || !canLogin(id)) return res.status(404).json({ error: "unknown provider" });
+  res.json({ ok: loginProvider(id) });
+});
+app.post("/api/providers/:id/check", async (req, res) => {
+  const id = req.params.id;
+  if (!isProvider(id)) return res.status(404).json({ error: "unknown provider" });
+  await refreshProvider(id);
+  res.json(await providersPayload());
 });
 app.get("/api/settings", async (_req, res) => res.json(await settingsPayload()));
 app.put("/api/settings", async (req, res) => {
@@ -661,6 +676,8 @@ app.put("/api/settings", async (req, res) => {
   // applied live: getSettings() hands out this same object, so new sessions, task starts and the sickness check see it at once
   const prevRefresh = settings.refreshHours;
   if (next.sickness !== undefined && process.env.PIXEL_OFFICE_SICKNESS !== "0") settings.sickness = next.sickness as boolean;
+  // switched off: whoever is ill right now gets well at once instead of sitting out the rest of their sick time
+  if (!settings.sickness) for (const o of offices.values()) for (const e of o.employees.values()) if (e.sick) e.recover();
   if (next.compactAtTokens !== undefined && process.env.PIXEL_OFFICE_COMPACT_AT === undefined) settings.compactAtTokens = next.compactAtTokens as number;
   if (next.taskSessions !== undefined) settings.taskSessions = next.taskSessions as boolean;
   if (next.refreshHours !== undefined) {
@@ -862,7 +879,7 @@ r.get("/board/tasks/:id/transcript", async (req: OReq, res) => {
   if (!o || !k) return res.status(404).json({ error: t("server.notFound") });
   const owner = o.employees.get(k.owner);
   if (!k.session) return res.json({ available: false, reason: t("server.runs.noSession"), messages: [] });
-  if (owner?.engine === "codex" || /^[0-9a-f]{8}-[0-9a-f]{4}-7/i.test(k.session)) return res.json({ available: false, reason: t("server.runs.codex"), messages: [] });
+  if (owner?.engine === "codex" || owner?.engine === "gemini" || /^[0-9a-f]{8}-[0-9a-f]{4}-7/i.test(k.session)) return res.json({ available: false, reason: t("server.runs.codex"), messages: [] });
   const messages = await sessionTranscript(k.session, owner?.cfg.cwd ?? o.def.cwd).catch(() => []);
   if (!messages.length) return res.json({ available: false, reason: t("server.runs.notFound"), messages: [] });
   res.json({ available: true, messages });

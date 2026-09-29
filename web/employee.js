@@ -31,7 +31,7 @@ async function load() {
     settings.model = detail.configuredModel ?? "";
     settings.effort = detail.effort ?? "";
     settings.perm = detail.permissionMode;
-    buildChoiceCards($("fModel"), [{ value: "", name: t("ui.profile.modelDefault"), desc: t("ui.profile.modelDefaultDesc"), tag: "" }, ...modelItems()], settings.model, (v) => { settings.model = v; codexHint(); });
+    buildChoiceCards($("fModel"), [{ value: "", name: t("ui.profile.modelDefault"), desc: t("ui.profile.modelDefaultDesc"), tag: "" }, ...modelItems(), ...(settings.model && !modelItems().some((m) => m.value === settings.model) ? [{ value: settings.model, name: modelName(settings.model), desc: "", tag: "" }] : [])], settings.model, (v) => { settings.model = v; codexHint(); });
     codexHint();
     buildSegment($("fEffort"), [{ value: "", name: t("ui.profile.effortDefault") }, ...effortItems()], settings.effort, (v) => { settings.effort = v; $("effortHint").textContent = EFFORT_INFO[v]?.desc || ""; });
     $("effortHint").textContent = EFFORT_INFO[settings.effort]?.desc || "";
@@ -86,7 +86,7 @@ function renderHead() {
 }
 
 // A Codex model cannot stop and ask: the permission choice becomes the fence it works inside.
-function codexHint() { $("codexPermHint").hidden = !(PO.codexModels || []).some((m) => m.id === settings.model); }
+function codexHint() { $("codexPermHint").hidden = !(PO.extraModels || []).some((m) => m.id === settings.model); }
 
 // claude.ai connectors: all come along by default; each switch keeps one out of this employee's sessions.
 let connectors = null;

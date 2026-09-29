@@ -1,5 +1,6 @@
 import path from "node:path";
 import { appendJsonLineSync, readJsonLines } from "./fsutil.js";
+import type { Engine } from "./providers.js";
 
 // What the office spent, one line per finished turn. Unlike an employee's running total it never shrinks: a reset or a
 // fired employee leaves their lines here, so "what did today cost" stays true.
@@ -9,7 +10,7 @@ export interface CostLine {
   ts: number;
   emp: string;
   empName: string;
-  engine: "claude" | "codex";
+  engine: Engine;
   model: string;
   kind: CostKind;
   task?: number;

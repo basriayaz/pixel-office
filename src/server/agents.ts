@@ -284,7 +284,7 @@ export function syncClaudeAgents(office: OfficeDef, emps: EmployeeConfig[]) {
       `---`,
       `name: ${e.id}`,
       `description: ${t("server.agentSync.description", { name: e.name, role: e.role, roleLower: e.role.toLowerCase() })}`,
-      e.model ? `model: ${e.model}` : null,
+      e.model && /^(claude-|opus|sonnet|haiku|fable)/.test(e.model) ? `model: ${e.model}` : null, // another engine's model id means nothing to Claude Code
       e.allowedTools?.length ? `tools: ${e.allowedTools.join(", ")}` : null,
       `---`,
       t("server.agentSync.marker"),

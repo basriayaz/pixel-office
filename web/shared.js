@@ -113,14 +113,15 @@ function buildSegment(host, items, current, onChange) {
 }
 
 // Claude models, then the models of the Codex account the machine is signed in to (another engine, another pool of limits).
+const PROVIDER_TAG = { codex: "Codex", gemini: "Gemini", openrouter: "OpenRouter" };
 const modelItems = () => [
   ...PO.models.map((m) => ({ value: m, name: MODEL_INFO[m]?.name || m, desc: MODEL_INFO[m]?.desc || "", tag: MODEL_INFO[m]?.tier || "" })),
-  ...(PO.codexModels || []).map((m) => ({ value: m.id, name: m.name, desc: m.desc, tag: "Codex" })),
+  ...(PO.extraModels || []).map((m) => ({ value: m.id, name: m.name, desc: MODEL_INFO[m.id]?.desc || m.desc, tag: PROVIDER_TAG[m.provider] || m.provider })),
 ];
 // A model id as the boss should read it: "Opus 5.5", not "claude-opus-5-5" (or a dated / "[1m]" variant of it).
 function modelName(id) {
   if (!id) return "";
-  const known = (m) => MODEL_INFO[m]?.name || (PO.codexModels || []).find((c) => c.id === m)?.name;
+  const known = (m) => MODEL_INFO[m]?.name || (PO.extraModels || []).find((c) => c.id === m)?.name;
   const base = String(id).replace(/\[[^\]]*\]$/, "").replace(/-\d{8}$/, "");
   const hit = known(id) || known(base);
   if (hit) return hit;

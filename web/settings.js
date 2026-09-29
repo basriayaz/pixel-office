@@ -3,7 +3,7 @@
 // switches that decide cost and speed), Server (read-only facts, Codex CLI, shutting the office down).
 // /?settings=<tab> opens it on that tab. Loaded after board.js and costs.js.
 const settingsUI = (() => {
-  const TABS = ["general", "offices", "office", "sessions", "server"];
+  const TABS = ["general", "offices", "office", "sessions", "models", "server"];
   const modal = $("settingsModal");
   let tab = "general", data = null, loadError = "";
   const open = () => !modal.hidden;
@@ -16,6 +16,7 @@ const settingsUI = (() => {
     modal.hidden = false;
     render();
     load();
+    loadProviders(true);
   }
   // a number typed but not yet confirmed (no Enter, no click elsewhere) is saved when the tab or the modal closes
   const commit = () => { const a = document.activeElement; if (a?.dataset?.key && modal.contains(a)) a.blur(); };
@@ -34,6 +35,7 @@ const settingsUI = (() => {
     else if (tab === "offices") renderOfficeList();
     else if (tab === "office") renderOffice();
     else if (tab === "sessions") renderSessions();
+    else if (tab === "models") renderModels();
     else renderServer();
   }
 
@@ -99,9 +101,7 @@ const settingsUI = (() => {
   function renderServer() {
     const host = $("setServerInfo");
     if (!data) { host.innerHTML = `<div class="muted">${escapeHtml(loadError ? t("ui.settings.unavailable", { message: loadError }) : t("ui.settings.loading"))}</div>`; return; }
-    const s = data.server, c = data.codex;
-    const codex = !c.installed ? escapeHtml(t("ui.settings.codexMissing"))
-      : c.loggedIn ? escapeHtml(t("ui.settings.codexIn", { version: c.version, n: c.models })) : t("ui.settings.codexOut", { version: escapeHtml(c.version) });
+    const s = data.server;
     const rows = [
       [t("ui.settings.version"), escapeHtml(s.version ? `pixel-office ${s.version}` : "—")],
       [t("ui.settings.mode"), escapeHtml(t(s.mode === "project" ? "ui.settings.modeProject" : "ui.settings.modeGlobal"))],
@@ -111,10 +111,100 @@ const settingsUI = (() => {
       [t("ui.settings.port"), `<code>${escapeHtml(s.port)}</code>`],
       [t("ui.settings.host"), `<code>${escapeHtml(s.host)}</code>`],
       [t("ui.settings.node"), escapeHtml(s.node)],
-      [t("ui.settings.codex"), `<span class="${c.installed && c.loggedIn ? "" : "muted"}">${codex}</span>`],
     ];
     host.innerHTML = rows.map(([k, v]) => `<dt>${escapeHtml(k)}</dt><dd>${v}</dd>`).join("");
   }
+  // ---------- Models: the engines (Claude, Codex, Gemini, OpenRouter), what is installed and connected ----------
+  let prov = null, provError = "";
+  const busy = new Set(); // "<id>:<action>" running now
+  async function loadProviders(fresh = false) {
+    try { prov = await api("GET", "/api/providers" + (fresh ? "?fresh=1" : "")); provError = ""; syncModels(prov); }
+    catch (err) { provError = err.message; }
+    if (open() && tab === "models") renderModels();
+  }
+  // the model pickers (hire, profile) read PO.extraModels: keep it as the server has it after every change
+  function syncModels(r) { if (r?.extraModels) PO.extraModels = r.extraModels; }
+  function stateText(p) {
+    if (!p.installed && p.canInstall) return escapeHtml(t("ui.settings.models.state.missing"));
+    const [code, ...rest] = String(p.detail || "").split(":");
+    const known = ["missing", "signedOut", "needKey", "badKey", "authExpired", "offline", "error"];
+    if (known.includes(code)) return escapeHtml(t(`ui.settings.models.state.${code}`, { detail: rest.join(":") }));
+    if (code.startsWith("http")) return escapeHtml(t("ui.settings.models.state.error", { detail: p.detail }));
+    return escapeHtml(p.detail || "");
+  }
+  function renderModels() {
+    const host = $("provList");
+    if (!prov) { host.innerHTML = `<div class="muted">${escapeHtml(provError ? t("ui.settings.unavailable", { message: provError }) : t("ui.settings.loading"))}</div>`; if (!provError && !busy.size) loadProviders(); return; }
+    if (host.contains(document.activeElement) && /INPUT|TEXTAREA/.test(document.activeElement.tagName)) return; // typing: do not redraw under the cursor
+    const BRAND = { claude: "#d97757", codex: "#10a37f", gemini: "#4f8ff7", openrouter: "#a78bfa" };
+    const PKG = { claude: "@anthropic-ai/claude-code", codex: "@openai/codex", gemini: "@google/gemini-cli" };
+    host.innerHTML = prov.providers.map((p) => {
+      const b = (a) => busy.has(`${p.id}:${a}`);
+      const badge = !p.installed && p.canInstall ? ["off", "notInstalled"] : !p.enabled ? ["off", "off"] : p.connected ? ["ok", "connected"] : ["warn", "notConnected"];
+      const actions = [];
+      if (!p.installed && p.canInstall) actions.push(`<button class="btn small primary" data-act="install" ${b("install") ? "disabled" : ""}>${escapeHtml(t(b("install") ? "ui.settings.models.installing" : "ui.settings.models.install"))}</button>`);
+      else if (!p.connected && p.canLogin) actions.push(`<button class="btn small primary" data-act="login">${escapeHtml(t("ui.settings.models.login"))}</button>`);
+      actions.push(`<button class="btn small ghost" data-act="check" ${b("check") ? "disabled" : ""}>${escapeHtml(t(b("check") ? "ui.settings.models.checking" : "ui.settings.models.check"))}</button>`);
+      const keyRow = p.id === "gemini" || p.id === "openrouter" ? `<div class="prov-key"><label><span>${escapeHtml(t("ui.settings.models.key"))}</span><input type="password" autocomplete="off" data-key-input placeholder="${escapeHtml(t("ui.settings.models.keyPh"))}" /></label>
+          <button class="btn small primary" data-act="saveKey">${escapeHtml(t("ui.settings.models.keySave"))}</button>${p.keyHint && p.keyHint !== "env" ? `<button class="btn small ghost" data-act="removeKey">${escapeHtml(t("ui.settings.models.keyRemove"))}</button>` : ""}
+          ${p.keyHint ? `<small class="muted">${escapeHtml(t("ui.settings.models.keyFrom", { hint: p.keyHint === "env" ? t("ui.settings.models.keyEnv") : p.keyHint }))}</small>` : ""}</div>` : "";
+      const customRow = p.id === "gemini" || p.id === "openrouter" ? `<div class="prov-key"><label><span>${escapeHtml(t("ui.settings.models.custom"))}</span><input type="text" data-custom-input value="${escapeHtml((p.custom || []).join(", "))}" /></label>
+          <button class="btn small ghost" data-act="saveModels">${escapeHtml(t("ui.settings.models.customSave"))}</button></div>` : "";
+      const chips = p.models.length ? p.models.map((m) => `<span class="chip" title="${escapeHtml(MODEL_INFO[m.id]?.desc || m.desc || m.id)}">${escapeHtml(m.name)}</span>`).join("") : `<small class="muted">${escapeHtml(t("ui.settings.models.noModels"))}</small>`;
+      const stateLine = stateText(p);
+      return `<div class="prov-card prov-${badge[0]}" data-id="${p.id}" style="--brand:${BRAND[p.id]}">
+        <div class="prov-top">
+          <span class="prov-mark" aria-hidden="true"><i style="--logo:url(/logos/${p.id}.svg)"></i></span>
+          <div class="prov-title">
+            <div class="prov-name"><b>${escapeHtml(t(`ui.settings.models.p.${p.id}.name`))}</b><span class="prov-pill"><i></i>${escapeHtml(t(`ui.settings.models.${badge[1]}`))}</span>${p.version ? `<small class="muted">${escapeHtml(t("ui.settings.models.version", { v: p.version }))}</small>` : ""}</div>
+            <small class="muted">${escapeHtml(t(`ui.settings.models.p.${p.id}.desc`))}</small>
+          </div>
+          <label class="check prov-on" title="${escapeHtml(t("ui.settings.models.on"))}"><input type="checkbox" data-act="toggle" ${p.enabled ? "checked" : ""} /> <span>${escapeHtml(t("ui.settings.models.on"))}</span></label>
+        </div>
+        ${stateLine ? `<div class="prov-state">${stateLine}</div>` : ""}
+        ${p.warning ? `<div class="prov-note">⚠ ${escapeHtml(t("ui.settings.models.warn", { detail: p.warning.replace(/^invalidConfig:/, "") }))}</div>` : ""}
+        ${!p.installed && p.canInstall ? `<small class="muted prov-hint">${t("ui.settings.models.installHint", { pkg: PKG[p.id] })}</small>` : ""}
+        ${keyRow}${customRow}
+        <div class="prov-actions">${actions.join("")}</div>
+        <details class="prov-models"><summary>${escapeHtml(t("ui.settings.models.modelsTitle", { n: p.models.length }))}</summary><div class="prov-chips">${chips}</div></details>
+      </div>`;
+    }).join("");
+  }
+  $("provList").addEventListener("click", async (ev) => {
+    const btn = ev.target.closest("[data-act]");
+    if (!btn || btn.type === "checkbox") return;
+    const card = btn.closest(".prov-card"), id = card.dataset.id, act = btn.dataset.act;
+    const run = async (name, fn) => {
+      busy.add(`${id}:${name}`); renderModels();
+      try { await fn(); } catch (err) { toast(err.message); }
+      busy.delete(`${id}:${name}`);
+      if (open() && tab === "models") renderModels();
+    };
+    if (act === "install") await run("install", async () => {
+      const r = await api("POST", `/api/providers/${id}/install`);
+      prov = r; syncModels(r);
+      toast(r.ok ? t("ui.settings.models.installed") : t("ui.settings.models.installFailed", { output: String(r.output || "").split("\n").slice(-3).join(" ").slice(0, 300) }));
+    });
+    else if (act === "login") { const r = await api("POST", `/api/providers/${id}/login`).catch(() => ({ ok: false })); toast(t(r.ok ? "ui.settings.models.loginStarted" : "ui.settings.models.loginFailed")); }
+    else if (act === "check") await run("check", async () => { prov = await api("POST", `/api/providers/${id}/check`); syncModels(prov); });
+    else if (act === "saveKey" || act === "removeKey") await run("key", async () => {
+      const v = act === "removeKey" ? "" : card.querySelector("[data-key-input]").value.trim();
+      if (act === "saveKey" && !v) return;
+      prov = await api("PUT", `/api/providers/${id}`, { apiKey: v }); syncModels(prov); toast(t("ui.settings.saved"));
+    });
+    else if (act === "saveModels") await run("models", async () => {
+      const list = card.querySelector("[data-custom-input]").value.split(",").map((x) => x.trim()).filter(Boolean);
+      prov = await api("PUT", `/api/providers/${id}`, { models: list }); syncModels(prov); toast(t("ui.settings.saved"));
+    });
+  });
+  $("provList").addEventListener("change", async (ev) => {
+    const el = ev.target.closest('[data-act="toggle"]');
+    if (!el) return;
+    const id = el.closest(".prov-card").dataset.id;
+    try { prov = await api("PUT", `/api/providers/${id}`, { enabled: el.checked }); syncModels(prov); toast(t("ui.settings.saved")); }
+    catch (err) { toast(err.message); }
+    renderModels();
+  });
   $("setShutdown").onclick = () => askShutdown();
 
   // ---------- wiring ----------

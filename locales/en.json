@@ -291,7 +291,11 @@
     },
     "codex": {
       "skills": "## Your skills\nA skill is a file with instructions for one kind of work. When a request matches one of these, read its file first (the full path is given) and follow it:\n{list}",
-      "notice": "Codex: {detail}"
+      "notice": "Codex: {detail}",
+      "authFailed": "Codex sign-in is no longer valid ({detail}). Sign in again in Settings → Models."
+    },
+    "gemini": {
+      "authFailed": "The Gemini API key was refused ({detail}). Check it in Settings → Models."
     },
     "refreshCancelled": "Knowledge refresh cancelled because the boss wrote; it will run again at a quieter moment.",
     "refreshNote": "[Note: in a separate short session you tidied your memory file. What you reported: {summary}]",
@@ -780,10 +784,28 @@
       "autoRefreshHint": "Off by default, because it spends tokens nobody asked for. When on, the employee tidies their memory in a short, separate session every few hours (set below), only if they worked since the last time, and skipped if you wrote to them in the last 30 minutes."
     },
     "models": {
+      "gpt-6-astra": { "desc": "Frontier intelligence for the most demanding work." },
+      "gpt-6-sol": { "desc": "Workhorse model for coding and everyday work." },
+      "gpt-6-luna": { "desc": "Fast and affordable model for easier tasks." },
+      "gpt-5.6-sol": { "desc": "Older coding model for complex work." },
+      "gpt-5.6-terra": { "desc": "Older balanced model for straightforward work." },
+      "gpt-5.6-luna": { "desc": "Older fast and efficient model." },
+      "gpt-5.5": { "desc": "Legacy coding model." },
+      "gemini-3.1-pro-preview": { "desc": "Google's most capable model (preview); deep reasoning for hard problems." },
+      "gemini-3-flash-preview": { "desc": "Fast and capable (preview); a good everyday choice." },
+      "gemini-3.1-flash-lite-preview": { "desc": "The lightest and cheapest of the newest (preview); simple, high-volume work." },
+      "gemini-2.5-pro": { "desc": "Previous strong model; deep reasoning and long context." },
+      "gemini-2.5-flash": { "desc": "Previous fast model; balanced speed and quality." },
+      "gemini-2.5-flash-lite": { "desc": "Previous lightest model; the cheapest for simple work." },
       "claude-opus-5-5": {
         "name": "Opus 5.5",
         "desc": "The newest Opus; stronger and a little cheaper than Opus 5. The default for most work.",
         "tier": "$$"
+      },
+      "claude-sonnet-5-5": {
+        "name": "Sonnet 5.5",
+        "desc": "The newest Sonnet; fast and economical, a good fit for most everyday work.",
+        "tier": "$"
       },
       "claude-opus-5": {
         "name": "Opus 5",
@@ -792,7 +814,7 @@
       },
       "claude-sonnet-5": {
         "name": "Sonnet 5",
-        "desc": "Fast and economical; routine, well-defined work.",
+        "desc": "Previous Sonnet; fast and economical, routine work.",
         "tier": "$"
       },
       "claude-haiku-4-5": {
@@ -1057,6 +1079,7 @@
         "offices": "Offices",
         "office": "This office",
         "sessions": "Sessions",
+        "models": "Models",
         "server": "Server"
       },
       "lang": "Language",
@@ -1092,10 +1115,52 @@
       "version": "Version",
       "node": "Node.js",
       "restartHint": "Port, host and the data folder are read when the office starts: change them in the config file, then close and start the office again.",
-      "codex": "Codex CLI",
-      "codexMissing": "not installed — Codex models are not offered",
-      "codexIn": "{version} · signed in · {n} models",
-      "codexOut": "{version} · not signed in (run <code>codex login</code> in a terminal)",
+      "models": {
+        "intro": "The AI engines your employees can run on. Only connected engines (installed and signed in, or with a key) offer their models when you hire or edit an employee.",
+        "connected": "Connected",
+        "notConnected": "Not connected",
+        "notInstalled": "Not installed",
+        "off": "Switched off",
+        "p": {
+          "claude": { "name": "Claude", "desc": "Claude Code: the default engine, your Claude plan or an Anthropic API key." },
+          "codex": { "name": "Codex", "desc": "OpenAI Codex CLI, on your ChatGPT plan." },
+          "gemini": { "name": "Gemini", "desc": "Google Gemini CLI, with a Gemini API key." },
+          "openrouter": { "name": "OpenRouter", "desc": "Any model OpenRouter serves, with an OpenRouter API key." }
+        },
+        "state": {
+          "missing": "The CLI is not installed on this machine.",
+          "signedOut": "Installed, but not signed in.",
+          "needKey": "Add an API key to connect.",
+          "authExpired": "The sign-in has expired. Press Sign in to connect again.",
+          "badKey": "The API key was refused.",
+          "apiKey": "API key",
+          "offline": "Could not reach the service: {detail}",
+          "error": "Check failed: {detail}"
+        },
+        "warn": "The CLI's settings file has something it cannot read ({detail}). It still works, but prints a warning.",
+        "install": "Install",
+        "installing": "Installing…",
+        "installHint": "Runs <code>npm install -g {pkg}</code> on this machine.",
+        "installed": "Installed",
+        "installFailed": "Install failed: {output}",
+        "login": "Sign in",
+        "loginStarted": "Sign-in started in your browser. Finish it there, then press Check.",
+        "loginFailed": "Could not start the sign-in. Run it in a terminal instead.",
+        "check": "Check again",
+        "checking": "Checking…",
+        "on": "Use this engine",
+        "key": "API key",
+        "keyPh": "paste the key",
+        "keySave": "Save key",
+        "keyRemove": "Remove key",
+        "keyFrom": "Key: {hint}",
+        "keyEnv": "from the environment",
+        "modelsTitle": "{n} models",
+        "noModels": "No models yet.",
+        "custom": "Extra model ids (comma separated)",
+        "customSave": "Save models",
+        "version": "version {v}"
+      },
       "shutdownHint": "Stops the server. Running work is interrupted; chats, memories and skills stay on disk."
     },
     "shutdown": {

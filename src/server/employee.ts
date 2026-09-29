@@ -19,7 +19,7 @@ import { officeServer, OFFICE_TOOLS, type Colleagues } from "./office-tools.js";
 import { runCodexTurn, skillsIndex, skillFile, type CodexItem } from "./codex.js";
 import { runGeminiTurn, type GeminiEvent } from "./gemini.js";
 import { costOf } from "./prices.js";
-import { engineOf, geminiKey, openrouterEnv, openrouterSlug, markAuthFailed, AUTH_ERROR, type Engine } from "./providers.js";
+import { engineOf, geminiKey, openrouterCatalog, openrouterCostOf, openrouterEnv, openrouterSlug, markAuthFailed, AUTH_ERROR, type Engine } from "./providers.js";
 import { listSkills, listProjectSkills } from "./agents.js";
 import { fromClaudeRateLimit, fromClaudeUsage, fromCodexThread, claudeUsageDue } from "./quota.js";
 import type { CostKind } from "./ledger.js";
@@ -909,6 +909,7 @@ export class Employee extends EventEmitter {
     if (this.engine === "gemini") { void this.runGemini(gen, key); return; }
     // OpenRouter runs through Claude Code too, pointed at OpenRouter: same tools, permissions and sessions
     const viaOpenRouter = this.engine === "openrouter";
+    if (viaOpenRouter) void openrouterCatalog().catch(() => {}); // its prices, before the first result needs them
     this.context = 0;
     const compactAt = getSettings().compactAtTokens;
     const taskId = taskOf(key);
@@ -1028,7 +1029,8 @@ export class Employee extends EventEmitter {
         fromClaudeRateLimit(m.rate_limit_info as unknown as Record<string, unknown>);
         break;
       case "result": {
-        const total = Number(m.total_cost_usd) || 0;
+        // a running total for the session either way; through OpenRouter counted with OpenRouter's prices
+        const total = this.engine === "openrouter" ? openrouterCostOf(m.modelUsage, openrouterSlug(this.cfg.model!)) : Number(m.total_cost_usd) || 0;
         if (this.procFirst && total < this.procPrev) this.procPrev = 0; // this transcript did not carry its earlier total
         this.procFirst = false;
         const delta = Math.max(0, total - this.procPrev);

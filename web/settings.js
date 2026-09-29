@@ -45,8 +45,10 @@ const settingsUI = (() => {
     n.checked = notifyOn();
     n.disabled = !("Notification" in window);
     $("setNotifyHint").textContent = t(n.disabled ? "ui.settings.notifyNone" : "ui.settings.notifyHint");
+    $("setEvents").checked = officeEventsOn();
     fillSwitches();
   }
+  $("setEvents").onchange = (ev) => { try { localStorage.setItem("po.events", ev.target.checked ? "1" : "0"); } catch {} toast(t("ui.settings.saved")); };
   $("setNotify").onchange = async (ev) => { ev.target.disabled = true; ev.target.checked = await setNotify(ev.target.checked); ev.target.disabled = false; };
 
   // ---------- config.json switches (General's sickness + Sessions) ----------

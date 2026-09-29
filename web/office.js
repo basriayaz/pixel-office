@@ -415,6 +415,7 @@ class Office {
   }
 
   update(dt, now) {
+    this.tickEvents(now);
     if (this.particles.length) {
       for (const p of this.particles) { p.vy += 260 * dt; p.x += p.vx * dt; p.y += p.vy * dt; p.vx *= 0.98; p.life -= dt; p.rot += p.vr * dt; }
       this.particles = this.particles.filter((p) => p.life > 0 && p.y < LH + 8);
@@ -466,6 +467,7 @@ class Office {
     if (this.atSeat(e)) { e.dir = "down"; e.spot = null; }
     if (e.entering && this.atSeat(e)) { e.entering = false; this.burst(e.x + 16, e.y + 8, 60); e.bubble = { kind: "party", until: now + 4000 }; }
     e.restUntil = now + rand(8000, 20000);
+    this.arrivedExtra(e, now);
   }
 
   // Confetti burst at a logical point.
@@ -479,6 +481,7 @@ class Office {
   celebrate(id) { const e = this.emps.find((x) => x.id === id); if (e) this.burst(e.x + 16, e.y + 8, 60); }
 
   decideIdle(e, now) {
+    if (this.tryNap(e, now)) return;
     const goSpot = this.atSeat(e) ? Math.random() < 0.6 : Math.random() < 0.45;
     if (goSpot) {
       const s = this.freeSpot(e);
@@ -555,10 +558,13 @@ class Office {
         },
       });
     }
+    for (const it of this.eventItems(t)) items.push(it);
     items.sort((a, c) => a.y - c.y);
     for (const it of items) it.draw();
     const occupied = new Set(this.emps.filter((e) => e.spot && !e.path.length).map((e) => e.spot.key));
     for (const e of this.emps) drawOverhead(b, e, t, occupied);
+    for (const e of this.emps) if (this.isNapping(e)) drawZzz(b, e, t);
+    drawDayNight(b, t, this.evt);
     for (const p of this.particles) { b.save(); b.translate(p.x, p.y); b.rotate(p.rot); b.globalAlpha = Math.min(1, p.life); b.fillStyle = p.col; b.fillRect(-p.w / 2, -p.h / 2, p.w, p.h); b.restore(); }
     if (this.offline) { b.fillStyle = "rgba(10,12,20,.55)"; b.fillRect(0, 0, LW, LH); }
     this.ctx.drawImage(this.buf, 0, 0, this.canvas.width, this.canvas.height);
@@ -670,13 +676,34 @@ function drawConcrete(b, x, y, w, h) {
   for (let py = y + 8; py < y + h; py += 32) for (let px = x + 8; px < x + w; px += 32) b.fillRect(px + ((py / 32) % 2) * 9, py, 3, 1);
 }
 
-function skyColors() {
-  const h = new Date().getHours() + new Date().getMinutes() / 60;
-  if (h < 5.5 || h >= 20.5) return { top: "#0c1330", bot: "#1f3260", stars: true };
-  if (h < 7.5) return { top: "#5a4a8a", bot: "#f2a35e", stars: false };
-  if (h < 18) return { top: "#5fb0ea", bot: "#c4e6f8", stars: false };
-  return { top: "#3d4a8a", bot: "#f0834d", stars: false };
+// Current hour of the day (0..24). `?hour=23` in the URL pins it, to look at the night without waiting for it.
+function poHour() {
+  try { const o = parseFloat(new URLSearchParams(location.search).get("hour")); if (o >= 0 && o < 24) return o; } catch {}
+  const d = new Date();
+  return d.getHours() + d.getMinutes() / 60;
 }
+
+// Sky behind the windows: night, dawn, morning, noon, afternoon, dusk. `sun` (0..1 across the pane) is set from 6 to 20.
+function skyColors() {
+  const h = poHour();
+  const sun = h >= 6 && h <= 20 ? (h - 6) / 14 : null;
+  if (h < 5.5 || h >= 20.5) return { top: "#0c1330", bot: "#1f3260", stars: true, sun: null };
+  if (h < 7.5) return { top: "#5a4a8a", bot: "#f2a35e", stars: false, sun };
+  if (h < 10) return { top: "#6ab4ec", bot: "#f6dcb0", stars: false, sun };
+  if (h < 16) return { top: "#4aa3ea", bot: "#c4e6f8", stars: false, sun };
+  if (h < 18) return { top: "#5fb0ea", bot: "#f8e2b4", stars: false, sun };
+  return { top: "#3d4a8a", bot: "#f0834d", stars: false, sun };
+}
+
+// How dark the office is, 0 (daylight) .. 0.32 (deep night); ramps over dawn and dusk.
+function nightDarkness() {
+  const h = poHour();
+  if (h >= 21 || h < 5) return 0.32;
+  if (h < 7) return 0.32 * (7 - h) / 2;
+  if (h >= 19) return 0.32 * (h - 19) / 2;
+  return 0;
+}
+const isNight = () => nightDarkness() >= 0.25;
 
 function drawWalls(b, blocked, doors, t, theme = "default") {
   const T = THEMES[theme] || THEMES.default;
@@ -705,6 +732,10 @@ function drawWalls(b, blocked, doors, t, theme = "default") {
       b.fillStyle = "rgba(255,255,255,.9)";
       const cx = wx + ((t / 90) % 140) - 40;
       b.fillRect(cx, 18, 22, 6); b.fillRect(cx + 5, 14, 12, 4); b.fillRect(cx + 40, 30, 16, 5); b.fillRect(cx + 44, 27, 8, 3);
+      if (sky.sun != null) {
+        const sx = wx + 6 + sky.sun * 80, sy = 38 - Math.sin(sky.sun * Math.PI) * 26, low = Math.sin(sky.sun * Math.PI) < 0.35;
+        b.fillStyle = low ? "#ffb35a" : "#ffe27a"; b.fillRect(sx - 4, sy - 4, 8, 8); b.fillRect(sx - 6, sy - 2, 12, 4); b.fillRect(sx - 2, sy - 6, 4, 12);
+      }
       b.restore();
       b.fillStyle = "#3f7f3f"; b.fillRect(wx, 42, 96, 6); b.fillStyle = "#5aa05a"; for (let i = 0; i < 12; i++) b.fillRect(wx + i * 8, 40 + (i % 2), 6, 3);
     }
@@ -1255,7 +1286,7 @@ function drawOverhead(b, e, t, occupied) {
     b.fillStyle = "#0b3a1e";
     for (let i = 0; i < 4; i++) b.fillRect(cx - 7 + i, top - 11 + bob + i, 2, 2);
     for (let i = 0; i < 7; i++) b.fillRect(cx - 3 + i, top - 8 + bob - i, 2, 2);
-  } else if (e.anim === "chat" || (e.anim === "sitfree" && e.spot && (e.spot.key.startsWith("meet") || e.spot.key.startsWith("sofa") || e.spot.key.startsWith("stool")))) {
+  } else if (e.anim === "chat" || (e.anim === "sitfree" && e.spot && (e.spot.key.startsWith("meet") || e.spot.key.startsWith("sofa") || e.spot.key.startsWith("stool")) && e.napSpot !== e.spot)) {
     const group = e.spot.key.replace(/[A-Z]$/, "");
     const others = [...occupied].filter((k) => k !== e.spot.key && k.replace(/[A-Z]$/, "") === group);
     if (others.length) {
@@ -3068,4 +3099,146 @@ function progressDecor(n) {
     b.fillStyle = on ? "#ffd166" : "#6b5a2b"; b.fillRect(603, 21, 4, 14); b.fillRect(598, 26, 14, 4); b.fillRect(600, 23, 10, 10);
   });
   return out;
+}
+
+// ---------- day cycle & office events ----------
+// Night: a dim blue layer over the whole office, and idle people sometimes doze on the lounge sofa.
+// Events: every few minutes something small happens (pizza, cake, printer jam, blackout). Only idle people react;
+// anyone who starts working goes straight back to the desk (setStatus clears the event spot). Switch: localStorage po.events.
+const officeEventsOn = () => { try { return localStorage.getItem("po.events") !== "0"; } catch { return true; } };
+
+const EVENT_KINDS = ["pizza", "cake", "printer", "blackout"];
+const KITCHEN_TILES = [[2, 5], [3, 5], [4, 5], [1, 5], [2, 7], [3, 7], [5, 5], [4, 7]];
+const PRINTER_TILES = [[27, 14], [26, 14], [28, 14], [26, 15], [27, 15]];
+
+Object.assign(Office.prototype, {
+  isNapping(e) { return !!e.napSpot && e.napSpot === e.spot && e.status === "idle" && !e.path.length; },
+
+  // At night an idle employee may curl up on a free sofa seat for a while.
+  tryNap(e, now) {
+    if (!isNight() || e.meet || this.evt || Math.random() > 0.5) return false;
+    const taken = new Set(this.emps.filter((o) => o !== e && o.spot).map((o) => o.spot.key));
+    const s = SPOTS.find((x) => x.key.startsWith("sofa") && !taken.has(x.key));
+    if (!s || !this.goToSpot(e, s)) return false;
+    e.spot = s; e.napSpot = s;
+    return true;
+  },
+
+  arrivedExtra(e, now) {
+    if (e.napSpot && e.napSpot === e.spot) e.restUntil = now + rand(30000, 70000);
+    else if (e.spot?.evt) {
+      e.restUntil = Math.max(e.restUntil, this.evt ? this.evt.until : now);
+      if (e.spot.evt === "pizza" || e.spot.evt === "cake") e.bubble = { kind: "party", until: now + 3000 };
+    }
+  },
+
+  tickEvents(now) {
+    if (this.evNext == null) this.evNext = now + rand(3 * 60000, 8 * 60000);
+    if (this.evt) {
+      if (now > this.evt.until || !officeEventsOn()) this.endEvent(now);
+      return;
+    }
+    if (now < this.evNext) return;
+    if (!officeEventsOn() || this.offline || this.meetingOn || !this.emps.length) { this.evNext = now + 30000; return; }
+    const kind = EVENT_KINDS[Math.floor(Math.random() * EVENT_KINDS.length)];
+    if (!this.startEvent(kind, now)) this.evNext = now + 30000;
+  },
+
+  // Returns false (and does nothing) when nobody idle is around to see it. Callable from the console: office.startEvent("pizza").
+  startEvent(kind, now = performance.now()) {
+    if (this.evt || !EVENT_KINDS.includes(kind)) return false;
+    const idle = this.emps.filter((e) => e.status === "idle" && !e.meet && !e.entering);
+    if (!idle.length) return false;
+    const ev = { kind, t0: now, until: now + (kind === "blackout" ? 5000 : rand(22000, 32000)) };
+    if (kind === "blackout") {
+      for (const e of idle) e.restUntil = Math.max(e.restUntil, ev.until + 1000);
+    } else {
+      const tiles = kind === "printer" ? PRINTER_TILES : KITCHEN_TILES;
+      let n = 0;
+      for (const e of idle.sort(() => Math.random() - 0.5)) {
+        if (n >= (kind === "printer" ? 2 : 4)) break;
+        const tile = tiles.find(([x, y]) => !this.isBlocked(x, y, e));
+        if (!tile) break;
+        const was = e.spot;
+        const spot = { key: "evt" + n, tx: tile[0], ty: tile[1], dir: "up", anim: kind === "printer" ? "think" : "stand", evt: kind };
+        e.spot = spot;
+        if (this.goToSpot(e, spot)) { e.bubble = null; e.napSpot = null; n++; }
+        else e.spot = was;
+      }
+      if (!n) return false;
+    }
+    this.evt = ev;
+    this.evNext = now + rand(3 * 60000, 8 * 60000);
+    if (typeof toast === "function") toast(t("ui.events." + kind));
+    return true;
+  },
+
+  endEvent(now) {
+    this.evt = null;
+    for (const e of this.emps) if (e.spot?.evt) { e.spot = null; e.restUntil = now + rand(1000, 5000); }
+  },
+
+  // Table / printer props, depth-sorted with the rest of the scene.
+  eventItems(t) {
+    const ev = this.evt;
+    if (!ev || ev.kind === "blackout") return [];
+    if (ev.kind === "printer") return [{ y: 14 * TILE + 24, draw: (b) => drawPrinterJam(b, 27 * TILE, 13 * TILE, t) }];
+    return [{ y: 6 * TILE + 30, draw: (b) => (ev.kind === "pizza" ? drawPizza : drawCake)(b, 3 * TILE, 6 * TILE + 10, t) }];
+  },
+});
+
+function drawPizza(b, x, y, t) {
+  outlineRect(b, x - 14, y - 4, 28, 14, "#b98a52");
+  b.fillStyle = "#e8c07a"; b.fillRect(x - 12, y - 2, 24, 10);
+  b.fillStyle = "#d9432f"; b.fillRect(x - 6, y, 4, 3); b.fillRect(x + 3, y + 3, 4, 3); b.fillRect(x - 1, y + 4, 3, 2);
+  if (!REDUCED_MOTION.matches && Math.floor(t / 500) % 2) { b.fillStyle = "rgba(255,255,255,.7)"; b.fillRect(x - 4, y - 10, 2, 5); b.fillRect(x + 4, y - 12, 2, 5); }
+}
+
+function drawCake(b, x, y, t) {
+  outlineRect(b, x - 12, y - 2, 24, 12, "#f4a8c0");
+  b.fillStyle = "#fff"; b.fillRect(x - 12, y - 2, 24, 4);
+  for (let i = 0; i < 3; i++) {
+    b.fillStyle = "#61afef"; b.fillRect(x - 8 + i * 8, y - 8, 2, 6);
+    if (REDUCED_MOTION.matches || Math.floor(t / 250 + i) % 3) { b.fillStyle = "#ffd166"; b.fillRect(x - 8 + i * 8, y - 11, 2, 3); }
+  }
+}
+
+function drawPrinterJam(b, x, y, t) {
+  const on = REDUCED_MOTION.matches || Math.floor(t / 300) % 2;
+  b.fillStyle = on ? "#f87171" : "#5a1a1a"; b.fillRect(x + 42, y - 6, 3, 2);
+  b.fillStyle = "#fff"; b.fillRect(x + 20, y + 30, 10, 6); b.fillRect(x + 36, y + 32, 8, 5);
+  if (!REDUCED_MOTION.matches) for (let i = 0; i < 3; i++) {
+    const p = (t / 900 + i / 3) % 1;
+    b.fillStyle = `rgba(150,150,150,${0.6 * (1 - p)})`; b.fillRect(x + 26 + i * 6 + Math.sin(p * 6 + i) * 3, y - 14 - p * 22, 5, 5);
+  }
+  b.fillStyle = OUTLINE; b.fillRect(x + 28, y - 44, 8, 14); b.fillStyle = "#f87171"; b.fillRect(x + 29, y - 43, 6, 12);
+  b.fillStyle = "#fff"; b.fillRect(x + 31, y - 41, 2, 6); b.fillRect(x + 31, y - 33, 2, 2);
+}
+
+// "z z z" above a dozing person; static under reduced motion.
+function drawZzz(b, e, t) {
+  const still = REDUCED_MOTION.matches;
+  const f = still ? 0 : (t / 700 + e.seed) % 3;
+  b.fillStyle = "#dbe6ff";
+  for (let i = 0; i < 3; i++) {
+    const p = still ? i : (f + i) % 3, s = 2 + Math.floor(p);
+    b.globalAlpha = still ? 1 : 1 - p / 3.2;
+    b.fillRect(e.x + 22 + p * 5, e.y - 14 - p * 7, s + 2, 1);
+    b.fillRect(e.x + 22 + p * 5, e.y - 14 - p * 7 + s + 1, s + 2, 1);
+    b.fillRect(e.x + 23 + p * 5 + s - 1, e.y - 13 - p * 7, 1, s);
+  }
+  b.globalAlpha = 1;
+}
+
+// Night layer: a flat dim blue tint over the whole office. A blackout goes much darker for a few seconds.
+function drawDayNight(b, t, ev) {
+  let a = nightDarkness();
+  if (ev && ev.kind === "blackout") {
+    const p = performance.now() - ev.t0;
+    const flicker = !REDUCED_MOTION.matches && p < 900 && Math.floor(p / 120) % 2 === 0 ? 0.25 : 0;
+    a = Math.max(a, (p < 4200 ? 0.72 : 0.72 * Math.max(0, 5000 - p) / 800) - flicker);
+  }
+  if (a <= 0.01) return;
+  b.fillStyle = `rgba(8,14,44,${a.toFixed(3)})`;
+  b.fillRect(0, 0, LW, LH);
 }

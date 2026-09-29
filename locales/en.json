@@ -1231,6 +1231,8 @@
       "notify": "Browser notifications",
       "notifyHint": "A desktop notification when an employee replies or needs you. Remembered in this browser only.",
       "notifyNone": "This browser does not support notifications.",
+      "events": "Random office events",
+      "eventsHint": "Every few minutes something small happens: pizza day, a birthday cake, a printer jam or a short power cut. Idle employees gather and react; working employees are never disturbed. Remembered in this browser only.",
       "sickness": "Employees fall ill now and then",
       "sicknessHint": "An idle employee sometimes rests on the sofa for 3–5 minutes. Just for fun, it costs nothing. Off: nobody gets ill.",
       "envLocked": "Set by the environment variable {name}; change it there.",
@@ -1367,6 +1369,12 @@
       "s2": "<b>Teach them.</b> Say “remember that…” and it goes into their memory file, which is loaded every session. Edit it any time from the profile (☰).",
       "s3": "<b>Hire your own</b> with <b>+ Hire</b>: design the character, pick a position, choose the model. Fire the samples whenever you like.",
       "cta": "Let's go"
+    },
+    "events": {
+      "pizza": "Pizza day! Fresh pizza in the kitchen.",
+      "cake": "Someone has a birthday: cake in the kitchen!",
+      "printer": "The printer jammed again.",
+      "blackout": "Power cut! Back in a moment."
     },
     "notify": {
       "on": "Notifications on",

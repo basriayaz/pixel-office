@@ -266,6 +266,16 @@ class Office {
     if (REDUCED_MOTION.matches || e.anim !== "sit" || e.status !== "idle") { e.micro = null; return; }
     if (e.micro) {
       if (now - e.micro.t0 > MICRO_MS[e.micro.kind]) { e.micro = null; e.microAt = now + rand(10000, 26000); }
+      else if (e.micro.kind === "giggle") {
+        // snickering at the phone: two short bursts of laughter, sometimes with a remark in a balloon
+        const m = e.micro;
+        if (!m.g) { m.g = [m.t0 + 900, m.t0 + 2400]; m.talk = Math.random() < 0.7; }
+        if (m.g.length && now >= m.g[0]) {
+          m.g.shift();
+          this.startLaugh(e, now, 1100, { v: "giggle", amp: 0.7, text: false });
+          if (m.talk && !m.g.length) { const g = lifePick(lifeStrings().giggle); if (g) this.say(e, g, lifeMs(g)); }
+        }
+      }
     } else if (e.microAt == null) e.microAt = now + rand(6000, 18000);
     else if (now > e.microAt) e.micro = { kind: MICRO_KINDS[Math.floor(Math.random() * MICRO_KINDS.length)], t0: now };
   }
@@ -276,6 +286,7 @@ class Office {
     const prev = e.status;
     e.status = status;
     e.tool = null;
+    e.sayLater = null;
     this.endAct(e, performance.now(), false);
     e.pulse = { t0: performance.now(), col: status === "working" ? "#4ade80" : status === "error" ? "#f87171" : status === "waiting" ? "#ffd166" : "#ffffff" };
     const now = performance.now();
@@ -469,6 +480,7 @@ class Office {
         e.anim = "stand";
       }
       this.lifeApply(e, now);
+      this.lifeTalk(e, now);
       if (e.meet) continue;
       if (e.status === "idle" && now > e.restUntil) this.decideIdle(e, now);
       if (e.status !== "idle" && e.status !== "sick" && !this.atSeat(e)) this.goTo(e, e.seat.tx, e.seat.ty);
@@ -567,7 +579,7 @@ class Office {
             if (p >= 1 || REDUCED_MOTION.matches) e.pulse = null;
             else { b.save(); b.globalAlpha = 1 - p; b.strokeStyle = e.pulse.col; b.lineWidth = 2; b.beginPath(); b.ellipse(e.x + 16, e.y + TILE - 1, 12 + p * 14, 4 + p * 6, 0, 0, Math.PI * 2); b.stroke(); b.restore(); }
           }
-          drawPerson(b, e.x, oy, e, { dir: e.dir, anim: e.anim, frame, t, seed: e.seed, sipT: e.sipping ? performance.now() - e.sipping : 0, ...deskLifeOpts(e, t), talk: lv.talk, laugh: lv.laugh });
+          drawPerson(b, e.x, oy, e, { dir: e.dir, anim: e.anim, frame, t, seed: e.seed, sipT: e.sipping ? performance.now() - e.sipping : 0, ...deskLifeOpts(e, t), talk: lv.talk, laugh: lv.laugh, lk: lv.lk, lt: lv.lt });
         },
       });
     }
@@ -581,6 +593,7 @@ class Office {
     for (const p of this.particles) { b.save(); b.translate(p.x, p.y); b.rotate(p.rot); b.globalAlpha = Math.min(1, p.life); b.fillStyle = p.col; b.fillRect(-p.w / 2, -p.h / 2, p.w, p.h); b.restore(); }
     if (this.offline) { b.fillStyle = "rgba(10,12,20,.55)"; b.fillRect(0, 0, LW, LH); }
     this.ctx.drawImage(this.buf, 0, 0, this.canvas.width, this.canvas.height);
+    flushBalloonText(this.ctx, this.canvas.width / LW);
     for (const e of this.emps) {
       const el = this.labelEls.get(e.id);
       if (!el) continue;
@@ -619,6 +632,22 @@ function traitOf(e) {
 }
 const lifeStrings = () => (window.PO && window.PO.strings && window.PO.strings.ui && window.PO.strings.ui.life) || {};
 function lifePick(arr, fallback = "") { return Array.isArray(arr) && arr.length ? arr[Math.floor(Math.random() * arr.length)] : fallback; }
+// how long a balloon stays up: longer sentences need longer to read
+const lifeMs = (text) => Math.min(5200, 1600 + String(text || "").length * 55);
+const shuffled = (arr) => { const a = Array.isArray(arr) ? arr.filter((x) => typeof x === "string" && x) : []; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const firstName = (e) => String((e && e.name) || "").trim().split(/\s+/)[0] || "";
+// {me} / {you} -> first names; tidy up what is left when a name is missing
+function fillNames(text, me, you) {
+  return String(text).replace(/\{me\}/g, me).replace(/\{you\}/g, you).replace(/\s+/g, " ").replace(/\s+([,.!?;:])/g, "$1").replace(/^[\s,;:]+/, "").trim();
+}
+// spot key -> key of ui.life.spot
+const SPOT_LINE = { coffee: "coffee", fridge: "fridge", stoolL: "stool", stoolR: "stool", sofaL: "sofa", sofaR: "sofa", books: "books", printer: "printer", water: "water", window: "window", window2: "window", brew: "brew", plantK: "plant", plantM: "plant" };
+const LAUGH_POSE = ["stand", "chat", "sit", "sitfree", "think", "gaze", "brew"]; // poses whose arms give way to a laughing pose
+const LAUGH_AT = 1300; // a laugh after a joke lasts this long (added to the line's time)
+function dayPeriod() {
+  const h = poHour();
+  return h >= 5 && h < 11 ? "morning" : h >= 11 && h < 15 ? "noon" : h >= 15 && h < 21 ? "evening" : "night";
+}
 function faceDir(a, b) {
   const dx = b.x - a.x, dy = b.y - a.y;
   return Math.abs(dx) > 6 ? (dx > 0 ? "right" : "left") : dy > 0 ? "down" : "up";
@@ -639,7 +668,15 @@ Object.assign(Office.prototype, {
     return options[options.length - 1];
   },
 
-  say(e, text, ms = 2200) { if (text) e.say = { text, until: performance.now() + ms }; },
+  say(e, text, ms) { if (text) e.say = { text, until: performance.now() + (ms || lifeMs(text)) }; },
+
+  // Laugh for `ms` with a fade in / out. Poses differ for standing and seated people; `v` forces a variant.
+  startLaugh(e, now, ms, o = {}) {
+    if (!e) return;
+    const pool = e.anim === "sit" ? ["mouth", "tear", "slap"] : e.anim === "sitfree" ? ["mouth", "belly", "slap", "tear"] : ["arms", "belly", "knee", "tear"];
+    e.laughing = { t0: now, ms, amp: o.amp == null ? 1 : o.amp, v: o.v || lifePick(pool) };
+    if (o.text !== false) this.say(e, lifePick(lifeStrings().laugh), ms); // picked once per laugh, so it never flickers
+  },
 
   endAct(e, now, restore = true) {
     e.errand = null;
@@ -647,6 +684,7 @@ Object.assign(Office.prototype, {
     if (!a) return;
     e.act = null;
     if (a.kind === "chat") {
+      if (e.laughing) e.laughing = null;
       e.chatCool = now + rand(15000, 30000);
       if (restore && a.path && a.path.length && !e.path.length) e.path = a.path;
       else if (!e.path.length && !e.spot && !this.atSeat(e)) e.restUntil = now + rand(1200, 4500);
@@ -654,7 +692,7 @@ Object.assign(Office.prototype, {
       if (p && p.act && p.act.kind === "chat" && p.act.partner === e.id) this.endAct(p, now, restore);
     } else if (a.kind === "pat") {
       const v = this.emps.find((x) => x.id === a.victim);
-      if (v && v.status === "error") this.say(v, lifePick(lifeStrings().thanks), 2200);
+      if (v && v.status === "error" && a.reply) this.say(v, a.reply.text);
       if (!e.path.length && !e.spot && !this.atSeat(e)) e.restUntil = now + rand(800, 2500);
     }
   },
@@ -681,26 +719,84 @@ Object.assign(Office.prototype, {
     return !e.spot || STAND_ANIMS.includes(e.spot.anim);
   },
 
-  startChat(a, b, now) {
-    const dur = rand(6500, 11000) * Math.sqrt(Math.max(TRAIT_LIFE[traitOf(a)].chat, TRAIT_LIFE[traitOf(b)].chat));
-    const line = Math.floor(Math.random() * 3);
+  // Picks a conversation from ui.life.convos: not one of the pair's last ~15, nor of the last ones anywhere.
+  // Returns the script { ev: [{ at, k: "say" | "laugh", spk, txt, ms }], i, total }, or null without content.
+  convoFor(a, b, wantLaugh) {
+    const all = lifeStrings().convos;
+    if (!Array.isArray(all) || !all.length) return null;
+    const has = (c, re) => c.some((x) => typeof x === "string" && re.test(x.trim()));
+    const ok = (c) => Array.isArray(c) && has(c, /./) && (!wantLaugh || has(c, /^~/));
+    const pk = [a.id, b.id].sort().join("|");
+    const pair = this.convoPair || (this.convoPair = new Map());
+    const rec = pair.get(pk) || [], glob = this.convoGlobal || (this.convoGlobal = []);
+    const n = all.length, kp = Math.min(15, n - 1), kg = Math.min(30, n >> 1);
+    const pr = kp > 0 ? rec.slice(-kp) : [], gl = kg > 0 ? glob.slice(-kg) : [];
+    let pick = -1;
+    for (const strict of [true, false]) {
+      for (let i = 0; i < 80 && pick < 0; i++) {
+        const j = Math.floor(Math.random() * n);
+        if (ok(all[j]) && !pr.includes(j) && (!strict || !gl.includes(j))) pick = j;
+      }
+      if (pick >= 0) break;
+    }
+    if (pick < 0) pick = all.findIndex(ok);
+    if (pick < 0) return null;
+    rec.push(pick); if (rec.length > 40) rec.shift(); pair.set(pk, rec);
+    glob.push(pick); if (glob.length > 60) glob.shift();
+    const names = [firstName(a), firstName(b)];
+    const ev = []; let at = 300;
+    all[pick].forEach((raw, i) => {
+      if (typeof raw !== "string" || !raw.trim()) return;
+      const laugh = raw.trim().startsWith("~"), spk = i % 2;
+      const txt = fillNames(raw.trim().replace(/^~\s*/, ""), names[spk], names[1 - spk]);
+      if (!txt) return;
+      const speech = 1800 + txt.length * 55;
+      ev.push({ at, k: "say", spk, txt, ms: speech - 100 });
+      if (laugh) ev.push({ at: at + speech, k: "laugh", spk });
+      at += speech + (laugh ? LAUGH_AT : 0) + 150;
+    });
+    return ev.length ? { ev, i: 0, total: at + 300 } : null;
+  },
+
+  startChat(a, b, now, opts = {}) {
+    let c = this.convoFor(a, b, opts.laugh);
+    if (!c) c = { ev: [0, 1, 0, 1].map((spk, i) => ({ at: 300 + i * 2000, k: "say", spk, txt: "...", ms: 1800 })), i: 0, total: 8600 }; // no content: dots
     for (const [x, y, lead] of [[a, b, true], [b, a, false]]) {
-      x.act = { kind: "chat", anim: "chat", hold: true, t0: now, until: now + dur, partner: y.id, path: x.path, lead, line };
+      x.act = { kind: "chat", anim: "chat", hold: true, t0: now, until: now + c.total, partner: y.id, path: x.path, lead, convo: c };
       x.path = [];
       x.dir = faceDir(x, y);
     }
   },
 
+  // One step of a conversation script (run by the leader): a line in the speaker's balloon, or the laugh after a joke.
+  convoStep(a, b, ev, c, now) {
+    const sp = ev.spk === 0 ? a : b, li = ev.spk === 0 ? b : a;
+    if (ev.k === "say") {
+      this.say(sp, ev.txt, ev.ms);
+      li.say = null;
+      c.speaker = sp.id; c.speakUntil = now + ev.ms;
+      return;
+    }
+    c.speaker = null;
+    this.startLaugh(li, now, LAUGH_AT, { amp: 1 });
+    const r = Math.random(); // the joker laughs along, or only a little, or keeps a straight face
+    if (r < 0.55) this.startLaugh(sp, now, LAUGH_AT, { amp: 0.9, text: Math.random() < 0.4 });
+    else if (r < 0.85) this.startLaugh(sp, now, LAUGH_AT, { amp: 0.4, text: false });
+  },
+
   // Runs before movement. Returns true when an act fully controls the character this frame.
   lifeTick(e, now) {
+    if (e.laughing && now > e.laughing.t0 + e.laughing.ms) e.laughing = null;
     if (e.errand) {
       const er = e.errand, v = this.emps.find((x) => x.id === er.victim);
       if (!v || v.status !== "error" || e.status !== "idle" || now > er.until || e.act) { e.errand = null; e.restUntil = now + rand(800, 2500); }
       else if (!e.path.length) {
         e.errand = null;
         if (e.tx === er.tx && e.ty === er.ty) {
-          e.act = { kind: "pat", anim: "pat", hold: true, t0: now, until: now + 3000, victim: v.id, dir: faceDir(e, v) };
-          this.say(e, lifePick(lifeStrings().comfort), 2800);
+          const pr = lifePick(lifeStrings().comfortPairs, null), c1 = pr && typeof pr[0] === "string" ? pr[0] : "", c2 = pr && typeof pr[1] === "string" ? pr[1] : "";
+          const m1 = c1 ? lifeMs(c1) : 0, m2 = c2 ? lifeMs(c2) : 0;
+          e.act = { kind: "pat", anim: "pat", hold: true, t0: now, until: now + Math.max(3000, m1 + m2 + 600), victim: v.id, dir: faceDir(e, v), reply: c2 ? { at: now + m1 + 150, text: c2 } : null };
+          this.say(e, c1, m1);
         } else e.restUntil = now + rand(800, 2500);
       }
     }
@@ -716,7 +812,14 @@ Object.assign(Office.prototype, {
       const p = this.emps.find((x) => x.id === a.partner);
       if (!p || !p.act || p.act.kind !== "chat" || p.status !== "idle") { this.endAct(e, now); return false; }
       e.dir = faceDir(e, p);
+      const c = a.convo;
+      if (a.lead && c) while (c.i < c.ev.length && now - a.t0 >= c.ev[c.i].at) this.convoStep(e, p, c.ev[c.i++], c, now);
     } else if (a.dir) e.dir = a.dir;
+    if (a.kind === "pat" && a.reply && now >= a.reply.at) {
+      const v = this.emps.find((x) => x.id === a.victim);
+      if (v && v.status === "error") this.say(v, a.reply.text);
+      a.reply = null;
+    }
     e.anim = a.anim;
     return true;
   },
@@ -753,17 +856,59 @@ Object.assign(Office.prototype, {
     e.anim = e.act.anim;
   },
 
-  // per-frame visual modifiers for drawing: hop offset, who is talking / laughing
+  // Small talk to oneself: delayed lines (applause, events), a mutter on reaching a spot, the odd greeting for the time of day.
+  lifeTalk(e, now) {
+    if (e.status !== "idle" || e.meet || e.entering) return;
+    const S = lifeStrings();
+    if (e.sayLater && now >= e.sayLater.at) { const s = e.sayLater; e.sayLater = null; if (!e.say) this.say(e, s.text); }
+    if (e.say || e.act || e.errand || e.path.length || e.sipping) return;
+    const sp = e.spot;
+    if (!sp) e.spotTalk = null;
+    else if (!sp.evt && e.napSpot !== sp) {
+      // at most two tries per stay, ~35% each
+      if (!e.spotTalk || e.spotTalk.spot !== sp) e.spotTalk = { spot: sp, n: 0, at: now + rand(1500, 4500) };
+      const st = e.spotTalk;
+      if (st.n < 2 && now >= st.at) {
+        st.n++; st.at = now + rand(6000, 14000);
+        if (Math.random() < 0.35) this.say(e, lifePick((S.spot || {})[SPOT_LINE[sp.key]]));
+      }
+      return;
+    }
+    if (e.timeAt == null) e.timeAt = now + rand(40000, 120000);
+    if (now >= e.timeAt) {
+      e.timeAt = now + rand(120000, 300000);
+      if (Math.random() < 0.6) this.say(e, lifePick((S.time || {})[dayPeriod()]));
+    }
+  },
+
+  // A line about the office event: each person draws a different one from a shuffled deck.
+  eventLine(kind) {
+    const ev = this.evt;
+    if (!ev) return "";
+    const deck = ev.deck || (ev.deck = {});
+    if (!deck[kind] || !deck[kind].length) deck[kind] = shuffled(((lifeStrings().event || {})[kind]));
+    return deck[kind].pop() || "";
+  },
+
+  // per-frame visual modifiers for drawing: hop offset, who is talking, laugh intensity (0 = none .. 1), its variant and age
   lifeVis(e, t) {
-    const a = e.act, v = { lift: 0, talk: false, laugh: false };
+    const a = e.act, v = { lift: 0, talk: false, laugh: 0, lk: "", lt: 0 };
+    const L = e.laughing;
+    if (L && t >= L.t0 && e.anim !== "walk") {
+      const p = (t - L.t0) / L.ms;
+      if (p < 1) {
+        const env = REDUCED_MOTION.matches ? 1 : p < 0.15 ? p / 0.15 : p > 0.7 ? (1 - p) / 0.3 : 1; // builds up, holds, dies down
+        v.laugh = env * L.amp < 0.05 ? 0 : env * L.amp;
+        v.lk = L.v; v.lt = t - L.t0;
+        if (v.laugh > 0.5 && L.v === "arms" && !REDUCED_MOTION.matches) v.lift = -(Math.floor(t / 110) % 2);
+      }
+    }
     if (!a || t < a.t0) return v;
-    const el = t - a.t0;
     if (a.kind === "chat") {
-      const ph = el % 4800;
-      v.laugh = ph > 3600 && ph < 4500;
-      v.talk = !v.laugh && (Math.floor(el / 1700) + (a.lead ? 0 : 1)) % 2 === 0;
-      if (v.laugh && !REDUCED_MOTION.matches) v.lift = -(Math.floor(t / 110) % 2);
+      const c = a.convo;
+      v.talk = !!c && c.speaker === e.id && t < c.speakUntil && !v.laugh;
     } else if (!REDUCED_MOTION.matches) {
+      const el = t - a.t0;
       if (a.kind === "hop" && a.anim === "hop") v.lift = -Math.round(Math.abs(Math.sin(el / 130)) * 7);
       else if (a.kind === "cheer") v.lift = -Math.round(Math.abs(Math.sin(el / 160)) * 6);
     }
@@ -776,7 +921,7 @@ Object.assign(Office.prototype, {
     if (!e) return;
     const now = performance.now();
     const S = lifeStrings();
-    this.say(e, lifePick((S.lines || {})[traitOf(e)], lifePick(S.click)), 2400);
+    this.say(e, lifePick((S.lines || {})[traitOf(e)], lifePick(S.click)));
     if (e.status !== "idle" || e.meet || e.path.length || e.act || e.errand) return;
     const seat = this.atSeat(e);
     if (seat) { e.sipping = 0; e.act = { kind: "hop", anim: "wave", hold: true, t0: now, until: now + 1500, dir: "down" }; }
@@ -789,6 +934,8 @@ Object.assign(Office.prototype, {
     e.act = { kind: "cheer", anim: "cheer", hold: true, t0: now, until: now + 2400, dir: "down" };
     e.restUntil = Math.max(e.restUntil, now + 3000);
     this.burst(e.x + 16, e.y - 4, 14);
+    this.say(e, lifePick(lifeStrings().done));
+    const claps = shuffled(lifeStrings().applause);
     for (const o of this.emps) {
       if (o === e || o.status !== "idle" || o.meet || o.act || o.errand || o.path.length || o.sipping) continue;
       if (Math.hypot(o.x - e.x, o.y - e.y) > 230) continue;
@@ -797,6 +944,7 @@ Object.assign(Office.prototype, {
       const start = now + rand(200, 800), until = start + 2000 + rand(0, 600);
       o.act = { kind: "clap", anim: seat ? "clapsit" : "clap", hold: true, t0: start, until, dir: seat ? "down" : faceDir(o, e) };
       o.restUntil = Math.max(o.restUntil, until + 500);
+      if (claps.length && Math.random() < 0.6) o.sayLater = { at: start + rand(300, 900), text: claps.pop() };
     }
   },
 
@@ -828,15 +976,56 @@ function lifeBubble(b, cx, top, w, h, fill = "#fff") {
   b.fillStyle = OUTLINE; b.fillRect(cx - w / 2 - 1, top - h - 1, w + 2, h + 2); b.fillRect(cx - 3, top, 6, 3);
   b.fillStyle = fill; b.fillRect(cx - w / 2, top - h, w, h); b.fillRect(cx - 2, top, 4, 2);
 }
+// Word-wraps a balloon text to at most two lines of ~24 characters (the rest becomes an ellipsis).
+function wrapBalloon(text, max = 24) {
+  const out = [];
+  let cur = "";
+  for (let w of String(text).split(/\s+/).filter(Boolean)) {
+    while (w.length > max) { if (cur) { out.push(cur); cur = ""; } out.push(w.slice(0, max)); w = w.slice(max); }
+    if (!cur) cur = w;
+    else if (cur.length + 1 + w.length <= max) cur += " " + w;
+    else { out.push(cur); cur = w; }
+  }
+  if (cur) out.push(cur);
+  if (out.length > 2) { out.length = 2; out[1] = out[1].slice(0, max - 1).replace(/[\s,.;:!?]+$/, "") + "…"; }
+  return out;
+}
+const BALLOON_FONT = (px) => `bold ${px}px "IBM Plex Mono", ui-monospace, monospace`;
+// Balloon text is queued while the scene is drawn on the logical canvas and painted after it is scaled up,
+// at the real screen resolution: the boxes stay crisp pixel art and the letters stay sharp.
+const balloonTexts = [];
+function flushBalloonText(ctx, k) {
+  if (!balloonTexts.length) return;
+  ctx.save();
+  ctx.font = BALLOON_FONT(8 * k); ctx.textBaseline = "middle"; ctx.textAlign = "center"; ctx.fillStyle = "#2b2b2b";
+  for (const q of balloonTexts) ctx.fillText(q.text, q.x * k, q.y * k, q.w * k);
+  ctx.restore();
+  balloonTexts.length = 0;
+}
+// layouts are cached per text: measuring the text is not something to do every frame
+const balloonCache = new Map();
+function balloonLayout(b, text) {
+  let c = balloonCache.get(text);
+  if (c) return c;
+  b.font = BALLOON_FONT(8); // widths scale linearly, so one measurement at 8px serves every zoom level
+  const lines = wrapBalloon(text);
+  const w = Math.min(124, Math.ceil(Math.max(0, ...lines.map((l) => b.measureText(l).width))) + 8);
+  c = { lines, w, h: 4 + 9 * lines.length };
+  if (balloonCache.size > 400) balloonCache.clear();
+  balloonCache.set(text, c);
+  return c;
+}
+// Speech balloon above a head: 1 or 2 lines; `top` is where the tail touches, the balloon grows upwards.
 function lifeBalloon(b, cx, top, text) {
+  const { lines, w, h } = balloonLayout(b, text);
+  if (!lines.length) return;
+  top = Math.max(top, h + 2); // never above the canvas
   b.save();
-  b.font = "bold 8px monospace"; b.textBaseline = "middle"; b.textAlign = "center";
-  const w = Math.min(124, Math.ceil(b.measureText(text).width) + 8), h = 13;
   const x = Math.max(w / 2 + 1, Math.min(LW - w / 2 - 1, cx));
   const tail = Math.max(x - w / 2 + 4, Math.min(x + w / 2 - 4, cx));
   b.fillStyle = OUTLINE; b.fillRect(x - w / 2 - 1, top - h - 1, w + 2, h + 2); b.fillRect(tail - 3, top, 6, 3);
   b.fillStyle = "#fff"; b.fillRect(x - w / 2, top - h, w, h); b.fillRect(tail - 2, top, 4, 2);
-  b.fillStyle = "#2b2b2b"; b.fillText(text, x, top - h / 2 + 0.5, w - 6);
+  lines.forEach((ln, i) => balloonTexts.push({ text: ln, x, y: top - h + 7 + i * 9, w: w - 6 }));
   b.restore();
 }
 
@@ -858,15 +1047,6 @@ function drawLifeOverhead(b, e, t) {
         b.fillStyle = "#e8f1ff"; pixelZ(b, cx + 8 + p * 8 + i, by - p * 16, 4 + (i > 1 ? 1 : 0));
       }
       b.restore();
-    } else if (a.kind === "chat" && !busy) {
-      const v = e.act && t - a.t0;
-      const ph = v % 4800;
-      if (ph > 3600 && ph < 4500) lifeBalloon(b, cx, top, lifePick(lifeStrings().laugh, "haha")); // both laugh together
-      else if ((Math.floor(v / 1700) + (a.lead ? 0 : 1)) % 2 === 0) {
-        lifeBubble(b, cx, top, 24, 12);
-        b.fillStyle = "#2b2b2b"; const n = Math.floor(t / 300) % 4;
-        for (let i = 0; i < 3; i++) b.fillRect(cx - 8 + i * 6, top - 8 + bob + (i < n ? -1 : 0), 3, 3);
-      }
     } else if (a.kind === "clap") {
       if (Math.floor(t / 150) % 2) {
         const y = e.y + (a.anim === "clapsit" ? 6 : -6);
@@ -886,7 +1066,7 @@ function drawLifeOverhead(b, e, t) {
   }
   if (e.say) {
     if (t > e.say.until) e.say = null;
-    else lifeBalloon(b, cx, top - (busy ? 20 : 0) - (a && a.kind === "chat" ? 16 : 0), e.say.text);
+    else lifeBalloon(b, cx, top - (busy ? 20 : 0), e.say.text);
   }
 }
 
@@ -1325,8 +1505,8 @@ function drawChair(b, x, feet) {
 }
 
 // ---------- working animations & desk micro moves ----------
-const MICRO_KINDS = ["stretch", "clock", "phone"];
-const MICRO_MS = { stretch: 2400, clock: 1900, phone: 3800 };
+const MICRO_KINDS = ["stretch", "clock", "phone", "giggle"];
+const MICRO_MS = { stretch: 2400, clock: 1900, phone: 3800, giggle: 4200 };
 const DEEP_FOCUS_MS = 60000;   // this long on the job: headphones + energy drink
 const TOOL_FRESH_MS = 25000;   // a tool call shapes the pose this long, then back to plain typing
 
@@ -1346,7 +1526,8 @@ function deskLifeOpts(e, t) {
 function headNod(o) {
   if (REDUCED_MOTION.matches) return 0;
   if (o.micro === "stretch") return -1;
-  if (o.micro === "clock" || o.micro === "phone") return 1;
+  if (o.micro === "clock" || o.micro === "phone" || o.micro === "giggle") return 1;
+  if (o.anim === "chat" && !o.talk && !o.laugh) { const ph = (o.t + (o.seed || 0)) % 2600; if (ph < 320) return 1; } // listener nods
   if (o.tool === "write" && o.anim === "type") { const ph = o.t % 3200; if (ph > 2300 && ph < 3000) return Math.floor(o.t / 200) % 2; }
   return 0;
 }
@@ -2496,10 +2677,17 @@ function personShapes(b, ox, oy, e, o, mono) {
   const walking = o.anim === "walk";
   const f = walking ? o.frame : 0;
   const bob = walking ? (f === 1 || f === 3 ? 1 : 0) : (Math.floor(o.t / 1200) % 2 === 0 ? 1 : 0);
-  const blink = dozing || o.laugh || o.anim === "yawn" || Math.floor((o.t + (o.seed || 0)) / 3400) % 18 === 0;
+  // laughing: lau = intensity 0..1, lk = variant, lt = ms since it began. Shakes stop under reduced motion, the pose stays.
+  const lau = o.laugh || 0, lk = o.lk || "arms", lt = o.lt || 0, still = REDUCED_MOTION.matches;
+  const lauPose = lau > 0 && LAUGH_POSE.includes(o.anim);
+  const jig = lau > 0.3 && !still ? Math.floor(lt / 85) % 2 : 0;          // shoulders shaking
+  const nod = lau > 0.4 && !still ? Math.floor(lt / 130) % 2 : 0;         // head bobbing
+  const throwBack = lau > 0.6 && (lk === "arms" || lk === "mouth" || lk === "slap") ? -1 : 0; // head thrown back
+  const bend = lau > 0.5 && (lk === "belly" || lk === "knee") ? 2 : 0;     // doubled over
+  const blink = dozing || lau > 0 || o.anim === "yawn" || Math.floor((o.t + (o.seed || 0)) / 3400) % 18 === 0;
   const slump = o.anim === "slump" ? 3 : 0;
-  const H = bob + slump + headNod(o) + (dozing ? 2 : 0); // head offset
-  const T = bob;         // torso offset
+  const H = bob + slump + headNod(o) + (dozing ? 2 : 0) + (lau ? throwBack + bend + nod : 0); // head offset
+  const T = bob + (lau ? jig + (bend ? 1 : 0) : 0);         // torso offset
   const clothColor = F.bottomStyle === "dress" ? top : bottom;
   const clothDark = F.bottomStyle === "dress" ? topDark : bottomDark;
   const { tx, tw, axL, axR, aw, lxL, lxR, lw } = P;
@@ -2704,7 +2892,7 @@ function personShapes(b, ox, oy, e, o, mono) {
         if (up) { C("#c9d1d9"); R(axL, 20 + T, aw, 1); C("#4a6a9c"); R(axL + 1, 20 + T, 1, 1); }
         return true;
       }
-      case "phone": {
+      case "phone": case "giggle": {
         // both hands hold a phone at chest height, thumb scrolling
         arm(axL, 17 + T, 5, false); arm(axR, 17 + T, 5, false);
         C(OUTLINE); R(cx - 3, 19 + T, 7, 10);
@@ -2717,9 +2905,44 @@ function personShapes(b, ox, oy, e, o, mono) {
     return false;
   };
 
+  // laughing poses (front view): arms up, hands on the belly, slapping the knee / desk, wiping a tear, hand over the mouth
+  const laughArms = () => {
+    if (!lauPose) return false;
+    const fl = still ? 0 : Math.floor(lt / 110) % 2;
+    switch (lk) {
+      case "belly":
+        arm(axL, 17 + T, 6, false); arm(axR, 17 + T, 6, false);
+        C(sleeveC); R(cx - 6, 23 + T, 12, 3); C(skin); R(cx - 6, 23 + T, 3, 3); R(cx + 3, 23 + T, 3, 3);
+        return true;
+      case "knee":
+        arm(axL, 17 + T, 7, true);
+        C(sleeveC); R(axR, 17 + T, aw, 8); C(skin); R(axR - 2, 25 + T + fl * 2, 5, 4);
+        return true;
+      case "tear": {
+        const wipe = still ? 0 : Math.floor(lt / 200) % 2;
+        arm(axL, 19 + T, 7, true);
+        C(sleeveC); R(axR, 12 + T, aw, 7); C(skin); R(axR - 3 + wipe, 8 + H, 5, 4);
+        return true;
+      }
+      case "mouth":
+        arm(axL, 19 + T, 7, true);
+        C(sleeveC); R(axR, 13 + T, aw, 6); C(skin); R(axR - 5, 11 + H, 6, 3);
+        return true;
+      case "slap":
+        arm(axL, 17 + T, 6, false); arm(axR, 17 + T, 6, false);
+        C(skin); R(axL + 1, 22 + T + fl * 2, 5, 3); R(axR - 3, 24 + T - fl * 2, 5, 3);
+        return true;
+      default:
+        C(sleeveC); R(axL - 3, 3 + H, aw, 15); R(axR + 2, 3 + H, aw, 15);
+        C(skin); R(axL - 3, -1 + H + fl, aw, 4); R(axR + 2, -1 + H + fl, aw, 4);
+        return true;
+    }
+  };
+
   const armsFront = () => {
     const swing = walking ? [0, 2, 0, -2][f] : 0;
     if ((o.tool || o.micro) && workArms()) return;
+    if (laughArms()) return;
     switch (o.anim) {
       case "type": {
         const tap = Math.floor(o.t / 160) % 2;
@@ -2812,7 +3035,7 @@ function personShapes(b, ox, oy, e, o, mono) {
       case "chat": {
         // one talks with a raised, gesturing hand; the other listens
         arm(axL, 17 + T, 7, true);
-        if (o.talk || o.laugh) {
+        if (o.talk) {
           const ph = Math.floor(o.t / 220 + (o.seed || 0)) % 2;
           C(sleeveC); R(axR, 11 + T + ph, aw, 7); C(skin); R(axR - 1, 8 + T + ph, 5, 4);
         } else arm(axR, 17 + T, 7, true);
@@ -2934,9 +3157,23 @@ function personShapes(b, ox, oy, e, o, mono) {
       if (L.fem) { R(11, 7 + H, 3, 1); R(18, 7 + H, 3, 1); R(11, 8 + H, 1, 1); R(20, 8 + H, 1, 1); }
       C(F.eyes); R(13, 9 + H, 1, 1); R(19, 9 + H, 1, 1);
       C("#ffffff"); R(12, 8 + H, 1, 1); R(18, 8 + H, 1, 1);
+    } else if (lau) { // happy squint: ^ ^
+      C("#1c1a20"); R(12, 10 + H, 1, 1); R(13, 9 + H, 2, 1); R(14, 10 + H, 1, 1); R(18, 10 + H, 1, 1); R(19, 9 + H, 2, 1); R(20, 10 + H, 1, 1);
     } else { C("#1c1a20"); R(12, 10 + H, 2, 1); R(18, 10 + H, 2, 1); if (L.fem) { R(11, 10 + H, 1, 1); R(20, 10 + H, 1, 1); } }
     if (F.hat === "none") { C(hairDark); R(12, 6 + H, 2, 1); R(18, 6 + H, 2, 1); }
-    if (L.fem) { C("#d4607a"); R(15, 12 + H, 2, 1); C("#e98aa0"); R(15, 12 + H, 1, 1); }
+    if (lau) {
+      // wide open laughing mouth: teeth on top, tongue at the bottom; a chuckle is smaller
+      const big = lau > 0.55 && (still || Math.floor(lt / 110) % 3 !== 2);
+      const mw = lau > 0.55 ? 6 : 4, mx = 16 - (mw >> 1);
+      C("#4a1522"); R(mx, 12 + H, mw, big ? 3 : 2);
+      C("#ffffff"); R(mx, 12 + H, mw, 1);
+      if (big) { C("#e0607a"); R(mx + 1, 14 + H, mw - 2, 1); }
+      if (lau > 0.5 && (still || Math.floor(lt / 260) % 4 === 1 || Math.floor(lt / 260) % 4 === 2)) { // tear
+        C("#8fd3ff"); const dy = still ? 0 : Math.floor(lt / 260) % 4 - 1; R((o.seed || 0) % 2 ? 12 : 19, 11 + H + dy, 1, 2);
+      }
+    } else if (o.talk) {
+      if (Math.floor((o.t + (o.seed || 0)) / 140) % 2) { C("#4a1522"); R(14, 12 + H, 3, 2); } else { C(L.fem ? "#d4607a" : skinDark); R(15, 12 + H, 2, 1); }
+    } else if (L.fem) { C("#d4607a"); R(15, 12 + H, 2, 1); C("#e98aa0"); R(15, 12 + H, 1, 1); }
     else { C(skinDark); R(15, 12 + H, 2, 1); }
     C(L.fem ? "#f0a0a8" : "#eaa5a0"); R(11, 11 + H, 1, 1); R(20, 11 + H, 1, 1);
     if (L.fem && !["long", "bob", "afro"].includes(hs)) { C("#f2c14e"); R(9, 10 + H, 1, 2); R(22, 10 + H, 1, 2); }
@@ -3060,7 +3297,18 @@ function personShapes(b, ox, oy, e, o, mono) {
     if (F.topStyle !== "dress" && !suit) { C("#33303a"); R(sx, 28 + T, sw, 1); }
     C(skin); R(14, 14 + H, 4, 3);
     const ax = sx + Math.floor((sw - aw) / 2);
-    if (o.anim === "drink") {
+    if (lauPose) {
+      const fl = still ? 0 : Math.floor(lt / 110) % 2;
+      C(sleeveC);
+      switch (lk) {
+        case "belly": R(ax + 1, 17 + T, aw, 6); C(skin); R(ax + 2, 22 + T, aw + 4, 3); break;
+        case "knee": R(ax + 1, 17 + T, aw, 9); C(skin); R(ax + 2, 26 + T + fl * 2, aw + 1, 4); break;
+        case "tear": R(ax + 3, 13 + T, aw, 7); C(skin); R(ax + 4 + (still ? 0 : Math.floor(lt / 200) % 2), 9 + H, 4, 4); break;
+        case "mouth": R(ax + 3, 14 + T, aw, 6); C(skin); R(ax + 5, 11 + H, 4, 3); break;
+        case "slap": R(ax + 1, 17 + T, aw, 7); C(skin); R(ax + 2, 24 + T + fl * 2, aw + 2, 4); break;
+        default: R(ax + 1, 8 + H, aw, 10); C(skin); R(ax + 1 + fl, 4 + H, aw + 1, 4);
+      }
+    } else if (o.anim === "drink") {
       C(sleeveC); R(ax + 1, 17 + T, aw, 5); C(skin); R(ax + 3, 21 + T, 3, 3);
       C("#f5f5f5"); R(ax + 4, 18 + T, 7, 8); C(e.color); R(ax + 6, 20 + T, 3, 4);
     } else if (o.anim === "read") {
@@ -3070,7 +3318,7 @@ function personShapes(b, ox, oy, e, o, mono) {
     } else if (o.anim === "pat") {
       // reaching out to a colleague's shoulder
       C(sleeveC); R(ax + 1, 18 + T, 11, 4); C(skin); R(ax + 12 + (Math.floor(o.t / 320) % 2), 17 + T, 4, 4);
-    } else if (["cheer", "hop", "stretch", "clap", "clapsit"].includes(o.anim) || (o.anim === "chat" && (o.talk || o.laugh))) {
+    } else if (["cheer", "hop", "stretch", "clap", "clapsit"].includes(o.anim) || (o.anim === "chat" && o.talk)) {
       const w = Math.floor(o.t / 200) % 2;
       C(sleeveC); R(ax + 1, 8 + H, aw, 10); C(skin); R(ax + 1 + w, 4 + H, aw + 1, 4);
     } else {
@@ -3089,10 +3337,17 @@ function personShapes(b, ox, oy, e, o, mono) {
     }
     hairSide(b, ox, oy + H, L, C, hs);
     hatSide();
-    if (!blink) { C("#1c1a20"); R(17, 8 + H, 2, 3); if (L.fem) R(17, 7 + H, 3, 1); C(F.eyes); R(18, 9 + H, 1, 1); C("#fff"); R(17, 8 + H, 1, 1); } else { C("#1c1a20"); R(17, 10 + H, 2, 1); }
+    if (!blink) { C("#1c1a20"); R(17, 8 + H, 2, 3); if (L.fem) R(17, 7 + H, 3, 1); C(F.eyes); R(18, 9 + H, 1, 1); C("#fff"); R(17, 8 + H, 1, 1); } else if (lau) { C("#1c1a20"); R(17, 10 + H, 1, 1); R(18, 9 + H, 1, 1); R(19, 10 + H, 1, 1); } else { C("#1c1a20"); R(17, 10 + H, 2, 1); }
     if (F.hat === "none") { C(hairDark); R(17, 6 + H, 3, 1); }
     C(skinDark); R(22, 9 + H, 1, 2);
-    if (L.fem) { C("#d4607a"); R(19, 12 + H, 2, 1); } else { C(skinDark); R(19, 12 + H, 2, 1); }
+    if (lau) {
+      const big = lau > 0.55 && (still || Math.floor(lt / 110) % 3 !== 2);
+      C("#4a1522"); R(lau > 0.55 ? 18 : 19, 12 + H, lau > 0.55 ? 4 : 3, big ? 3 : 2);
+      C("#ffffff"); R(lau > 0.55 ? 18 : 19, 12 + H, lau > 0.55 ? 4 : 3, 1);
+      if (big) { C("#e0607a"); R(19, 14 + H, 2, 1); }
+      if (lau > 0.5 && (still || Math.floor(lt / 260) % 4 === 1 || Math.floor(lt / 260) % 4 === 2)) { C("#8fd3ff"); R(17, 11 + H + (still ? 0 : Math.floor(lt / 260) % 4 - 1), 1, 2); }
+    } else if (o.talk && Math.floor((o.t + (o.seed || 0)) / 140) % 2) { C("#4a1522"); R(19, 12 + H, 2, 2); }
+    else if (L.fem) { C("#d4607a"); R(19, 12 + H, 2, 1); } else { C(skinDark); R(19, 12 + H, 2, 1); }
     C(L.fem ? "#f0a0a8" : "#eaa5a0"); R(16, 11 + H, 1, 1);
     beardSide();
     if (F.glasses === "square") { C("#6b7482"); R(16, 11 + H, 4, 1); R(20, 8 + H, 1, 3); R(14, 8 + H, 3, 1); }
@@ -3500,6 +3755,8 @@ Object.assign(Office.prototype, {
     else if (e.spot?.evt) {
       e.restUntil = Math.max(e.restUntil, this.evt ? this.evt.until : now);
       if (e.spot.evt === "pizza" || e.spot.evt === "cake") e.bubble = { kind: "party", until: now + 3000 };
+      const text = Math.random() < 0.6 ? this.eventLine(e.spot.evt) : "";
+      if (text && !e.sayLater) e.sayLater = { at: now + rand(300, 1400), text };
     }
   },
 
@@ -3521,8 +3778,13 @@ Object.assign(Office.prototype, {
     const idle = this.emps.filter((e) => e.status === "idle" && !e.meet && !e.entering);
     if (!idle.length) return false;
     const ev = { kind, t0: now, until: now + (kind === "blackout" ? 5000 : rand(22000, 32000)) };
+    this.evt = ev; // eventLine() reads it
     if (kind === "blackout") {
-      for (const e of idle) e.restUntil = Math.max(e.restUntil, ev.until + 1000);
+      idle.forEach((e, i) => {
+        e.restUntil = Math.max(e.restUntil, ev.until + 1000);
+        const text = this.eventLine(kind);
+        if (text && i < 5) e.sayLater = { at: now + 500 + i * 700 + rand(0, 400), text };
+      });
     } else {
       const tiles = kind === "printer" ? PRINTER_TILES : KITCHEN_TILES;
       let n = 0;
@@ -3533,12 +3795,15 @@ Object.assign(Office.prototype, {
         const was = e.spot;
         const spot = { key: "evt" + n, tx: tile[0], ty: tile[1], dir: "up", anim: kind === "printer" ? "think" : "stand", evt: kind };
         e.spot = spot;
-        if (this.goToSpot(e, spot)) { e.bubble = null; e.napSpot = null; n++; }
-        else e.spot = was;
+        if (this.goToSpot(e, spot)) {
+          e.bubble = null; e.napSpot = null;
+          const text = this.eventLine(kind);
+          if (text) e.sayLater = { at: now + 300 + n * 800 + rand(0, 500), text };
+          n++;
+        } else e.spot = was;
       }
-      if (!n) return false;
+      if (!n) { this.evt = null; return false; }
     }
-    this.evt = ev;
     this.evNext = now + rand(3 * 60000, 8 * 60000);
     if (typeof toast === "function") toast(t("ui.events." + kind));
     return true;

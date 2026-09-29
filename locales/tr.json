@@ -415,25 +415,159 @@
   },
   "ui": {
     "life": {
+      "convos": [
+        [
+          "Derleme yeşile döndü, gördün mü?",
+          "Gördüm! İlk seferde hem de.",
+          "~Neredeyse ağlıyordum valla.",
+          "Ağzından yel alsın, {me}."
+        ],
+        [
+          "{you}, bugün kaç kahve oldu?",
+          "Üç. Yargılama beni.",
+          "Asla. Ben dördüncüdeyim.",
+          "~Şampiyonlar takımıyız biz."
+        ],
+        [
+          "Cuma oldu mu artık?",
+          "Daha salı, {me}.",
+          "~Yüksek sesle söyleme.",
+          "O zaman bir şeyler atıştıralım."
+        ],
+        [
+          "Test dosyasına final_v2_gercek dedim.",
+          "~Klasik.",
+          "Sonra tekrar adını değiştirdim.",
+          "Tabii ki değiştirdin."
+        ],
+        [
+          "Ofisin çiçekleri bugün mutlu görünüyor.",
+          "Bana bakmadıkları kadar bakılıyor onlara.",
+          "~Çünkü hiç tartışmıyorlar.",
+          "Haklısın, {you}."
+        ]
+      ],
       "laugh": [
         "haha",
         "hehe",
-        "ha ha!"
-      ],
-      "comfort": [
-        "Sorun yok",
-        "Sonra kahve?",
-        "Yanındayım"
-      ],
-      "thanks": [
-        "Sağ ol...",
-        "Off, sağ ol",
-        "Eyvallah"
+        "ha ha!",
+        "kaka"
       ],
       "click": [
         "Selam!",
         "Merhaba!",
         "Bana mı?"
+      ],
+      "comfortPairs": [
+        [
+          "Sorun yok, hallederiz",
+          "Sağ ol, iyi geldi"
+        ],
+        [
+          "Sonra kahve?",
+          "Off, olur tabii"
+        ],
+        [
+          "Yanındayım",
+          "Eyvallah, iyi geldi"
+        ]
+      ],
+      "spot": {
+        "coffee": [
+          "Nihayet taze kahve",
+          "Bir fincan daha"
+        ],
+        "fridge": [
+          "İçinde güzel bir şey var mı?",
+          "Yoğurdumu kim aldı?"
+        ],
+        "stool": [
+          "Ne rahat",
+          "Düşünmek için iyi yer"
+        ],
+        "sofa": [
+          "Bu koltuk harika",
+          "Sadece beş dakika"
+        ],
+        "books": [
+          "Okunacak bir şey",
+          "Güzel bir eski kitap"
+        ],
+        "printer": [
+          "Lütfen sıkışma",
+          "Sıcak kağıt kokusu"
+        ],
+        "water": [
+          "Bol su iç",
+          "Buz gibi"
+        ],
+        "window": [
+          "Manzaraya bak",
+          "Şu gökyüzüne bak"
+        ],
+        "brew": [
+          "Hadi, daha hızlı demlen",
+          "Ne güzel kokuyor"
+        ],
+        "plant": [
+          "Büyü bakalım küçüğüm",
+          "Biraz daha güneş lazım"
+        ]
+      },
+      "event": {
+        "pizza": [
+          "Pizza vakti!",
+          "Peynir kokusu geliyor",
+          "Bana bir dilim ayır!"
+        ],
+        "cake": [
+          "Yaşasın pasta!",
+          "Biri mi doğdu?",
+          "En büyük dilim benim"
+        ],
+        "printer": [
+          "Yine mi...",
+          "Yazıcıyı kim bozdu?",
+          "Kapatıp açtın mı?"
+        ],
+        "blackout": [
+          "Vay, ışıklar gitti!",
+          "Ben mi yaptım?",
+          "Kimse kıpırdamasın"
+        ]
+      },
+      "time": {
+        "morning": [
+          "Günaydın!",
+          "Günaydın, kahve lazım"
+        ],
+        "noon": [
+          "Öğle yemeği yakın mı?",
+          "Günün yarısı gitti"
+        ],
+        "evening": [
+          "Bugünlük az kaldı",
+          "Akşam olmuş bile"
+        ],
+        "night": [
+          "Hâlâ buradayım...",
+          "Sessiz bir gece"
+        ]
+      },
+      "done": [
+        "Tamamdır!",
+        "Hallettim!",
+        "Bu güzel oldu"
+      ],
+      "applause": [
+        "Tebrikler!",
+        "Bravo!",
+        "Eline sağlık!"
+      ],
+      "giggle": [
+        "Ha, çok doğru",
+        "Dur, çok komik",
+        "Bunu unutamam"
       ],
       "lines": {
         "coffee": [

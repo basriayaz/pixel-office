@@ -44,11 +44,17 @@
   group("2) Masada mikro hareket", (typeof MICRO_KINDS !== "undefined" ? MICRO_KINDS : []).map((k) => [k, () => { const e = emp(); atDesk(e, () => { e.micro = { kind: k, t0: now() }; }); }]));
   group("Masada boşta", ["stretch", "yawn", "doze"].map((k) => [k, () => { const e = emp(); atDesk(e, () => { e.act = { kind: k, anim: k, t0: now(), until: now() + (k === "doze" ? 8000 : 2300), spot: null }; }); }]));
   group("3) Spot'a gönder", SPOTS.filter((s) => !s.key.startsWith("meet")).map((s) => [s.key, () => { const e = emp(); office.setStatus(e.id, "idle"); e.act = null; if (office.goToSpot(e, s)) { e.spot = s; e.restUntil = now() + 60000; } }]));
+  const pair = () => { const a = emp(), b = office.emps.find((x) => x !== a); if (!b) return null; for (const x of [a, b]) { office.setStatus(x.id, "idle"); x.act = null; } return [a, b]; };
   group("Sohbet / tepki", [
-    ["Sohbet (bu + sıradaki)", () => { const a = emp(), b = office.emps.find((x) => x !== a); if (!b) return; for (const x of [a, b]) { office.setStatus(x.id, "idle"); x.act = null; } office.startChat(a, b, now()); }],
+    ["Sohbet (bu + sıradaki)", () => { const p = pair(); if (p) office.startChat(p[0], p[1], now()); }],
+    ["Sohbet (kahkahalı)", () => { const p = pair(); if (p) office.startChat(p[0], p[1], now(), { laugh: true }); }],
+    ["Gülme (bu + sıradaki)", () => { const a = emp(), b = office.emps.find((x) => x !== a); for (const x of [a, b]) if (x) office.startLaugh(x, now(), 4200); }],
+    ["Gülme (yalnız, 4sn)", () => office.startLaugh(emp(), now(), 4200)],
+    ["Kıkırdama (masada)", () => { const e = emp(); atDesk(e, () => { e.micro = { kind: "giggle", t0: now() }; }); }],
     ["Tıklama tepkisi", () => office.react(emp().id)],
     ["Konfeti", () => office.celebrate(emp().id)],
   ]);
+  group("Gülme varyantı (bu kişi)", ["arms", "belly", "knee", "tear", "mouth", "slap"].map((v) => [v, () => office.startLaugh(emp(), now(), 4200, { v })]));
   group("4) Başarı / hata", [
     ["Zafer + alkış", () => { const e = emp(); atDesk(e, () => { office.setStatus(e.id, "working"); setTimeout(() => office.setStatus(e.id, "idle"), 400); }); }],
     ["Hata + omuz dokunuşu", () => { const e = emp(); atDesk(e, () => office.setStatus(e.id, "error")); }],

@@ -415,25 +415,159 @@
   },
   "ui": {
     "life": {
+      "convos": [
+        [
+          "Did you see the build turn green?",
+          "Yes! First try for once.",
+          "~I almost cried, honestly.",
+          "Do not jinx it, {me}."
+        ],
+        [
+          "{you}, how many coffees so far?",
+          "Three. Do not judge me.",
+          "I would never. I am on my fourth.",
+          "~We are a team of champions."
+        ],
+        [
+          "Is it Friday yet?",
+          "It is barely Tuesday, {me}.",
+          "~Do not say that out loud.",
+          "Then let us have a snack."
+        ],
+        [
+          "I named my test file final_v2_real.",
+          "~Classic.",
+          "Then I renamed it again.",
+          "Of course you did."
+        ],
+        [
+          "The office plants look happy today.",
+          "They get more attention than me.",
+          "~That is because they never argue.",
+          "Fair point, {you}."
+        ]
+      ],
       "laugh": [
         "haha",
         "hehe",
-        "ha ha!"
-      ],
-      "comfort": [
-        "Hey, it's ok",
-        "Coffee later?",
-        "I'm here"
-      ],
-      "thanks": [
-        "Thanks...",
-        "Ugh, thanks",
-        "Cheers"
+        "ha ha!",
+        "lol"
       ],
       "click": [
         "Hi!",
         "Hey there!",
         "Need me?"
+      ],
+      "comfortPairs": [
+        [
+          "Hey, it's ok, we will fix it",
+          "Thanks... I needed that"
+        ],
+        [
+          "Coffee later?",
+          "Ugh, yes please"
+        ],
+        [
+          "I am here for you",
+          "Cheers, that helps"
+        ]
+      ],
+      "spot": {
+        "coffee": [
+          "Fresh coffee, finally",
+          "Just one more cup"
+        ],
+        "fridge": [
+          "Anything good in here?",
+          "Who took my yogurt?"
+        ],
+        "stool": [
+          "Nice and cozy",
+          "Good spot to think"
+        ],
+        "sofa": [
+          "This sofa is perfect",
+          "Five minutes only"
+        ],
+        "books": [
+          "Something to read",
+          "Nice old book"
+        ],
+        "printer": [
+          "Please do not jam",
+          "Warm paper, best smell"
+        ],
+        "water": [
+          "Stay hydrated",
+          "Cold and fresh"
+        ],
+        "window": [
+          "What a view",
+          "Look at that sky"
+        ],
+        "brew": [
+          "Come on, brew faster",
+          "Smells so good"
+        ],
+        "plant": [
+          "Grow, little one",
+          "You need more sun"
+        ]
+      },
+      "event": {
+        "pizza": [
+          "Pizza time!",
+          "I smell cheese",
+          "Save me a slice!"
+        ],
+        "cake": [
+          "Cake, yes!",
+          "Is it someone's birthday?",
+          "I want the biggest piece"
+        ],
+        "printer": [
+          "Not again...",
+          "Who broke the printer?",
+          "Have you tried turning it off?"
+        ],
+        "blackout": [
+          "Whoa, lights out!",
+          "Was that me?",
+          "Nobody move"
+        ]
+      },
+      "time": {
+        "morning": [
+          "Good morning!",
+          "Morning, need coffee"
+        ],
+        "noon": [
+          "Lunch soon?",
+          "Half the day gone"
+        ],
+        "evening": [
+          "Almost done for today",
+          "Evening already"
+        ],
+        "night": [
+          "Still here...",
+          "Quiet night"
+        ]
+      },
+      "done": [
+        "Done and dusted!",
+        "Nailed it!",
+        "That was a good one"
+      ],
+      "applause": [
+        "Well done!",
+        "Bravo!",
+        "Nice one!"
+      ],
+      "giggle": [
+        "Ha, so true",
+        "Stop it, that is funny",
+        "Cannot unsee this"
       ],
       "lines": {
         "coffee": [

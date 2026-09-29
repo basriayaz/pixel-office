@@ -19,6 +19,7 @@ import { officeServer, OFFICE_TOOLS, type Colleagues } from "./office-tools.js";
 import { runCodexTurn, skillsIndex, skillFile, type CodexItem } from "./codex.js";
 import { runGeminiTurn, type GeminiEvent } from "./gemini.js";
 import { engineOf, geminiKey, openrouterEnv, openrouterSlug, markAuthFailed, AUTH_ERROR, type Engine } from "./providers.js";
+import { isTransient, retryDelay, RETRY_DELAYS_MS } from "./retry.js";
 import { listSkills, listProjectSkills } from "./agents.js";
 import { fromClaudeRateLimit, fromClaudeUsage, fromCodexThread, claudeUsageDue } from "./quota.js";
 import type { CostKind } from "./ledger.js";
@@ -201,6 +202,8 @@ export class Employee extends EventEmitter {
   private turnOpen = false;                  // a delivered message has not had its result yet
   private turnEndWaiters: Array<() => void> = [];
   private recovered = false;
+  private retry?: { key: string; replay: SDKUserMessage[]; timer: NodeJS.Timeout }; // a task turn that failed for a passing reason, tried again after a wait
+  private retries = new Map<string, number>(); // session key -> retries used since its last good turn
   private interrupting = false;
   private interruptJob?: { resume: boolean; done: Promise<void> };
   private disposed = false;
@@ -294,6 +297,8 @@ export class Employee extends EventEmitter {
     if (o.files?.length) this.plain.set(msg, { text: "", files: o.files });
     if (!this.sick) this.setStatus("working");
     this.turnOpen = true;
+    // the session waited to retry: this message is the new attempt, what the failed turn had not answered goes in front of it
+    if (this.retry?.key === key) { const { replay } = this.retry; this.dropRetry(); this.unanswered.push(...replay); for (const r of replay) this.enqueue(r); }
     this.unanswered.push(msg);
     this.enqueue(msg);
     if (!this.running) this.start(key);
@@ -495,6 +500,7 @@ export class Employee extends EventEmitter {
     if (k && k.status === "doing" && k.owner === this.cfg.id) return false;
     const id = this.taskId;
     this.taskId = undefined;
+    this.forgetRetry(`task:${id}`);
     this.handBack(id);
     this.stopQuery();
     return true;
@@ -505,6 +511,7 @@ export class Employee extends EventEmitter {
     const id = this.taskId;
     if (id === undefined) return;
     this.taskId = undefined;
+    this.forgetRetry(`task:${id}`);
     this.stopQuery();
     if (mode === "requeue") {
       if (!this.taskQueue.some((q) => q.id === id)) this.taskQueue.unshift({ id });
@@ -703,7 +710,15 @@ export class Employee extends EventEmitter {
       if (opts.resume === false) this.interruptJob.resume = false;
       return this.interruptJob.done;
     }
-    if (this.status !== "working" && this.status !== "waiting") return Promise.resolve();
+    if (this.status !== "working" && this.status !== "waiting") {
+      // nothing runs, but a task waits to be retried: Stop means the task stops, as it would while running
+      if (this.retry && (opts.task ?? "todo") === "todo" && taskOf(this.retry.key) === this.taskId) {
+        this.push({ role: "system", text: t("server.stopped"), ts: Date.now() });
+        this.stopTask("todo");
+        if (opts.resume !== false) setTimeout(() => this.afterTurn(), 0);
+      }
+      return Promise.resolve();
+    }
     const job: { resume: boolean; done: Promise<void> } = { resume: opts.resume !== false, done: Promise.resolve() };
     this.interruptJob = job;
     job.done = this.doInterrupt(opts.task ?? "todo", job).finally(() => { if (this.interruptJob === job) this.interruptJob = undefined; });
@@ -747,6 +762,8 @@ export class Employee extends EventEmitter {
   async reset() {
     if (this.sick) { clearTimeout(this.sickTimer); this.sickUntil = 0; }
     await this.interrupt({ resume: false });
+    this.dropRetry();
+    this.retries.clear();
     this.stopQuery(true);
     this.carry = [];
     this.sessionId = undefined;
@@ -810,6 +827,7 @@ export class Employee extends EventEmitter {
 
   async dispose() {
     this.disposed = true;
+    this.dropRetry();
     await this.interrupt({ task: "keep", resume: false });
     this.stopQuery(true);
   }
@@ -967,6 +985,7 @@ export class Employee extends EventEmitter {
     } catch (err) {
       if (this.generation !== gen) return;
       this.flushStream();
+      if (this.retryLater(key, (err as Error)?.message ?? String(err))) return;
       this.rejectPending(t("server.sessionError"));
       this.push({ role: "system", text: t("server.error", { message: (err as Error).message }), ts: Date.now() });
       this.closeTurn(this.turnTexts.join("\n\n"));
@@ -1040,7 +1059,9 @@ export class Employee extends EventEmitter {
         this.turnSpend = { cost: delta };
         // the plan's windows, when the CLI can tell (a plain HTTP call, no tokens), now and then
         if (this.engine === "claude" && claudeUsageDue()) this.q?.usage_EXPERIMENTAL_MAY_CHANGE_DO_NOT_RELY_ON_THIS_API_YET?.({ skipBehaviors: true }).then(fromClaudeUsage, () => {});
-        const detail = m.subtype === "success" ? undefined : "errors" in m && Array.isArray(m.errors) ? m.errors.join("; ") : m.subtype;
+        // an API error (overloaded, 429) can end a turn as "success" with is_error: in a task session it is worth a retry
+        const detail = m.subtype === "success" ? (taskOf(key) !== undefined && m.is_error && isTransient(m.result) ? m.result : undefined)
+          : "errors" in m && Array.isArray(m.errors) ? m.errors.join("; ") : m.subtype;
         // more turns queued inside the CLI follow without further input: the employee is not free yet
         const more = (m.queued_turn_count ?? 0) > 0 && !this.interrupting;
         this.endTurn(detail, m.duration_ms, !!detail && /No conversation found/i.test(detail), more);
@@ -1069,6 +1090,8 @@ export class Employee extends EventEmitter {
       return;
     }
     this.interrupting = false;
+    if (!detail && key) this.retries.delete(key);
+    if (detail && !wasInterrupted && !sessionLost && this.retryLater(key, detail)) return;
     if (detail && !wasInterrupted && sessionLost && key !== "side" && !this.recovered && (taskOf(key) !== undefined || this.sessionId)) {
       this.turnTexts = [];
       this.recoverSession(key!);
@@ -1275,7 +1298,7 @@ export class Employee extends EventEmitter {
     this.interrupting = false;
     try { this.flushStream(); } catch {}
     this.rejectPending(t("server.sessionError"));
-    try { this.push({ role: "system", text: t("server.error", { message: (err as Error)?.message ?? String(err) }), ts: Date.now() }); } catch {}
+    try { this.push({ role: "system", text: t("server.error", { message: err instanceof Error ? err.message : String(err) }), ts: Date.now() }); } catch {}
     this.unanswered = [];
     this.closeTurn(this.turnTexts.join("\n\n"));
     this.setStatus("error");
@@ -1307,15 +1330,78 @@ export class Employee extends EventEmitter {
       this.afterTurn();
       return;
     }
-    const [first, ...rest] = replay;
-    const lead = userMsg(recap + "\n\n" + plainText(first), Array.isArray(first.message.content)
+    this.unanswered = this.leadWith(recap, replay);
+    for (const msg of this.unanswered) this.enqueue(msg);
+    this.start(key);
+  }
+
+  // The messages again, the first one with `note` in front of it (its images and files kept).
+  private leadWith(note: string, msgs: SDKUserMessage[]): SDKUserMessage[] {
+    if (!msgs.length) return [userMsg(note)];
+    const [first, ...rest] = msgs;
+    const lead = userMsg(note + "\n\n" + plainText(first), Array.isArray(first.message.content)
       ? first.message.content.flatMap((b) => (b.type === "image" && b.source.type === "base64" ? [{ media_type: b.source.media_type as ImageInput["media_type"], data: b.source.data }] : []))
       : undefined);
     const files = this.plain.get(first);
     if (files) this.plain.set(lead, files);
-    this.unanswered = [lead, ...rest];
+    return [lead, ...rest];
+  }
+
+  // A board task's turn failed for a passing reason (rate limit, overload, network): the process is closed, and after a wait
+  // (30 s, 2 min, 5 min) the same session is resumed with what the turn had not answered. After the last wait the turn fails
+  // as before (the task is blocked). False = not a case for a retry; the caller handles the error as usual.
+  private retryLater(key: string | undefined, detail: string): boolean {
+    const taskId = taskOf(key);
+    if (taskId === undefined || this.disposed || !isTransient(detail)) return false;
+    const attempt = (this.retries.get(key!) ?? 0) + 1;
+    const wait = retryDelay(attempt);
+    const max = RETRY_DELAYS_MS.length;
+    if (wait === undefined) {
+      this.retries.delete(key!);
+      this.push({ role: "system", text: tt("server.retry.gaveUp", "The provider error did not pass after {max} retries.", { max }), ts: Date.now() });
+      this.failTurn(detail);
+      return true;
+    }
+    this.retries.set(key!, attempt);
+    const replay = this.unanswered.slice();
+    this.stopQuery(true);
+    this.unanswered = [];
+    this.rejectPending(t("server.sessionError"));
+    this.closeTurn(this.turnTexts.join("\n\n"));
+    this.push({ role: "system", text: tt("server.retry.scheduled", "Temporary provider error ({detail}). Trying again in {sec} s (retry {attempt}/{max}).", { detail: clip(detail.replace(/\s+/g, " "), 200), sec: Math.round(wait / 1000), attempt, max }), ts: Date.now() });
+    this.emit("retry", { task: taskId, attempt, max, delayMs: wait, message: detail.slice(0, 300) });
+    this.retry = { key: key!, replay, timer: setTimeout(() => this.runRetry(), wait) };
+    this.settle(); // a boss or colleague message that waited goes out now, into this session: that is the retry, at once
+    return true;
+  }
+
+  private runRetry() {
+    const r = this.retry;
+    if (!r) return;
+    const taskId = taskOf(r.key)!;
+    const k = this.colleagues?.board().tasks.find((x) => x.id === taskId);
+    if (this.disposed || this.taskId !== taskId || !k || k.status !== "doing" || k.owner !== this.cfg.id) return this.forgetRetry(r.key);
+    // in a meeting, sick, or busy with something else: looked at again a little later
+    if (this.busy || this.sick || this.inMeeting) { r.timer = setTimeout(() => this.runRetry(), RETRY_DELAYS_MS[0]); return; }
+    this.retry = undefined;
+    this.push({ role: "activity", text: tt("server.retry.now", "Trying again (retry {attempt}/{max}).", { attempt: this.retries.get(r.key) ?? 1, max: RETRY_DELAYS_MS.length }), ts: Date.now() });
+    const note = tt("server.retry.lead", "[pixel-office: your previous turn stopped on a temporary provider error. This is a new attempt: continue the task where you left off and do not redo what is already done.]");
+    this.unanswered = this.leadWith(note, r.replay);
+    this.setStatus("working");
+    this.turnOpen = true;
     for (const msg of this.unanswered) this.enqueue(msg);
-    this.start(key);
+    if (!this.running) this.start(r.key);
+  }
+
+  private dropRetry() {
+    if (this.retry) clearTimeout(this.retry.timer);
+    this.retry = undefined;
+  }
+
+  // The session is let go (task finished, stopped, moved): its pending retry and its count go with it.
+  private forgetRetry(key: string) {
+    if (this.retry?.key === key) this.dropRetry();
+    this.retries.delete(key);
   }
 
   private canUseTool(

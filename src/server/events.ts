@@ -6,7 +6,7 @@ export type EventKind =
   | "task_created" | "task_status" | "task_owner" | "task_started" | "task_edited"
   | "idea_new" | "idea_promoted" | "idea_edited" | "pm_woken" | "discovery_start" | "discovery_end"
   | "mode_change" | "cap_reached" | "cap_changed"
-  | "emp_error" | "emp_sick" | "ask" | "question"
+  | "emp_error" | "emp_sick" | "emp_retry" | "ask" | "question"
   | "meeting_start" | "meeting_end" | "hired" | "fired" | "server_start" | "run_end";
 
 export interface OfficeEvent {

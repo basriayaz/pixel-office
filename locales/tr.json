@@ -27,6 +27,12 @@
     "sessionError": "Oturum hatası.",
     "error": "Hata: {message}",
     "turnError": "Tur hatayla bitti: {detail}",
+    "retry": {
+      "scheduled": "Geçici sağlayıcı hatası ({detail}). {sec} sn sonra yeniden denenecek (deneme {attempt}/{max}).",
+      "now": "Yeniden deneniyor (deneme {attempt}/{max}).",
+      "gaveUp": "Sağlayıcı hatası {max} denemeden sonra da geçmedi.",
+      "lead": "[pixel-office: önceki turun geçici bir sağlayıcı hatasıyla durdu. Bu yeni bir deneme: göreve kaldığın yerden devam et, bitmiş işi yeniden yapma.]"
+    },
     "sessionRecovered": "Önceki oturum bulunamadı, temiz bir oturumla devam ediliyor.",
     "cancelled": "İptal edildi.",
     "askQuestion": "Sana bir sorusu var",
@@ -451,6 +457,7 @@
         "cap_changed": "Günlük sınır değişti ({byName})",
         "emp_error": "{empName} hata aldı: {message}",
         "emp_sick": "{empName} hastalandı",
+        "emp_retry": "{empName} geçici sağlayıcı hatası aldı; {sec} sn sonra deneme {attempt}/{max}: {message}",
         "ask": "{empName} izin istiyor: {summary}",
         "question": "{empName} bir şey soruyor: {summary}",
         "meeting_start": "Toplantı başladı: {topic}",

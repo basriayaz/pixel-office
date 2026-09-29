@@ -26,7 +26,7 @@
     "start": "node bin/pixel-office.js",
     "dev": "tsx src/server/index.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "npm run build && node scripts/test-retry.mjs && node scripts/test-archive.mjs && node scripts/test-digest.mjs"
+    "test": "npm run build && node scripts/test-retry.mjs && node scripts/test-archive.mjs && node scripts/test-digest.mjs && node scripts/test-progress.mjs"
   },
   "dependencies": {
     "@anthropic-ai/claude-agent-sdk": "^0.3.283",

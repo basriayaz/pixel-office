@@ -23,6 +23,7 @@ import { writeFileAtomicSync } from "./fsutil.js";
 import { Ledger, dayKey, type Cap } from "./ledger.js";
 import { initPrices, pricesFile, customPrices, parsePrices, saveCustomPrices, DEFAULT_PRICES } from "./prices.js";
 import { EventLog, type OfficeEvent } from "./events.js";
+import { Progress } from "./progress.js";
 import { RunLog, sessionTranscript, type RunStatus } from "./runs.js";
 import { getQuota, onQuota } from "./quota.js";
 import type { Spend } from "./employee.js";
@@ -97,6 +98,7 @@ interface OfficeRt {
   events: EventLog;  // events.jsonl: the activity feed
   runs: RunLog;      // runs.jsonl: one line per finished task run
   openRuns: Map<number, OpenRun>;
+  progress: Progress; // progress.json: XP per employee, office unlocks, daily badge
 }
 const offices = new Map<string, OfficeRt>();
 
@@ -447,7 +449,7 @@ function openOffice(def: OfficeDef): OfficeRt {
     employees.set(cfg.id, new Employee(cfg, store));
   }
   const board = new Board(store.dir);
-  const o: OfficeRt = { def, store, employees, board, ledger: new Ledger(store.dir), events: new EventLog(store.dir), runs: new RunLog(store.dir), openRuns: new Map() };
+  const o: OfficeRt = { def, store, employees, board, ledger: new Ledger(store.dir), events: new EventLog(store.dir), runs: new RunLog(store.dir), openRuns: new Map(), progress: new Progress(store.dir, board.tasks) };
   offices.set(def.id, o);
   board.on("change", safe("board change", () => broadcast({ type: "board", office: def.id, board: boardPayload(o) })));
   board.on("status", safe("task status", (k: Task, _prev: TaskStatus, by: string) => onTaskStatus(o, k, by)));
@@ -466,6 +468,9 @@ function openOffice(def: OfficeDef): OfficeRt {
   board.on("idea", safe("idea log", (x: { id: number; by: string; title: string }) => logEvent(o, { kind: "idea_new", emp: x.by === "user" ? undefined : x.by, idea: x.id, by: x.by, data: { title: x.title } })));
   board.on("ideaEdited", safe("idea edit log", (x: { id: number; title: string }, ed: { by: string; summary: string; fields: string[] }) => logEvent(o, { kind: "idea_edited", emp: ed.by, idea: x.id, by: ed.by, data: { title: x.title, summary: ed.summary } })));
   board.on("promoted", safe("idea promoted log", (x: { id: number; title: string }, k: Task, by: string) => logEvent(o, { kind: "idea_promoted", emp: k.owner, idea: x.id, task: k.id, by, data: { title: x.title } })));
+  // finished work earns XP; a failure here never touches the work itself
+  board.on("status", safe("progress", (k: Task, prev: TaskStatus) => { if (k.status === "done" && prev !== "done") o.progress.award(k); }));
+  o.progress.on("change", safe("progress change", () => broadcast({ type: "progress", office: def.id, progress: o.progress.state() })));
   for (const e of employees.values()) e.setColleagues(colleaguesOf(o));
   return o;
 }
@@ -920,6 +925,11 @@ r.put("/costs/cap", (req: OReq, res) => {
   if (was && !capReached(o)) nudgeManager(o);
   res.json(costsPayload(o, Math.min(90, Math.max(1, Math.round(Number(req.query.days)) || 7))));
 });
+r.get("/progress", (req: OReq, res) => {
+  const o = officeOf(req);
+  if (!o) return res.status(404).json({ error: t("server.notFound") });
+  res.json(o.progress.state());
+});
 r.get("/quota", (_req, res) => res.json(getQuota()));
 r.get("/activity", (req: OReq, res) => {
   const o = officeOf(req);
@@ -1345,7 +1355,7 @@ function startMeeting(o: OfficeRt, topic: string, ids: string[], interruptBusy: 
 
 wss.on("connection", (ws) => {
   ws.on("error", (err) => logError("websocket client", err));
-  ws.send(JSON.stringify({ type: "init", quota: getQuota(), offices: [...offices.values()].map((o) => ({ ...officeInfo(o), employees: roster(o), meeting: o.meeting?.state() ?? null, board: boardPayload(o), costs: costsBrief(o), lastSeen: o.store.getMeta<number>("_office", "lastSeen") ?? 0 })) }));
+  ws.send(JSON.stringify({ type: "init", quota: getQuota(), offices: [...offices.values()].map((o) => ({ ...officeInfo(o), employees: roster(o), meeting: o.meeting?.state() ?? null, board: boardPayload(o), costs: costsBrief(o), progress: o.progress.state(), lastSeen: o.store.getMeta<number>("_office", "lastSeen") ?? 0 })) }));
   ws.on("message", async (raw) => {
     let msg: ClientMessage;
     try { msg = JSON.parse(raw.toString()); } catch { return; }

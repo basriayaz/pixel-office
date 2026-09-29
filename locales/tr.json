@@ -514,6 +514,36 @@
       "events_one": "{n} şey oldu",
       "all": "Tümünü gör ({n})"
     },
+    "progress": {
+      "title": "İlerleme",
+      "close": "Kapat",
+      "chipTip": "Ofis ilerlemesi: biten görevler puan kazandırır. Seviyeler, açılan eşyalar ve günün rozeti için tıkla.",
+      "level": "Sv {n}",
+      "officeXp": "Ofis puanı",
+      "today": "Bugün biten görev: {n}",
+      "badgeNone": "Bugün henüz rozet yok",
+      "badge": {
+        "1": "Isınma rozeti",
+        "2": "Beşlik rozeti",
+        "3": "Maraton rozeti"
+      },
+      "badgeNext": "{name} için {n} görev daha",
+      "unlocks": "Ofis yenilikleri",
+      "unlock": {
+        "1": "Duvar posteri",
+        "2": "Asma bitki",
+        "3": "Altın kahve makinesi",
+        "4": "Kupa rafı",
+        "5": "Neon tabela"
+      },
+      "locked": "{xp} puanda",
+      "team": "Ekip seviyeleri",
+      "empRow": "{xp} puan · {tasks} görev",
+      "none": "Henüz biten görev yok. Bitti'ye ulaşan her görev sahibine 10 puan kazandırır (araştırma görevleri 6).",
+      "toastLevel": "{name} {n}. seviyeye çıktı!",
+      "toastUnlock": "Ofise yeni bir şey geldi: {name}",
+      "toastBadge": "Rozet kazanıldı: {name}"
+    },
     "costs": {
       "title": "Maliyetler",
       "close": "Kapat",

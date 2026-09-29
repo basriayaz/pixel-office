@@ -514,6 +514,36 @@
       "events_one": "{n} thing happened",
       "all": "See all ({n})"
     },
+    "progress": {
+      "title": "Progress",
+      "close": "Close",
+      "chipTip": "Office progress: finished tasks earn XP. Click for levels, unlocks and today's badge.",
+      "level": "Lv {n}",
+      "officeXp": "Office XP",
+      "today": "Tasks done today: {n}",
+      "badgeNone": "No badge yet today",
+      "badge": {
+        "1": "Warm-up badge",
+        "2": "High-five badge",
+        "3": "Marathon badge"
+      },
+      "badgeNext": "{n} more for the {name}",
+      "unlocks": "Office upgrades",
+      "unlock": {
+        "1": "Wall poster",
+        "2": "Hanging plant",
+        "3": "Golden coffee machine",
+        "4": "Trophy shelf",
+        "5": "Neon sign"
+      },
+      "locked": "at {xp} XP",
+      "team": "Team levels",
+      "empRow": "{xp} XP · {tasks} tasks",
+      "none": "No finished tasks yet. Every task that reaches Done earns its owner 10 XP (research tasks 6).",
+      "toastLevel": "{name} reached level {n}!",
+      "toastUnlock": "Office upgrade unlocked: {name}",
+      "toastBadge": "Badge earned: {name}"
+    },
     "costs": {
       "title": "Costs",
       "close": "Close",

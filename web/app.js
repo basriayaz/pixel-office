@@ -72,7 +72,7 @@ function mergeRoster(officeId, list, info) {
     const since = e.statusSince ?? (old && old.status === e.status ? old.since : old ? Date.now() : null);
     employees.set(e.id, { ...e, messages: old?.messages ?? [], pending: Array.isArray(e.pendingAsks) ? e.pendingAsks : old?.pending ?? [], queue: old?.queue ?? [], loaded: old?.loaded ?? false, unread, since });
   }
-  state.offices.set(officeId, { info: info ?? prev?.info ?? { id: officeId, name: officeId }, employees, meeting: prev?.meeting ?? null, board: prev?.board ?? null, costs: prev?.costs ?? null });
+  state.offices.set(officeId, { info: info ?? prev?.info ?? { id: officeId, name: officeId }, employees, meeting: prev?.meeting ?? null, board: prev?.board ?? null, costs: prev?.costs ?? null, progress: prev?.progress ?? null });
 }
 
 function showOffice(officeId, keepChat = false) {
@@ -123,7 +123,7 @@ function handle(m) {
     const hired = params.get("hired");
     if (hired && !state.inited) { state.entering = new Set([hired]); history.replaceState(null, "", `/?office=${encodeURIComponent(state.office)}`); }
     if ("quota" in m) state.quota = m.quota;
-    for (const o of m.offices) if (o.costs) state.offices.get(o.id).costs = o.costs;
+    for (const o of m.offices) { if (o.costs) state.offices.get(o.id).costs = o.costs; if (o.progress) state.offices.get(o.id).progress = o.progress; }
     state.inited = true;
     showOffice(state.office, true);
     const open = params.get("open");
@@ -150,6 +150,7 @@ function handle(m) {
   if (m.type === "board") { const o = state.offices.get(m.office); if (o) { o.board = m.board; boardUI.refresh(m.office); if (m.office === state.office) renderIdeaCtx(); } panelsChanged("board", m.office); return; }
   // spend today and the daily cap; plan limits (global); one line of the office's activity log
   if (m.type === "costs") { const o = state.offices.get(m.office); if (o) o.costs = { today: m.today, todayTokens: m.todayTokens, cap: m.cap }; panelsChanged("costs", m.office); return; }
+  if (m.type === "progress") { const o = state.offices.get(m.office); if (o) o.progress = m.progress; panelsChanged("progress", m.office); return; }
   if (m.type === "quota") { state.quota = m.quota; panelsChanged("quota"); return; }
   if (m.type === "activity") { panelsChanged("activity", m.office, m.event); return; }
   // something the server could not do for us (a websocket request that failed): say so instead of failing silently

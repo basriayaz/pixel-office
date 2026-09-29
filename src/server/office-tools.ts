@@ -138,9 +138,17 @@ export function officeToolDefs(self: Employee, colleagues: Colleagues) {
         effort: z.enum(["S", "M", "L"]).optional().describe(t("server.ideas.effortDesc")),
         owner: z.string().optional().describe(t("server.ideas.ownerDesc")),
         tags: z.array(z.string()).optional(),
-      }, async ({ title, why, effort, owner, tags }) => {
+        force: z.boolean().optional().describe(t("server.ideas.forceDesc")),
+      }, async ({ title, why, effort, owner, tags, force }) => {
         const twin = board().similarIdea(title);
         if (twin) return text(t("server.ideas.similar", { id: twin.id, name: twin.byName, title: twin.title, status: twin.status }), true);
+        const closed = board().similarClosedIdea(title, why);
+        if (closed && !force) return text(t("server.ideas.closedTwin", { id: closed.id, title: closed.title, status: closed.status, name: closed.byName, reason: closed.comment || closed.advice || t("server.ideas.noReason") }), true);
+        if (force && closed) {
+          const n = /^\s*revize\s*#(\d+)/i.exec(title)?.[1] ?? String(closed.id);
+          if (!new RegExp(`^\\s*revize\\s*#${n}\\b`, "i").test(title)) title = `Revize #${n}: ${title}`;
+          if (!new RegExp(`revize\\s*#${n}\\b`, "i").test(why)) why = `Revize #${n}\n${why}`;
+        }
         const who = owner ? find(owner) ?? (slug(owner) === self.cfg.id || slug(owner) === slug(self.cfg.name) ? self : undefined) : undefined;
         const idea = board().addIdea(self.cfg.id, self.cfg.name, { title, text: why, effort, owner: who?.cfg.id, tags });
         return text(t("server.ideas.saved", { id: idea.id }));

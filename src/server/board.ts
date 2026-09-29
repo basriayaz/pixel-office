@@ -127,7 +127,26 @@ export class Board extends EventEmitter {
   similarNote(title: string): Note | undefined { return similarTitle(this.data.notes, title); }
 
   // ---- ideas ----
-  similarIdea(title: string): Idea | undefined { return similarTitle(this.data.ideas.filter((x) => x.status !== "rejected"), title); }
+  similarIdea(title: string): Idea | undefined { return similarTitle(this.data.ideas.filter((x) => x.status !== "rejected" && x.status !== "moved"), title); }
+  // Rejected or already-moved ideas that overlap the new one by keywords (title + text), so a closed idea is not proposed again blindly.
+  similarClosedIdea(title: string, text: string): Idea | undefined {
+    const words = (s: string) => new Set(s.toLowerCase().replace(/[^\p{L}\p{N}\s]/gu, " ").split(/\s+/).filter((w) => w.length > 3));
+    const a = words(title.replace(/^\s*revize\s*#\d+\s*[:\-–—]?\s*/i, ""));
+    const ctx = words(text);
+    let best: Idea | undefined, bestScore = 0;
+    for (const x of this.data.ideas) {
+      if (x.status !== "rejected" && x.status !== "moved") continue;
+      const b = words(x.title);
+      if (a.size < 2 || b.size < 2) continue;
+      let same = 0;
+      for (const w of a) if (b.has(w)) same++;
+      let ctxSame = 0;
+      for (const w of b) if (ctx.has(w) && !a.has(w)) ctxSame++;
+      const score = (same + ctxSame * 0.5) / Math.min(a.size, b.size);
+      if (same >= 2 && score >= 0.6 && score > bestScore) { best = x; bestScore = score; }
+    }
+    return best;
+  }
 
   addIdea(by: string, byName: string, input: { title: string; text: string; effort?: Effort; owner?: string; tags?: string[] }): Idea {
     const idea: Idea = { id: this.data.nextIdea++, by, byName, title: input.title.trim().slice(0, 160), text: input.text.trim().slice(0, 4000), ...(input.effort ? { effort: input.effort } : {}), ...(input.owner ? { owner: input.owner } : {}), tags: (input.tags ?? []).map((x) => x.trim().toLowerCase().slice(0, 30)).filter(Boolean).slice(0, 6), status: "new", ts: Date.now() };

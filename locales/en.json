@@ -596,7 +596,11 @@
       "none": "No finished tasks yet. Every task that reaches Done earns its owner 10 XP (research tasks 6).",
       "toastLevel": "{name} reached level {n}!",
       "toastUnlock": "Office upgrade unlocked: {name}",
-      "toastBadge": "Badge earned: {name}"
+      "toastBadge": "Badge earned: {name}",
+      "nextUp": "Next: {name} — {n} XP to go",
+      "allUnlocked": "Everything unlocked — the office is fully upgraded!",
+      "medalNeed": "{n} tasks in a day",
+      "badgesTitle": "Today's badges"
     },
     "costs": {
       "title": "Costs",

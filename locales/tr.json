@@ -596,7 +596,11 @@
       "none": "Henüz biten görev yok. Bitti'ye ulaşan her görev sahibine 10 puan kazandırır (araştırma görevleri 6).",
       "toastLevel": "{name} {n}. seviyeye çıktı!",
       "toastUnlock": "Ofise yeni bir şey geldi: {name}",
-      "toastBadge": "Rozet kazanıldı: {name}"
+      "toastBadge": "Rozet kazanıldı: {name}",
+      "nextUp": "Sıradaki: {name} — {n} puan kaldı",
+      "allUnlocked": "Hepsi açıldı — ofis tamamen yenilendi!",
+      "medalNeed": "günde {n} görev",
+      "badgesTitle": "Bugünün rozetleri"
     },
     "costs": {
       "title": "Maliyetler",

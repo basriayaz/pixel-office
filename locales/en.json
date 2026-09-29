@@ -415,6 +415,63 @@
     "sick": "sick"
   },
   "ui": {
+    "layout": {
+      "btn": "Edit office layout",
+      "title": "Edit layout",
+      "hint": "Click a piece to select it, drag to move. Del deletes, R rotates, Ctrl+D copies, Ctrl+Z undoes.",
+      "add": "Add a piece",
+      "addType": "Add: {name}",
+      "undo": "Undo",
+      "rotate": "Rotate",
+      "copy": "Copy",
+      "delete": "Delete",
+      "reset": "Back to default",
+      "cancel": "Cancel",
+      "save": "Save",
+      "saved": "Layout saved",
+      "discard": "Discard your changes to the layout?",
+      "selected": "Selected: {name}",
+      "noRoom": "There is no room for that",
+      "noDesk": "There is no free spot left for every desk. Make some room in the layout.",
+      "repaired": "A desk was moved so the entrance stays free.",
+      "resetDone": "Back to the default layout (Save to keep it)",
+      "err": {
+        "outside": "Pieces must stand on the floor, not in walls or doorways",
+        "overlap": "That spot is taken by another piece",
+        "entrance": "Keep the entrance free",
+        "door": "Keep every doorway open",
+        "unreachable": "That would block the way to a desk or a place people use",
+        "spot": "Leave the tile in front of it free",
+        "desks": "Everyone needs a desk",
+        "type": "Unknown piece",
+        "dup": "Duplicate piece",
+        "assigned": "This desk belongs to {name}: move it instead of deleting it",
+        "lastDesk": "Everyone needs a desk: this one has to stay",
+        "missing": "That piece is gone",
+        "cannotEdit": "The layout cannot be edited right now",
+        "saveFailed": "Could not save the layout: {message}"
+      },
+      "type": {
+        "desk": "Desk",
+        "counter": "Kitchen counter",
+        "fridge": "Fridge",
+        "roundTable": "Round table",
+        "stool": "Stool",
+        "bin": "Bin",
+        "plant": "Plant",
+        "meetingTable": "Meeting table",
+        "meetingChair": "Meeting chair",
+        "sofa": "Sofa",
+        "coffeeTable": "Coffee table",
+        "bookshelf": "Bookshelf",
+        "lamp": "Lamp",
+        "cabinets": "Cabinets",
+        "boxes": "Boxes",
+        "printer": "Printer",
+        "cooler": "Water cooler",
+        "coffeeStation": "Coffee station"
+      }
+    },
     "life": {
       "convos": [
         [

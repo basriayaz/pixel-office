@@ -415,6 +415,63 @@
     "sick": "hasta"
   },
   "ui": {
+    "layout": {
+      "btn": "Ofis düzenini düzenle",
+      "title": "Düzeni düzenle",
+      "hint": "Bir eşyaya tıkla, sürükleyip taşı. Del siler, R döndürür, Ctrl+D kopyalar, Ctrl+Z geri alır.",
+      "add": "Eşya ekle",
+      "addType": "Ekle: {name}",
+      "undo": "Geri al",
+      "rotate": "Döndür",
+      "copy": "Kopyala",
+      "delete": "Sil",
+      "reset": "Varsayılana dön",
+      "cancel": "İptal",
+      "save": "Kaydet",
+      "saved": "Düzen kaydedildi",
+      "discard": "Düzende yaptığın değişiklikler silinsin mi?",
+      "selected": "Seçili: {name}",
+      "noRoom": "Bunun için yer yok",
+      "noDesk": "Her masaya yetecek boş yer kalmadı. Düzende biraz yer aç.",
+      "repaired": "Giriş açık kalsın diye bir masa yer değiştirdi.",
+      "resetDone": "Varsayılan düzene dönüldü (kalması için Kaydet)",
+      "err": {
+        "outside": "Eşyalar zeminde durmalı; duvara ya da kapıya konmaz",
+        "overlap": "Orası başka bir eşyayla dolu",
+        "entrance": "Giriş boş kalmalı",
+        "door": "Her kapı açık kalmalı",
+        "unreachable": "Bu, bir masaya ya da kullanılan bir yere giden yolu kapatır",
+        "spot": "Önündeki karo boş kalmalı",
+        "desks": "Herkesin bir masası olmalı",
+        "type": "Bilinmeyen eşya",
+        "dup": "Aynı eşya iki kez var",
+        "assigned": "Bu masa {name} için: silmek yerine taşı",
+        "lastDesk": "Herkesin masası olmalı: bu masa kalmalı",
+        "missing": "O eşya artık yok",
+        "cannotEdit": "Düzen şu an düzenlenemiyor",
+        "saveFailed": "Düzen kaydedilemedi: {message}"
+      },
+      "type": {
+        "desk": "Masa",
+        "counter": "Mutfak tezgâhı",
+        "fridge": "Buzdolabı",
+        "roundTable": "Yuvarlak masa",
+        "stool": "Tabure",
+        "bin": "Çöp kutusu",
+        "plant": "Bitki",
+        "meetingTable": "Toplantı masası",
+        "meetingChair": "Toplantı sandalyesi",
+        "sofa": "Kanepe",
+        "coffeeTable": "Sehpa",
+        "bookshelf": "Kitaplık",
+        "lamp": "Lamba",
+        "cabinets": "Dolaplar",
+        "boxes": "Kolilar",
+        "printer": "Yazıcı",
+        "cooler": "Su sebili",
+        "coffeeStation": "Kahve makinesi"
+      }
+    },
     "life": {
       "convos": [
         [

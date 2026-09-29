@@ -415,7 +415,9 @@ class Office {
     const cw = stage.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
     const roster = stage.querySelector(".roster");
     const rosterH = roster && getComputedStyle(roster).display !== "none" ? Math.max(roster.offsetHeight, 36) + 14 : 0;
-    const ch = stage.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom) - rosterH;
+    const bar = stage.querySelector(".layout-bar"); // the layout editor's palette under the office
+    const barH = bar && !bar.hidden ? bar.offsetHeight + 12 : 0;
+    const ch = stage.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom) - rosterH - barH;
     const raw = Math.min(cw / LW, ch / LH);
     // 1/16 steps keep pixels crisp; cap at 2.5× for 4K screens, floor at 0.3× for phones
     this.scale = Math.max(0.3, Math.min(2.5, Math.floor(raw * 16) / 16));
@@ -617,7 +619,7 @@ class Office {
     const sitting = new Map(this.emps.filter((e) => e.seat.desk).map((e) => [e.seat.desk, e]));
     for (const d of this.scene.build.desks) {
       const feet = (d.ty + 1) * TILE;
-      const who = sitting.get(d.id) || { seat: d, tx: -1, ty: -1, path: [], status: "idle", color: "#8b8f9e", look: {}, seed: 0, anim: "stand" };
+      const who = sitting.get(d.id) || deskStub(d);
       items.push({ y: feet - 24, draw: faded(d.id, () => drawChair(b, d.tx * TILE, feet)) });
       items.push({ y: feet + TILE + 6, draw: faded(d.id, () => drawDesk(b, who, t)) });
     }
@@ -2663,6 +2665,36 @@ function renderThemePreview(theme, width = 240) {
   return out.toDataURL();
 }
 window.renderThemePreview = renderThemePreview;
+
+// A small picture of one piece of furniture for the layout editor's palette (drawn with the current theme's props).
+const itemThumbs = new Map();
+function renderItemThumb(theme, type) {
+  const k = theme + ":" + type;
+  if (itemThumbs.has(k)) return itemThumbs.get(k);
+  const T = POLayout.TYPES[type];
+  const it = { id: "thumb", type, tx: 4, ty: 4, dir: POLayout.DEFAULT_DIR[type], v: 1 };
+  const tiles = POLayout.tilesOf(it);
+  const x0 = Math.min(...tiles.map((q) => q[0])), x1 = Math.max(...tiles.map((q) => q[0]));
+  const y0 = Math.min(...tiles.map((q) => q[1])), y1 = Math.max(...tiles.map((q) => q[1]));
+  const up = (T.up || 0) + 6;
+  const cv = document.createElement("canvas");
+  cv.width = (x1 - x0 + 1) * TILE + 16; cv.height = (y1 - y0 + 1) * TILE + up + 10;
+  const b = cv.getContext("2d");
+  b.translate(8 - x0 * TILE, up - y0 * TILE);
+  const list = [];
+  if (type === "desk") {
+    const feet = (it.ty + 1) * TILE;
+    list.push({ y: feet - 24, draw: () => drawChair(b, it.tx * TILE, feet) }, { y: feet + TILE + 6, draw: () => drawDesk(b, deskStub({ tx: it.tx, ty: it.ty }), 0) });
+  } else itemDecor(theme, it, list);
+  list.sort((a, c) => a.y - c.y);
+  for (const d of list) d.draw(b, 0);
+  const url = cv.toDataURL();
+  itemThumbs.set(k, url);
+  return url;
+}
+window.renderItemThumb = renderItemThumb;
+// what an empty desk is drawn with
+const deskStub = (seat) => ({ seat, tx: -1, ty: -1, path: [], status: "idle", color: "#8b8f9e", look: {}, seed: 0, anim: "stand" });
 window.THEME_NAMES = THEME_NAMES;
 
 // ---------- characters (32x48 box, feet at oy+48, slim ~3.5 heads tall) ----------

@@ -73,5 +73,24 @@
   slider("6) Saat (gece = 22-6)", 0, 24, 0.5, new Date().getHours(), (v) => { window.__poHour = v >= 24 ? 23.99 : v; });
   slider("7) Ofis dekor sayısı (0-5)", 0, 5, 1, 0, (v) => office.setProgress(v));
   group("Görev/XP", [["Gerçek XP için: panoda bir görevi 'done' yap", () => alert("XP sunucuda hesaplanır: board'da bir görevi Done'a taşı, sağ üstteki ⭐ çipini kontrol et.")]]);
+  // Furniture layout (this browser only; a saved layout comes back on the next update from the server)
+  const randomMove = () => {
+    const ids = office.rosterIds, items = office.scene.items;
+    for (let i = 0; i < 300; i++) {
+      const it = items[Math.floor(Math.random() * items.length)];
+      const next = items.map((x) => (x.id === it.id ? { ...x, tx: Math.floor(Math.random() * POLayout.COLS), ty: Math.floor(Math.random() * POLayout.ROWS) } : x));
+      if (next.find((x) => x.id === it.id).tx === it.tx && next.find((x) => x.id === it.id).ty === it.ty) continue;
+      if (!POLayout.check(next, { empCount: ids.length }).ok) continue;
+      office.applyLayout(POLayout.toDoc(next));
+      return `${it.id} -> ${next.find((x) => x.id === it.id).tx},${next.find((x) => x.id === it.id).ty}`;
+    }
+    return null;
+  };
+  group("8) Ofis düzeni", [
+    ["Düzeni sıfırla", () => office.applyLayout(null)],
+    ["Rastgele geçerli taşıma", () => { const r = randomMove(); if (!r) alert("Geçerli taşıma bulunamadı."); else console.log("[debug] moved", r); }],
+    ["10 rastgele taşıma", () => { for (let i = 0; i < 10; i++) randomMove(); }],
+    ["Düzenleme modu", () => layoutEditor.active ? layoutEditor.cancel() : layoutEditor.open()],
+  ]);
   document.body.append(box);
 })();

@@ -240,11 +240,17 @@ class Office {
     }
   }
 
+  setTool(id, kind) {
+    const e = this.emps.find((x) => x.id === id);
+    if (e) e.tool = { kind, t0: performance.now() };
+  }
+
   setStatus(id, status, reason) {
     const e = this.emps.find((x) => x.id === id);
     if (!e || e.status === status) return;
     const prev = e.status;
     e.status = status;
+    e.tool = null;
     e.pulse = { t0: performance.now(), col: status === "working" ? "#4ade80" : status === "error" ? "#f87171" : status === "waiting" ? "#ffd166" : "#ffffff" };
     const now = performance.now();
     if (e.meet) { e.bubble = null; return; } // in a meeting: stays in the room whatever the status
@@ -1024,6 +1030,27 @@ function drawRing(b, cx, y, strong) {
   b.fillRect(cx - 16, y - 5, 32, 2); b.fillRect(cx - 16, y + 1, 32, 2);
 }
 
+// 10x10 pixel icons: # = ink, o = accent
+const TOOL_ICONS = {
+  read: ["..........", ".########.", ".#oo##oo#.", ".#oo##oo#.", ".#oo##oo#.", ".#oo##oo#.", ".#oo##oo#.", ".########.", "..........", ".........."],
+  write: [".......##.", "......#oo#", ".....#oo#.", "....#oo#..", "...#oo#...", "..#oo#....", ".#oo#.....", ".##.......", ".########.", ".........."],
+  bash: ["##########", "#oooooooo#", "#o#oooooo#", "#oo#ooooo#", "#o#oooooo#", "#oooo###o#", "#oooooooo#", "##########", "..........", ".........."],
+  search: ["..####....", ".#oooo#...", "#oo..oo#..", "#o....o#..", "#oo..oo#..", ".#oooo##..", "..####.##.", ".......###", "........##", ".........."],
+  web: ["..######..", ".#o#oo#o#.", "#oo#oo#oo#", "##########", "#oo#oo#oo#", "#oo#oo#oo#", "##########", "#oo#oo#oo#", ".#o#oo#o#.", "..######.."],
+  other: ["..........", "....##....", "...####...", "..##oo##..", ".##oooo##.", "..##oo##..", "...####...", "....##....", "..........", ".........."],
+};
+const TOOL_ACCENT = { read: "#61afef", write: "#e5a02d", bash: "#4ade80", search: "#c678dd", web: "#56b6c2", other: "#98a2b3" };
+
+function drawToolIcon(b, kind, x, y) {
+  const rows = TOOL_ICONS[kind];
+  for (let j = 0; j < rows.length; j++) for (let i = 0; i < rows[j].length; i++) {
+    const c = rows[j][i];
+    if (c === ".") continue;
+    b.fillStyle = c === "#" ? "#2b2b2b" : TOOL_ACCENT[kind];
+    b.fillRect(x + i, y + j, 1, 1);
+  }
+}
+
 function drawOverhead(b, e, t, occupied) {
   const cx = e.x + 16;
   let top = e.y - 22;
@@ -1055,6 +1082,9 @@ function drawOverhead(b, e, t, occupied) {
     for (let i = 0; i < 3; i++) b.fillRect(cx - 10 + i * 8, top - 10 + bob + (i < n ? -2 : 0), 4, 4);
   } else if (e.meet) {
     // listening: nothing over the head
+  } else if (e.status === "working" && (e.anim === "type" || e.anim === "walk") && e.tool && t - e.tool.t0 < 8000 && TOOL_ICONS[e.tool.kind]) {
+    bubble(20, 18, "#fff");
+    drawToolIcon(b, e.tool.kind, cx - 5, top - 14 + bob);
   } else if (e.status === "working" && (e.anim === "type" || e.anim === "walk")) {
     bubble(28, 16, "#fff");
     b.fillStyle = "#2b2b2b";

@@ -76,6 +76,8 @@ export function listConnectors(cwd: string, fresh = false): Promise<Connector[]>
   })());
 }
 
+export type ToolKind = "read" | "write" | "bash" | "search" | "web" | "other";
+
 export interface ChatMessage {
   role: "user" | "assistant" | "activity" | "system" | "auto" | "colleague" | "meeting";
   text: string;
@@ -85,6 +87,7 @@ export interface ChatMessage {
   id?: string;       // boss messages: lets the client refer to one (undo while it is queued)
   queued?: boolean;  // a boss message waiting for the running turn to end; not seen by any model yet
   ideaId?: number;   // a boss message about this idea (asked from its card): delivered on its own, only to the chat session
+  kind?: ToolKind;   // activity lines for a tool call: what sort of tool (the office canvas draws an icon)
 }
 
 export interface ImageInput {
@@ -1043,7 +1046,7 @@ export class Employee extends EventEmitter {
             this.emit("chunk_end");
             if (block.text.trim()) this.push({ role: "assistant", text: block.text, ts: Date.now() });
           } else if (block.type === "tool_use") {
-            this.push({ role: "activity", text: describeTool(block.name, block.input as Record<string, unknown>), ts: Date.now() });
+            this.push({ role: "activity", text: describeTool(block.name, block.input as Record<string, unknown>), ts: Date.now(), kind: toolKind(block.name) });
           }
         }
         break;
@@ -1191,7 +1194,7 @@ export class Employee extends EventEmitter {
             if (taskId !== undefined) this.colleagues?.board().markTask(taskId, { session: id });
             else if (key === "chat") { this.sessionId = id; this.store.setSession(this.cfg.id, id); }
           },
-          onItemStarted: (item) => { if (this.generation === gen && item.type !== "agent_message" && item.type !== "reasoning") { const line = describeCodex(item); if (line) this.push({ role: "activity", text: line, ts: Date.now() }); } },
+          onItemStarted: (item) => { if (this.generation === gen && item.type !== "agent_message" && item.type !== "reasoning") { const line = describeCodex(item); if (line) this.push({ role: "activity", text: line, ts: Date.now(), kind: codexKind(item) }); } },
           onItem: (item) => {
             if (this.generation !== gen) return;
             if (item.type === "agent_message" && item.text.trim()) { this.emit("chunk", item.text); this.emit("chunk_end"); this.push({ role: "assistant", text: item.text, ts: Date.now() }); }
@@ -1281,7 +1284,7 @@ export class Employee extends EventEmitter {
             else if (key === "chat") { this.sessionId = id; this.store.setSession(this.cfg.id, id); }
           },
           onText: (chunk) => { if (this.generation !== gen) return; said += chunk; this.emit("chunk", chunk); },
-          onTool: (ev) => { if (this.generation !== gen) return; flush(); const line = describeGemini(ev); if (line) this.push({ role: "activity", text: line, ts: Date.now() }); },
+          onTool: (ev) => { if (this.generation !== gen) return; flush(); const line = describeGemini(ev); if (line) this.push({ role: "activity", text: line, ts: Date.now(), kind: toolKind(ev.tool_name) }); },
           onWarning: (message) => { if (this.generation === gen) this.push({ role: "activity", text: tt("server.gemini.notice", "Gemini: {detail}", { detail: message }), ts: Date.now() }); },
         });
         this.cx = { kill: run.kill };
@@ -1519,6 +1522,25 @@ function sameExcept(a: EmployeeConfig, b: EmployeeConfig, fields: Array<keyof Em
     if (JSON.stringify((a as unknown as Record<string, unknown>)[k]) !== JSON.stringify((b as unknown as Record<string, unknown>)[k])) return false;
   }
   return true;
+}
+
+const TOOL_KINDS: Record<string, ToolKind> = {
+  Read: "read", read_file: "read", NotebookRead: "read",
+  Write: "write", Edit: "write", MultiEdit: "write", NotebookEdit: "write", write_file: "write", replace: "write",
+  Bash: "bash", run_shell_command: "bash",
+  Glob: "search", Grep: "search", glob: "search", search_file_content: "search", grep_search: "search",
+  WebSearch: "web", WebFetch: "web", google_web_search: "web", web_fetch: "web",
+};
+
+function toolKind(name: string): ToolKind {
+  return TOOL_KINDS[name] ?? "other";
+}
+
+function codexKind(item: CodexItem): ToolKind {
+  if (item.type === "command_execution") return "bash";
+  if (item.type === "file_change") return "write";
+  if (item.type === "web_search") return "web";
+  return "other";
 }
 
 function describeCodex(item: CodexItem): string {

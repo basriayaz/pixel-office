@@ -213,6 +213,7 @@ function handle(m) {
       break;
     case "message":
       e.messages.push(m.message);
+      if (current && m.message.role === "activity" && m.message.kind) office.setTool(m.id, m.message.kind);
       if (selected) {
         endStream();
         appendMessage(e, m.message);

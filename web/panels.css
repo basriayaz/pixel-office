@@ -381,7 +381,7 @@ body.layout-editing #office { touch-action: none; user-select: none; }
 .lb-head { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
 .lb-head b { font-family: "Silkscreen", monospace; font-weight: 400; font-size: 12px; letter-spacing: 1px; color: var(--accent); }
 .lb-hint { color: var(--muted); font-size: 11.5px; }
-.lb-msg { margin-left: auto; min-height: 1.2em; font-size: 12px; color: var(--text); }
+.lb-msg { flex: 1 1 100%; height: 1.4em; line-height: 1.4em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; color: var(--text); } /* own fixed-height line: the bar must not grow/shrink while a red hint comes and goes, or the office jitters */
 .lb-msg.bad { color: var(--error); }
 .lb-body { display: flex; align-items: flex-end; gap: 12px; flex-wrap: wrap; }
 .lb-palette { flex: 1 1 100%; min-width: 0; display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: thin; }

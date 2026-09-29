@@ -167,7 +167,7 @@ const layoutEditor = (() => {
     const p = at(ev), it = hitItem(p);
     selected = it ? it.id : null;
     drag = it ? { id: it.id, orig: { ...it }, grab: [p.tx - it.tx, p.ty - it.ty], moved: false, sx: ev.clientX, sy: ev.clientY, last: "" } : null;
-    if (drag) canvas.setPointerCapture(ev.pointerId);
+    if (drag) { try { canvas.setPointerCapture(ev.pointerId); } catch {} }
     ghost = null;
     refreshButtons();
     ev.preventDefault();

@@ -117,6 +117,7 @@ const marketShop = (() => {
   function renderTop() {
     const a = E(), chip = root.querySelector("#shCoins");
     chip.innerHTML = coin(a.wallet.coins);
+    chip.title = t("ui.coins.chipTip", { task: 20 });
     if (lastCoins !== null && lastCoins !== a.wallet.coins) { // the change floats up from the coin counter
       const d = a.wallet.coins - lastCoins, f = el("span", "mk-float" + (d > 0 ? " up" : ""), (d > 0 ? "+" : "−") + Math.abs(d));
       chip.appendChild(f); chip.classList.remove("pulse"); void chip.offsetWidth; chip.classList.add("pulse");
@@ -321,7 +322,7 @@ const marketShop = (() => {
       const n = el("p", "ct-note ok", `<span>${escapeHtml(st.note.text)}</span>`);
       if (a.canUndo()) { const u = el("button", "ct-undo", escapeHtml(t("ui.shop.undo"))); u.type = "button"; u.onclick = () => { a.undo(); st.note = null; renderTop(); render(); }; n.appendChild(u); }
       host.appendChild(n);
-    } else if (!canPayQty && !inDepot && i.price > 0 && !hung && st.confirm !== i.key) host.appendChild(el("p", "ct-note bad", escapeHtml(t("ui.shop.needMore", { n: total - a.wallet.coins }))));
+    } else if (!canPayQty && !inDepot && i.price > 0 && !hung && st.confirm !== i.key) host.appendChild(el("p", "ct-note bad", escapeHtml(t("ui.shop.needMore", { n: total - a.wallet.coins }) + " " + t("ui.coins.none"))));
     else host.appendChild(el("p", "ct-note", escapeHtml(t(i.ambient ? "ui.shop.noteAmbient" : inDepot ? "ui.shop.noteDepot" : placed > 0 ? "ui.shop.noteMine" : "ui.shop.noteTry"))));
   }
 

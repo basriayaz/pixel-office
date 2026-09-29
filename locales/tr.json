@@ -415,6 +415,20 @@
     "sick": "hasta"
   },
   "ui": {
+    "coins": {
+      "title": "Coin",
+      "chipTip": "Mobilya marketi için coin. Biten görevler kazandırır (her biri {task}, seviye ve günlük rozetler daha fazla). Marketi açmak için tıkla.",
+      "earnedTotal": "şimdiye kadar biten işlerden {n} kazanıldı",
+      "gained": "Biten işlerden +{n} coin",
+      "none": "Biten görevler coin kazandırır.",
+      "rates": "Biten görev +{task}, araştırma görevi +{discovery}, kazanılan seviye +25 ve seviye başına 15, günlük rozet +{b1} / +{b2} / +{b3} (bronz, gümüş, altın).",
+      "log": {
+        "task": "{name} “{title}” görevini bitirdi",
+        "discovery": "{name} “{title}” araştırmasını bitirdi",
+        "level": "{name} {n}. seviyeye ulaştı",
+        "badge": "Günün rozeti: {name}"
+      }
+    },
     "shop": {
       "btn": "Market",
       "title": "Market",

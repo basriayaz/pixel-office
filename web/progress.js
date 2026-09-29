@@ -49,6 +49,13 @@ const progressUI = (() => {
       const f = Math.max(0, Math.min(1, (e.xp - e.from) / Math.max(1, e.next - e.from)));
       return `<div class="pxp-row"><i class="dot" style="background:${escapeHtml(m.color || "var(--idle)")}"></i><span class="pname">${escapeHtml(m.name)}</span><b class="plvl">${escapeHtml(t("ui.progress.level", { n: e.level }))}</b><div class="pxp-bar"><i style="width:${Math.round(f * 100)}%"></i></div><small class="muted">${escapeHtml(t("ui.progress.empRow", { xp: e.xp, tasks: e.tasks ?? 0 }))}</small></div>`;
     }).join("");
+    // coins earned by finished work: the running total, the recent earnings, and what earns them
+    const who = (id) => cur()?.employees.get(id)?.name || id;
+    const when = (ts) => { const d = new Date(ts); return d.toDateString() === new Date().toDateString() ? d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : d.toLocaleDateString([], { day: "numeric", month: "short" }); };
+    const label = (e) => (e.kind === "level" ? t("ui.coins.log.level", { name: who(e.emp), n: e.text }) : e.kind === "badge" ? t("ui.coins.log.badge", { name: badgeName(Number(e.text)) }) : t(e.kind === "discovery" ? "ui.coins.log.discovery" : "ui.coins.log.task", { name: who(e.emp), title: e.text || "" }));
+    const coinRows = (p.coinLog || []).map((e) => `<div class="pxp-coin"><b>+${e.amount}</b><span>${escapeHtml(label(e))}</span><small>${escapeHtml(when(e.ts))}</small></div>`).join("");
+    const rates = p.coinRates ? t("ui.coins.rates", { task: p.coinRates.task, discovery: p.coinRates.discovery, b1: p.coinRates.badge[0], b2: p.coinRates.badge[1], b3: p.coinRates.badge[2] }) : "";
+    const coinsBlock = typeof p.coins === "number" ? `<h3>${escapeHtml(t("ui.coins.title"))} <small class="muted">${escapeHtml(t("ui.coins.earnedTotal", { n: p.coins }))}</small></h3><div class="pxp-coins">${coinRows || `<div class="muted">${escapeHtml(t("ui.coins.none"))}</div>`}</div><p class="muted pxp-rates">${escapeHtml(rates)}</p>` : "";
     host.innerHTML = `
       <div class="pxp-hero">
         <div class="pxp-top"><b>${escapeHtml(String(p.total))}</b><span>${escapeHtml(t("ui.progress.officeXp"))}</span></div>
@@ -59,6 +66,7 @@ const progressUI = (() => {
       <div class="pxp-medals">${medals}</div>
       <h3>${escapeHtml(t("ui.progress.unlocks"))}</h3>
       <div class="pxp-cards">${cards}</div>
+      ${coinsBlock}
       <h3>${escapeHtml(t("ui.progress.team"))}</h3>
       <div class="pxp-team">${rows || `<div class="muted">${escapeHtml(t("ui.progress.none"))}</div>`}</div>`;
   }

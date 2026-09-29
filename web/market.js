@@ -114,8 +114,8 @@
   const isOwnLook = (i, theme, hasSkin) => !!i && (i.group === null || i.group === theme || (!i.wall && i.skin === "default" && !hasSkin(theme, i.type)));
 
   // ---------- the wallet (never mutated: every operation returns a new one) ----------
-  const newWallet = () => ({ v: 1, coins: START_COINS, depot: {}, bought: [], claimed: [], gone: [] });
-  const clone = (w) => ({ v: 1, coins: w.coins, depot: { ...w.depot }, bought: [...(w.bought || [])], claimed: [...(w.claimed || [])], gone: [...(w.gone || [])] });
+  const newWallet = () => ({ v: 1, coins: START_COINS, depot: {}, bought: [], claimed: [], gone: [], earned: 0 });
+  const clone = (w) => ({ v: 1, coins: w.coins, depot: { ...w.depot }, bought: [...(w.bought || [])], claimed: [...(w.claimed || [])], gone: [...(w.gone || [])], earned: w.earned || 0 });
   function sanitize(raw) {
     const w = newWallet();
     if (!raw || typeof raw !== "object" || Array.isArray(raw) || raw.v !== 1) return w;
@@ -124,6 +124,7 @@
       for (const [key, n] of Object.entries(raw.depot)) if (stored(key) && Number.isInteger(n) && n > 0) w.depot[key] = Math.min(n, MAX_STACK);
     }
     if (Array.isArray(raw.bought)) w.bought = [...new Set(raw.bought.filter((id) => typeof id === "string" && ID_RE.test(id)))].slice(0, MAX_BOUGHT);
+    if (Number.isInteger(raw.earned) && raw.earned >= 0) w.earned = Math.min(raw.earned, MAX_COINS);
     if (Array.isArray(raw.gone)) w.gone = [...new Set(raw.gone.filter((id) => typeof id === "string" && ID_RE.test(id)))].slice(0, MAX_GONE);
     if (Array.isArray(raw.claimed)) w.claimed = [...new Set(raw.claimed.filter((n) => Number.isInteger(n) && n >= 1 && n <= L.PROGRESS_ORDER.length))];
     return w;
@@ -211,6 +212,15 @@
     }
     return { wallet: out, gave };
   }
+  // Coins earned by finished work: the office keeps a running total (progress.json); the wallet remembers how much of it it has already
+  // been given (`earned`) and takes the difference, so a total seen twice pays once. {wallet, gained}
+  function credit(w, total) {
+    const out = clone(w), t = Number.isInteger(total) && total >= 0 ? Math.min(total, MAX_COINS) : null;
+    if (t === null) return { wallet: out, gained: 0 };
+    if (t > out.earned) { const gained = t - out.earned; out.coins = Math.min(MAX_COINS, out.coins + gained); out.earned = t; return { wallet: out, gained }; }
+    out.earned = t; // (the office's total went down, its file was reset: start counting again from there)
+    return { wallet: out, gained: 0 };
+  }
   const depotCount = (w) => Object.values(w.depot).reduce((a, n) => a + n, 0);
 
   // ---------- storage: this browser only ----------
@@ -220,5 +230,5 @@
   }
   function save(officeId, w) { try { globalThis.localStorage && globalThis.localStorage.setItem(storeKey(officeId), JSON.stringify(sanitize(w))); } catch { /* private window, quota: the wallet just does not persist */ } }
 
-  globalThis.POMarket = { START_COINS, REFUND, RARITIES, CATEGORIES, FLOOR, WALL_PRICE, keyOf, info, sellPrice, stored, catalog, collections, isOwnLook, setDeals, dealKeys, pickDeals, today, DEAL_OFF, newWallet, sanitize, inDepot, canAfford, acquire, purchase, own, discard, sellItem, prune, sell, earn, claim, depotCount, load, save };
+  globalThis.POMarket = { START_COINS, REFUND, RARITIES, CATEGORIES, FLOOR, WALL_PRICE, keyOf, info, sellPrice, stored, catalog, collections, isOwnLook, setDeals, dealKeys, pickDeals, today, DEAL_OFF, newWallet, sanitize, inDepot, canAfford, acquire, purchase, own, discard, sellItem, prune, sell, earn, credit, claim, depotCount, load, save };
 })();

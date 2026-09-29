@@ -415,6 +415,20 @@
     "sick": "sick"
   },
   "ui": {
+    "coins": {
+      "title": "Coins",
+      "chipTip": "Coins for the furniture market. Finished tasks earn them ({task} each, more for levels and daily badges). Click to open the market.",
+      "earnedTotal": "{n} earned by finished work so far",
+      "gained": "+{n} coins from finished work",
+      "none": "Finished tasks earn coins.",
+      "rates": "A finished task +{task}, a research task +{discovery}, a level gained +25 plus 15 per level, a daily badge +{b1} / +{b2} / +{b3} (bronze, silver, gold).",
+      "log": {
+        "task": "{name} finished “{title}”",
+        "discovery": "{name} finished the research “{title}”",
+        "level": "{name} reached level {n}",
+        "badge": "Badge of the day: {name}"
+      }
+    },
     "shop": {
       "btn": "Market",
       "title": "Market",

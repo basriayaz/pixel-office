@@ -700,6 +700,7 @@ const layoutEditor = (() => {
     editTheme = office.theme;
     starters = new Set(L.scene(null, ids(), office.theme, office.progress || 0).items.map((x) => x.id));
     items = fixed; startJson = JSON.stringify(start); undo = []; selected = null; drag = null; ghost = null; resetFlag = false; saving = false;
+    if (window.marketCoins) window.marketCoins.sync(); // (what finished work has earned so far is in the wallet before the draft copies it)
     const claimed = M.claim(M.load(state.office), office.progress || 0, items); // the pieces finished work unlocked are yours (not a change to save)
     wallet = claimed.wallet; walletStart = JSON.stringify(wallet); placing = null; clearPending(); fx = []; paintMute(); M.setDeals(M.pickDeals(M.catalog(office.theme, hasSkin), M.today()));
     active = true;
@@ -720,6 +721,7 @@ const layoutEditor = (() => {
     if (!active) return;
     if (window.marketShop) window.marketShop.close(); // (the shop is part of editing)
     comparing = false; active = false; drag = null; ghost = null; hover = null; placing = null; clearPending(); endCardDrag();
+    if (window.marketCoins) window.marketCoins.sync(); // earnings that arrived while editing
     office.editing = false; office.editorDraw = null; office.editorDim = null;
     document.body.classList.remove("layout-editing");
     btn.classList.remove("active");

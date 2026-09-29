@@ -91,7 +91,7 @@ assert.equal(M.sell(s.wallet, "sofa").ok, false, "nothing left to sell");
 assert.ok(M.sellPrice("sofa") < M.info("sofa").price, "you never gain by buying and selling");
 for (const type of keys) assert.ok(M.sellPrice(type) <= M.info(type).price * 0.8 + 1e-9);
 // too poor
-const poor = { v: 1, coins: 10, depot: {}, bought: [], claimed: [], gone: [] };
+const poor = { v: 1, coins: 10, depot: {}, bought: [], claimed: [], gone: [], earned: 0 };
 r = M.acquire(poor, "fridge");
 assert.equal(r.ok, false); assert.equal(r.reason, "coins"); assert.equal(r.price, M.info("fridge").price);
 assert.equal(M.canAfford(poor, "fridge"), false); assert.equal(M.canAfford(poor, "bin"), true); assert.equal(M.canAfford(poor, "desk"), true);
@@ -99,10 +99,10 @@ assert.equal(M.acquire(poor, "nope").ok, false);
 // earning
 assert.equal(M.earn(poor, 25).coins, 35);
 for (const bad of [-5, 0, 1.5, NaN, "9", null]) assert.equal(M.earn(poor, bad).coins, 10, `earn ignores ${bad}`);
-assert.equal(M.earn({ v: 1, coins: 1e9, depot: {}, bought: [], claimed: [], gone: [] }, 5).coins, 1e9, "capped");
+assert.equal(M.earn({ v: 1, coins: 1e9, depot: {}, bought: [], claimed: [], gone: [], earned: 0 }, 5).coins, 1e9, "capped");
 // random buying / selling never makes a negative wallet and never creates coins
 let seed = 7; const rnd = () => ((seed = (seed * 1664525 + 1013904223) >>> 0) / 4294967296);
-let cur = { v: 1, coins: 500, depot: {}, bought: [], claimed: [], gone: [] }, spentNet = 0, serial = 0;
+let cur = { v: 1, coins: 500, depot: {}, bought: [], claimed: [], gone: [], earned: 0 }, spentNet = 0, serial = 0;
 const placed = [];
 for (let n = 0; n < 4000; n++) {
   const type = keys[Math.floor(rnd() * keys.length)], op = rnd();
@@ -149,21 +149,21 @@ assert.ok(dl.deal && dl.was === plain && dl.price === Math.round(plain * 0.8), "
 assert.equal(M.info(cat.find((i) => !d1.includes(i.key) && i.price > 0).key).deal, undefined, "the others are as usual");
 assert.deepEqual(M.dealKeys(), d1);
 for (const k of d1) { // buying on a deal and selling never makes coins, and neither does a deal for the rest of the day
-  const w0 = { v: 1, coins: 5000, depot: {}, bought: [], claimed: [], gone: [] };
+  const w0 = { v: 1, coins: 5000, depot: {}, bought: [], claimed: [], gone: [], earned: 0 };
   const bought = M.purchase(w0, k);
   assert.ok(bought.ok && bought.paid === M.info(k).price && bought.wallet.coins === 5000 - bought.paid && M.inDepot(bought.wallet, k) === 1, `${k}: bought into the depot`);
   const back = M.sell(bought.wallet, k);
   assert.ok(back.gain <= bought.paid, `${k}: selling never pays more than the deal price`);
 }
-assert.ok(M.acquire({ v: 1, coins: dl.price, depot: {}, bought: [], claimed: [], gone: [] }, d1[2]).ok, "and you can pay it with exactly that");
-assert.equal(M.acquire({ v: 1, coins: dl.price - 1, depot: {}, bought: [], claimed: [], gone: [] }, d1[2]).ok, false);
+assert.ok(M.acquire({ v: 1, coins: dl.price, depot: {}, bought: [], claimed: [], gone: [], earned: 0 }, d1[2]).ok, "and you can pay it with exactly that");
+assert.equal(M.acquire({ v: 1, coins: dl.price - 1, depot: {}, bought: [], claimed: [], gone: [], earned: 0 }, d1[2]).ok, false);
 M.setDeals(["nope", "desk", "sofa@gothic"]);
 assert.deepEqual(M.dealKeys(), ["sofa@gothic"], "only real, paid pieces can be on a deal");
 M.setDeals([]);
 assert.equal(M.info(d1[2]).deal, undefined);
 assert.match(M.today(new Date(2026, 9, 1)), /^2026-10-01$/);
 // purchase: pays and stores, refuses when poor, never for desks / unknown keys
-const pw = { v: 1, coins: 100, depot: {}, bought: [], claimed: [], gone: [] };
+const pw = { v: 1, coins: 100, depot: {}, bought: [], claimed: [], gone: [], earned: 0 };
 assert.equal(M.purchase(pw, "sofa").wallet.coins, 100 - M.info("sofa").price);
 assert.equal(M.purchase(pw, "fridge").ok, false); assert.equal(M.purchase(pw, "fridge").reason, "coins");
 assert.equal(M.purchase(pw, "desk").ok, false); assert.equal(M.purchase(pw, "nope").ok, false);
@@ -179,6 +179,26 @@ assert.equal(gothic.owned, 3); assert.equal(dream.owned, 1);
 assert.ok(gothic.total > 10 && gothic.total === cat.filter((i) => i.group === "gothic").length, "the total is everything of that theme");
 assert.ok(cols.some((c) => c.group === "rewards" && c.total === 5), "the rewards are a collection too");
 assert.ok(!cols.some((c) => c.group === null), "pieces that follow the theme belong to no collection");
+
+// ---------- coins earned by finished work ----------
+let ew = M.newWallet();
+assert.equal(ew.earned, 0);
+let cr = M.credit(ew, 120);
+assert.ok(cr.gained === 120 && cr.wallet.coins === M.START_COINS + 120 && cr.wallet.earned === 120, "the first total pays in full");
+assert.equal(M.credit(cr.wallet, 120).gained, 0, "the same total again pays nothing");
+cr = M.credit(cr.wallet, 150);
+assert.ok(cr.gained === 30 && cr.wallet.coins === M.START_COINS + 150, "only the new part is paid");
+cr = M.credit(cr.wallet, 40);
+assert.ok(cr.gained === 0 && cr.wallet.earned === 40 && cr.wallet.coins === M.START_COINS + 150, "a total that went down pays nothing and is followed");
+assert.equal(M.credit(cr.wallet, 55).gained, 15, "and counting resumes from there");
+for (const bad of [-1, 1.5, NaN, "9", null, undefined]) assert.equal(M.credit(ew, bad).gained, 0, `junk total ${bad}`);
+assert.equal(ew.coins, M.START_COINS, "the wallet is never mutated");
+assert.equal(M.credit({ ...ew, coins: 1e9 }, 10).wallet.coins, 1e9, "capped");
+// spending does not disturb what was earned, and a wallet from before coins existed starts at 0
+const spent = M.acquire(M.credit(ew, 100).wallet, "sofa").wallet;
+assert.equal(spent.earned, 100);
+assert.equal(M.sanitize({ v: 1, coins: 5, depot: {} }).earned, 0);
+for (const bad of [-3, 2.5, "7", null]) assert.equal(M.sanitize({ v: 1, coins: 5, depot: {}, earned: bad }).earned, 0, `junk earned ${bad}`);
 
 // ---------- storage ----------
 const mem = new Map();
@@ -196,7 +216,7 @@ for (const junk of ["{oops", "null", "[]", "5", JSON.stringify({ v: 2, coins: 9 
   assert.deepEqual(got.gone, [], `junk ${junk.slice(0, 20)}: nothing gone`);
 }
 mem.set("po.market.main", JSON.stringify({ v: 1, coins: 1e12, depot: { sofa: 100000 } }));
-assert.deepEqual(M.load("main"), { v: 1, coins: 1e9, depot: { sofa: 999 }, bought: [], claimed: [], gone: [] }, "huge numbers are capped");
+assert.deepEqual(M.load("main"), { v: 1, coins: 1e9, depot: { sofa: 999 }, bought: [], claimed: [], gone: [], earned: 0 }, "huge numbers are capped");
 mem.set("po.market.main", JSON.stringify({ v: 1, coins: 5, depot: {}, bought: ["ok1", "ok1", "not valid", 5, null, "__proto__x"], gone: ["g1", "g1", "bad id", 7] }));
 assert.deepEqual(M.load("main").gone, ["g1"], "only valid, unique ids of gone pieces");
 assert.deepEqual(M.load("main").bought, ["ok1"], "only valid, unique ids of bought pieces");

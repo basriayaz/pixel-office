@@ -455,3 +455,15 @@ body.mk-dragging, body.mk-dragging * { cursor: grabbing !important; user-select:
 .mk-confirm kbd { font: inherit; font-size: 10px; opacity: .65; margin-left: 2px; }
 @keyframes mk-in { from { opacity: 0; transform: translateX(-50%) translateY(8px); } to { opacity: 1; transform: translateX(-50%); } }
 @media (prefers-reduced-motion: reduce) { .mk-coins.pulse, .mk-float, .mk-confirm { animation: none; } }
+
+/* coins from finished work: the chip in the strip and the earnings list in the progress window */
+#stripCoins b { color: var(--accent); font-variant-numeric: tabular-nums; font-weight: 600; }
+#stripCoins .mk-coin { margin-right: 0; }
+#stripCoins.pulse { animation: mk-pulse .6s ease; }
+.pxp-coins { display: grid; gap: 4px; }
+.pxp-coin { display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; align-items: baseline; gap: 8px; padding: 5px 8px; background: var(--bg); border: 1px solid var(--line); border-radius: 6px; font-size: 12px; }
+.pxp-coin b { color: var(--accent); font-variant-numeric: tabular-nums; }
+.pxp-coin span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pxp-coin small { color: var(--muted); font-size: 10.5px; }
+.pxp-rates { font-size: 11.5px; line-height: 1.5; margin: 8px 0 0; }
+@media (prefers-reduced-motion: reduce) { #stripCoins.pulse { animation: none; } }

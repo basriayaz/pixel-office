@@ -245,6 +245,17 @@ class Office {
     if (e) e.tool = { kind, t0: performance.now() };
   }
 
+  // Life at the desk: how long the colleague has been at it (deep focus) and idle micro moves
+  // (stretch / glance at the watch / check the phone) on a timer like the mug sip.
+  deskLife(e, now) {
+    if (e.status === "working") { if (!e.workSince) e.workSince = now; } else e.workSince = 0;
+    if (REDUCED_MOTION.matches || e.anim !== "sit" || e.status !== "idle") { e.micro = null; return; }
+    if (e.micro) {
+      if (now - e.micro.t0 > MICRO_MS[e.micro.kind]) { e.micro = null; e.microAt = now + rand(10000, 26000); }
+    } else if (e.microAt == null) e.microAt = now + rand(6000, 18000);
+    else if (now > e.microAt) e.micro = { kind: MICRO_KINDS[Math.floor(Math.random() * MICRO_KINDS.length)], t0: now };
+  }
+
   setStatus(id, status, reason) {
     const e = this.emps.find((x) => x.id === id);
     if (!e || e.status === status) return;
@@ -430,6 +441,7 @@ class Office {
           else if (e.sipping) { e.sipping = 0; e.sipAt = now + rand(12000, 32000); }
           else if (now > (e.sipAt ?? 0)) { e.sipping = now; e.anim = "sip"; }
         } else e.sipping = 0;
+        this.deskLife(e, now);
       } else if (e.spot) {
         e.dir = e.spot.dir;
         e.anim = e.spot.anim;
@@ -531,7 +543,7 @@ class Office {
             if (p >= 1 || REDUCED_MOTION.matches) e.pulse = null;
             else { b.save(); b.globalAlpha = 1 - p; b.strokeStyle = e.pulse.col; b.lineWidth = 2; b.beginPath(); b.ellipse(e.x + 16, e.y + TILE - 1, 12 + p * 14, 4 + p * 6, 0, 0, Math.PI * 2); b.stroke(); b.restore(); }
           }
-          drawPerson(b, e.x, oy, e, { dir: e.dir, anim: e.anim, frame, t, seed: e.seed, sipT: e.sipping ? performance.now() - e.sipping : 0 });
+          drawPerson(b, e.x, oy, e, { dir: e.dir, anim: e.anim, frame, t, seed: e.seed, sipT: e.sipping ? performance.now() - e.sipping : 0, ...deskLifeOpts(e, t) });
         },
       });
     }
@@ -960,6 +972,126 @@ function drawChair(b, x, feet) {
   b.fillStyle = "#2b2d3a"; b.fillRect(x + 14, feet - 10, 4, 8); b.fillRect(x + 6, feet - 3, 20, 3);
 }
 
+// ---------- working animations & desk micro moves ----------
+const MICRO_KINDS = ["stretch", "clock", "phone"];
+const MICRO_MS = { stretch: 2400, clock: 1900, phone: 3800 };
+const DEEP_FOCUS_MS = 60000;   // this long on the job: headphones + energy drink
+const TOOL_FRESH_MS = 25000;   // a tool call shapes the pose this long, then back to plain typing
+
+// Tool kind that shapes the pose right now (null = plain typing).
+function workKind(e, t) {
+  if (e.status !== "working" || !e.tool || !TOOL_ICONS[e.tool.kind] || e.tool.kind === "other") return null;
+  return t - e.tool.t0 < TOOL_FRESH_MS ? e.tool.kind : null;
+}
+function isDeepFocus(e) { return e.status === "working" && !!e.workSince && performance.now() - e.workSince > DEEP_FOCUS_MS; }
+// Extra options for drawPerson: what to act out while sitting at the desk.
+function deskLifeOpts(e, t) {
+  if (e.anim === "type") return { tool: workKind(e, t), deep: isDeepFocus(e) };
+  if (e.anim === "sit" && e.micro) return { micro: e.micro.kind, microT: performance.now() - e.micro.t0 };
+  return null;
+}
+// Head offset on top of the idle bob: nods while writing pauses, tilts back to stretch, looks down at watch/phone.
+function headNod(o) {
+  if (REDUCED_MOTION.matches) return 0;
+  if (o.micro === "stretch") return -1;
+  if (o.micro === "clock" || o.micro === "phone") return 1;
+  if (o.tool === "write" && o.anim === "type") { const ph = o.t % 3200; if (ph > 2300 && ph < 3000) return Math.floor(o.t / 200) % 2; }
+  return 0;
+}
+
+// Monitor content per tool kind (26x18 screen at sx,sy); false = not handled, caller draws the default.
+function drawWorkScreen(b, e, t, sx, sy) {
+  const kind = workKind(e, t);
+  if (!kind) return false;
+  const tt = REDUCED_MOTION.matches ? 0 : t;
+  const hash = (n) => ((n * 2654435761) >>> 0) % 1000;
+  switch (kind) {
+    case "bash": {
+      b.fillStyle = "#06110c"; b.fillRect(sx, sy, 26, 18);
+      const s = Math.floor(tt / 110);
+      for (let r = 0; r < 8; r++) { // green lines streaming up the screen
+        const h = hash(r + s + 7);
+        b.fillStyle = r === 7 ? "#b8ffd8" : h % 3 ? "#3fd985" : "#22a862";
+        b.fillRect(sx + 2 + (h % 3), sy + 1 + r * 2, 3 + (h % 17), 1);
+      }
+      b.fillStyle = "#b8ffd8"; b.fillRect(sx + 2, sy + 16, 2, 1);
+      if (Math.floor(tt / 300) % 2) b.fillRect(sx + 6, sy + 15, 2, 2);
+      b.fillStyle = "rgba(92,242,165,.16)"; b.fillRect(sx - 8, sy + 16, 42, 12);
+      break;
+    }
+    case "read": {
+      b.fillStyle = "#e8edf4"; b.fillRect(sx, sy, 26, 18);
+      b.fillStyle = "#61afef"; b.fillRect(sx + 3, sy + 2, 12, 2);
+      const s = Math.floor(tt / 500);
+      for (let r = 0; r < 6; r++) { const h = hash(r + s); b.fillStyle = "#8a93a3"; b.fillRect(sx + 3, sy + 6 + r * 2, 12 + (h % 9), 1); }
+      b.fillStyle = "#c9d3e0"; b.fillRect(sx + 20, sy + 2, 4, 5);
+      b.fillStyle = "rgba(232,237,244,.2)"; b.fillRect(sx - 8, sy + 16, 42, 12);
+      break;
+    }
+    case "write": {
+      b.fillStyle = "#1e2230"; b.fillRect(sx, sy, 26, 18);
+      b.fillStyle = "#2c3245"; b.fillRect(sx, sy, 4, 18);
+      const n = 3 + (Math.floor(tt / 700) % 5);
+      const cols = ["#e5a02d", "#98c379", "#61afef", "#c678dd"];
+      for (let r = 0; r < n; r++) {
+        b.fillStyle = "#59617a"; b.fillRect(sx + 1, sy + 2 + r * 3, 2, 1);
+        const h = hash(r + 3);
+        b.fillStyle = cols[h % 4]; b.fillRect(sx + 6, sy + 2 + r * 3, 3 + (h % 5), 1);
+        b.fillStyle = "#d5d9e4"; b.fillRect(sx + 10 + (h % 5), sy + 2 + r * 3, 3 + ((h >> 3) % 8), 1);
+      }
+      if (Math.floor(tt / 250) % 2) { b.fillStyle = "#fff"; b.fillRect(sx + 6 + (Math.floor(tt / 120) % 12), sy + 2 + (n - 1) * 3, 1, 2); }
+      break;
+    }
+    case "search": {
+      b.fillStyle = "#17142a"; b.fillRect(sx, sy, 26, 18);
+      b.fillStyle = "#f2f2f8"; b.fillRect(sx + 2, sy + 2, 22, 3);
+      b.fillStyle = "#c678dd"; b.fillRect(sx + 3, sy + 3, 2 + (Math.floor(tt / 200) % 8), 1);
+      const hot = Math.floor(tt / 650) % 3;
+      for (let r = 0; r < 3; r++) {
+        if (r === hot) { b.fillStyle = "rgba(198,120,221,.3)"; b.fillRect(sx + 1, sy + 6 + r * 4, 24, 4); }
+        b.fillStyle = "#7aa7ff"; b.fillRect(sx + 3, sy + 7 + r * 4, 10, 1);
+        b.fillStyle = "#6a6f86"; b.fillRect(sx + 3, sy + 9 + r * 4, 16, 1);
+      }
+      break;
+    }
+    case "web": {
+      b.fillStyle = "#0c1e2c"; b.fillRect(sx, sy, 26, 18);
+      const cx = sx + 13, cy = sy + 9, ph = tt / 700;
+      for (let dy = -6; dy <= 6; dy++) {
+        const w = Math.floor(Math.sqrt(36 - dy * dy));
+        b.fillStyle = "#2a7fb8"; b.fillRect(cx - w, cy + dy, w * 2 + 1, 1);
+        for (let k = 0; k < 6; k++) { // meridians turning around the globe
+          const a = ph + (k * Math.PI) / 3;
+          if (Math.cos(a) < 0) continue;
+          b.fillStyle = k % 3 === 0 ? "#5fbf6a" : "#8fd3f4";
+          b.fillRect(cx + Math.round(w * Math.sin(a)), cy + dy, 1, 1);
+        }
+      }
+      b.fillStyle = "#8fd3f4"; b.fillRect(cx - 6, cy, 13, 1);
+      const arcs = 1 + (Math.floor(tt / 350) % 3); // wifi bars filling up in the corner
+      for (let i = 0; i < 3; i++) { b.fillStyle = i < arcs ? "#56b6c2" : "#24505a"; b.fillRect(sx + 20 + i * 2, sy + 4 - i, 1, 1 + i); }
+      break;
+    }
+  }
+  return true;
+}
+
+// Things on the desk that come with the work: a paper stack for reading, an energy drink in deep focus.
+function drawWorkDeskProps(b, e, t, x, y) {
+  const tt = REDUCED_MOTION.matches ? 0 : t;
+  if (workKind(e, t) === "read") {
+    outlineRect(b, x + 74, y + 5, 12, 8, "#f5f5f5");
+    b.fillStyle = "#9aa"; b.fillRect(x + 76, y + 7, 7, 1); b.fillRect(x + 76, y + 9, 5, 1);
+    if (tt % 2400 < 300) { b.fillStyle = "#fff"; b.fillRect(x + 78, y + 3, 8, 3); }
+  }
+  if (isDeepFocus(e)) {
+    outlineRect(b, x + 86, y - 2, 6, 11, "#2a9d8f");
+    b.fillStyle = "#e9c46a"; b.fillRect(x + 87, y + 2, 4, 2);
+    b.fillStyle = "rgba(255,255,255,.45)"; b.fillRect(x + 88, y, 1, 4);
+    if (!REDUCED_MOTION.matches) { b.fillStyle = "rgba(255,255,255,.5)"; b.fillRect(x + 89, y - 5 - (Math.floor(t / 350) % 3), 1, 2); }
+  }
+}
+
 function drawDesk(b, e, t) {
   const x = (e.seat.tx - 1) * TILE, y = (e.seat.ty + 1) * TILE;
   const status = e.status;
@@ -992,7 +1124,9 @@ function drawDesk(b, e, t) {
   outlineRect(b, mx, my, 30, 22, "#2a2d34");
   b.fillStyle = "#3a3e47"; b.fillRect(mx, my, 30, 1);
   const sx = mx + 2, sy = my + 2;
-  if (status === "working") {
+  if (status === "working" && drawWorkScreen(b, e, t, sx, sy)) {
+    // tool-specific screen drawn by drawWorkScreen
+  } else if (status === "working") {
     b.fillStyle = "#0f2a22"; b.fillRect(sx, sy, 26, 18);
     b.fillStyle = "#5cf2a5";
     const n = 4 + (Math.floor(t / 260) % 4);
@@ -1020,6 +1154,7 @@ function drawDesk(b, e, t) {
   // notebook + pen
   outlineRect(b, x + 22, y + 9, 8, 7, "#f5f5f5"); b.fillStyle = "#9aa"; b.fillRect(x + 24, y + 11, 4, 1); b.fillRect(x + 24, y + 13, 3, 1);
   b.fillStyle = "#3f7cc9"; b.fillRect(x + 12, y + 15, 8, 1);
+  drawWorkDeskProps(b, e, t, x, y);
   if (e.seed % 2) { b.fillStyle = "#3a9d5d"; b.fillRect(x + 78, y + 2, 8, 6); b.fillStyle = "#b4593a"; b.fillRect(x + 79, y + 8, 6, 4); }
 }
 
@@ -2010,7 +2145,7 @@ function personShapes(b, ox, oy, e, o, mono) {
   const bob = walking ? (f === 1 || f === 3 ? 1 : 0) : (Math.floor(o.t / 1200) % 2 === 0 ? 1 : 0);
   const blink = Math.floor((o.t + (o.seed || 0)) / 3400) % 18 === 0;
   const slump = o.anim === "slump" ? 3 : 0;
-  const H = bob + slump; // head offset
+  const H = bob + slump + headNod(o); // head offset
   const T = bob;         // torso offset
   const clothColor = F.bottomStyle === "dress" ? top : bottom;
   const clothDark = F.bottomStyle === "dress" ? topDark : bottomDark;
@@ -2150,8 +2285,88 @@ function personShapes(b, ox, oy, e, o, mono) {
     if (P.shoulders && F.topStyle !== "tank") { C(topDark); R(x, y + 3, aw, 1); }
   };
 
+  // tool-shaped working poses (o.tool) and idle desk micro moves (o.micro); false = not handled
+  const workArms = () => {
+    const t = REDUCED_MOTION.matches ? 0 : o.t;
+    switch (o.tool) {
+      case "read": {
+        // holds a sheet up in both hands and flips it now and then
+        const ph = t % 2400;
+        arm(axL, 17 + T, 5, false); arm(axR, 17 + T, 5, false);
+        C("#f5f5f5"); R(cx - 6, 20 + T, 12, 9);
+        C("#9aa"); R(cx - 4, 22 + T, 8, 1); R(cx - 4, 24 + T, 6, 1); R(cx - 4, 26 + T, 7, 1);
+        if (ph < 260) { C("#dfe6ee"); R(cx + 5 - Math.round((ph / 260) * 10), 20 + T, 2, 9); }
+        C(skin); R(cx - 8, 24 + T, 3, 4); R(cx + 5, 24 + T, 3, 4);
+        return true;
+      }
+      case "write": {
+        // fast typing, then a pause (the head nods, see headNod)
+        const pause = t % 3200 > 2300 && t % 3200 < 3000;
+        const tap = pause ? 0 : Math.floor(t / 90) % 2;
+        arm(axL, 17 + T, 6, false); arm(axR, 17 + T, 6, false);
+        C(skin); R(axL + 1, 23 + T + tap, 5, 3); R(axR - 3, 24 + T - tap, 5, 3);
+        return true;
+      }
+      case "bash": {
+        // hammering the keys: hands lift high and slam down
+        const hit = Math.floor(t / 100) % 2;
+        arm(axL, 17 + T, 5 + hit, false); arm(axR, 17 + T, 6 - hit, false);
+        C(skin); R(axL + 1, 22 + T + hit * 3, 5, 3); R(axR - 3, 25 + T - hit * 3, 5, 3);
+        return true;
+      }
+      case "search": {
+        // right hand holds a magnifying glass out beside the head and sweeps it about, left hand rests
+        const sw = Math.round(Math.sin(t / 450) * 2);
+        arm(axL, 19 + T, 7, true);
+        C(sleeveC); R(axR, 14 + T, aw, 5);
+        C(skin); R(axR + sw, 11 + T, aw, 3);
+        C(OUTLINE); R(axR + 2 + sw, 2 + T, 9, 9);
+        C("rgba(200,225,255,.85)"); R(axR + 3 + sw, 3 + T, 7, 7);
+        C("#fff"); R(axR + 4 + sw, 4 + T, 2, 1);
+        C("#6b4a2a"); R(axR + 1 + sw, 10 + T, 2, 2);
+        return true;
+      }
+      case "web": {
+        // one hand on the mouse, clicking around; the other types
+        const tap = Math.floor(t / 300) % 2;
+        arm(axL, 17 + T, 6, false); arm(axR, 17 + T, 6, false);
+        C(skin); R(axL + 1, 23 + T + tap, 5, 3); R(axR - 1, 25 + T + (Math.floor(t / 700) % 2), 4, 3);
+        return true;
+      }
+    }
+    switch (o.micro) {
+      case "stretch": {
+        // both arms up and out, drifting apart and back
+        const sp = Math.round(Math.sin(Math.min(1, (o.microT || 0) / 2400) * Math.PI) * 3);
+        C(sleeveC); R(axL - sp, 3 + H, aw, 15 + T - H); R(axR + sp, 3 + H, aw, 15 + T - H);
+        C(skin); R(axL - sp, -1 + H, aw, 4); R(axR + sp, -1 + H, aw, 4);
+        return true;
+      }
+      case "clock": {
+        // lifts the left wrist, glances at the watch, lowers it again
+        const up = (o.microT || 0) < 1500 ? 1 : 0;
+        arm(axR, 19 + T, 7, true);
+        C(sleeveC); R(axL, 17 + T, aw, up ? 4 : 6);
+        C(skin); R(axL, (up ? 21 : 23) + T, aw, 3);
+        if (up) { C("#c9d1d9"); R(axL, 20 + T, aw, 1); C("#4a6a9c"); R(axL + 1, 20 + T, 1, 1); }
+        return true;
+      }
+      case "phone": {
+        // both hands hold a phone at chest height, thumb scrolling
+        arm(axL, 17 + T, 5, false); arm(axR, 17 + T, 5, false);
+        C(OUTLINE); R(cx - 3, 19 + T, 7, 10);
+        C("#8ecaff"); R(cx - 2, 20 + T, 5, 8);
+        C("#ffffff"); R(cx - 1, 21 + T + (Math.floor((o.microT || 0) / 400) % 4) * 2, 3, 1);
+        C(skin); R(cx - 5, 24 + T, 3, 4); R(cx + 3, 24 + T, 3, 4);
+        return true;
+      }
+    }
+    return false;
+  };
+
   const armsFront = () => {
     const swing = walking ? [0, 2, 0, -2][f] : 0;
+    if ((o.tool || o.micro) && workArms()) return;
     switch (o.anim) {
       case "type": {
         const tap = Math.floor(o.t / 160) % 2;
@@ -2324,6 +2539,11 @@ function personShapes(b, ox, oy, e, o, mono) {
     beardFront();
     glassesFront();
     accessoryFront(b, ox, oy + H, L, C);
+    if (o.deep) { // deep focus: big over-ear headphones
+      C("#222"); R(9, 1 + H, 14, 2); R(8, 2 + H, 2, 5); R(22, 2 + H, 2, 5);
+      C("#2a2a30"); R(7, 6 + H, 3, 6); R(22, 6 + H, 3, 6);
+      C(e.color || "#e5a02d"); R(8, 7 + H, 1, 4); R(23, 7 + H, 1, 4);
+    }
   };
 
   const headBack = () => {

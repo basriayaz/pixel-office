@@ -573,7 +573,7 @@ class Office {
     }
     for (const it of this.eventItems(t)) items.push(it);
     items.sort((a, c) => a.y - c.y);
-    for (const it of items) it.draw();
+    for (const it of items) it.draw(b);
     const occupied = new Set(this.emps.filter((e) => e.spot && !e.path.length).map((e) => e.spot.key));
     for (const e of this.emps) { drawOverhead(b, e, t, occupied); drawLifeOverhead(b, e, t); }
     for (const e of this.emps) if (this.isNapping(e)) drawZzz(b, e, t);
@@ -990,6 +990,7 @@ function drawConcrete(b, x, y, w, h) {
 
 // Current hour of the day (0..24). `?hour=23` in the URL pins it, to look at the night without waiting for it.
 function poHour() {
+  if (window.__poHour >= 0 && window.__poHour < 24) return window.__poHour; // set by the ?debug panel
   try { const o = parseFloat(new URLSearchParams(location.search).get("hour")); if (o >= 0 && o < 24) return o; } catch {}
   const d = new Date();
   return d.getHours() + d.getMinutes() / 60;
@@ -2412,7 +2413,7 @@ function renderThemePreview(theme, width = 240) {
     items.push({ y: feet + TILE + 6, draw: () => drawDesk(b, { seat, tx: -1, ty: -1, path: [], status: "idle", color: "#61afef", look: {}, seed: 0 }, 5000) });
   }
   items.sort((a, c) => a.y - c.y);
-  for (const it of items) it.draw();
+  for (const it of items) it.draw(b);
   const out = document.createElement("canvas");
   out.width = width; out.height = Math.round(width * LH / LW);
   const g = out.getContext("2d");

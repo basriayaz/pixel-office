@@ -66,6 +66,7 @@ async function load() {
   $("refreshInfo").textContent = detail.lastRefresh ? t("ui.profile.lastRefresh", { date: fmtDate(detail.lastRefresh) }) : t("ui.profile.neverRefreshed");
   renderSkills();
   renderConnectors();
+  renderIntegrations();
   renderRecent();
 }
 
@@ -131,6 +132,33 @@ async function renderConnectors() {
   }
   $("connectorsAllOff").onclick = () => saveConnectors(rows.map((c) => c.name));
   $("connectorsAllOn").onclick = () => saveConnectors([]);
+}
+
+// Integrations (Settings → Integrations): the catalogue servers the boss added; each switch gives this employee one. None by default.
+let integrations = null;
+async function saveIntegrations(ids) {
+  const r = await api("PUT", `${API}/employees/${encodeURIComponent(id)}/integrations`, { ids });
+  detail.integrations = r.ids;
+  renderIntegrations();
+  toast(t(r.applies === "next" ? "ui.profile.connectorsNext" : "ui.profile.connectorsSaved"));
+}
+async function renderIntegrations() {
+  const host = $("integrationList");
+  if (!integrations) { try { integrations = (await api("GET", "/api/integrations")).integrations; } catch { integrations = []; } }
+  const on = new Set(detail.integrations || []);
+  const rows = integrations.filter((x) => x.added || on.has(x.id));
+  host.innerHTML = "";
+  $("integrationNone").hidden = rows.length > 0;
+  for (const x of rows) {
+    const row = document.createElement("label");
+    row.className = "skill";
+    row.style.cursor = "pointer";
+    const tools = x.tools ? t("ui.integrations.toolsLine", { total: x.tools.total, read: x.tools.read, write: x.tools.write }) : "";
+    const state = x.ok === false ? t("ui.integrations.err." + (["auth", "timeout", "offline", "reauth"].includes(String(x.error).split(":")[0]) ? String(x.error).split(":")[0] : "error"), { detail: "" }) : x.readOnly ? t("ui.integrations.readOnlyOn") : tools;
+    row.innerHTML = `<div><b>${escapeHtml(x.name)}</b><div class="muted">${escapeHtml(state)}</div></div><input type="checkbox" style="width:auto;accent-color:var(--accent)" ${on.has(x.id) ? "checked" : ""} ${x.ok === false ? "" : ""}/>`;
+    row.querySelector("input").onchange = (ev) => { const next = new Set(on); if (ev.target.checked) next.add(x.id); else next.delete(x.id); saveIntegrations([...next]); };
+    host.appendChild(row);
+  }
 }
 
 function renderSkills() {

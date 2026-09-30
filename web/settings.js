@@ -269,6 +269,6 @@ const settingsUI = (() => {
   });
 
   const deep = params.get("settings");
-  if (deep != null) show(deep);
+  if (deep != null && deep !== "integrations") show(deep); // (integrations moved to the market page)
   return { show, hide };
 })();

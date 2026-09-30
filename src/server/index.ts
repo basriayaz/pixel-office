@@ -16,6 +16,7 @@ import crypto from "node:crypto";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { officeToolDefs } from "./office-tools.js";
+import { CATEGORIES, initIntegrations, listIntegrations, saveIntegration, checkIntegration, removeIntegration, entryOf, startOAuth, finishOAuth, addCustom, gateway, setOwnClient } from "./integrations.js";
 import { CLAUDE_MODELS, PROVIDERS, activeModels, isActiveModel, initProviders, providersReady, providerStatuses, updateProvider, installProvider, loginProvider, refreshProvider, canInstall, canLogin, type ProviderId } from "./providers.js";
 import { createGuard, isLoopbackHost } from "./security.js";
 import { acquireLock } from "./lock.js";
@@ -220,6 +221,7 @@ const colleaguesOf = (o: OfficeRt) => ({
   autoMoveBlock: () => { const c = cycleOf(o); return modeOf(o) === "auto" && c.phase !== "idle" && spent(o, c) > budgetOf(o) ? t("server.cycle.budget", { spent: spent(o, c).toFixed(2), budget: budgetOf(o) }) : undefined; },
   countDiscovery: () => { const c = cycleOf(o); if (c.phase === "discovering") saveCycle(o, { ...c, tasks: c.tasks + 1 }); },
   mcpUrl: (self: Employee) => `http://127.0.0.1:${settings.port}/mcp/${mcpToken(self)}`,
+  gatewayUrl: (self: Employee, id: string) => `http://127.0.0.1:${settings.port}/gw/${mcpToken(self)}/${id}`,
 });
 
 // Office tools for engines that run as a separate program (Codex): the same definitions Claude gets in-process, served over
@@ -500,6 +502,7 @@ const defaultOfficeId = () => settings.offices[0].id;
 const app = express();
 // Refuses foreign pages (Origin) and DNS rebinding (Host) before anything is served; see security.ts.
 initProviders(R, settings.dataDir);
+initIntegrations(settings.dataDir);
 const guard = createGuard({ port: settings.port, host: settings.host, extraHosts: (process.env.PIXEL_OFFICE_ALLOWED_HOSTS ?? "").split(",") });
 app.use(guard.middleware);
 app.use(express.json({ limit: "1mb" }));
@@ -551,6 +554,15 @@ app.all("/mcp/:token", async (req, res) => {
   res.on("close", () => { void transport.close(); void server.close(); });
   try { await server.connect(transport); await transport.handleRequest(req, res, req.body); }
   catch (err) { if (!res.headersSent) res.status(500).json({ jsonrpc: "2.0", error: { code: -32603, message: (err as Error).message }, id: null }); }
+});
+
+// The integrations gateway: an employee's session reaches a connected server only through here (credentials are added, the grant and read-only mode enforced).
+app.all("/gw/:token/:id", async (req, res) => {
+  const e = mcpTokens.get(String(req.params.token));
+  const o = e && offices.get(e.cfg.officeId);
+  const id = String(req.params.id);
+  if (!e || !o || o.employees.get(e.cfg.id) !== e || !e.cfg.integrations?.includes(id)) { res.status(404).end(); return; }
+  await gateway(req, res, id);
 });
 
 app.get("/i18n.js", async (_req, res) => { await providersReady; res.type("application/javascript").send(`window.PO = ${JSON.stringify(clientConfig())};`); });
@@ -1107,6 +1119,7 @@ r.get("/employees/:id/detail", (req: OReq, res) => {
     skills: listSkills(e.cfg.pluginDir),
     projectSkills: listProjectSkills(e.cfg.cwd).map((s) => ({ ...s, dir: displayPath(s.dir) })),
     connectorsOff: e.cfg.connectorsOff ?? [],
+    integrations: e.cfg.integrations ?? [],
     skillsDir: e.cfg.pluginDir ? path.join(e.cfg.pluginDir, "skills") : null,
     refreshHours: e.cfg.refreshHours ?? 0,
     autoRefresh: autoRefreshOf(e),
@@ -1131,6 +1144,77 @@ r.put("/employees/:id/connectors", (req: OReq, res) => {
   writeAgentFile(cfg);
   e.setConfigQuietly(cfg);
   res.json({ ok: true, off, applies: e.busy ? "next" : "now" });
+});
+
+// Integrations market: the catalogue with what the boss has connected (never any credential), OAuth sign-in, servers of their own,
+// and who gets which (the matrix, or the profile → Skills).
+app.get("/api/integrations", (_req, res) => res.json({ integrations: listIntegrations(), categories: CATEGORIES() }));
+app.post("/api/integrations/custom", async (req, res) => {
+  const b = req.body ?? {};
+  if (typeof b.name !== "string" || typeof b.url !== "string" || !["none", "token", "oauth"].includes(b.auth)) return res.status(400).json({ error: t("server.integrations.badBody") });
+  try {
+    const r = await addCustom({ name: b.name, url: b.url, auth: b.auth, header: typeof b.header === "string" ? b.header : undefined, token: typeof b.token === "string" ? b.token : undefined, desc: typeof b.desc === "string" ? b.desc : undefined });
+    if (r.error) return res.status(422).json({ error: r.error });
+    res.json({ integration: r.view });
+  } catch (err) { res.status(500).json({ error: (err as Error).message }); }
+});
+app.put("/api/oauth-clients/:group", (req, res) => {
+  const b = req.body ?? {};
+  if (typeof b.clientId !== "string" || (b.clientSecret !== undefined && typeof b.clientSecret !== "string")) return res.status(400).json({ error: t("server.integrations.badBody") });
+  if (!setOwnClient(String(req.params.group), b.clientId, b.clientSecret ?? "")) return res.status(404).json({ error: t("server.notFound") });
+  res.json({ integrations: listIntegrations() });
+});
+app.post("/api/integrations/:id/oauth/start", async (req, res) => {
+  const id = String(req.params.id);
+  if (!entryOf(id)?.oauth) return res.status(404).json({ error: t("server.notFound") });
+  try { res.json(await startOAuth(id, `http://${req.headers.host}`)); }
+  catch (err) { res.status(502).json({ error: `error:${String((err as Error).message).replace(/\s+/g, " ").slice(0, 160)}` }); }
+});
+// The browser comes back here from the service's sign-in page (a top-level navigation): tell the office tab and say it can close.
+app.get("/api/integrations/oauth/callback", async (req, res) => {
+  const q = req.query;
+  const r = await finishOAuth(String(q.state ?? ""), typeof q.code === "string" ? q.code : undefined, typeof q.error === "string" ? q.error : undefined);
+  const payload = JSON.stringify({ type: "po-oauth", id: r.id ?? null, ok: r.ok, error: r.error ?? null }).replace(/</g, "\\u003c");
+  const msg = r.ok ? t("server.integrations.oauthDone") : t("server.integrations.oauthFail", { error: (r.error ?? "").replace(/^[a-z]+:/, "") });
+  res.type("html").send(`<!doctype html><meta charset="utf-8"><title>Pixel Office</title><body style="font:16px system-ui;background:#14161c;color:#e8e8ee;display:grid;place-items:center;height:100vh;margin:0"><p style="text-align:center;max-width:26em">${r.ok ? "✅" : "⚠️"}<br>${msg.replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" })[c]!)}</p><script>try{new BroadcastChannel("po-oauth").postMessage(${payload})}catch(e){}try{window.opener&&window.opener.postMessage(${payload},location.origin)}catch(e){}setTimeout(()=>{try{window.close()}catch(e){}},1500)</script>`);
+});
+app.put("/api/integrations/:id", async (req, res) => {
+  const id = String(req.params.id);
+  if (!entryOf(id)) return res.status(404).json({ error: t("server.notFound") });
+  const b = req.body ?? {};
+  if (b.token !== undefined && typeof b.token !== "string") return res.status(400).json({ error: t("server.integrations.badBody") });
+  try {
+    const r = await saveIntegration(id, { token: b.token, readOnly: typeof b.readOnly === "boolean" ? b.readOnly : undefined, add: typeof b.add === "boolean" ? b.add : undefined });
+    // a token the server refused is not kept: the boss sees why
+    if (r.probe && !r.probe.ok && b.token) return res.status(422).json({ error: r.probe.error ?? "error", integration: r.view });
+    res.json({ integration: r.view });
+  } catch (err) { res.status(500).json({ error: (err as Error).message }); }
+});
+app.post("/api/integrations/:id/check", async (req, res) => {
+  if (!entryOf(String(req.params.id))) return res.status(404).json({ error: t("server.notFound") });
+  try { res.json({ integration: await checkIntegration(String(req.params.id)) }); } catch (err) { res.status(500).json({ error: (err as Error).message }); }
+});
+app.delete("/api/integrations/:id", (req, res) => {
+  const id = String(req.params.id);
+  if (!entryOf(id)) return res.status(404).json({ error: t("server.notFound") });
+  const view = removeIntegration(id);
+  // nobody keeps what is no longer connected
+  for (const o of offices.values()) for (const e of o.employees.values()) {
+    if (!e.cfg.integrations?.includes(id)) continue;
+    const ids = e.cfg.integrations.filter((x) => x !== id);
+    const cfg: EmployeeConfig = { ...e.cfg, integrations: ids.length ? ids : undefined };
+    writeAgentFile(cfg); e.setConfigQuietly(cfg);
+  }
+  res.json({ integration: view });
+});
+r.put("/employees/:id/integrations", (req: OReq, res) => {
+  const e = empOf(req);
+  if (!e) return res.status(404).json({ error: t("server.notFound") });
+  const ids = Array.isArray(req.body?.ids) ? [...new Set((req.body.ids as unknown[]).map((x) => String(x)).filter((x) => entryOf(x)))] : [];
+  const cfg: EmployeeConfig = { ...e.cfg, integrations: ids.length ? ids : undefined };
+  writeAgentFile(cfg);
+  e.setConfigQuietly(cfg);
+  res.json({ ok: true, ids, applies: e.busy ? "next" : "now" });
 });
 
 r.put("/employees/:id/memory", (req: OReq, res) => {

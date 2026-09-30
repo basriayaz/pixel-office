@@ -23,6 +23,7 @@ import { statusDigest } from "./digest.js";
 import { engineOf, geminiKey, openrouterCatalog, openrouterCostOf, openrouterEnv, openrouterSlug, markAuthFailed, AUTH_ERROR, type Engine } from "./providers.js";
 import { isTransient, retryDelay, RETRY_DELAYS_MS } from "./retry.js";
 import { listSkills, listProjectSkills } from "./agents.js";
+import { claudeSession, readOnlySession } from "./integrations.js";
 import { fromClaudeRateLimit, fromClaudeUsage, fromCodexThread, claudeUsageDue } from "./quota.js";
 import type { CostKind } from "./ledger.js";
 
@@ -52,6 +53,7 @@ export interface EmployeeConfig {
   worktree?: boolean; // works in a private git worktree (branch po/<id>) so parallel code changes cannot collide
   baseCwd?: string;   // the configured working folder; `cwd` is the worktree inside it when `worktree` is on
   connectorsOff?: string[]; // claude.ai connectors (by server name) this employee does not get; all others come along by default
+  integrations?: string[];  // integrations (Settings → Integrations: catalogue MCP servers) this employee was given; none by default
   autoRefresh?: boolean;    // the timed knowledge refresh runs for this employee (off unless switched on: it spends tokens nobody asked for)
 }
 
@@ -946,6 +948,7 @@ export class Employee extends EventEmitter {
     const resumeId = key === "side" ? undefined : taskId !== undefined ? task?.session : this.sessionId;
     this.procPrev = resumeId ? this.sessionTotals()[resumeId] ?? 0 : 0;
     this.procFirst = true;
+    const integ = claudeSession(this.colleagues ? this.cfg.integrations : undefined, (id) => this.colleagues!.gatewayUrl(this, id)); // the integrations this employee was given: their servers, the read-only tools that need no question
     this.q = query({
       prompt: this.input(gen),
       options: {
@@ -965,8 +968,9 @@ export class Employee extends EventEmitter {
         title: taskId !== undefined ? `${this.cfg.name} — #${taskId} ${task?.title ?? ""}`.slice(0, 120) : `${this.cfg.name} — ${this.cfg.role}`,
         includePartialMessages: true,
         permissionMode: this.cfg.permissionMode ?? "default",
-        allowedTools: [...(this.cfg.allowedTools ?? []), ...OFFICE_TOOLS],
-        mcpServers: this.colleagues ? { office: officeServer(this, this.colleagues) } : undefined,
+        allowedTools: [...(this.cfg.allowedTools ?? []), ...OFFICE_TOOLS, ...integ.allowed],
+        disallowedTools: integ.denied.length ? integ.denied : undefined,
+        mcpServers: this.colleagues || Object.keys(integ.servers).length ? { ...(this.colleagues ? { office: officeServer(this, this.colleagues) } : {}), ...integ.servers } : undefined,
         model: viaOpenRouter ? openrouterSlug(this.cfg.model!) : this.cfg.model,
         // effort is a Claude setting; other models behind OpenRouter may reject it
         effort: viaOpenRouter ? undefined : this.cfg.effort,
@@ -1184,8 +1188,10 @@ export class Employee extends EventEmitter {
         const thread = key === "side" ? undefined : taskId !== undefined ? task?.session : this.sessionId;
         const mode = this.cfg.permissionMode ?? "default";
         const started = Date.now();
+        const fixedInteg = this.colleagues ? readOnlySession(this.cfg.integrations, (id) => this.colleagues!.gatewayUrl(this, id)) : [];
         const run = runCodexTurn({
           cwd: this.cfg.cwd, prompt: prompt || "-", model: this.cfg.model!, effort: this.cfg.effort, thread, persist: key !== "side", images: files,
+          extraMcp: fixedInteg,
           instructions: this.buildPrompt() + this.codexExtras(),
           sandbox: this.meetingTurn || mode === "plan" ? "read-only" : mode === "bypassPermissions" ? "full" : "workspace-write",
           writableDirs: this.cfg.dir ? [this.cfg.dir] : [],
@@ -1277,6 +1283,7 @@ export class Employee extends EventEmitter {
           approval: this.meetingTurn || mode === "plan" ? "plan" : mode === "bypassPermissions" ? "yolo" : "auto_edit",
           includeDirs: this.cfg.dir ? [this.cfg.dir] : [],
           mcpUrl: this.colleagues?.mcpUrl(this),
+          extraMcp: this.colleagues ? readOnlySession(this.cfg.integrations, (id) => this.colleagues!.gatewayUrl(this, id)) : [],
           settingsFile: path.join(os.tmpdir(), "pixel-office", `gemini-${this.cfg.officeId}-${this.cfg.id}.json`),
         }, {
           onSession: (id) => {

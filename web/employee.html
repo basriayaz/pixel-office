@@ -85,6 +85,14 @@
       <div class="actions"><button type="button" class="btn small ghost" id="connectorsAllOff" data-i18n="ui.profile.connectorsAllOff"></button><button type="button" class="btn small ghost" id="connectorsAllOn" data-i18n="ui.profile.connectorsAllOn"></button></div>
     </section>
 
+    <section class="tab card" data-tab="skills" hidden id="integrationsCard">
+      <h2 data-i18n="ui.integrations.profileTitle"></h2>
+      <p class="muted" data-i18n="ui.integrations.profileHint"></p>
+      <div id="integrationList" class="skill-list"></div>
+      <p class="muted"><a href="/?integrations" data-i18n="ui.integrations.openMarket"></a></p>
+      <p class="muted" id="integrationNone" hidden><a href="/?settings=integrations" data-i18n="ui.integrations.profileNone"></a></p>
+    </section>
+
     <section class="tab card" data-tab="history" hidden>
       <h2 data-i18n="ui.profile.historyTitle"></h2>
       <div id="recent" class="recent"></div>

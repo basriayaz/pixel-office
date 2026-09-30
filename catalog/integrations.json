@@ -1,0 +1,2154 @@
+{
+ "v": 1,
+ "categories": [
+  "code",
+  "work",
+  "google",
+  "data",
+  "cloud",
+  "ai",
+  "media",
+  "web",
+  "crm",
+  "payments",
+  "support",
+  "security",
+  "docs",
+  "automation"
+ ],
+ "integrations": [
+  {
+   "id": "github",
+   "name": "GitHub",
+   "category": "code",
+   "url": "https://api.githubcopilot.com/mcp/",
+   "desc": {
+    "en": "Repositories, issues, pull requests and code search.",
+    "tr": "Depolar, issue'lar, pull request'ler ve kod araması."
+   },
+   "icon": "github",
+   "brand": "#181717",
+   "token": {
+    "help": "https://github.com/settings/personal-access-tokens/new",
+    "hint": "github_pat_…"
+   },
+   "readOnly": {
+    "url": "https://api.githubcopilot.com/mcp/readonly"
+   },
+   "featured": true
+  },
+  {
+   "id": "sentry",
+   "name": "Sentry",
+   "category": "code",
+   "url": "https://mcp.sentry.dev/mcp",
+   "desc": {
+    "en": "Errors, releases and performance traces.",
+    "tr": "Hatalar, sürümler ve performans izleri."
+   },
+   "icon": "sentry",
+   "brand": "#9a7fe0",
+   "oauth": true,
+   "token": {
+    "help": "https://sentry.io/settings/account/api/auth-tokens/",
+    "hint": "sntryu_…"
+   },
+   "beta": true
+  },
+  {
+   "id": "vercel",
+   "name": "Vercel",
+   "category": "code",
+   "url": "https://mcp.vercel.com",
+   "desc": {
+    "en": "Projects, deployments and logs.",
+    "tr": "Projeler, dağıtımlar ve günlükler."
+   },
+   "icon": "vercel",
+   "brand": "#000000",
+   "oauth": true
+  },
+  {
+   "id": "netlify",
+   "name": "Netlify",
+   "category": "code",
+   "url": "https://netlify-mcp.netlify.app/mcp",
+   "desc": {
+    "en": "Sites, deploys and forms.",
+    "tr": "Siteler, dağıtımlar ve formlar."
+   },
+   "icon": "netlify",
+   "brand": "#00C7B7",
+   "oauth": true
+  },
+  {
+   "id": "prisma",
+   "name": "Prisma Postgres",
+   "category": "code",
+   "url": "https://mcp.prisma.io/mcp",
+   "desc": {
+    "en": "Databases and schema for Prisma Postgres.",
+    "tr": "Prisma Postgres için veritabanları ve şema."
+   },
+   "icon": "prisma",
+   "brand": "#2D3748",
+   "oauth": true
+  },
+  {
+   "id": "neon",
+   "name": "Neon",
+   "category": "code",
+   "url": "https://mcp.neon.tech/mcp",
+   "desc": {
+    "en": "Serverless Postgres projects, branches and SQL.",
+    "tr": "Sunucusuz Postgres projeleri, dalları ve SQL."
+   },
+   "icon": "neon",
+   "brand": "#34D59A",
+   "oauth": true
+  },
+  {
+   "id": "supabase",
+   "name": "Supabase",
+   "category": "code",
+   "url": "https://mcp.supabase.com/mcp",
+   "desc": {
+    "en": "Projects, databases, SQL and logs.",
+    "tr": "Projeler, veritabanları, SQL ve günlükler."
+   },
+   "icon": "supabase",
+   "brand": "#3FCF8E",
+   "oauth": true,
+   "token": {
+    "help": "https://supabase.com/dashboard/account/tokens",
+    "hint": "sbp_…"
+   },
+   "readOnly": {
+    "query": {
+     "read_only": "true"
+    }
+   },
+   "beta": true,
+   "featured": true
+  },
+  {
+   "id": "datadog",
+   "name": "Datadog",
+   "category": "code",
+   "url": "https://mcp.datadoghq.com/api/unstable/mcp-server/mcp",
+   "desc": {
+    "en": "Metrics, monitors, logs and incidents.",
+    "tr": "Metrikler, izleyiciler, günlükler ve olaylar."
+   },
+   "icon": "datadog",
+   "brand": "#632CA6",
+   "oauth": true
+  },
+  {
+   "id": "notion",
+   "name": "Notion",
+   "category": "work",
+   "url": "https://mcp.notion.com/mcp",
+   "desc": {
+    "en": "Pages, databases and comments.",
+    "tr": "Sayfalar, veritabanları ve yorumlar."
+   },
+   "icon": "notion",
+   "brand": "#e8e6df",
+   "oauth": true,
+   "featured": true
+  },
+  {
+   "id": "linear",
+   "name": "Linear",
+   "category": "work",
+   "url": "https://mcp.linear.app/mcp",
+   "desc": {
+    "en": "Issues, projects and cycles.",
+    "tr": "Görevler, projeler ve döngüler."
+   },
+   "icon": "linear",
+   "brand": "#5E6AD2",
+   "oauth": true,
+   "token": {
+    "help": "https://linear.app/settings/account/security",
+    "hint": "lin_api_…"
+   },
+   "beta": true,
+   "featured": true
+  },
+  {
+   "id": "atlassian",
+   "name": "Atlassian",
+   "category": "work",
+   "url": "https://mcp.atlassian.com/v1/mcp",
+   "desc": {
+    "en": "Jira issues and Confluence pages.",
+    "tr": "Jira görevleri ve Confluence sayfaları."
+   },
+   "icon": "atlassian",
+   "brand": "#0052CC",
+   "oauth": true
+  },
+  {
+   "id": "clickup",
+   "name": "ClickUp",
+   "category": "work",
+   "url": "https://mcp.clickup.com/mcp",
+   "desc": {
+    "en": "Tasks, lists and docs.",
+    "tr": "Görevler, listeler ve belgeler."
+   },
+   "icon": "clickup",
+   "brand": "#7B68EE",
+   "oauth": true
+  },
+  {
+   "id": "monday",
+   "name": "monday.com",
+   "category": "work",
+   "url": "https://mcp.monday.com/mcp",
+   "desc": {
+    "en": "Boards, items and updates.",
+    "tr": "Panolar, öğeler ve güncellemeler."
+   },
+   "brand": "#ff3d57",
+   "oauth": true,
+   "icon": "monday.svg"
+  },
+  {
+   "id": "airtable",
+   "name": "Airtable",
+   "category": "work",
+   "url": "https://mcp.airtable.com/mcp",
+   "desc": {
+    "en": "Bases, tables and records.",
+    "tr": "Tabanlar, tablolar ve kayıtlar."
+   },
+   "icon": "airtable",
+   "brand": "#18BFFF",
+   "oauth": true
+  },
+  {
+   "id": "todoist",
+   "name": "Todoist",
+   "category": "work",
+   "url": "https://ai.todoist.net/mcp",
+   "desc": {
+    "en": "Tasks, projects and labels.",
+    "tr": "Görevler, projeler ve etiketler."
+   },
+   "icon": "todoist",
+   "brand": "#E44332",
+   "oauth": true
+  },
+  {
+   "id": "miro",
+   "name": "Miro",
+   "category": "work",
+   "url": "https://mcp.miro.com/",
+   "desc": {
+    "en": "Boards, diagrams and sticky notes.",
+    "tr": "Panolar, diyagramlar ve yapışkan notlar."
+   },
+   "icon": "miro",
+   "brand": "#050038",
+   "oauth": true
+  },
+  {
+   "id": "coda",
+   "name": "Coda",
+   "category": "work",
+   "url": "https://coda.io/apis/mcp",
+   "desc": {
+    "en": "Docs, tables and pages.",
+    "tr": "Belgeler, tablolar ve sayfalar."
+   },
+   "icon": "coda",
+   "brand": "#F46A54",
+   "oauth": true
+  },
+  {
+   "id": "attio",
+   "name": "Attio",
+   "category": "work",
+   "url": "https://mcp.attio.com/mcp",
+   "desc": {
+    "en": "CRM records, lists and notes.",
+    "tr": "CRM kayıtları, listeler ve notlar."
+   },
+   "brand": "#8e8cf3",
+   "oauth": true,
+   "icon": "attio.png"
+  },
+  {
+   "id": "fireflies",
+   "name": "Fireflies",
+   "category": "work",
+   "url": "https://api.fireflies.ai/mcp",
+   "desc": {
+    "en": "Meeting transcripts and summaries.",
+    "tr": "Toplantı dökümleri ve özetleri."
+   },
+   "brand": "#f4c542",
+   "oauth": true,
+   "icon": "fireflies.png"
+  },
+  {
+   "id": "granola",
+   "name": "Granola",
+   "category": "work",
+   "url": "https://mcp.granola.ai/mcp",
+   "desc": {
+    "en": "Meeting notes.",
+    "tr": "Toplantı notları."
+   },
+   "brand": "#7bc96f",
+   "oauth": true,
+   "icon": "granola.png"
+  },
+  {
+   "id": "posthog",
+   "name": "PostHog",
+   "category": "data",
+   "url": "https://mcp.posthog.com/mcp",
+   "desc": {
+    "en": "Product analytics, feature flags and experiments.",
+    "tr": "Ürün analitiği, özellik bayrakları ve deneyler."
+   },
+   "icon": "posthog",
+   "brand": "#f9a03f",
+   "oauth": true,
+   "token": {
+    "help": "https://us.posthog.com/settings/user-api-keys",
+    "hint": "phx_…"
+   },
+   "beta": true
+  },
+  {
+   "id": "mixpanel",
+   "name": "Mixpanel",
+   "category": "data",
+   "url": "https://mcp.mixpanel.com/mcp",
+   "desc": {
+    "en": "Events, funnels and retention.",
+    "tr": "Olaylar, dönüşüm hunileri ve elde tutma."
+   },
+   "icon": "mixpanel",
+   "brand": "#a48bf5",
+   "oauth": true
+  },
+  {
+   "id": "amplitude",
+   "name": "Amplitude",
+   "category": "data",
+   "url": "https://mcp.amplitude.com/mcp",
+   "desc": {
+    "en": "Product analytics and charts.",
+    "tr": "Ürün analitiği ve grafikler."
+   },
+   "brand": "#4a7cff",
+   "oauth": true,
+   "icon": "amplitude.svg"
+  },
+  {
+   "id": "huggingface",
+   "name": "Hugging Face",
+   "category": "data",
+   "url": "https://huggingface.co/mcp",
+   "desc": {
+    "en": "Search models, datasets and Spaces.",
+    "tr": "Model, veri kümesi ve Space ara."
+   },
+   "icon": "huggingface",
+   "brand": "#FFD21E",
+   "token": {
+    "help": "https://huggingface.co/settings/tokens",
+    "hint": "hf_…",
+    "optional": true
+   },
+   "open": true
+  },
+  {
+   "id": "stripe",
+   "name": "Stripe",
+   "category": "payments",
+   "url": "https://mcp.stripe.com",
+   "desc": {
+    "en": "Customers, payments, subscriptions and docs.",
+    "tr": "Müşteriler, ödemeler, abonelikler ve belgeler."
+   },
+   "icon": "stripe",
+   "brand": "#635BFF",
+   "oauth": true,
+   "token": {
+    "help": "https://dashboard.stripe.com/apikeys",
+    "hint": "rk_live_…"
+   },
+   "beta": true,
+   "featured": true
+  },
+  {
+   "id": "paypal",
+   "name": "PayPal",
+   "category": "payments",
+   "url": "https://mcp.paypal.com/mcp",
+   "desc": {
+    "en": "Invoices, orders and transactions.",
+    "tr": "Faturalar, siparişler ve işlemler."
+   },
+   "icon": "paypal",
+   "brand": "#002991",
+   "oauth": true
+  },
+  {
+   "id": "square",
+   "name": "Square",
+   "category": "payments",
+   "url": "https://mcp.squareup.com/sse",
+   "desc": {
+    "en": "Payments, catalog and customers.",
+    "tr": "Ödemeler, katalog ve müşteriler."
+   },
+   "icon": "square",
+   "brand": "#3E4348",
+   "oauth": true
+  },
+  {
+   "id": "intercom",
+   "name": "Intercom",
+   "category": "support",
+   "url": "https://mcp.intercom.com/mcp",
+   "desc": {
+    "en": "Conversations, contacts and help articles.",
+    "tr": "Konuşmalar, kişiler ve yardım makaleleri."
+   },
+   "icon": "intercom",
+   "brand": "#6AFDEF",
+   "oauth": true
+  },
+  {
+   "id": "webflow",
+   "name": "Webflow",
+   "category": "web",
+   "url": "https://mcp.webflow.com/mcp",
+   "desc": {
+    "en": "Sites, pages and CMS collections.",
+    "tr": "Siteler, sayfalar ve CMS koleksiyonları."
+   },
+   "icon": "webflow",
+   "brand": "#146EF5",
+   "oauth": true
+  },
+  {
+   "id": "wix",
+   "name": "Wix",
+   "category": "web",
+   "url": "https://mcp.wix.com/mcp",
+   "desc": {
+    "en": "Sites, stores and bookings.",
+    "tr": "Siteler, mağazalar ve rezervasyonlar."
+   },
+   "icon": "wix",
+   "brand": "#0C6EFC",
+   "oauth": true
+  },
+  {
+   "id": "sanity",
+   "name": "Sanity",
+   "category": "web",
+   "url": "https://mcp.sanity.io",
+   "desc": {
+    "en": "Content datasets and documents.",
+    "tr": "İçerik veri kümeleri ve belgeler."
+   },
+   "icon": "sanity",
+   "brand": "#0D0E12",
+   "oauth": true
+  },
+  {
+   "id": "canva",
+   "name": "Canva",
+   "category": "web",
+   "url": "https://mcp.canva.com/mcp",
+   "desc": {
+    "en": "Designs and brand assets.",
+    "tr": "Tasarımlar ve marka varlıkları."
+   },
+   "brand": "#00c4cc",
+   "oauth": true,
+   "featured": true,
+   "icon": "canva"
+  },
+  {
+   "id": "gamma",
+   "name": "Gamma",
+   "category": "web",
+   "url": "https://mcp.gamma.app/mcp",
+   "desc": {
+    "en": "Presentations and documents.",
+    "tr": "Sunumlar ve belgeler."
+   },
+   "brand": "#a06cf0",
+   "oauth": true,
+   "icon": "gamma.png"
+  },
+  {
+   "id": "zapier",
+   "name": "Zapier",
+   "category": "automation",
+   "url": "https://mcp.zapier.com/api/mcp/mcp",
+   "desc": {
+    "en": "Run actions in thousands of apps.",
+    "tr": "Binlerce uygulamada eylem çalıştır."
+   },
+   "icon": "zapier",
+   "brand": "#FF4F00",
+   "oauth": true
+  },
+  {
+   "id": "context7",
+   "name": "Context7",
+   "category": "docs",
+   "url": "https://mcp.context7.com/mcp",
+   "desc": {
+    "en": "Up-to-date documentation for libraries and frameworks.",
+    "tr": "Kütüphane ve çatıların güncel belgeleri."
+   },
+   "brand": "#4ad1c8",
+   "token": {
+    "help": "https://context7.com/dashboard",
+    "hint": "ctx7sk-…",
+    "header": "CONTEXT7_API_KEY",
+    "optional": true
+   },
+   "open": true,
+   "readsOnly": true,
+   "icon": "context7.png"
+  },
+  {
+   "id": "deepwiki",
+   "name": "DeepWiki",
+   "category": "docs",
+   "url": "https://mcp.deepwiki.com/mcp",
+   "desc": {
+    "en": "Ask questions about any public GitHub repository.",
+    "tr": "Herkese açık GitHub depoları hakkında soru sor."
+   },
+   "brand": "#6ea8ff",
+   "open": true,
+   "readsOnly": true,
+   "icon": "deepwiki.png"
+  },
+  {
+   "id": "cloudflare_docs",
+   "name": "Cloudflare Docs",
+   "category": "docs",
+   "url": "https://docs.mcp.cloudflare.com/mcp",
+   "desc": {
+    "en": "Search the Cloudflare documentation.",
+    "tr": "Cloudflare belgelerinde ara."
+   },
+   "icon": "cloudflare",
+   "brand": "#F38020",
+   "open": true,
+   "readsOnly": true,
+   "featured": true
+  },
+  {
+   "id": "gmail",
+   "name": "Gmail",
+   "category": "google",
+   "url": "https://gmailmcp.googleapis.com/mcp/v1",
+   "desc": {
+    "en": "Search, read and draft email, and manage labels.",
+    "tr": "E-postaları ara, oku, taslak hazırla ve etiketleri yönet."
+   },
+   "icon": "gmail",
+   "brand": "#ea4335",
+   "oauth": true,
+   "ownClient": "google",
+   "scopes": "https://www.googleapis.com/auth/gmail.modify https://www.googleapis.com/auth/gmail.compose",
+   "featured": true
+  },
+  {
+   "id": "gdrive",
+   "name": "Google Drive",
+   "category": "google",
+   "url": "https://drivemcp.googleapis.com/mcp/v1",
+   "desc": {
+    "en": "Search, read and create files in Drive.",
+    "tr": "Drive'da dosya ara, oku ve oluştur."
+   },
+   "icon": "googledrive",
+   "brand": "#4285f4",
+   "oauth": true,
+   "ownClient": "google",
+   "scopes": "https://www.googleapis.com/auth/drive.readonly https://www.googleapis.com/auth/drive.file",
+   "featured": true
+  },
+  {
+   "id": "gcalendar",
+   "name": "Google Calendar",
+   "category": "google",
+   "url": "https://calendarmcp.googleapis.com/mcp/v1",
+   "desc": {
+    "en": "Events, calendars and free time.",
+    "tr": "Etkinlikler, takvimler ve boş zamanlar."
+   },
+   "icon": "googlecalendar",
+   "brand": "#4285f4",
+   "oauth": true,
+   "ownClient": "google",
+   "scopes": "https://www.googleapis.com/auth/calendar.events https://www.googleapis.com/auth/calendar.readonly",
+   "featured": true
+  },
+  {
+   "id": "gdocs",
+   "name": "Google Docs",
+   "category": "google",
+   "url": "https://docsmcp.googleapis.com/mcp/v1",
+   "desc": {
+    "en": "Read and edit documents.",
+    "tr": "Belgeleri oku ve düzenle."
+   },
+   "icon": "googledocs",
+   "brand": "#4285f4",
+   "oauth": true,
+   "ownClient": "google",
+   "scopes": "https://www.googleapis.com/auth/documents https://www.googleapis.com/auth/drive.readonly"
+  },
+  {
+   "id": "gsheets",
+   "name": "Google Sheets",
+   "category": "google",
+   "url": "https://sheetsmcp.googleapis.com/mcp/v1",
+   "desc": {
+    "en": "Read and update spreadsheets.",
+    "tr": "Tabloları oku ve güncelle."
+   },
+   "icon": "googlesheets",
+   "brand": "#34a853",
+   "oauth": true,
+   "ownClient": "google",
+   "scopes": "https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.readonly"
+  },
+  {
+   "id": "gslides",
+   "name": "Google Slides",
+   "category": "google",
+   "url": "https://slidesmcp.googleapis.com/mcp/v1",
+   "desc": {
+    "en": "Read and edit presentations.",
+    "tr": "Sunumları oku ve düzenle."
+   },
+   "icon": "googleslides",
+   "brand": "#fbbc04",
+   "oauth": true,
+   "ownClient": "google",
+   "scopes": "https://www.googleapis.com/auth/presentations https://www.googleapis.com/auth/drive.readonly"
+  },
+  {
+   "id": "gchat",
+   "name": "Google Chat",
+   "category": "google",
+   "url": "https://chatmcp.googleapis.com/mcp/v1",
+   "desc": {
+    "en": "Search messages and send them in spaces.",
+    "tr": "Mesajlarda ara, alanlara mesaj gönder."
+   },
+   "icon": "googlechat",
+   "brand": "#34a853",
+   "oauth": true,
+   "ownClient": "google",
+   "scopes": "https://www.googleapis.com/auth/chat.messages https://www.googleapis.com/auth/chat.spaces.readonly https://www.googleapis.com/auth/chat.memberships.readonly"
+  },
+  {
+   "id": "bigquery",
+   "name": "BigQuery",
+   "category": "google",
+   "url": "https://bigquery.googleapis.com/mcp",
+   "desc": {
+    "en": "Datasets, tables and SQL over your data.",
+    "tr": "Veri kümeleri, tablolar ve verin üzerinde SQL."
+   },
+   "icon": "googlebigquery",
+   "brand": "#669df6",
+   "oauth": true,
+   "ownClient": "google",
+   "scopes": "https://www.googleapis.com/auth/bigquery"
+  },
+  {
+   "id": "mslearn",
+   "name": "Microsoft Learn",
+   "category": "docs",
+   "url": "https://learn.microsoft.com/api/mcp",
+   "desc": {
+    "en": "Search and fetch official Microsoft and Azure documentation and code samples.",
+    "tr": "Resmi Microsoft ve Azure dokümanlarında ve kod örneklerinde arama yapar."
+   },
+   "icon": "microsoft",
+   "brand": "#5E5E5E",
+   "open": true,
+   "readsOnly": true
+  },
+  {
+   "id": "googledev",
+   "name": "Google Developer Knowledge",
+   "category": "google",
+   "url": "https://developerknowledge.googleapis.com/mcp",
+   "desc": {
+    "en": "Search official Google developer documentation (Firebase, Cloud, Android, Maps and more).",
+    "tr": "Resmi Google geliştirici dokümanlarında (Firebase, Cloud, Android, Maps vb.) arama yapar."
+   },
+   "icon": "google",
+   "brand": "#4285F4",
+   "token": {
+    "help": "https://console.cloud.google.com/apis/library/developerknowledge.googleapis.com",
+    "hint": "AIza… (API key restricted to Developer Knowledge API)",
+    "header": "X-Goog-Api-Key",
+    "prefix": ""
+   },
+   "readsOnly": true
+  },
+  {
+   "id": "googlemaps",
+   "name": "Google Maps Grounding Lite",
+   "category": "google",
+   "url": "https://mapstools.googleapis.com/mcp",
+   "desc": {
+    "en": "Search places, get weather and compute routes with Google Maps data.",
+    "tr": "Google Maps verileriyle yer arar, hava durumunu getirir ve rota hesaplar."
+   },
+   "icon": "googlemaps",
+   "brand": "#4285F4",
+   "token": {
+    "help": "https://console.cloud.google.com/apis/library/mapstools.googleapis.com",
+    "hint": "AIza… (Maps Grounding Lite API key)",
+    "header": "X-Goog-Api-Key",
+    "prefix": ""
+   }
+  },
+  {
+   "id": "higgsfield",
+   "name": "Higgsfield",
+   "category": "media",
+   "url": "https://mcp.higgsfield.ai/mcp",
+   "desc": {
+    "en": "Generate images and videos with Higgsfield.",
+    "tr": "Higgsfield ile görsel ve video üret."
+   },
+   "brand": "#c6f432",
+   "oauth": true,
+   "featured": true,
+   "icon": "higgsfield.png"
+  },
+  {
+   "id": "runway",
+   "name": "Runway",
+   "category": "media",
+   "url": "https://mcp.runwayml.com/mcp",
+   "desc": {
+    "en": "Generate videos and images with your Runway credits.",
+    "tr": "Runway kredilerinle video ve görsel üret."
+   },
+   "brand": "#111111",
+   "oauth": true,
+   "icon": "runway.png"
+  },
+  {
+   "id": "replicate",
+   "name": "Replicate",
+   "category": "media",
+   "url": "https://mcp.replicate.com/mcp",
+   "desc": {
+    "en": "Run thousands of image, video and audio models.",
+    "tr": "Binlerce görsel, video ve ses modelini çalıştır."
+   },
+   "icon": "replicate",
+   "brand": "#EA2805",
+   "oauth": true,
+   "token": {
+    "help": "https://replicate.com/account/api-tokens",
+    "hint": "r8_…"
+   }
+  },
+  {
+   "id": "fal",
+   "name": "fal",
+   "category": "media",
+   "url": "https://mcp.fal.ai/mcp",
+   "desc": {
+    "en": "Run fal's image, video and audio models.",
+    "tr": "fal'ın görsel, video ve ses modellerini çalıştır."
+   },
+   "brand": "#7b5cff",
+   "token": {
+    "help": "https://fal.ai/dashboard/keys",
+    "hint": "fal API key"
+   },
+   "icon": "fal.png"
+  },
+  {
+   "id": "krea",
+   "name": "Krea",
+   "category": "media",
+   "url": "https://api.krea.ai/mcp",
+   "desc": {
+    "en": "Generate and enhance images and video with Krea.",
+    "tr": "Krea ile görsel ve video üret, geliştir."
+   },
+   "brand": "#111111",
+   "oauth": true,
+   "icon": "krea.png"
+  },
+  {
+   "id": "ideogram",
+   "name": "Ideogram",
+   "category": "media",
+   "url": "https://mcp.ideogram.ai/mcp",
+   "desc": {
+    "en": "Generate images with accurate text using Ideogram.",
+    "tr": "Ideogram ile yazısı doğru görseller üret."
+   },
+   "brand": "#F2F2F2",
+   "oauth": true,
+   "icon": "ideogram.png"
+  },
+  {
+   "id": "recraft",
+   "name": "Recraft",
+   "category": "media",
+   "url": "https://mcp.recraft.ai/mcp",
+   "desc": {
+    "en": "Generate, edit, vectorize and upscale images.",
+    "tr": "Görsel üret, düzenle, vektörleştir ve büyüt."
+   },
+   "brand": "#111111",
+   "oauth": true,
+   "icon": "recraft.png"
+  },
+  {
+   "id": "magnific",
+   "name": "Magnific (Freepik)",
+   "category": "media",
+   "url": "https://mcp.magnific.com",
+   "desc": {
+    "en": "Generate and upscale images and video, browse your history.",
+    "tr": "Görsel ve video üret, büyüt, geçmişini gez."
+   },
+   "brand": "#1273eb",
+   "oauth": true,
+   "icon": "magnific.png"
+  },
+  {
+   "id": "cloudinary",
+   "name": "Cloudinary",
+   "category": "media",
+   "url": "https://asset-management.mcp.cloudinary.com/mcp",
+   "desc": {
+    "en": "Manage, transform and generate media assets.",
+    "tr": "Medya varlıklarını yönet, dönüştür ve üret."
+   },
+   "icon": "cloudinary",
+   "brand": "#3448C5",
+   "oauth": true
+  },
+  {
+   "id": "mux",
+   "name": "Mux",
+   "category": "media",
+   "url": "https://mcp.mux.com",
+   "desc": {
+    "en": "Video hosting, streaming and video data.",
+    "tr": "Video barındırma, yayın ve video verisi."
+   },
+   "brand": "#fb501d",
+   "oauth": true,
+   "icon": "mux.png"
+  },
+  {
+   "id": "heygen",
+   "name": "HeyGen",
+   "category": "media",
+   "url": "https://mcp.heygen.com/mcp/",
+   "desc": {
+    "en": "Create avatar videos with HeyGen.",
+    "tr": "HeyGen ile avatarlı video oluştur."
+   },
+   "brand": "#6d4aff",
+   "oauth": true,
+   "icon": "heygen.png"
+  },
+  {
+   "id": "synthesia",
+   "name": "Synthesia",
+   "category": "media",
+   "url": "https://mcp.synthesia.io/mcp",
+   "desc": {
+    "en": "Create AI avatar videos with Synthesia.",
+    "tr": "Synthesia ile yapay zeka avatarlı video oluştur."
+   },
+   "brand": "#4d3cff",
+   "oauth": true,
+   "icon": "synthesia.png"
+  },
+  {
+   "id": "captions",
+   "name": "Captions",
+   "category": "media",
+   "url": "https://mcp.captions.ai/mcp",
+   "desc": {
+    "en": "Create and edit talking-head videos with Captions.",
+    "tr": "Captions ile konuşan kafa videoları oluştur ve düzenle."
+   },
+   "brand": "#111111",
+   "oauth": true,
+   "icon": "captions.png"
+  },
+  {
+   "id": "videodb",
+   "name": "VideoDB",
+   "category": "media",
+   "url": "https://mcp.videodb.io/mcp",
+   "desc": {
+    "en": "Index, search and edit video and audio.",
+    "tr": "Video ve sesi indeksle, ara ve düzenle."
+   },
+   "brand": "#ff5a1f",
+   "oauth": true,
+   "icon": "videodb.png"
+  },
+  {
+   "id": "invideo",
+   "name": "invideo AI",
+   "category": "media",
+   "url": "https://mcp.invideo.io/mcp",
+   "desc": {
+    "en": "Turn a script into a finished video.",
+    "tr": "Bir senaryodan hazır video üret."
+   },
+   "brand": "#6c47ff",
+   "open": true,
+   "icon": "invideo.png"
+  },
+  {
+   "id": "excalidraw",
+   "name": "Excalidraw",
+   "category": "media",
+   "url": "https://mcp.excalidraw.com/mcp",
+   "desc": {
+    "en": "Draw hand-drawn style diagrams.",
+    "tr": "El çizimi tarzında diyagramlar çiz."
+   },
+   "icon": "excalidraw",
+   "brand": "#6965db",
+   "open": true
+  },
+  {
+   "id": "mermaid",
+   "name": "Mermaid Chart",
+   "category": "media",
+   "url": "https://mcp.mermaidchart.com/mcp",
+   "desc": {
+    "en": "Render and edit Mermaid diagrams.",
+    "tr": "Mermaid diyagramlarını çiz ve düzenle."
+   },
+   "icon": "mermaid",
+   "brand": "#ff3670",
+   "open": true
+  },
+  {
+   "id": "lucid",
+   "name": "Lucid",
+   "category": "media",
+   "url": "https://mcp.lucid.app/mcp",
+   "desc": {
+    "en": "Create and read Lucidchart and Lucidspark diagrams.",
+    "tr": "Lucidchart ve Lucidspark diyagramlarını oluştur ve oku."
+   },
+   "brand": "#f97b23",
+   "oauth": true,
+   "icon": "lucid"
+  },
+  {
+   "id": "whimsical",
+   "name": "Whimsical",
+   "category": "media",
+   "url": "https://mcp.whimsical.com/mcp",
+   "desc": {
+    "en": "Flowcharts, wireframes and mind maps.",
+    "tr": "Akış şemaları, tel kafesler ve zihin haritaları."
+   },
+   "brand": "#7c5cff",
+   "oauth": true,
+   "icon": "whimsical.png"
+  },
+  {
+   "id": "perplexity",
+   "name": "Perplexity",
+   "category": "ai",
+   "url": "https://api.perplexity.ai/mcp",
+   "desc": {
+    "en": "Web search and cited answers from Perplexity.",
+    "tr": "Perplexity ile web araması ve kaynaklı yanıtlar."
+   },
+   "icon": "perplexity",
+   "brand": "#20808D",
+   "oauth": true,
+   "token": {
+    "help": "https://www.perplexity.ai/account/api/keys",
+    "hint": "pplx-…"
+   },
+   "featured": true
+  },
+  {
+   "id": "exa",
+   "name": "Exa",
+   "category": "ai",
+   "url": "https://mcp.exa.ai/mcp",
+   "desc": {
+    "en": "Fast neural web search and page fetch.",
+    "tr": "Hızlı yapay zekalı web araması ve sayfa çekme."
+   },
+   "brand": "#1F40ED",
+   "token": {
+    "help": "https://dashboard.exa.ai/api-keys",
+    "hint": "Exa API key",
+    "header": "x-api-key",
+    "optional": true
+   },
+   "open": true,
+   "icon": "exa.svg"
+  },
+  {
+   "id": "tavily",
+   "name": "Tavily",
+   "category": "ai",
+   "url": "https://mcp.tavily.com/mcp/",
+   "desc": {
+    "en": "Web search, extract and crawl built for AI.",
+    "tr": "Yapay zeka için web arama, çıkarma ve tarama."
+   },
+   "brand": "#7C5CFF",
+   "oauth": true,
+   "token": {
+    "help": "https://app.tavily.com/home",
+    "hint": "tvly-…"
+   },
+   "icon": "tavily.png"
+  },
+  {
+   "id": "firecrawl",
+   "name": "Firecrawl",
+   "category": "ai",
+   "url": "https://mcp.firecrawl.dev/mcp",
+   "desc": {
+    "en": "Scrape and search the web into clean markdown.",
+    "tr": "Web'i kazı ve temiz markdown olarak ara."
+   },
+   "brand": "#FF6B1A",
+   "token": {
+    "help": "https://www.firecrawl.dev/app/api-keys",
+    "hint": "fc-…",
+    "optional": true
+   },
+   "open": true,
+   "icon": "firecrawl.svg"
+  },
+  {
+   "id": "jina",
+   "name": "Jina AI",
+   "category": "ai",
+   "url": "https://mcp.jina.ai/v1",
+   "desc": {
+    "en": "Read URLs, search the web and arXiv.",
+    "tr": "URL oku, web ve arXiv'de ara."
+   },
+   "brand": "#009191",
+   "token": {
+    "help": "https://jina.ai/?sui=apikey",
+    "hint": "jina_…",
+    "optional": true
+   },
+   "open": true,
+   "icon": "jina.svg"
+  },
+  {
+   "id": "brightdata",
+   "name": "Bright Data",
+   "category": "ai",
+   "url": "https://mcp.brightdata.com/mcp",
+   "desc": {
+    "en": "Search, scrape and browse the web at scale.",
+    "tr": "Web'de büyük ölçekte ara, kazı ve gez."
+   },
+   "brand": "#3D7FFC",
+   "oauth": true,
+   "icon": "brightdata.png"
+  },
+  {
+   "id": "apify",
+   "name": "Apify",
+   "category": "ai",
+   "url": "https://mcp.apify.com",
+   "desc": {
+    "en": "Run Apify Actors to scrape and automate the web.",
+    "tr": "Web'i kazımak ve otomatikleştirmek için Apify Actor'larını çalıştır."
+   },
+   "brand": "#0F172A",
+   "oauth": true,
+   "token": {
+    "help": "https://console.apify.com/settings/integrations",
+    "hint": "apify_api_…"
+   },
+   "icon": "apify.png"
+  },
+  {
+   "id": "browserbase",
+   "name": "Browserbase",
+   "category": "ai",
+   "url": "https://mcp.browserbase.com/mcp",
+   "desc": {
+    "en": "Cloud browser sessions with Stagehand.",
+    "tr": "Stagehand ile bulutta tarayıcı oturumları."
+   },
+   "brand": "#F97316",
+   "token": {
+    "help": "https://www.browserbase.com/settings",
+    "hint": "bb_live_…"
+   }
+  },
+  {
+   "id": "you_com",
+   "name": "You.com",
+   "category": "ai",
+   "url": "https://api.you.com/mcp",
+   "desc": {
+    "en": "Web search and research from You.com.",
+    "tr": "You.com ile web araması ve araştırma."
+   },
+   "brand": "#5B47FB",
+   "oauth": true
+  },
+  {
+   "id": "valyu",
+   "name": "Valyu",
+   "category": "ai",
+   "url": "https://mcp.valyu.network/mcp",
+   "desc": {
+    "en": "Search the web and licensed sources for AI.",
+    "tr": "Yapay zeka için web ve lisanslı kaynaklarda ara."
+   },
+   "brand": "#111111",
+   "oauth": true,
+   "icon": "valyu.png"
+  },
+  {
+   "id": "scrapegraph",
+   "name": "ScrapeGraphAI",
+   "category": "ai",
+   "url": "https://mcp.scrapegraphai.com/mcp",
+   "desc": {
+    "en": "Extract structured data from any page with AI.",
+    "tr": "Yapay zekayla her sayfadan yapılandırılmış veri çıkar."
+   },
+   "brand": "#7C3AED",
+   "oauth": true,
+   "icon": "scrapegraph.png"
+  },
+  {
+   "id": "openrouter",
+   "name": "OpenRouter",
+   "category": "ai",
+   "url": "https://mcp.openrouter.ai/mcp",
+   "desc": {
+    "en": "Browse models, prices and credits on OpenRouter.",
+    "tr": "OpenRouter'da model, fiyat ve kredileri gez."
+   },
+   "icon": "openrouter",
+   "brand": "#6467F2",
+   "oauth": true
+  },
+  {
+   "id": "langsmith",
+   "name": "LangSmith",
+   "category": "ai",
+   "url": "https://api.smith.langchain.com/mcp",
+   "desc": {
+    "en": "Traces, runs, prompts and datasets from LangSmith.",
+    "tr": "LangSmith'ten izler, çalıştırmalar, prompt'lar ve veri kümeleri."
+   },
+   "icon": "langchain",
+   "brand": "#1C3C3C",
+   "oauth": true
+  },
+  {
+   "id": "roboflow",
+   "name": "Roboflow",
+   "category": "ai",
+   "url": "https://mcp.roboflow.com/mcp",
+   "desc": {
+    "en": "Manage vision datasets, train and run models.",
+    "tr": "Görü veri kümelerini yönet, model eğit ve çalıştır."
+   },
+   "icon": "roboflow",
+   "brand": "#6706CE",
+   "oauth": true
+  },
+  {
+   "id": "mem0",
+   "name": "Mem0",
+   "category": "ai",
+   "url": "https://mcp.mem0.ai/mcp/",
+   "desc": {
+    "en": "Long-term memory for AI agents.",
+    "tr": "Yapay zeka ajanları için uzun süreli hafıza."
+   },
+   "brand": "#6C4CF1",
+   "oauth": true,
+   "icon": "mem0.svg"
+  },
+  {
+   "id": "openai_docs",
+   "name": "OpenAI Docs",
+   "category": "docs",
+   "url": "https://developers.openai.com/mcp",
+   "desc": {
+    "en": "Search the OpenAI API documentation.",
+    "tr": "OpenAI API belgelerinde ara."
+   },
+   "icon": "openai",
+   "brand": "#412991",
+   "open": true,
+   "readsOnly": true
+  },
+  {
+   "id": "anthropic_docs",
+   "name": "Claude Docs",
+   "category": "docs",
+   "url": "https://platform.claude.com/docs/mcp",
+   "desc": {
+    "en": "Search the Claude API documentation.",
+    "tr": "Claude API belgelerinde ara."
+   },
+   "icon": "anthropic",
+   "brand": "#D97757",
+   "open": true,
+   "readsOnly": true
+  },
+  {
+   "id": "langchain_docs",
+   "name": "LangChain Docs",
+   "category": "docs",
+   "url": "https://docs.langchain.com/mcp",
+   "desc": {
+    "en": "Search the LangChain and LangGraph docs.",
+    "tr": "LangChain ve LangGraph belgelerinde ara."
+   },
+   "icon": "langchain",
+   "brand": "#1C3C3C",
+   "open": true,
+   "readsOnly": true
+  },
+  {
+   "id": "mcp_docs",
+   "name": "MCP Docs",
+   "category": "docs",
+   "url": "https://modelcontextprotocol.io/mcp",
+   "desc": {
+    "en": "Search the Model Context Protocol docs.",
+    "tr": "Model Context Protocol belgelerinde ara."
+   },
+   "brand": "#111111",
+   "open": true,
+   "readsOnly": true,
+   "icon": "modelcontextprotocol"
+  },
+  {
+   "id": "pinecone_docs",
+   "name": "Pinecone Docs",
+   "category": "docs",
+   "url": "https://docs.pinecone.io/mcp",
+   "desc": {
+    "en": "Search the Pinecone vector database docs.",
+    "tr": "Pinecone vektör veritabanı belgelerinde ara."
+   },
+   "brand": "#1B17F5",
+   "open": true,
+   "readsOnly": true,
+   "icon": "pinecone_docs.svg"
+  },
+  {
+   "id": "qdrant_docs",
+   "name": "Qdrant Docs",
+   "category": "docs",
+   "url": "https://mcp.qdrant.tech/mcp",
+   "desc": {
+    "en": "Search the Qdrant vector database docs.",
+    "tr": "Qdrant vektör veritabanı belgelerinde ara."
+   },
+   "icon": "qdrant",
+   "brand": "#DC244C",
+   "open": true,
+   "readsOnly": true
+  },
+  {
+   "id": "langfuse_docs",
+   "name": "Langfuse Docs",
+   "category": "docs",
+   "url": "https://langfuse.com/api/mcp",
+   "desc": {
+    "en": "Search the Langfuse observability docs.",
+    "tr": "Langfuse gözlemlenebilirlik belgelerinde ara."
+   },
+   "brand": "#E11312",
+   "open": true,
+   "readsOnly": true,
+   "icon": "langfuse_docs.png"
+  },
+  {
+   "id": "crewai_docs",
+   "name": "CrewAI Docs",
+   "category": "docs",
+   "url": "https://docs.crewai.com/mcp",
+   "desc": {
+    "en": "Search the CrewAI agent framework docs.",
+    "tr": "CrewAI ajan çatısı belgelerinde ara."
+   },
+   "icon": "crewai",
+   "brand": "#FF5A50",
+   "open": true,
+   "readsOnly": true
+  },
+  {
+   "id": "together_docs",
+   "name": "Together AI Docs",
+   "category": "docs",
+   "url": "https://docs.together.ai/mcp",
+   "desc": {
+    "en": "Search the Together AI docs.",
+    "tr": "Together AI belgelerinde ara."
+   },
+   "brand": "#0F6FFF",
+   "open": true,
+   "readsOnly": true,
+   "icon": "together_docs.png"
+  },
+  {
+   "id": "fal_docs",
+   "name": "fal Docs",
+   "category": "docs",
+   "url": "https://fal.ai/docs/mcp",
+   "desc": {
+    "en": "Search the fal model and API docs.",
+    "tr": "fal model ve API belgelerinde ara."
+   },
+   "brand": "#7b5cff",
+   "open": true,
+   "readsOnly": true,
+   "icon": "fal_docs.png"
+  },
+  {
+   "id": "mem0_docs",
+   "name": "Mem0 Docs",
+   "category": "docs",
+   "url": "https://docs.mem0.ai/mcp",
+   "desc": {
+    "en": "Search the Mem0 memory docs.",
+    "tr": "Mem0 hafıza belgelerinde ara."
+   },
+   "brand": "#6C4CF1",
+   "open": true,
+   "readsOnly": true,
+   "icon": "mem0_docs.svg"
+  },
+  {
+   "id": "bfl_docs",
+   "name": "Black Forest Labs Docs",
+   "category": "docs",
+   "url": "https://docs.bfl.ai/mcp",
+   "desc": {
+    "en": "Search the FLUX image model docs.",
+    "tr": "FLUX görsel modeli belgelerinde ara."
+   },
+   "brand": "#111111",
+   "open": true,
+   "readsOnly": true,
+   "icon": "bfl_docs.png"
+  },
+  {
+   "id": "cartesia_docs",
+   "name": "Cartesia Docs",
+   "category": "docs",
+   "url": "https://docs.cartesia.ai/mcp",
+   "desc": {
+    "en": "Search the Cartesia voice AI docs.",
+    "tr": "Cartesia ses yapay zekası belgelerinde ara."
+   },
+   "brand": "#111111",
+   "open": true,
+   "readsOnly": true,
+   "icon": "cartesia_docs.svg"
+  },
+  {
+   "id": "firecrawl_docs",
+   "name": "Firecrawl Docs",
+   "category": "docs",
+   "url": "https://docs.firecrawl.dev/mcp",
+   "desc": {
+    "en": "Search the Firecrawl docs.",
+    "tr": "Firecrawl belgelerinde ara."
+   },
+   "brand": "#FF6B1A",
+   "open": true,
+   "readsOnly": true,
+   "icon": "firecrawl_docs.svg"
+  },
+  {
+   "id": "browserbase_docs",
+   "name": "Browserbase Docs",
+   "category": "docs",
+   "url": "https://docs.browserbase.com/mcp",
+   "desc": {
+    "en": "Search the Browserbase docs.",
+    "tr": "Browserbase belgelerinde ara."
+   },
+   "brand": "#F97316",
+   "open": true,
+   "readsOnly": true
+  },
+  {
+   "id": "tavily_docs",
+   "name": "Tavily Docs",
+   "category": "docs",
+   "url": "https://docs.tavily.com/mcp",
+   "desc": {
+    "en": "Search the Tavily docs.",
+    "tr": "Tavily belgelerinde ara."
+   },
+   "brand": "#7C5CFF",
+   "open": true,
+   "readsOnly": true,
+   "icon": "tavily_docs.png"
+  },
+  {
+   "id": "perplexity_docs",
+   "name": "Perplexity Docs",
+   "category": "docs",
+   "url": "https://docs.perplexity.ai/mcp",
+   "desc": {
+    "en": "Search the Perplexity API docs.",
+    "tr": "Perplexity API belgelerinde ara."
+   },
+   "icon": "perplexity",
+   "brand": "#20808D",
+   "open": true,
+   "readsOnly": true
+  },
+  {
+   "id": "exa_docs",
+   "name": "Exa Docs",
+   "category": "docs",
+   "url": "https://exa.ai/docs/mcp",
+   "desc": {
+    "en": "Search the Exa docs.",
+    "tr": "Exa belgelerinde ara."
+   },
+   "brand": "#1F40ED",
+   "open": true,
+   "readsOnly": true,
+   "icon": "exa_docs.svg"
+  },
+  {
+   "id": "asana",
+   "name": "Asana",
+   "category": "work",
+   "url": "https://mcp.asana.com/sse",
+   "desc": {
+    "en": "Tasks, projects and goals in Asana.",
+    "tr": "Asana görevleri, projeleri ve hedefleri."
+   },
+   "icon": "asana",
+   "brand": "#F06A6A",
+   "oauth": true
+  },
+  {
+   "id": "apollo",
+   "name": "Apollo.io",
+   "category": "crm",
+   "url": "https://mcp.apollo.io/mcp",
+   "desc": {
+    "en": "Search people and companies and enrich leads.",
+    "tr": "Kişi ve şirket arayın, lead'leri zenginleştirin."
+   },
+   "brand": "#EBF212",
+   "oauth": true,
+   "icon": "apollo.png"
+  },
+  {
+   "id": "clay",
+   "name": "Clay",
+   "category": "crm",
+   "url": "https://api.clay.com/v3/mcp",
+   "desc": {
+    "en": "Enrich and research prospects with Clay data.",
+    "tr": "Clay verileriyle potansiyel müşterileri zenginleştirin ve araştırın."
+   },
+   "brand": "#4F46E5",
+   "oauth": true,
+   "icon": "clay.png"
+  },
+  {
+   "id": "close",
+   "name": "Close CRM",
+   "category": "crm",
+   "url": "https://mcp.close.com/mcp",
+   "desc": {
+    "en": "Leads, contacts, opportunities and activity in Close.",
+    "tr": "Close'daki lead, kişi, fırsat ve aktiviteler."
+   },
+   "brand": "#4AA5F0",
+   "oauth": true,
+   "icon": "close.svg"
+  },
+  {
+   "id": "klaviyo",
+   "name": "Klaviyo",
+   "category": "crm",
+   "url": "https://mcp.klaviyo.com/mcp",
+   "desc": {
+    "en": "Email and SMS campaigns, flows and customer profiles.",
+    "tr": "E-posta ve SMS kampanyaları, akışlar ve müşteri profilleri."
+   },
+   "brand": "#232426",
+   "oauth": true,
+   "icon": "klaviyo.png"
+  },
+  {
+   "id": "braze",
+   "name": "Braze",
+   "category": "crm",
+   "url": "https://mcp.braze.com/mcp",
+   "desc": {
+    "en": "Customer engagement campaigns and segments in Braze.",
+    "tr": "Braze'deki müşteri etkileşim kampanyaları ve segmentleri."
+   },
+   "brand": "#FF7A00",
+   "oauth": true,
+   "icon": "braze.svg"
+  },
+  {
+   "id": "calendly",
+   "name": "Calendly",
+   "category": "work",
+   "url": "https://mcp.calendly.com",
+   "desc": {
+    "en": "Event types, availability and scheduled meetings.",
+    "tr": "Etkinlik türleri, müsaitlik ve planlanmış toplantılar."
+   },
+   "icon": "calendly",
+   "brand": "#006BFF",
+   "oauth": true
+  },
+  {
+   "id": "calcom",
+   "name": "Cal.com",
+   "category": "work",
+   "url": "https://mcp.cal.com/mcp",
+   "desc": {
+    "en": "Bookings, event types and availability in Cal.com.",
+    "tr": "Cal.com randevuları, etkinlik türleri ve müsaitlik."
+   },
+   "icon": "caldotcom",
+   "brand": "#292929",
+   "oauth": true
+  },
+  {
+   "id": "make",
+   "name": "Make",
+   "category": "automation",
+   "url": "https://mcp.make.com",
+   "desc": {
+    "en": "Run Make scenarios as tools.",
+    "tr": "Make senaryolarını araç olarak çalıştırın."
+   },
+   "icon": "make",
+   "brand": "#6D00CC",
+   "oauth": true
+  },
+  {
+   "id": "contentful",
+   "name": "Contentful",
+   "category": "web",
+   "url": "https://mcp.contentful.com/mcp",
+   "desc": {
+    "en": "Entries, assets and content models in Contentful.",
+    "tr": "Contentful içerikleri, medya dosyaları ve içerik modelleri."
+   },
+   "icon": "contentful",
+   "brand": "#2478CC",
+   "oauth": true
+  },
+  {
+   "id": "jotform",
+   "name": "Jotform",
+   "category": "work",
+   "url": "https://mcp.jotform.com",
+   "desc": {
+    "en": "Forms and submissions in Jotform.",
+    "tr": "Jotform formları ve gönderimleri."
+   },
+   "brand": "#0A1551",
+   "oauth": true,
+   "icon": "jotform.png"
+  },
+  {
+   "id": "workos",
+   "name": "WorkOS",
+   "category": "code",
+   "url": "https://mcp.workos.com/mcp",
+   "desc": {
+    "en": "WorkOS docs, environments and auth setup.",
+    "tr": "WorkOS belgeleri, ortamları ve kimlik doğrulama kurulumu."
+   },
+   "brand": "#6363F1",
+   "oauth": true,
+   "icon": "workos.svg"
+  },
+  {
+   "id": "lovable",
+   "name": "Lovable",
+   "category": "code",
+   "url": "https://mcp.lovable.dev/mcp",
+   "desc": {
+    "en": "Manage Lovable projects from your agent.",
+    "tr": "Lovable projelerinizi ajanınızdan yönetin."
+   },
+   "brand": "#FF4F8B",
+   "oauth": true,
+   "icon": "lovable.svg"
+  },
+  {
+   "id": "planetscale",
+   "name": "PlanetScale",
+   "category": "data",
+   "url": "https://mcp.pscale.dev/mcp/planetscale",
+   "desc": {
+    "en": "Databases, branches and queries on PlanetScale.",
+    "tr": "PlanetScale veritabanları, dalları ve sorguları."
+   },
+   "icon": "planetscale",
+   "brand": "#F35815",
+   "oauth": true
+  },
+  {
+   "id": "plaid",
+   "name": "Plaid",
+   "category": "payments",
+   "url": "https://api.dashboard.plaid.com/mcp/sse",
+   "desc": {
+    "en": "Plaid dashboard, Link analytics and item debugging.",
+    "tr": "Plaid paneli, Link analitiği ve hata ayıklama."
+   },
+   "brand": "#111111",
+   "oauth": true,
+   "icon": "plaid.png"
+  },
+  {
+   "id": "mercury",
+   "name": "Mercury",
+   "category": "payments",
+   "url": "https://mcp.mercury.com/mcp",
+   "desc": {
+    "en": "Read-only view of Mercury bank accounts and transactions.",
+    "tr": "Mercury banka hesapları ve işlemlerinin salt okunur görünümü."
+   },
+   "brand": "#5266EB",
+   "oauth": true,
+   "icon": "mercury.png"
+  },
+  {
+   "id": "statsig",
+   "name": "Statsig",
+   "category": "data",
+   "url": "https://api.statsig.com/v1/mcp",
+   "desc": {
+    "en": "Feature gates, experiments and dynamic configs.",
+    "tr": "Özellik kapıları, deneyler ve dinamik yapılandırmalar."
+   },
+   "brand": "#194B7D",
+   "oauth": true,
+   "token": {
+    "help": "https://console.statsig.com/api_keys",
+    "hint": "console-…",
+    "header": "statsig-api-key"
+   },
+   "icon": "statsig.png"
+  },
+  {
+   "id": "launchdarkly",
+   "name": "LaunchDarkly",
+   "category": "code",
+   "url": "https://mcp.launchdarkly.com/mcp/fm",
+   "desc": {
+    "en": "Feature flags and rollouts in LaunchDarkly.",
+    "tr": "LaunchDarkly özellik bayrakları ve kademeli yayınlar."
+   },
+   "brand": "#405BFF",
+   "oauth": true,
+   "icon": "launchdarkly.svg"
+  },
+  {
+   "id": "honeycomb",
+   "name": "Honeycomb",
+   "category": "code",
+   "url": "https://mcp.honeycomb.io/mcp",
+   "desc": {
+    "en": "Observability queries, boards and SLOs.",
+    "tr": "Gözlemlenebilirlik sorguları, panolar ve SLO'lar."
+   },
+   "brand": "#FFB000",
+   "oauth": true,
+   "icon": "honeycomb.png"
+  },
+  {
+   "id": "newrelic",
+   "name": "New Relic",
+   "category": "code",
+   "url": "https://mcp.newrelic.com/mcp/",
+   "desc": {
+    "en": "Query telemetry, alerts and incidents in New Relic.",
+    "tr": "New Relic telemetri, uyarı ve olay sorguları."
+   },
+   "icon": "newrelic",
+   "brand": "#1CE783",
+   "oauth": true
+  },
+  {
+   "id": "grafana",
+   "name": "Grafana",
+   "category": "code",
+   "url": "https://mcp.grafana.com/mcp",
+   "desc": {
+    "en": "Dashboards, metrics, logs and alerts from Grafana Cloud.",
+    "tr": "Grafana Cloud panoları, metrikleri, logları ve uyarıları."
+   },
+   "icon": "grafana",
+   "brand": "#F46800",
+   "oauth": true
+  },
+  {
+   "id": "incidentio",
+   "name": "incident.io",
+   "category": "code",
+   "url": "https://mcp.incident.io/mcp",
+   "desc": {
+    "en": "Incidents, follow-ups and on-call in incident.io.",
+    "tr": "incident.io olayları, takipleri ve nöbet düzeni."
+   },
+   "brand": "#F25533",
+   "oauth": true,
+   "icon": "incidentio.svg"
+  },
+  {
+   "id": "jam",
+   "name": "Jam",
+   "category": "code",
+   "url": "https://mcp.jam.dev/mcp",
+   "desc": {
+    "en": "Bug reports with console, network and replay context.",
+    "tr": "Konsol, ağ ve oynatma bağlamıyla hata raporları."
+   },
+   "brand": "#FF5B4D",
+   "oauth": true,
+   "icon": "jam.png"
+  },
+  {
+   "id": "buildkite",
+   "name": "Buildkite",
+   "category": "code",
+   "url": "https://mcp.buildkite.com/mcp",
+   "desc": {
+    "en": "Pipelines, builds and job logs on Buildkite.",
+    "tr": "Buildkite pipeline'ları, build'leri ve iş logları."
+   },
+   "icon": "buildkite",
+   "brand": "#14CC80",
+   "oauth": true,
+   "token": {
+    "help": "https://buildkite.com/user/api-access-tokens",
+    "hint": "bkua_…"
+   }
+  },
+  {
+   "id": "gitlab",
+   "name": "GitLab",
+   "category": "code",
+   "url": "https://gitlab.com/api/v4/mcp",
+   "desc": {
+    "en": "Projects, issues and merge requests on GitLab.",
+    "tr": "GitLab projeleri, issue'ları ve merge request'leri."
+   },
+   "icon": "gitlab",
+   "brand": "#FC6D26",
+   "oauth": true
+  },
+  {
+   "id": "semgrep",
+   "name": "Semgrep",
+   "category": "security",
+   "url": "https://mcp.semgrep.ai/mcp",
+   "desc": {
+    "en": "Static code scans and security findings.",
+    "tr": "Statik kod taramaları ve güvenlik bulguları."
+   },
+   "brand": "#2CD5C4",
+   "oauth": true
+  },
+  {
+   "id": "vanta",
+   "name": "Vanta",
+   "category": "security",
+   "url": "https://mcp.vanta.com/mcp",
+   "desc": {
+    "en": "Compliance tests, controls and risks in Vanta.",
+    "tr": "Vanta uyumluluk testleri, kontrolleri ve riskleri."
+   },
+   "brand": "#7C3AED",
+   "oauth": true,
+   "icon": "vanta.png"
+  },
+  {
+   "id": "ahrefs",
+   "name": "Ahrefs",
+   "category": "web",
+   "url": "https://api.ahrefs.com/mcp/mcp",
+   "desc": {
+    "en": "SEO data: backlinks, keywords and rankings.",
+    "tr": "SEO verileri: backlink'ler, anahtar kelimeler ve sıralamalar."
+   },
+   "brand": "#FF7A00",
+   "oauth": true,
+   "icon": "ahrefs.png"
+  },
+  {
+   "id": "semrush",
+   "name": "Semrush",
+   "category": "web",
+   "url": "https://mcp.semrush.com/v1/mcp",
+   "desc": {
+    "en": "SEO and competitor research from Semrush.",
+    "tr": "Semrush ile SEO ve rakip araştırması."
+   },
+   "icon": "semrush",
+   "brand": "#FF642D",
+   "oauth": true
+  },
+  {
+   "id": "resend",
+   "name": "Resend",
+   "category": "automation",
+   "url": "https://mcp.resend.com/mcp",
+   "desc": {
+    "en": "Send email and manage domains and contacts on Resend.",
+    "tr": "Resend ile e-posta gönderin, domain ve kişileri yönetin."
+   },
+   "icon": "resend",
+   "brand": "#1a1a1a",
+   "oauth": true,
+   "token": {
+    "help": "https://resend.com/api-keys",
+    "hint": "re_…"
+   }
+  },
+  {
+   "id": "postman",
+   "name": "Postman",
+   "category": "code",
+   "url": "https://mcp.postman.com/mcp",
+   "desc": {
+    "en": "Workspaces, collections and API requests in Postman.",
+    "tr": "Postman çalışma alanları, koleksiyonları ve API istekleri."
+   },
+   "icon": "postman",
+   "brand": "#FF6C37",
+   "oauth": true,
+   "token": {
+    "help": "https://go.postman.co/settings/me/api-keys",
+    "hint": "PMAK-…"
+   }
+  },
+  {
+   "id": "railway",
+   "name": "Railway",
+   "category": "cloud",
+   "url": "https://mcp.railway.com",
+   "desc": {
+    "en": "Projects, services and deployments on Railway.",
+    "tr": "Railway projeleri, servisleri ve dağıtımları."
+   },
+   "icon": "railway",
+   "brand": "#0B0D0E",
+   "oauth": true
+  },
+  {
+   "id": "heroku",
+   "name": "Heroku",
+   "category": "cloud",
+   "url": "https://mcp.heroku.com/mcp",
+   "desc": {
+    "en": "Apps, dynos and add-ons on Heroku.",
+    "tr": "Heroku uygulamaları, dyno'ları ve eklentileri."
+   },
+   "icon": "heroku",
+   "brand": "#430098",
+   "oauth": true
+  },
+  {
+   "id": "do_apps",
+   "name": "DigitalOcean Apps",
+   "category": "cloud",
+   "url": "https://apps.mcp.digitalocean.com/mcp",
+   "desc": {
+    "en": "Deploy and manage DigitalOcean App Platform apps.",
+    "tr": "DigitalOcean App Platform uygulamalarını dağıtın ve yönetin."
+   },
+   "icon": "digitalocean",
+   "brand": "#0080FF",
+   "oauth": true
+  },
+  {
+   "id": "cf_bindings",
+   "name": "Cloudflare Bindings",
+   "category": "cloud",
+   "url": "https://bindings.mcp.cloudflare.com/mcp",
+   "desc": {
+    "en": "Workers bindings: KV, R2, D1 and more.",
+    "tr": "Workers bağlamaları: KV, R2, D1 ve diğerleri."
+   },
+   "icon": "cloudflare",
+   "brand": "#F38020",
+   "oauth": true
+  },
+  {
+   "id": "cf_observability",
+   "name": "Cloudflare Observability",
+   "category": "cloud",
+   "url": "https://observability.mcp.cloudflare.com/mcp",
+   "desc": {
+    "en": "Workers logs and analytics.",
+    "tr": "Workers logları ve analitiği."
+   },
+   "icon": "cloudflare",
+   "brand": "#F38020",
+   "oauth": true
+  },
+  {
+   "id": "cf_builds",
+   "name": "Cloudflare Builds",
+   "category": "cloud",
+   "url": "https://builds.mcp.cloudflare.com/mcp",
+   "desc": {
+    "en": "Workers Builds status and logs.",
+    "tr": "Workers Builds durumu ve logları."
+   },
+   "icon": "cloudflare",
+   "brand": "#F38020",
+   "oauth": true
+  },
+  {
+   "id": "cf_radar",
+   "name": "Cloudflare Radar",
+   "category": "cloud",
+   "url": "https://radar.mcp.cloudflare.com/mcp",
+   "desc": {
+    "en": "Internet traffic and security trends from Radar.",
+    "tr": "Radar ile internet trafiği ve güvenlik eğilimleri."
+   },
+   "icon": "cloudflare",
+   "brand": "#F38020",
+   "oauth": true
+  },
+  {
+   "id": "cf_browser",
+   "name": "Cloudflare Browser Rendering",
+   "category": "cloud",
+   "url": "https://browser.mcp.cloudflare.com/mcp",
+   "desc": {
+    "en": "Fetch pages, markdown and screenshots.",
+    "tr": "Sayfaları, markdown'ı ve ekran görüntülerini alın."
+   },
+   "icon": "cloudflare",
+   "brand": "#F38020",
+   "oauth": true
+  },
+  {
+   "id": "cf_logs",
+   "name": "Cloudflare Logpush",
+   "category": "cloud",
+   "url": "https://logs.mcp.cloudflare.com/mcp",
+   "desc": {
+    "en": "Logpush job health and logs.",
+    "tr": "Logpush işlerinin sağlığı ve logları."
+   },
+   "icon": "cloudflare",
+   "brand": "#F38020",
+   "oauth": true
+  },
+  {
+   "id": "cf_ai_gateway",
+   "name": "Cloudflare AI Gateway",
+   "category": "cloud",
+   "url": "https://ai-gateway.mcp.cloudflare.com/mcp",
+   "desc": {
+    "en": "AI Gateway logs and analytics.",
+    "tr": "AI Gateway logları ve analitiği."
+   },
+   "icon": "cloudflare",
+   "brand": "#F38020",
+   "oauth": true
+  },
+  {
+   "id": "cf_graphql",
+   "name": "Cloudflare GraphQL Analytics",
+   "category": "cloud",
+   "url": "https://graphql.mcp.cloudflare.com/mcp",
+   "desc": {
+    "en": "Query Cloudflare analytics via GraphQL.",
+    "tr": "Cloudflare analitiğini GraphQL ile sorgulayın."
+   },
+   "icon": "cloudflare",
+   "brand": "#F38020",
+   "oauth": true
+  },
+  {
+   "id": "cf_dns_analytics",
+   "name": "Cloudflare DNS Analytics",
+   "category": "cloud",
+   "url": "https://dns-analytics.mcp.cloudflare.com/mcp",
+   "desc": {
+    "en": "DNS performance and debugging.",
+    "tr": "DNS performansı ve hata ayıklama."
+   },
+   "icon": "cloudflare",
+   "brand": "#F38020",
+   "oauth": true
+  },
+  {
+   "id": "cf_auditlogs",
+   "name": "Cloudflare Audit Logs",
+   "category": "cloud",
+   "url": "https://auditlogs.mcp.cloudflare.com/mcp",
+   "desc": {
+    "en": "Cloudflare account audit logs.",
+    "tr": "Cloudflare hesap denetim kayıtları."
+   },
+   "icon": "cloudflare",
+   "brand": "#F38020",
+   "oauth": true
+  },
+  {
+   "id": "cf_containers",
+   "name": "Cloudflare Containers",
+   "category": "cloud",
+   "url": "https://containers.mcp.cloudflare.com/mcp",
+   "desc": {
+    "en": "Spin up sandbox containers.",
+    "tr": "Kum havuzu konteynerleri başlatın."
+   },
+   "icon": "cloudflare",
+   "brand": "#F38020",
+   "oauth": true
+  },
+  {
+   "id": "aws_knowledge",
+   "name": "AWS Knowledge",
+   "category": "docs",
+   "url": "https://knowledge-mcp.global.api.aws",
+   "desc": {
+    "en": "Search AWS docs, regions and best practices.",
+    "tr": "AWS belgelerinde, bölgelerde ve en iyi uygulamalarda arayın."
+   },
+   "icon": "amazonwebservices",
+   "brand": "#FF9900",
+   "open": true,
+   "readsOnly": true
+  },
+  {
+   "id": "clerk",
+   "name": "Clerk Docs",
+   "category": "docs",
+   "url": "https://mcp.clerk.com/mcp",
+   "desc": {
+    "en": "Clerk SDK snippets for adding authentication.",
+    "tr": "Kimlik doğrulama eklemek için Clerk SDK örnekleri."
+   },
+   "icon": "clerk",
+   "brand": "#6C47FF",
+   "open": true,
+   "readsOnly": true
+  },
+  {
+   "id": "convex",
+   "name": "Convex",
+   "category": "docs",
+   "url": "https://mcp.convex.dev/mcp",
+   "desc": {
+    "en": "Guidance for building apps on Convex.",
+    "tr": "Convex ile uygulama geliştirme rehberliği."
+   },
+   "icon": "convex",
+   "brand": "#EE342F",
+   "open": true,
+   "readsOnly": true
+  },
+  {
+   "id": "socket",
+   "name": "Socket",
+   "category": "security",
+   "url": "https://mcp.socket.dev/",
+   "desc": {
+    "en": "Dependency risk scores and supply-chain alerts.",
+    "tr": "Bağımlılık risk puanları ve tedarik zinciri uyarıları."
+   },
+   "icon": "socket",
+   "brand": "#C63EF2",
+   "open": true
+  },
+  {
+   "id": "render",
+   "name": "Render",
+   "category": "cloud",
+   "url": "https://mcp.render.com/mcp",
+   "desc": {
+    "en": "Services, databases, logs and metrics on Render.",
+    "tr": "Render servisleri, veritabanları, logları ve metrikleri."
+   },
+   "icon": "render",
+   "brand": "#4351E8",
+   "token": {
+    "help": "https://dashboard.render.com/settings#api-keys",
+    "hint": "rnd_…"
+   }
+  },
+  {
+   "id": "pagerduty",
+   "name": "PagerDuty",
+   "category": "cloud",
+   "url": "https://mcp.pagerduty.com/mcp",
+   "desc": {
+    "en": "Incidents, on-call schedules and services.",
+    "tr": "Olaylar, nöbet çizelgeleri ve servisler."
+   },
+   "icon": "pagerduty",
+   "brand": "#06AC38",
+   "token": {
+    "help": "https://support.pagerduty.com/main/docs/api-access-keys",
+    "hint": "u+…",
+    "header": "Authorization",
+    "prefix": "Token "
+   }
+  }
+ ]
+}

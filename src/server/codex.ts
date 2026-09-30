@@ -60,6 +60,7 @@ export interface CodexTurn {
   writableDirs?: string[];
   images?: string[];             // files on disk
   mcpUrl?: string;
+  extraMcp?: Array<{ id: string; url: string; tools: string[] }>; // integrations (through the office gateway, which holds the credentials): only their read-only tools
   persist?: boolean;             // false = throw-away session
 }
 
@@ -88,6 +89,8 @@ export function runCodexTurn(turn: CodexTurn, h: CodexHandlers): { done: Promise
   if (turn.effort) args.push("-c", `model_reasoning_effort=${toml(turn.effort)}`);
   args.push("-c", `developer_instructions=${toml(turn.instructions)}`, "-c", `project_doc_fallback_filenames=${toml(["CLAUDE.md"])}`);
   if (turn.mcpUrl) args.push("-c", `mcp_servers.office.url=${toml(turn.mcpUrl)}`, "-c", `mcp_servers.office.default_tools_approval_mode="approve"`);
+  // integrations: Codex cannot stop and ask, so it gets only the tools the server itself marks read-only
+  for (const m of turn.extraMcp ?? []) args.push("-c", `mcp_servers.${m.id}.url=${toml(m.url)}`, "-c", `mcp_servers.${m.id}.enabled_tools=${toml(m.tools)}`, "-c", `mcp_servers.${m.id}.default_tools_approval_mode="approve"`);
   for (const im of turn.images ?? []) args.push("-i", im);
   args.push("-"); // the prompt comes on stdin: no length or quoting limits
 

@@ -28,6 +28,7 @@ export interface GeminiTurn {
   includeDirs?: string[];
   images?: string[];              // files on disk, referenced with @path
   mcpUrl?: string;
+  extraMcp?: Array<{ id: string; url: string; tools: string[] }>; // integrations (through the office gateway): only their read-only tools
   settingsFile: string;           // where this employee's system settings file is written
 }
 
@@ -47,7 +48,10 @@ export function runGeminiTurn(turn: GeminiTurn, h: GeminiHandlers): { done: Prom
   const settings = {
     security: { auth: { selectedType: "gemini-api-key" } },
     context: { fileName: ["GEMINI.md", "CLAUDE.md"] },
-    ...(turn.mcpUrl ? { mcpServers: { office: { httpUrl: turn.mcpUrl, trust: true } } } : {}),
+    ...(turn.mcpUrl || turn.extraMcp?.length ? { mcpServers: {
+      ...(turn.mcpUrl ? { office: { httpUrl: turn.mcpUrl, trust: true } } : {}),
+      ...Object.fromEntries((turn.extraMcp ?? []).map((m) => [m.id, { httpUrl: m.url, includeTools: m.tools, trust: true }])),
+    } } : {}),
   };
   fs.mkdirSync(path.dirname(turn.settingsFile), { recursive: true });
   fs.writeFileSync(turn.settingsFile, JSON.stringify(settings, null, 2), { mode: 0o600 });

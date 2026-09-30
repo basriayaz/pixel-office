@@ -203,3 +203,16 @@ body.igm-open { overflow: hidden; }
 
 .ig-logo.pic { background: #f3f1ea; border-color: rgba(255, 255, 255, .25); overflow: hidden; }
 .ig-logo.pic img { width: 70%; height: 70%; object-fit: contain; image-rendering: auto; }
+
+/* skill market extras */
+.ig-badge.warn { border-color: rgba(251, 191, 36, .55); color: #fbbf24; }
+.ig-intro { margin: -4px 0 16px; max-width: 70ch; }
+.sk-meta { margin: 0 0 6px; }
+.sk-pre { margin: 6px 0 0; max-height: 280px; overflow: auto; padding: 10px; background: #0d0e15; border: 1px solid var(--line); border-radius: 8px; font-size: 11.5px; line-height: 1.5; white-space: pre-wrap; word-break: break-word; }
+.ig-drawer details { border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px; margin-top: 6px; }
+.ig-drawer summary { cursor: pointer; font-size: 12.5px; }
+.sk-warn { color: #fbbf24; }
+.sk-files { display: grid; gap: 2px; margin-top: 6px; max-height: 220px; overflow-y: auto; font-size: 11.5px; }
+.sk-files div { display: flex; justify-content: space-between; gap: 10px; color: var(--muted); }
+.sk-files div.w { color: #fbbf24; }
+.ig-err ul { margin: 6px 0 0; padding-left: 18px; }

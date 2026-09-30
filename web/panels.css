@@ -387,7 +387,7 @@ body.layout-editing #office { touch-action: none; user-select: none; }
 .layout-bar .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 .lb-actions { margin-left: auto; max-width: 100%; justify-content: flex-end; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
 .lb-sep { align-self: stretch; width: 1px; margin: 0 4px; background: var(--line); }
-#btnLayout.active { border-color: var(--accent); color: var(--accent); }
+#btnLayout.active { color: var(--accent); background: rgba(255, 209, 102, .08); }
 
 /* ---------- the market drawer (web/layouteditor.js + web/market.js): where new pieces come from ---------- */
 :root { --market-w: clamp(300px, 27vw, 400px); }

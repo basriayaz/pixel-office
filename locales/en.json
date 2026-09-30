@@ -5553,6 +5553,78 @@
           "b": "The daily limit (Claude dollars, Codex tokens) only stops automatic work. Settings → Server shows where the files live."
         }
       }
+    },
+    "skills": {
+      "btn": "Skill market",
+      "title": "Skills",
+      "sub": "Ready-made skills from companies, for the employees you choose",
+      "viewMarket": "Market",
+      "viewPerms": "Who has what",
+      "search": "Search skills…  (/)",
+      "intro": "A skill is a folder of instructions (and sometimes scripts) an employee reads when a task needs it. Nothing is installed without a preview, and a skill can never grant itself permissions.",
+      "cat": {
+        "all": "Everything",
+        "installed": "Installed",
+        "code": "Code",
+        "design": "Design",
+        "video": "Video",
+        "work": "Work and planning",
+        "data": "Data",
+        "cloud": "Cloud",
+        "security": "Security",
+        "business": "Business",
+        "research": "Research"
+      },
+      "installedPill": "Installed",
+      "scripts": "scripts",
+      "scriptsTip": "This skill comes with scripts an employee could run. Read the preview before installing.",
+      "noneInstalled": "No skill installed yet. Pick one in the market.",
+      "permsNote": "Each switch installs one skill for one employee.",
+      "previewFirst": "This skill has scripts: look at the preview first.",
+      "preview": "Preview what it contains",
+      "previewTitle": "What is inside",
+      "clean": "No risky patterns found in the files we could read. Still read the SKILL.md.",
+      "flagsTitle": "Marked for a closer look:",
+      "filesTitle": "{n} files",
+      "flag": {
+        "pipeToShell": "downloads code and runs it right away",
+        "download": "fetches things from the internet",
+        "eval": "runs commands or code from inside a script",
+        "encoded": "hides text in an encoded form",
+        "destructive": "can delete files or disks",
+        "privilege": "asks for administrator rights or changes file permissions",
+        "secrets": "touches keys, passwords or credentials",
+        "hiddenChars": "contains invisible characters",
+        "allowedTools": "grants itself tools (removed on install: your permission mode decides)"
+      },
+      "installOn": "Install for",
+      "everyone": "Everyone",
+      "count": "{n} market skills",
+      "many": "many skills slow every message",
+      "installNote": "Every installed skill's name and description is read on every message. A handful per employee is plenty. Installing restarts the employee's session.",
+      "meta": "{files} files · {kb} KB",
+      "tokens": "tokens",
+      "tokensTip": "Roughly what the description and the instructions cost when the skill is used",
+      "installedToast": "Installed",
+      "removedToast": "Removed",
+      "err": {
+        "download": "Could not download it: {detail}",
+        "error": "Something went wrong: {detail}",
+        "conflict": "This employee already has a skill named “{name}” that did not come from the market. It was left alone."
+      },
+      "source": "from the market",
+      "openMarket": "Open the skill market"
+    },
+    "tools": {
+      "button": "Tools",
+      "layout": "Edit the office",
+      "layoutSub": "Move furniture and wall decor",
+      "shop": "Furniture shop",
+      "shopSub": "Buy and sell pieces with your coins",
+      "integrations": "Integrations",
+      "integrationsSub": "Connect outside services",
+      "skills": "Skills",
+      "skillsSub": "Ready-made skills for your employees"
     }
   }
 }

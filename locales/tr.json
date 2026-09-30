@@ -5498,6 +5498,78 @@
           "b": "Günlük limit (Claude dolar, Codex token) yalnız otomatik işi durdurur. Dosyaların nerede durduğunu Ayarlar → Sunucu gösterir."
         }
       }
+    },
+    "skills": {
+      "btn": "Skill marketi",
+      "title": "Skiller",
+      "sub": "Şirketlerin hazırladığı skiller, seçtiğin çalışanlar için",
+      "viewMarket": "Market",
+      "viewPerms": "Kimde ne var",
+      "search": "Skill ara…  (/)",
+      "intro": "Skill, bir çalışanın işi gerektirince okuduğu yönerge klasörüdür (bazen script de içerir). Önizleme görmeden hiçbir şey kurulmaz ve bir skill kendine izin veremez.",
+      "cat": {
+        "all": "Hepsi",
+        "installed": "Kurulu olanlar",
+        "code": "Kod",
+        "design": "Tasarım",
+        "video": "Video",
+        "work": "İş ve planlama",
+        "data": "Veri",
+        "cloud": "Bulut",
+        "security": "Güvenlik",
+        "business": "İş dünyası",
+        "research": "Araştırma"
+      },
+      "installedPill": "Kurulu",
+      "scripts": "script",
+      "scriptsTip": "Bu skill, bir çalışanın çalıştırabileceği script'ler içeriyor. Kurmadan önce önizlemeyi oku.",
+      "noneInstalled": "Henüz kurulu skill yok. Marketten birini seç.",
+      "permsNote": "Her anahtar, bir çalışana bir skill kurar.",
+      "previewFirst": "Bu skill script içeriyor: önce önizlemeye bak.",
+      "preview": "İçinde ne var, göster",
+      "previewTitle": "İçindekiler",
+      "clean": "Okuyabildiğimiz dosyalarda riskli bir kalıp bulunmadı. Yine de SKILL.md'yi oku.",
+      "flagsTitle": "Daha yakından bakılması gerekenler:",
+      "filesTitle": "{n} dosya",
+      "flag": {
+        "pipeToShell": "kod indirip hemen çalıştırıyor",
+        "download": "internetten bir şey çekiyor",
+        "eval": "script içinden komut ya da kod çalıştırıyor",
+        "encoded": "metni kodlanmış biçimde saklıyor",
+        "destructive": "dosya ya da disk silebilir",
+        "privilege": "yönetici hakkı istiyor ya da dosya izinlerini değiştiriyor",
+        "secrets": "anahtar, parola ya da kimlik bilgilerine dokunuyor",
+        "hiddenChars": "görünmez karakterler içeriyor",
+        "allowedTools": "kendine araç izni veriyor (kurulumda kaldırılır: izin modun karar verir)"
+      },
+      "installOn": "Şunlar için kur",
+      "everyone": "Herkes",
+      "count": "{n} market skili",
+      "many": "çok skill her mesajı yavaşlatır",
+      "installNote": "Kurulu her skill'in adı ve açıklaması her mesajda okunur. Çalışan başına bir avuç yeter. Kurulum çalışanın oturumunu yeniden başlatır.",
+      "meta": "{files} dosya · {kb} KB",
+      "tokens": "token",
+      "tokensTip": "Skill kullanılınca açıklama ve yönergelerin yaklaşık maliyeti",
+      "installedToast": "Kuruldu",
+      "removedToast": "Kaldırıldı",
+      "err": {
+        "download": "İndirilemedi: {detail}",
+        "error": "Bir şey ters gitti: {detail}",
+        "conflict": "Bu çalışanda marketten gelmeyen “{name}” adında bir skill zaten var. Dokunulmadı."
+      },
+      "source": "marketten",
+      "openMarket": "Skill marketini aç"
+    },
+    "tools": {
+      "button": "Araçlar",
+      "layout": "Ofisi düzenle",
+      "layoutSub": "Eşyaları ve duvar süslerini taşı",
+      "shop": "Eşya mağazası",
+      "shopSub": "Coinlerinle eşya al ve sat",
+      "integrations": "Entegrasyonlar",
+      "integrationsSub": "Dış servisleri bağla",
+      "skills": "Skiller",
+      "skillsSub": "Çalışanların için hazır skiller"
     }
   }
 }

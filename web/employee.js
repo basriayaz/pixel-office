@@ -175,9 +175,10 @@ function renderSkills() {
   for (const s of detail.skills) {
     const row = document.createElement("div");
     row.className = "skill";
-    row.innerHTML = `<div><b>${escapeHtml(s.name)}</b><div class="muted">${escapeHtml(s.description)}</div></div>
-      <div class="skill-actions"><button class="btn small" data-act="edit">${t("ui.profile.edit")}</button><button class="btn small danger" data-act="del">${t("ui.profile.delete")}</button></div>`;
-    row.querySelector('[data-act="edit"]').onclick = async () => {
+    // a skill from the market keeps the files it came with: it is removed, not edited (edit a copy under another name instead)
+    row.innerHTML = `<div><b>${escapeHtml(s.name)}</b>${s.source ? ` <a class="tag" href="/?skills=${encodeURIComponent(s.source.id)}" title="${escapeHtml(s.source.repo)}@${escapeHtml(s.source.sha.slice(0, 7))}">${escapeHtml(t("ui.skills.source"))} · ${escapeHtml(s.source.vendor)}</a>` : ""}<div class="muted">${escapeHtml(s.description)}</div></div>
+      <div class="skill-actions">${s.source ? "" : `<button class="btn small" data-act="edit">${t("ui.profile.edit")}</button>`}<button class="btn small danger" data-act="del">${t("ui.profile.delete")}</button></div>`;
+    if (!s.source) row.querySelector('[data-act="edit"]').onclick = async () => {
       const full = await api("GET", `${API}/employees/${encodeURIComponent(id)}/skills/${encodeURIComponent(s.name)}`);
       editingSkill = s.name;
       $("skillFormTitle").textContent = t("ui.profile.editSkill", { name: s.name });

@@ -16,6 +16,7 @@ import crypto from "node:crypto";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { officeToolDefs } from "./office-tools.js";
+import { initSkills, skillCatalog, viewOfSkill, skillById, previewSkill, installSkill, uninstallSkill, installedIds } from "./skills.js";
 import { CATEGORIES, initIntegrations, listIntegrations, saveIntegration, checkIntegration, removeIntegration, entryOf, startOAuth, finishOAuth, addCustom, gateway, setOwnClient } from "./integrations.js";
 import { CLAUDE_MODELS, PROVIDERS, activeModels, isActiveModel, initProviders, providersReady, providerStatuses, updateProvider, installProvider, loginProvider, refreshProvider, canInstall, canLogin, type ProviderId } from "./providers.js";
 import { createGuard, isLoopbackHost } from "./security.js";
@@ -503,6 +504,7 @@ const app = express();
 // Refuses foreign pages (Origin) and DNS rebinding (Host) before anything is served; see security.ts.
 initProviders(R, settings.dataDir);
 initIntegrations(settings.dataDir);
+initSkills(settings.dataDir);
 const guard = createGuard({ port: settings.port, host: settings.host, extraHosts: (process.env.PIXEL_OFFICE_ALLOWED_HOSTS ?? "").split(",") });
 app.use(guard.middleware);
 app.use(express.json({ limit: "1mb" }));
@@ -1334,6 +1336,36 @@ r.post("/employees/:id/skills", async (req: OReq, res) => {
   await e.applyConfig(e.cfg);
   res.json({ ok: true, name: id });
 });
+
+// Skill Market: ready-made skills from the catalogue, installed onto the employees the boss picks (see skills.ts).
+app.get("/api/skills", (_req, res) => {
+  const cat = skillCatalog();
+  const installs: Record<string, Array<{ office: string; id: string }>> = {};
+  for (const o of offices.values()) for (const e of o.employees.values()) for (const id of installedIds(e.cfg.pluginDir)) (installs[id] ??= []).push({ office: o.def.id, id: e.cfg.id });
+  res.json({ categories: cat.categories, skills: cat.skills.map(viewOfSkill), installs });
+});
+app.get("/api/skills/:id/preview", async (req, res) => {
+  if (!skillById(String(req.params.id))) return res.status(404).json({ error: t("server.notFound") });
+  try { res.json(await previewSkill(String(req.params.id))); } catch (err) { res.status(502).json({ error: `download:${(err as Error).message}` }); }
+});
+for (const op of ["install", "uninstall"] as const) {
+  app.post(`/api/skills/:id/${op}`, async (req, res) => {
+    const id = String(req.params.id);
+    if (!skillById(id)) return res.status(404).json({ error: t("server.notFound") });
+    const targets = Array.isArray(req.body?.targets) ? (req.body.targets as Array<{ office?: unknown; id?: unknown }>).slice(0, 200) : [];
+    const results: Array<{ office: string; id: string; result: string }> = [];
+    for (const tg of targets) {
+      const e = offices.get(String(tg.office))?.employees.get(String(tg.id));
+      if (!e?.cfg.pluginDir) { results.push({ office: String(tg.office), id: String(tg.id), result: "missing" }); continue; }
+      try {
+        const result = op === "install" ? await installSkill(e.cfg.pluginDir, id) : uninstallSkill(e.cfg.pluginDir, id) ? "removed" : "absent";
+        if (result === "installed" || result === "removed") await e.applyConfig(e.cfg); // (the session restarts to see the change)
+        results.push({ office: String(tg.office), id: e.cfg.id, result });
+      } catch (err) { results.push({ office: String(tg.office), id: e.cfg.id, result: `error:${String((err as Error).message).slice(0, 120)}` }); }
+    }
+    res.json({ results });
+  });
+}
 
 r.get("/employees/:id/skills/:skill", (req: OReq, res) => {
   const e = empOf(req);

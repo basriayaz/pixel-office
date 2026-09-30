@@ -204,18 +204,42 @@ export function archiveEmployeeDir(dir: string) {
   return target;
 }
 
-export function listSkills(pluginDir?: string): Array<{ name: string; description: string }> {
+// A skill's folder inside an employee's skills/, or undefined for a name that is not one plain folder name (a "../" from the network must
+// never reach another employee's folder or anything else on disk).
+export function skillDirOf(pluginDir: string, name: string): string | undefined {
+  if (!name || name !== path.basename(name) || name === "." || name === ".." || /[\\/\0]/.test(name)) return undefined;
+  const base = path.resolve(pluginDir, "skills");
+  const dir = path.resolve(base, name);
+  return path.dirname(dir) === base ? dir : undefined;
+}
+
+// Where a skill from the market came from (written next to it when it was installed).
+export interface SkillSource { id: string; sha: string; vendor: string; repo: string }
+export function skillSourceOf(dir: string): SkillSource | undefined {
+  try {
+    const j = JSON.parse(fs.readFileSync(path.join(dir, ".po-skill.json"), "utf8"));
+    return typeof j?.id === "string" && typeof j?.sha === "string" ? { id: j.id, sha: j.sha, vendor: String(j.vendor ?? ""), repo: String(j.repo ?? "") } : undefined;
+  } catch { return undefined; }
+}
+
+export function listSkills(pluginDir?: string): Array<{ name: string; description: string; source?: SkillSource; files: number }> {
   if (!pluginDir) return [];
   const dir = path.join(pluginDir, "skills");
   if (!fs.existsSync(dir)) return [];
-  const out: Array<{ name: string; description: string }> = [];
+  const out: Array<{ name: string; description: string; source?: SkillSource; files: number }> = [];
   for (const name of fs.readdirSync(dir).sort()) {
     const f = path.join(dir, name, "SKILL.md");
     if (!fs.existsSync(f)) continue;
     const { meta } = parseAgentFile(f);
-    out.push({ name: meta.name ?? name, description: meta.description ?? "" });
+    const source = skillSourceOf(path.join(dir, name));
+    out.push({ name: meta.name ?? name, description: meta.description ?? "", ...(source ? { source } : {}), files: source ? countFiles(path.join(dir, name)) : 1 });
   }
   return out;
+}
+function countFiles(dir: string): number {
+  let n = 0;
+  for (const e of fs.readdirSync(dir, { withFileTypes: true })) n += e.isDirectory() ? countFiles(path.join(dir, e.name)) : 1;
+  return n;
 }
 
 // Skills that come with the project the employee works in (<cwd>/.claude/skills, up to the repository root). Claude Code
@@ -247,15 +271,16 @@ export function writeSkill(pluginDir: string, name: string, description: string,
 }
 
 export function readSkill(pluginDir: string, name: string): { name: string; description: string; body: string } | null {
-  const f = path.join(pluginDir, "skills", name, "SKILL.md");
-  if (!fs.existsSync(f)) return null;
+  const d = skillDirOf(pluginDir, name);
+  const f = d && path.join(d, "SKILL.md");
+  if (!f || !fs.existsSync(f)) return null;
   const { meta, body } = parseAgentFile(f);
   return { name, description: meta.description ?? "", body };
 }
 
 export function deleteSkill(pluginDir: string, name: string) {
-  const dir = path.join(pluginDir, "skills", name);
-  if (fs.existsSync(path.join(dir, "SKILL.md"))) fs.rmSync(dir, { recursive: true, force: true });
+  const dir = skillDirOf(pluginDir, name);
+  if (dir && fs.existsSync(path.join(dir, "SKILL.md"))) fs.rmSync(dir, { recursive: true, force: true });
 }
 
 // Mirrors office employees into <cwd>/.claude/agents so a terminal `claude` in the project can delegate to them.

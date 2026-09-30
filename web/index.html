@@ -31,18 +31,24 @@
       <button class="icon-btn small strip-btn" id="btnActivity" type="button" data-i18n-title="ui.strip.activityTip">🕘<i class="strip-dot" id="activityDot" hidden></i></button>
     </div>
     <div class="tools">
-      <button class="icon-btn small" id="btnLayout" type="button" data-i18n-title="ui.layout.btn" data-i18n-aria="ui.layout.btn">✏️</button>
-      <button class="icon-btn small" id="btnShop" type="button" data-i18n-title="ui.shop.btn" data-i18n-aria="ui.shop.btn">🛒</button>
-      <button class="icon-btn small" id="btnIntegrations" type="button" data-i18n-title="ui.integrations.btn" data-i18n-aria="ui.integrations.btn">🔌</button>
+      <div class="menu" id="toolsMenu">
+        <button class="btn small" id="btnTools" type="button" aria-haspopup="true" aria-expanded="false"><span>🧰</span> <span data-i18n="ui.tools.button"></span> <span class="menu-caret">▾</span></button>
+        <div class="menu-pop" id="toolsPop" role="menu" hidden>
+          <button class="menu-item" id="btnLayout" type="button" role="menuitem"><span class="mi-i">✏️</span><span class="mi-t"><b data-i18n="ui.tools.layout"></b><small data-i18n="ui.tools.layoutSub"></small></span></button>
+          <button class="menu-item" id="btnShop" type="button" role="menuitem"><span class="mi-i">🛒</span><span class="mi-t"><b data-i18n="ui.tools.shop"></b><small data-i18n="ui.tools.shopSub"></small></span></button>
+          <button class="menu-item" id="btnIntegrations" type="button" role="menuitem"><span class="mi-i">🔌</span><span class="mi-t"><b data-i18n="ui.tools.integrations"></b><small data-i18n="ui.tools.integrationsSub"></small></span></button>
+          <button class="menu-item" id="btnSkills" type="button" role="menuitem"><span class="mi-i">🧩</span><span class="mi-t"><b data-i18n="ui.tools.skills"></b><small data-i18n="ui.tools.skillsSub"></small></span></button>
+          <div class="legend" id="legend">
+            <span class="legend-item" data-i18n-tip="ui.legend.idle"><i class="dot idle"></i><span data-i18n="ui.legend.idle"></span></span>
+            <span class="legend-item" data-i18n-tip="ui.legend.working"><i class="dot working"></i><span data-i18n="ui.legend.working"></span></span>
+            <span class="legend-item" data-i18n-tip="ui.legend.waiting"><i class="dot waiting"></i><span data-i18n="ui.legend.waiting"></span></span>
+            <span class="legend-item" data-i18n-tip="ui.legend.error"><i class="dot error"></i><span data-i18n="ui.legend.error"></span></span>
+            <span class="legend-item" data-i18n-tip="ui.legend.sick"><i class="dot sick"></i><span data-i18n="ui.legend.sick"></span></span>
+          </div>
+        </div>
+      </div>
       <button class="icon-btn small" id="btnGuide" type="button" data-i18n-title="ui.guide.btn" data-i18n-aria="ui.guide.btn">?</button>
       <button class="icon-btn small" id="btnSettings" type="button" data-i18n-title="ui.settings.btn">⚙</button>
-    </div>
-    <div class="legend">
-      <span class="legend-item" data-i18n-tip="ui.legend.idle"><i class="dot idle"></i><span class="sr" data-i18n="ui.legend.idle"></span></span>
-      <span class="legend-item" data-i18n-tip="ui.legend.working"><i class="dot working"></i><span class="sr" data-i18n="ui.legend.working"></span></span>
-      <span class="legend-item" data-i18n-tip="ui.legend.waiting"><i class="dot waiting"></i><span class="sr" data-i18n="ui.legend.waiting"></span></span>
-      <span class="legend-item" data-i18n-tip="ui.legend.error"><i class="dot error"></i><span class="sr" data-i18n="ui.legend.error"></span></span>
-      <span class="legend-item" data-i18n-tip="ui.legend.sick"><i class="dot sick"></i><span class="sr" data-i18n="ui.legend.sick"></span></span>
     </div>
     <button class="btn small" id="btnBoard" data-i18n-title="ui.board.buttonTip"><span>📋</span> <span data-i18n="ui.board.button"></span><span class="badge" id="boardBadge" hidden></span></button>
     <button class="btn small" id="btnMeeting" data-i18n-title="ui.meeting.buttonTip"><span>👥</span> <span data-i18n="ui.meeting.button"></span></button>
@@ -348,7 +354,9 @@
   <script src="app.js"></script>
   <script src="layouteditor.js"></script>
   <script src="shop.js"></script>
+  <script src="toolsmenu.js"></script>
   <script src="integrations.js"></script>
+  <script src="skills.js"></script>
   <script src="coins.js"></script>
   <script src="board.js"></script>
   <script src="meeting.js"></script>

@@ -1,0 +1,8228 @@
+{
+ "categories": [
+  "code",
+  "design",
+  "video",
+  "work",
+  "data",
+  "cloud",
+  "security",
+  "business",
+  "research"
+ ],
+ "skills": [
+  {
+   "id": "anthropics_frontend-design",
+   "name": "frontend-design",
+   "vendor": "Anthropic",
+   "repo": "anthropics/skills",
+   "sha": "8a1541c4a3ffa5a20a5a91de0dcf3f0bab1d1ef4",
+   "path": "skills/frontend-design",
+   "category": "design",
+   "description": "Guidance for distinctive, intentional visual design when building new UI or reshaping an existing one. Helps with aesthetic direction, typography, and making choices that don't read as templated defaults.",
+   "license": "Apache-2.0",
+   "icon": "anthropic",
+   "brand": "#d97757",
+   "scripts": false,
+   "bytes": 19564,
+   "bodyChars": 9077,
+   "files": [
+    [
+     "LICENSE.txt",
+     10174
+    ],
+    [
+     "SKILL.md",
+     9390
+    ]
+   ]
+  },
+  {
+   "id": "anthropics_skill-creator",
+   "name": "skill-creator",
+   "vendor": "Anthropic",
+   "repo": "anthropics/skills",
+   "sha": "8a1541c4a3ffa5a20a5a91de0dcf3f0bab1d1ef4",
+   "path": "skills/skill-creator",
+   "category": "work",
+   "description": "Create new skills, modify and improve existing skills, and measure skill performance. Use when users want to create a skill from scratch, edit, or optimize an existing skill, run evals to test a skill, benchmark skill performance with variance analysis, or optimize a skill's description for better triggering accuracy.",
+   "license": "Apache-2.0",
+   "icon": "anthropic",
+   "brand": "#d97757",
+   "scripts": true,
+   "bytes": 224992,
+   "bodyChars": 32627,
+   "files": [
+    [
+     "LICENSE.txt",
+     11345
+    ],
+    [
+     "SKILL.md",
+     33168
+    ],
+    [
+     "agents/analyzer.md",
+     10376
+    ],
+    [
+     "agents/comparator.md",
+     7287
+    ],
+    [
+     "agents/grader.md",
+     9049
+    ],
+    [
+     "assets/eval_review.html",
+     7058
+    ],
+    [
+     "eval-viewer/generate_review.py",
+     16365
+    ],
+    [
+     "eval-viewer/viewer.html",
+     44998
+    ],
+    [
+     "references/schemas.md",
+     12061
+    ],
+    [
+     "scripts/__init__.py",
+     0
+    ],
+    [
+     "scripts/aggregate_benchmark.py",
+     14386
+    ],
+    [
+     "scripts/generate_report.py",
+     12847
+    ],
+    [
+     "scripts/improve_description.py",
+     11116
+    ],
+    [
+     "scripts/package_skill.py",
+     4234
+    ],
+    [
+     "scripts/quick_validate.py",
+     3972
+    ],
+    [
+     "scripts/run_eval.py",
+     11464
+    ],
+    [
+     "scripts/run_loop.py",
+     13605
+    ],
+    [
+     "scripts/utils.py",
+     1661
+    ]
+   ]
+  },
+  {
+   "id": "anthropics_mcp-builder",
+   "name": "mcp-builder",
+   "vendor": "Anthropic",
+   "repo": "anthropics/skills",
+   "sha": "8a1541c4a3ffa5a20a5a91de0dcf3f0bab1d1ef4",
+   "path": "skills/mcp-builder",
+   "category": "code",
+   "description": "Guide for creating high-quality MCP (Model Context Protocol) servers that enable LLMs to interact with external services through well-designed tools. Use when building MCP servers to integrate external APIs or services, whether in Python (FastMCP) or Node/TypeScript (MCP SDK).",
+   "license": "Apache-2.0",
+   "icon": "anthropic",
+   "brand": "#d97757",
+   "scripts": true,
+   "bytes": 121756,
+   "bodyChars": 8711,
+   "files": [
+    [
+     "LICENSE.txt",
+     11345
+    ],
+    [
+     "SKILL.md",
+     9092
+    ],
+    [
+     "reference/evaluation.md",
+     21663
+    ],
+    [
+     "reference/mcp_best_practices.md",
+     7330
+    ],
+    [
+     "reference/node_mcp_server.md",
+     28550
+    ],
+    [
+     "reference/python_mcp_server.md",
+     25099
+    ],
+    [
+     "scripts/connections.py",
+     4875
+    ],
+    [
+     "scripts/evaluation.py",
+     12579
+    ],
+    [
+     "scripts/example_evaluation.xml",
+     1194
+    ],
+    [
+     "scripts/requirements.txt",
+     29
+    ]
+   ]
+  },
+  {
+   "id": "anthropics_webapp-testing",
+   "name": "webapp-testing",
+   "vendor": "Anthropic",
+   "repo": "anthropics/skills",
+   "sha": "8a1541c4a3ffa5a20a5a91de0dcf3f0bab1d1ef4",
+   "path": "skills/webapp-testing",
+   "category": "code",
+   "description": "Toolkit for interacting with and testing local web applications using Playwright. Supports verifying frontend functionality, debugging UI behavior, capturing browser screenshots, and viewing browser logs.",
+   "license": "Apache-2.0",
+   "icon": "anthropic",
+   "brand": "#d97757",
+   "scripts": true,
+   "bytes": 22394,
+   "bodyChars": 3576,
+   "files": [
+    [
+     "LICENSE.txt",
+     11345
+    ],
+    [
+     "SKILL.md",
+     3913
+    ],
+    [
+     "examples/console_logging.py",
+     1027
+    ],
+    [
+     "examples/element_discovery.py",
+     1463
+    ],
+    [
+     "examples/static_html_automation.py",
+     953
+    ],
+    [
+     "scripts/with_server.py",
+     3693
+    ]
+   ]
+  },
+  {
+   "id": "anthropics_claude-api",
+   "name": "claude-api",
+   "vendor": "Anthropic",
+   "repo": "anthropics/skills",
+   "sha": "8a1541c4a3ffa5a20a5a91de0dcf3f0bab1d1ef4",
+   "path": "skills/claude-api",
+   "category": "code",
+   "description": "Reference for the Claude API / Anthropic SDK — model ids, pricing, params, streaming, tool use, MCP, agents, caching, token counting, model migration. TRIGGER — read BEFORE opening the target file; don't skip because it \"looks like a one-liner\" — whenever: the prompt names Claude/Anthropic in any form (Claude, Anthropic, Fable, Opus, Sonnet, Haiku, `anthropic`, `@anthropic-ai`, `claude-*`, `us.anthropic.*`, `[1m]`); the user asks about an LLM (pricing/model choice/limits/caching) — never answer from memory; OR the task is LLM-shaped with provider unstated (agent/MCP/tool-definition/multi-agent/RAG/LLM-judge/computer-use; generate/summarize/extract/classify/rewrite/converse over NL; debugging refusals/cutoffs/streaming/tool-calls/tokens). SKIP only when another provider is being worked on (overrides all triggers): OpenAI/GPT/Gemini/Llama/Mistral/Cohere/Ollama named in the query; OR `grep -rE 'openai|langchain_openai|google.generativeai|genai|mistralai|cohere|ollama'` over the project hits (run this grep FIRST ",
+   "license": "Apache-2.0",
+   "icon": "anthropic",
+   "brand": "#d97757",
+   "scripts": true,
+   "bytes": 1857674,
+   "bodyChars": 100545,
+   "files": [
+    [
+     "LICENSE.txt",
+     11345
+    ],
+    [
+     "SKILL.md",
+     101724
+    ],
+    [
+     "csharp/claude-api/README.md",
+     18915
+    ],
+    [
+     "csharp/claude-api/batches.md",
+     413
+    ],
+    [
+     "csharp/claude-api/files-api.md",
+     900
+    ],
+    [
+     "csharp/claude-api/streaming.md",
+     787
+    ],
+    [
+     "csharp/claude-api/tool-use.md",
+     5998
+    ],
+    [
+     "curl/examples.md",
+     9714
+    ],
+    [
+     "curl/managed-agents.md",
+     8618
+    ],
+    [
+     "go/claude-api/README.md",
+     8477
+    ],
+    [
+     "go/claude-api/files-api.md",
+     936
+    ],
+    [
+     "go/claude-api/streaming.md",
+     1026
+    ],
+    [
+     "go/claude-api/tool-use.md",
+     8393
+    ],
+    [
+     "go/managed-agents/README.md",
+     18939
+    ],
+    [
+     "java/claude-api/README.md",
+     11946
+    ],
+    [
+     "java/claude-api/files-api.md",
+     1198
+    ],
+    [
+     "java/claude-api/streaming.md",
+     655
+    ],
+    [
+     "java/claude-api/tool-use.md",
+     9509
+    ],
+    [
+     "java/managed-agents/README.md",
+     16944
+    ],
+    [
+     "php/claude-api/README.md",
+     6554
+    ],
+    [
+     "php/claude-api/batches.md",
+     447
+    ],
+    [
+     "php/claude-api/files-api.md",
+     476
+    ],
+    [
+     "php/claude-api/streaming.md",
+     682
+    ],
+    [
+     "php/claude-api/tool-use.md",
+     8097
+    ],
+    [
+     "php/managed-agents/README.md",
+     13513
+    ],
+    [
+     "python/claude-api/README.md",
+     20491
+    ],
+    [
+     "python/claude-api/batches.md",
+     5588
+    ],
+    [
+     "python/claude-api/files-api.md",
+     4499
+    ],
+    [
+     "python/claude-api/sdk-upgrade.md",
+     28741
+    ],
+    [
+     "python/claude-api/streaming.md",
+     11940
+    ],
+    [
+     "python/claude-api/tool-use.md",
+     19786
+    ],
+    [
+     "python/managed-agents/README.md",
+     11518
+    ],
+    [
+     "ruby/claude-api/README.md",
+     4843
+    ],
+    [
+     "ruby/claude-api/streaming.md",
+     235
+    ],
+    [
+     "ruby/claude-api/tool-use.md",
+     1063
+    ],
+    [
+     "ruby/managed-agents/README.md",
+     10452
+    ],
+    [
+     "shared/admin-api.md",
+     11606
+    ],
+    [
+     "shared/agent-design.md",
+     8736
+    ],
+    [
+     "shared/anthropic-cli.md",
+     22235
+    ],
+    [
+     "shared/claude-platform-on-aws.md",
+     4420
+    ],
+    [
+     "shared/cost-optimization.md",
+     57453
+    ],
+    [
+     "shared/error-codes.md",
+     19845
+    ],
+    [
+     "shared/evals/build-eval.md",
+     54819
+    ],
+    [
+     "shared/evals/cost-hillclimb.md",
+     31574
+    ],
+    [
+     "shared/evals/eval-audit.md",
+     27892
+    ],
+    [
+     "shared/evals/eval-hillclimb.md",
+     68773
+    ],
+    [
+     "shared/evals/report/SCHEMA.md",
+     16121
+    ],
+    [
+     "shared/evals/report/build-report-lite.mjs",
+     27329
+    ],
+    [
+     "shared/evals/report/runner-scaffold.mjs",
+     33142
+    ],
+    [
+     "shared/live-sources.md",
+     22989
+    ],
+    [
+     "shared/managed-agents-api-reference.md",
+     34401
+    ],
+    [
+     "shared/managed-agents-client-patterns.md",
+     12043
+    ],
+    [
+     "shared/managed-agents-core.md",
+     32852
+    ],
+    [
+     "shared/managed-agents-environments.md",
+     12823
+    ],
+    [
+     "shared/managed-agents-events.md",
+     25029
+    ],
+    [
+     "shared/managed-agents-memory.md",
+     11362
+    ],
+    [
+     "shared/managed-agents-multiagent.md",
+     26250
+    ],
+    [
+     "shared/managed-agents-onboarding.md",
+     13154
+    ],
+    [
+     "shared/managed-agents-outcomes.md",
+     7918
+    ],
+    [
+     "shared/managed-agents-overview.md",
+     13341
+    ],
+    [
+     "shared/managed-agents-scheduled-deployments.md",
+     9068
+    ],
+    [
+     "shared/managed-agents-self-hosted-sandboxes.md",
+     27847
+    ],
+    [
+     "shared/managed-agents-tools.md",
+     35673
+    ],
+    [
+     "shared/managed-agents-webhooks.md",
+     11321
+    ],
+    [
+     "shared/model-migration.md",
+     316954
+    ],
+    [
+     "shared/models.md",
+     15969
+    ],
+    [
+     "shared/platform-availability.md",
+     7415
+    ],
+    [
+     "shared/preserved-thinking-migration.md",
+     63994
+    ],
+    [
+     "shared/preserved-thinking-migration/causes.md",
+     37879
+    ],
+    [
+     "shared/preserved-thinking-migration/drop_block_probe.py",
+     64338
+    ],
+    [
+     "shared/preserved-thinking-migration/prefix_diff.py",
+     94008
+    ],
+    [
+     "shared/prompt-audit.md",
+     48983
+    ],
+    [
+     "shared/prompt-caching.md",
+     33021
+    ],
+    [
+     "shared/token-counting.md",
+     1603
+    ],
+    [
+     "shared/tool-use-concepts.md",
+     44242
+    ],
+    [
+     "typescript/claude-api/README.md",
+     15739
+    ],
+    [
+     "typescript/claude-api/batches.md",
+     2594
+    ],
+    [
+     "typescript/claude-api/files-api.md",
+     2384
+    ],
+    [
+     "typescript/claude-api/streaming.md",
+     9514
+    ],
+    [
+     "typescript/claude-api/tool-use.md",
+     22670
+    ],
+    [
+     "typescript/managed-agents/README.md",
+     10989
+    ]
+   ]
+  },
+  {
+   "id": "superpowers_systematic-debugging",
+   "name": "systematic-debugging",
+   "vendor": "Superpowers",
+   "repo": "obra/superpowers",
+   "sha": "8ca22dba9a94f28898bbce59f2537ff4d87c747d",
+   "path": "skills/systematic-debugging",
+   "category": "code",
+   "description": "Use when encountering any bug, test failure, or unexpected behavior, before proposing fixes",
+   "license": "MIT",
+   "scripts": true,
+   "bytes": 40777,
+   "bodyChars": 9302,
+   "files": [
+    [
+     "CREATION-LOG.md",
+     4257
+    ],
+    [
+     "SKILL.md",
+     9465
+    ],
+    [
+     "condition-based-waiting-example.ts",
+     5054
+    ],
+    [
+     "condition-based-waiting.md",
+     3516
+    ],
+    [
+     "defense-in-depth.md",
+     3650
+    ],
+    [
+     "find-polluter.sh",
+     1986
+    ],
+    [
+     "root-cause-tracing.md",
+     5321
+    ],
+    [
+     "test-academic.md",
+     653
+    ],
+    [
+     "test-pressure-1.md",
+     1900
+    ],
+    [
+     "test-pressure-2.md",
+     2283
+    ],
+    [
+     "test-pressure-3.md",
+     2692
+    ]
+   ]
+  },
+  {
+   "id": "superpowers_test-driven-development",
+   "name": "test-driven-development",
+   "vendor": "Superpowers",
+   "repo": "obra/superpowers",
+   "sha": "8ca22dba9a94f28898bbce59f2537ff4d87c747d",
+   "path": "skills/test-driven-development",
+   "category": "code",
+   "description": "Use when implementing any feature or bugfix, before writing implementation code",
+   "license": "MIT",
+   "scripts": false,
+   "bytes": 17846,
+   "bodyChars": 9426,
+   "files": [
+    [
+     "SKILL.md",
+     9578
+    ],
+    [
+     "writing-good-tests.md",
+     8268
+    ]
+   ]
+  },
+  {
+   "id": "superpowers_verification-before-completion",
+   "name": "verification-before-completion",
+   "vendor": "Superpowers",
+   "repo": "obra/superpowers",
+   "sha": "8ca22dba9a94f28898bbce59f2537ff4d87c747d",
+   "path": "skills/verification-before-completion",
+   "category": "code",
+   "description": "Use when about to claim work is complete, fixed, or passing, before committing or creating PRs - requires running verification commands and confirming output before making any success claims; evidence before assertions always",
+   "license": "MIT",
+   "scripts": false,
+   "bytes": 3646,
+   "bodyChars": 3315,
+   "files": [
+    [
+     "SKILL.md",
+     3646
+    ]
+   ]
+  },
+  {
+   "id": "superpowers_requesting-code-review",
+   "name": "requesting-code-review",
+   "vendor": "Superpowers",
+   "repo": "obra/superpowers",
+   "sha": "8ca22dba9a94f28898bbce59f2537ff4d87c747d",
+   "path": "skills/requesting-code-review",
+   "category": "code",
+   "description": "Use when completing tasks, implementing major features, or before merging to verify work meets requirements",
+   "license": "MIT",
+   "scripts": false,
+   "bytes": 9426,
+   "bodyChars": 2816,
+   "files": [
+    [
+     "SKILL.md",
+     2977
+    ],
+    [
+     "code-reviewer.md",
+     6449
+    ]
+   ]
+  },
+  {
+   "id": "superpowers_receiving-code-review",
+   "name": "receiving-code-review",
+   "vendor": "Superpowers",
+   "repo": "obra/superpowers",
+   "sha": "8ca22dba9a94f28898bbce59f2537ff4d87c747d",
+   "path": "skills/receiving-code-review",
+   "category": "code",
+   "description": "Use when receiving code review feedback, before implementing suggestions, especially if feedback seems unclear or technically questionable - requires technical rigor and verification, not performative agreement or blind implementation",
+   "license": "MIT",
+   "scripts": false,
+   "bytes": 6203,
+   "bodyChars": 5882,
+   "files": [
+    [
+     "SKILL.md",
+     6203
+    ]
+   ]
+  },
+  {
+   "id": "superpowers_using-git-worktrees",
+   "name": "using-git-worktrees",
+   "vendor": "Superpowers",
+   "repo": "obra/superpowers",
+   "sha": "8ca22dba9a94f28898bbce59f2537ff4d87c747d",
+   "path": "skills/using-git-worktrees",
+   "category": "code",
+   "description": "Use when starting feature work that needs isolation from current workspace or before executing implementation plans - ensures an isolated workspace exists via native tools or git worktree fallback",
+   "license": "MIT",
+   "scripts": false,
+   "bytes": 6813,
+   "bodyChars": 6560,
+   "files": [
+    [
+     "SKILL.md",
+     6813
+    ]
+   ]
+  },
+  {
+   "id": "superpowers_brainstorming",
+   "name": "brainstorming",
+   "vendor": "Superpowers",
+   "repo": "obra/superpowers",
+   "sha": "8ca22dba9a94f28898bbce59f2537ff4d87c747d",
+   "path": "skills/brainstorming",
+   "category": "work",
+   "description": "You MUST use this before any creative work - creating features, building components, adding functionality, or modifying behavior. Explores user intent, requirements and design before implementation.",
+   "license": "MIT",
+   "scripts": true,
+   "bytes": 82281,
+   "bodyChars": 17217,
+   "files": [
+    [
+     "SKILL.md",
+     17548
+    ],
+    [
+     "scripts/frame-template.html",
+     8094
+    ],
+    [
+     "scripts/helper.js",
+     5615
+    ],
+    [
+     "scripts/server.cjs",
+     25693
+    ],
+    [
+     "scripts/start-server.sh",
+     6908
+    ],
+    [
+     "scripts/stop-server.sh",
+     3263
+    ],
+    [
+     "spec-document-reviewer-prompt.md",
+     1747
+    ],
+    [
+     "visual-companion.md",
+     13413
+    ]
+   ]
+  },
+  {
+   "id": "superpowers_writing-plans",
+   "name": "writing-plans",
+   "vendor": "Superpowers",
+   "repo": "obra/superpowers",
+   "sha": "8ca22dba9a94f28898bbce59f2537ff4d87c747d",
+   "path": "skills/writing-plans",
+   "category": "work",
+   "description": "Use when you have a spec or requirements for a multi-step task, before touching code",
+   "license": "MIT",
+   "scripts": false,
+   "bytes": 10335,
+   "bodyChars": 10192,
+   "files": [
+    [
+     "SKILL.md",
+     10335
+    ]
+   ]
+  },
+  {
+   "id": "superpowers_executing-plans",
+   "name": "executing-plans",
+   "vendor": "Superpowers",
+   "repo": "obra/superpowers",
+   "sha": "8ca22dba9a94f28898bbce59f2537ff4d87c747d",
+   "path": "skills/executing-plans",
+   "category": "work",
+   "description": "Use when executing an implementation plan in the current session as the implementer yourself — your human partner chose inline execution, or no subagent tool is available",
+   "license": "MIT",
+   "scripts": true,
+   "bytes": 23038,
+   "bodyChars": 20036,
+   "files": [
+    [
+     "SKILL.md",
+     20405
+    ],
+    [
+     "scripts/task-done",
+     1670
+    ],
+    [
+     "scripts/task-start",
+     963
+    ]
+   ]
+  },
+  {
+   "id": "superpowers_dispatching-parallel-agents",
+   "name": "dispatching-parallel-agents",
+   "vendor": "Superpowers",
+   "repo": "obra/superpowers",
+   "sha": "8ca22dba9a94f28898bbce59f2537ff4d87c747d",
+   "path": "skills/dispatching-parallel-agents",
+   "category": "work",
+   "description": "Use when facing 2+ independent tasks that can be worked on without shared state or sequential dependencies",
+   "license": "MIT",
+   "scripts": false,
+   "bytes": 6078,
+   "bodyChars": 5891,
+   "files": [
+    [
+     "SKILL.md",
+     6078
+    ]
+   ]
+  },
+  {
+   "id": "superpowers_subagent-driven-development",
+   "name": "subagent-driven-development",
+   "vendor": "Superpowers",
+   "repo": "obra/superpowers",
+   "sha": "8ca22dba9a94f28898bbce59f2537ff4d87c747d",
+   "path": "skills/subagent-driven-development",
+   "category": "work",
+   "description": "Use when executing implementation plans with independent tasks in the current session",
+   "license": "MIT",
+   "scripts": true,
+   "bytes": 59320,
+   "bodyChars": 32218,
+   "files": [
+    [
+     "SKILL.md",
+     32577
+    ],
+    [
+     "implementer-prompt.md",
+     6335
+    ],
+    [
+     "re-review-prompt.md",
+     4761
+    ],
+    [
+     "scripts/review-package",
+     2029
+    ],
+    [
+     "scripts/sdd-workspace",
+     3265
+    ],
+    [
+     "scripts/task-brief",
+     1322
+    ],
+    [
+     "task-reviewer-prompt.md",
+     9031
+    ]
+   ]
+  },
+  {
+   "id": "hyperframes_hyperframes",
+   "name": "hyperframes",
+   "vendor": "HeyGen",
+   "repo": "heygen-com/hyperframes",
+   "sha": "daa44fcd753d9055aa3c954ad74f09a4e4389780",
+   "path": "skills/hyperframes",
+   "category": "video",
+   "description": "Mandatory entry point: read this first for any request to make, create, edit, animate, or render a video, animation, or motion graphic, including a promo, explainer, captioned clip, title card, overlay, slideshow or interactive deck, Remotion port, or any HyperFrames HTML composition. Also use it to inspect, diagnose, validate, preview, publish, or batch-render an existing HyperFrames project. Inputs may be a website URL, GitHub PR, Figma design or URL, text or brief, existing footage, or music. It resumes project state, captures intent when applicable, selects and installs the owning workflow, and routes domain capabilities. HyperFrames is the default output framework unless the user explicitly chooses another framework for the deliverable or asks only to record a browser session.",
+   "license": "Apache-2.0",
+   "icon": "heygen.png",
+   "scripts": true,
+   "bytes": 147615,
+   "bodyChars": 17035,
+   "files": [
+    [
+     "SKILL.md",
+     17943
+    ],
+    [
+     "references/brief-contract.md",
+     11889
+    ],
+    [
+     "references/brief-format.md",
+     7090
+    ],
+    [
+     "references/capability-menu.md",
+     15611
+    ],
+    [
+     "references/frame-worker-core.md",
+     16832
+    ],
+    [
+     "references/intent-interview.md",
+     14143
+    ],
+    [
+     "references/pitch-round.md",
+     5550
+    ],
+    [
+     "references/plugin-installation.md",
+     2715
+    ],
+    [
+     "references/production-loop.md",
+     8188
+    ],
+    [
+     "references/review-loop.md",
+     6122
+    ],
+    [
+     "references/route-briefs.md",
+     579
+    ],
+    [
+     "references/routes/embedded-captions.md",
+     739
+    ],
+    [
+     "references/routes/faceless-explainer.md",
+     1020
+    ],
+    [
+     "references/routes/general-video.md",
+     1374
+    ],
+    [
+     "references/routes/motion-graphics.md",
+     864
+    ],
+    [
+     "references/routes/music-to-video.md",
+     1114
+    ],
+    [
+     "references/routes/pr-to-video.md",
+     2057
+    ],
+    [
+     "references/routes/product-launch-video.md",
+     2006
+    ],
+    [
+     "references/routes/remotion-to-hyperframes.md",
+     545
+    ],
+    [
+     "references/routes/slideshow.md",
+     1081
+    ],
+    [
+     "references/routes/talking-head-recut.md",
+     765
+    ],
+    [
+     "references/script-format.md",
+     2778
+    ],
+    [
+     "references/skill-lifecycle.md",
+     2101
+    ],
+    [
+     "references/storyboard-format.md",
+     5781
+    ],
+    [
+     "references/subagent-dispatch.md",
+     3677
+    ],
+    [
+     "references/workflow-catalog.md",
+     458
+    ],
+    [
+     "scripts/lib/frame-packets-core.mjs",
+     7408
+    ],
+    [
+     "scripts/plugin-cli.mjs",
+     2933
+    ],
+    [
+     "scripts/plugin-cli.test.mjs",
+     4252
+    ]
+   ]
+  },
+  {
+   "id": "hyperframes_hyperframes-core",
+   "name": "hyperframes-core",
+   "vendor": "HeyGen",
+   "repo": "heygen-com/hyperframes",
+   "sha": "daa44fcd753d9055aa3c954ad74f09a4e4389780",
+   "path": "skills/hyperframes-core",
+   "category": "video",
+   "description": "The HyperFrames composition contract — build one renderable project. Use for composition structure, the `data-*` timing attributes, `class=\"clip\"`, tracks, sub-compositions, variables, framework-owned media playback, deterministic-render rules, and validation. Read before writing composition HTML.",
+   "license": "Apache-2.0",
+   "icon": "heygen.png",
+   "scripts": false,
+   "bytes": 95041,
+   "bodyChars": 12190,
+   "files": [
+    [
+     "SKILL.md",
+     12572
+    ],
+    [
+     "references/composition-patterns.md",
+     10853
+    ],
+    [
+     "references/creator-editing-recipes.md",
+     17738
+    ],
+    [
+     "references/data-attributes.md",
+     15874
+    ],
+    [
+     "references/determinism-rules.md",
+     6659
+    ],
+    [
+     "references/full-screen-motion.md",
+     2906
+    ],
+    [
+     "references/minimal-composition.md",
+     2507
+    ],
+    [
+     "references/sub-compositions.md",
+     8074
+    ],
+    [
+     "references/tailwind.md",
+     4078
+    ],
+    [
+     "references/tracks-and-clips.md",
+     5620
+    ],
+    [
+     "references/variables-and-media.md",
+     8160
+    ]
+   ]
+  },
+  {
+   "id": "hyperframes_hyperframes-creative",
+   "name": "hyperframes-creative",
+   "vendor": "HeyGen",
+   "repo": "heygen-com/hyperframes",
+   "sha": "daa44fcd753d9055aa3c954ad74f09a4e4389780",
+   "path": "skills/hyperframes-creative",
+   "category": "video",
+   "description": "Non-animation creative direction for HyperFrames videos. Use for design spec (frame.md / design.md) handling, palettes, typography, narration, beat planning, audio-reactive visuals, composition patterns, and brand / style decisions. For atomic motion patterns and scene blueprints, use `hyperframes-animation`.",
+   "license": "Apache-2.0",
+   "icon": "heygen.png",
+   "scripts": true,
+   "bytes": 1207344,
+   "bodyChars": 6203,
+   "files": [
+    [
+     "SKILL.md",
+     6598
+    ],
+    [
+     "frame-presets/biennale-yellow/FRAME.md",
+     17789
+    ],
+    [
+     "frame-presets/biennale-yellow/caption-skin.html",
+     8258
+    ],
+    [
+     "frame-presets/biennale-yellow/frame-showcase.html",
+     34908
+    ],
+    [
+     "frame-presets/blockframe/FRAME.md",
+     16292
+    ],
+    [
+     "frame-presets/blockframe/caption-skin.html",
+     8472
+    ],
+    [
+     "frame-presets/blockframe/frame-showcase.html",
+     38856
+    ],
+    [
+     "frame-presets/blue-professional/FRAME.md",
+     17202
+    ],
+    [
+     "frame-presets/blue-professional/caption-skin.html",
+     8384
+    ],
+    [
+     "frame-presets/blue-professional/frame-showcase.html",
+     39108
+    ],
+    [
+     "frame-presets/bold-poster/FRAME.md",
+     15984
+    ],
+    [
+     "frame-presets/bold-poster/caption-skin.html",
+     8847
+    ],
+    [
+     "frame-presets/bold-poster/frame-showcase.html",
+     32385
+    ],
+    [
+     "frame-presets/broadside/FRAME.md",
+     16303
+    ],
+    [
+     "frame-presets/broadside/caption-skin.html",
+     8558
+    ],
+    [
+     "frame-presets/broadside/frame-showcase.html",
+     33899
+    ],
+    [
+     "frame-presets/capsule/FRAME.md",
+     17214
+    ],
+    [
+     "frame-presets/capsule/caption-skin.html",
+     8501
+    ],
+    [
+     "frame-presets/capsule/frame-showcase.html",
+     43052
+    ],
+    [
+     "frame-presets/cartesian/FRAME.md",
+     17294
+    ],
+    [
+     "frame-presets/cartesian/caption-skin.html",
+     8442
+    ],
+    [
+     "frame-presets/cartesian/frame-showcase.html",
+     35340
+    ],
+    [
+     "frame-presets/cobalt-grid/FRAME.md",
+     17286
+    ],
+    [
+     "frame-presets/cobalt-grid/caption-skin.html",
+     8952
+    ],
+    [
+     "frame-presets/cobalt-grid/frame-showcase.html",
+     47020
+    ],
+    [
+     "frame-presets/code-editorial/FRAME.md",
+     20600
+    ],
+    [
+     "frame-presets/code-editorial/caption-skin.html",
+     8469
+    ],
+    [
+     "frame-presets/code-editorial/fonts/EBGaramond-400.woff2",
+     21704
+    ],
+    [
+     "frame-presets/code-editorial/fonts/EBGaramond-700.woff2",
+     23076
+    ],
+    [
+     "frame-presets/code-editorial/fonts/Inter-400.woff2",
+     23664
+    ],
+    [
+     "frame-presets/code-editorial/fonts/Inter-700.woff2",
+     24356
+    ],
+    [
+     "frame-presets/code-editorial/fonts/JetBrainsMono-400.woff2",
+     21168
+    ],
+    [
+     "frame-presets/code-editorial/fonts/JetBrainsMono-700.woff2",
+     21908
+    ],
+    [
+     "frame-presets/code-editorial/fonts/OFL-eb-garamond.txt",
+     4519
+    ],
+    [
+     "frame-presets/code-editorial/fonts/OFL-inter.txt",
+     4477
+    ],
+    [
+     "frame-presets/code-editorial/fonts/OFL-jetbrains-mono.txt",
+     4524
+    ],
+    [
+     "frame-presets/code-editorial/frame-showcase.html",
+     43711
+    ],
+    [
+     "frame-presets/coral/FRAME.md",
+     18950
+    ],
+    [
+     "frame-presets/coral/caption-skin.html",
+     8457
+    ],
+    [
+     "frame-presets/coral/frame-showcase.html",
+     36472
+    ],
+    [
+     "frame-presets/creative-mode/FRAME.md",
+     19605
+    ],
+    [
+     "frame-presets/creative-mode/caption-skin.html",
+     8516
+    ],
+    [
+     "frame-presets/creative-mode/frame-showcase.html",
+     38750
+    ],
+    [
+     "frame-presets/daisy-days/FRAME.md",
+     17445
+    ],
+    [
+     "frame-presets/daisy-days/caption-skin.html",
+     8643
+    ],
+    [
+     "frame-presets/daisy-days/frame-showcase.html",
+     42293
+    ],
+    [
+     "frame-presets/editorial-forest/FRAME.md",
+     17019
+    ],
+    [
+     "frame-presets/editorial-forest/caption-skin.html",
+     8483
+    ],
+    [
+     "frame-presets/editorial-forest/frame-showcase.html",
+     36847
+    ],
+    [
+     "palettes/bold-energetic.md",
+     417
+    ],
+    [
+     "palettes/clean-corporate.md",
+     410
+    ],
+    [
+     "palettes/dark-premium.md",
+     389
+    ],
+    [
+     "palettes/jewel-rich.md",
+     394
+    ],
+    [
+     "palettes/monochrome.md",
+     454
+    ],
+    [
+     "palettes/nature-earth.md",
+     399
+    ],
+    [
+     "palettes/neon-electric.md",
+     380
+    ],
+    [
+     "palettes/pastel-soft.md",
+     392
+    ],
+    [
+     "palettes/warm-editorial.md",
+     411
+    ],
+    [
+     "references/audio-reactive.md",
+     3062
+    ],
+    [
+     "references/beat-direction.md",
+     13640
+    ],
+    [
+     "references/composition-patterns.md",
+     5685
+    ],
+    [
+     "references/data-in-motion.md",
+     1274
+    ],
+    [
+     "references/design-adherence.md",
+     1423
+    ],
+    [
+     "references/design-picker.md",
+     12221
+    ],
+    [
+     "references/design-spec.md",
+     10498
+    ],
+    [
+     "references/house-style.md",
+     5025
+    ],
+    [
+     "references/motion-principles.md",
+     9335
+    ],
+    [
+     "references/narration.md",
+     3482
+    ],
+    [
+     "references/prompt-expansion.md",
+     5707
+    ],
+    [
+     "references/story-spine.md",
+     4154
+    ],
+    [
+     "references/storyboard-recipe.md",
+     7455
+    ],
+    [
+     "references/typography.md",
+     14481
+    ],
+    [
+     "references/video-composition.md",
+     4298
+    ],
+    [
+     "references/visual-styles.md",
+     11967
+    ],
+    [
+     "scripts/contrast-report.mjs",
+     21349
+    ],
+    [
+     "scripts/extract-audio-data.py",
+     7214
+    ],
+    [
+     "scripts/package-loader.mjs",
+     14451
+    ],
+    [
+     "scripts/package-loader.test.mjs",
+     4279
+    ],
+    [
+     "templates/design-picker.html",
+     44098
+    ]
+   ]
+  },
+  {
+   "id": "hyperframes_hyperframes-animation",
+   "name": "hyperframes-animation",
+   "vendor": "HeyGen",
+   "repo": "heygen-com/hyperframes",
+   "sha": "daa44fcd753d9055aa3c954ad74f09a4e4389780",
+   "path": "skills/hyperframes-animation",
+   "category": "video",
+   "description": "All animation knowledge for HyperFrames — atomic motion rules, multi-phase scene blueprints, scene transitions, broader motion-design techniques, AND the seven runtime adapters (GSAP default, plus Lottie, Three.js, Anime.js, CSS keyframes, Web Animations API, TypeGPU). Use for any motion or animation task: pick 2-4 rules and compose, or load a blueprint, or look up runtime-specific API (e.g. GSAP eases / Lottie player / Three.js mixer). Also covers auditing an existing composition's choreography (animation map) and 24 named text-animation effects. HyperFrames-native: single paused timeline, seek-safe, deterministic.",
+   "license": "Apache-2.0",
+   "icon": "heygen.png",
+   "scripts": true,
+   "bytes": 1231035,
+   "bodyChars": 7649,
+   "files": [
+    [
+     "SKILL.md",
+     8357
+    ],
+    [
+     "adapters/animate-text.md",
+     4069
+    ],
+    [
+     "adapters/animejs.md",
+     6224
+    ],
+    [
+     "adapters/css-animations.md",
+     5407
+    ],
+    [
+     "adapters/gsap-easing-and-stagger.md",
+     13270
+    ],
+    [
+     "adapters/gsap-timeline-and-labels.md",
+     3734
+    ],
+    [
+     "adapters/gsap-transforms-and-perf.md",
+     8552
+    ],
+    [
+     "adapters/gsap.md",
+     7504
+    ],
+    [
+     "adapters/html-in-canvas-patterns.md",
+     17166
+    ],
+    [
+     "adapters/lottie.md",
+     6181
+    ],
+    [
+     "adapters/three.md",
+     6473
+    ],
+    [
+     "adapters/typegpu.md",
+     8100
+    ],
+    [
+     "adapters/waapi.md",
+     4248
+    ],
+    [
+     "blueprints-index.md",
+     26512
+    ],
+    [
+     "blueprints/agent-progress-theater.md",
+     16091
+    ],
+    [
+     "blueprints/camera-journey.md",
+     13648
+    ],
+    [
+     "blueprints/comparison-split.md",
+     3316
+    ],
+    [
+     "blueprints/constellation-hub.md",
+     7144
+    ],
+    [
+     "blueprints/cta-morph-press.md",
+     6407
+    ],
+    [
+     "blueprints/cursor-ui-demo.md",
+     20276
+    ],
+    [
+     "blueprints/dataviz-countup.md",
+     14611
+    ],
+    [
+     "blueprints/device-surface-showcase.md",
+     17151
+    ],
+    [
+     "blueprints/fixed-anchor-cycle.md",
+     9089
+    ],
+    [
+     "blueprints/grid-card-assemble.md",
+     15594
+    ],
+    [
+     "blueprints/kinetic-type-beats.md",
+     29151
+    ],
+    [
+     "blueprints/logo-assemble-lockup.md",
+     26609
+    ],
+    [
+     "blueprints/overwhelm-surround.md",
+     6140
+    ],
+    [
+     "blueprints/panel-edit-live-sync.md",
+     13394
+    ],
+    [
+     "blueprints/prompt-type-submit-generate.md",
+     18636
+    ],
+    [
+     "blueprints/spatial-pan-stations.md",
+     4868
+    ],
+    [
+     "blueprints/ticker-takeover.md",
+     3052
+    ],
+    [
+     "blueprints/titlecard-reveal.md",
+     7441
+    ],
+    [
+     "blueprints/transcript-scroll-artifact-reveal.md",
+     11666
+    ],
+    [
+     "blueprints/typewriter-reveal.md",
+     6276
+    ],
+    [
+     "blueprints/video-text-pivot.md",
+     3281
+    ],
+    [
+     "blueprints/zoom-out-workspace-reveal.md",
+     14714
+    ],
+    [
+     "examples/brand-reveal-assemble-zoom.html",
+     12285
+    ],
+    [
+     "examples/comparison-split-cards.html",
+     21754
+    ],
+    [
+     "examples/concept-demo-decode-pan.html",
+     18382
+    ],
+    [
+     "examples/cta-morph-press.html",
+     15192
+    ],
+    [
+     "examples/cta-orbit-collapse.html",
+     50646
+    ],
+    [
+     "examples/demo-page-scroll-spotlight.html",
+     25019
+    ],
+    [
+     "examples/hook-counter-burst.html",
+     23004
+    ],
+    [
+     "examples/messaging-multi-phrase.html",
+     12223
+    ],
+    [
+     "examples/metric-video-text-pivot.html",
+     25640
+    ],
+    [
+     "examples/problem-mockup-overwhelm.html",
+     44482
+    ],
+    [
+     "examples/proof-logo-chain.html",
+     28911
+    ],
+    [
+     "examples/takeover-ticker-displace.html",
+     10947
+    ],
+    [
+     "examples/workflow-approve-press.html",
+     20674
+    ],
+    [
+     "references/motion-blur.md",
+     12792
+    ],
+    [
+     "rules-index.md",
+     21204
+    ],
+    [
+     "rules/3d-camera-flight.md",
+     18137
+    ],
+    [
+     "rules/3d-page-scroll.md",
+     7406
+    ],
+    [
+     "rules/3d-text-depth-layers.md",
+     6708
+    ],
+    [
+     "rules/ai-tracking-box.md",
+     6562
+    ],
+    [
+     "rules/ambient-glow-bloom.md",
+     9840
+    ],
+    [
+     "rules/anchored-layout-expand.md",
+     10313
+    ],
+    [
+     "rules/asr-keyword-glow.md",
+     6762
+    ],
+    [
+     "rules/avatar-cloud-network.md",
+     6578
+    ],
+    [
+     "rules/camera-cursor-tracking.md",
+     7911
+    ],
+    [
+     "rules/card-morph-anchor.md",
+     7411
+    ],
+    [
+     "rules/center-outward-expansion.md",
+     4263
+    ],
+    [
+     "rules/chart-scrub-readout.md",
+     10348
+    ],
+    [
+     "rules/chromatic-glitch.md",
+     10339
+    ],
+    [
+     "rules/context-sensitive-cursor.md",
+     6938
+    ],
+    [
+     "rules/control-target-sync.md",
+     10276
+    ],
+    [
+     "rules/coordinate-target-zoom.md",
+     7607
+    ],
+    [
+     "rules/counting-dynamic-scale.md",
+     5977
+    ],
+    [
+     "rules/css-marker-patterns.md",
+     5702
+    ],
+    [
+     "rules/cursor-click-ripple.md",
+     6397
+    ],
+    [
+     "rules/cursor-drag.md",
+     10215
+    ],
+    [
+     "rules/depth-of-field-blur.md",
+     8876
+    ],
+    [
+     "rules/depth-scatter-assemble.md",
+     7054
+    ],
+    [
+     "rules/discrete-text-sequence.md",
+     6454
+    ],
+    [
+     "rules/dynamic-content-sequencing.md",
+     8558
+    ],
+    [
+     "rules/gradient-text-sweep.md",
+     8751
+    ],
+    [
+     "rules/gsap-effects.md",
+     6912
+    ],
+    [
+     "rules/hacker-flip-3d.md",
+     5586
+    ],
+    [
+     "rules/kinetic-beat-slam.md",
+     6445
+    ],
+    [
+     "rules/motion-blur-streak.md",
+     10616
+    ],
+    [
+     "rules/multi-cursor-choreography.md",
+     10520
+    ],
+    [
+     "rules/multi-phase-camera.md",
+     7773
+    ],
+    [
+     "rules/nudge-curve.md",
+     2689
+    ],
+    [
+     "rules/orbit-3d-entry.md",
+     6628
+    ],
+    [
+     "rules/particle-burst.md",
+     9956
+    ],
+    [
+     "rules/physics-press-reaction.md",
+     6687
+    ],
+    [
+     "rules/press-release-spring.md",
+     7041
+    ],
+    [
+     "rules/reactive-displacement.md",
+     6539
+    ],
+    [
+     "rules/scale-swap-transition.md",
+     5517
+    ],
+    [
+     "rules/sine-wave-loop.md",
+     6163
+    ],
+    [
+     "rules/split-tilt-cards.md",
+     5669
+    ],
+    [
+     "rules/spring-pop-entrance.md",
+     6533
+    ],
+    [
+     "rules/stat-bars-and-fills.md",
+     5486
+    ],
+    [
+     "rules/svg-icon-enrichment.md",
+     7621
+    ],
+    [
+     "rules/svg-path-draw.md",
+     5646
+    ],
+    [
+     "rules/theme-crossfade-morph.md",
+     9404
+    ],
+    [
+     "rules/vertical-spring-ticker.md",
+     5495
+    ],
+    [
+     "rules/viewport-change.md",
+     8974
+    ],
+    [
+     "rules/waterfall-entry.md",
+     4582
+    ],
+    [
+     "scripts/animation-map-sampling.mjs",
+     1400
+    ],
+    [
+     "scripts/animation-map-sampling.test.mjs",
+     1689
+    ],
+    [
+     "scripts/animation-map.mjs",
+     23340
+    ],
+    [
+     "scripts/animation-map.test.mjs",
+     19354
+    ],
+    [
+     "scripts/package-loader.mjs",
+     14451
+    ],
+    [
+     "scripts/package-loader.test.mjs",
+     4279
+    ],
+    [
+     "techniques.md",
+     15823
+    ],
+    [
+     "transitions/TRANSITION-REGISTRY.md",
+     8171
+    ],
+    [
+     "transitions/catalog.md",
+     6679
+    ],
+    [
+     "transitions/css-3d.md",
+     421
+    ],
+    [
+     "transitions/css-blur.md",
+     1787
+    ],
+    [
+     "transitions/css-cover.md",
+     1448
+    ],
+    [
+     "transitions/css-destruction.md",
+     4484
+    ],
+    [
+     "transitions/css-dissolve.md",
+     2462
+    ],
+    [
+     "transitions/css-distortion.md",
+     1803
+    ],
+    [
+     "transitions/css-grid.md",
+     370
+    ],
+    [
+     "transitions/css-light.md",
+     2376
+    ],
+    [
+     "transitions/css-mechanical.md",
+     1613
+    ],
+    [
+     "transitions/css-other.md",
+     838
+    ],
+    [
+     "transitions/css-push.md",
+     1243
+    ],
+    [
+     "transitions/css-radial.md",
+     1060
+    ],
+    [
+     "transitions/css-scale.md",
+     715
+    ],
+    [
+     "transitions/overview.md",
+     13857
+    ]
+   ]
+  },
+  {
+   "id": "hyperframes_hyperframes-audio",
+   "name": "hyperframes-audio",
+   "vendor": "HeyGen",
+   "repo": "heygen-com/hyperframes",
+   "sha": "daa44fcd753d9055aa3c954ad74f09a4e4389780",
+   "path": "skills/hyperframes-audio",
+   "category": "video",
+   "description": "Use when audio already placed in a HyperFrames composition needs to be mixed: fade-in/fade-out, crossfade, track gain or volume, volume automation, ducking, a music bed that fights a voiceover (voiceover carve), effects on a track (EQ, compressor, limiter, gate, saturation, delay, reverb, chorus, phaser, bitcrush), automation envelopes drawn on a track's volume or any effect parameter, or one submix bus carrying a chain, a fader and an automation clock for several tracks at once (`<hf-audio-group>`). Don't use for sourcing or generating audio — finding BGM, SFX, or making a voiceover is `/media-use`. Don't use for clip timing or track layout, which is `/hyperframes-core`.",
+   "license": "Apache-2.0",
+   "icon": "heygen.png",
+   "scripts": true,
+   "bytes": 100280,
+   "bodyChars": 24937,
+   "files": [
+    [
+     "SKILL.md",
+     25822
+    ],
+    [
+     "references/attributes.md",
+     6216
+    ],
+    [
+     "references/diagnosis.md",
+     12080
+    ],
+    [
+     "references/fx-registry.md",
+     6928
+    ],
+    [
+     "references/presets.md",
+     13155
+    ],
+    [
+     "scripts/carve.mjs",
+     24261
+    ],
+    [
+     "scripts/carve.test.mjs",
+     11818
+    ]
+   ]
+  },
+  {
+   "id": "hyperframes_hyperframes-cli",
+   "name": "hyperframes-cli",
+   "vendor": "HeyGen",
+   "repo": "heygen-com/hyperframes",
+   "sha": "daa44fcd753d9055aa3c954ad74f09a4e4389780",
+   "path": "skills/hyperframes-cli",
+   "category": "video",
+   "description": "Use the HyperFrames CLI development loop: init, add, catalog, capture, lint, check, snapshot, compare, grade-compare, preview, play, present, beats, keyframes, single or batch render, publish, cloud, cloudrun, feedback, lambda, doctor, browser, info, upgrade, skills, compositions, timeline, history, clean, docs, benchmark, telemetry, transcribe, auth, tts, and remove-background. Also use when diagnosing build or render failures. validate, inspect, and layout are deprecated aliases; use check. Covers local, HeyGen-hosted cloud, AWS Lambda, and Google Cloud Run rendering.",
+   "license": "Apache-2.0",
+   "icon": "heygen.png",
+   "scripts": false,
+   "bytes": 120599,
+   "bodyChars": 20295,
+   "files": [
+    [
+     "SKILL.md",
+     20952
+    ],
+    [
+     "references/beats.md",
+     921
+    ],
+    [
+     "references/cloud.md",
+     11029
+    ],
+    [
+     "references/cloudrun.md",
+     3583
+    ],
+    [
+     "references/compare-and-batch.md",
+     4378
+    ],
+    [
+     "references/doctor-browser.md",
+     2725
+    ],
+    [
+     "references/init-and-scaffold.md",
+     5798
+    ],
+    [
+     "references/lambda.md",
+     16703
+    ],
+    [
+     "references/lint-validate-inspect.md",
+     12858
+    ],
+    [
+     "references/preview-render.md",
+     31532
+    ],
+    [
+     "references/upgrade-info-misc.md",
+     10120
+    ]
+   ]
+  },
+  {
+   "id": "hyperframes_hyperframes-keyframes",
+   "name": "hyperframes-keyframes",
+   "vendor": "HeyGen",
+   "repo": "heygen-com/hyperframes",
+   "sha": "daa44fcd753d9055aa3c954ad74f09a4e4389780",
+   "path": "skills/hyperframes-keyframes",
+   "category": "video",
+   "description": "Use when a HyperFrames composition needs a punch-in, punch-out, zoom, reframe, Ken Burns treatment, camera move, visual match/whip handoff, or other seek-safe 2D/3D keyframes; also for GSAP, CSS keyframes, Anime.js, WAAPI, FLIP, paths, masks, SVG morph/draw, text trails, 3D depth, or `hyperframes keyframes` diagnostics. Don't use for broad scene strategy, brand design, media sourcing, captions, or general video planning.",
+   "license": "Apache-2.0",
+   "icon": "heygen.png",
+   "scripts": false,
+   "bytes": 23057,
+   "bodyChars": 15656,
+   "files": [
+    [
+     "SKILL.md",
+     16145
+    ],
+    [
+     "agents/openai.yaml",
+     220
+    ],
+    [
+     "references/keyframe-patterns.md",
+     6692
+    ]
+   ]
+  },
+  {
+   "id": "hyperframes_product-launch-video",
+   "name": "product-launch-video",
+   "vendor": "HeyGen",
+   "repo": "heygen-com/hyperframes",
+   "sha": "daa44fcd753d9055aa3c954ad74f09a4e4389780",
+   "path": "skills/product-launch-video",
+   "category": "video",
+   "description": "Turn a product or marketing URL, pasted script, or brief into a product launch / promo video — SaaS promos, feature reveals, product demos, app and company launches. Use when the user wants to market, launch, promote, or reveal a product; the default for any commercial URL. Site tours / showcases of a website route here too — the brief carries the show-it-as-is intent. Unclear → /hyperframes.",
+   "license": "Apache-2.0",
+   "icon": "heygen.png",
+   "scripts": true,
+   "bytes": 332883,
+   "bodyChars": 32382,
+   "files": [
+    [
+     "SKILL.md",
+     32957
+    ],
+    [
+     "references/cut-catalog.md",
+     13246
+    ],
+    [
+     "references/motion-language.md",
+     15636
+    ],
+    [
+     "references/story-design.md",
+     33001
+    ],
+    [
+     "references/visual-design.md",
+     16488
+    ],
+    [
+     "scripts/assemble-index.mjs",
+     32361
+    ],
+    [
+     "scripts/assemble-index.test.mjs",
+     5283
+    ],
+    [
+     "scripts/audio.mjs",
+     13260
+    ],
+    [
+     "scripts/audio.test.mjs",
+     10229
+    ],
+    [
+     "scripts/build-frame-subsets.test.mjs",
+     6669
+    ],
+    [
+     "scripts/build-frame.mjs",
+     26670
+    ],
+    [
+     "scripts/captions.mjs",
+     25341
+    ],
+    [
+     "scripts/captions.test.mjs",
+     9335
+    ],
+    [
+     "scripts/capture-skill-guardrails.test.mjs",
+     1728
+    ],
+    [
+     "scripts/frame-packets.mjs",
+     1070
+    ],
+    [
+     "scripts/frame-packets.test.mjs",
+     7072
+    ],
+    [
+     "scripts/lib/assets.mjs",
+     2214
+    ],
+    [
+     "scripts/lib/bgm-volume.mjs",
+     236
+    ],
+    [
+     "scripts/lib/captured-fonts.mjs",
+     2628
+    ],
+    [
+     "scripts/lib/dimensions.mjs",
+     2288
+    ],
+    [
+     "scripts/lib/frame-packets-core.mjs",
+     7408
+    ],
+    [
+     "scripts/lib/pad-frame-duration.mjs",
+     1628
+    ],
+    [
+     "scripts/lib/pad-frame-duration.test.mjs",
+     2970
+    ],
+    [
+     "scripts/lib/storyboard.mjs",
+     8244
+    ],
+    [
+     "scripts/lib/tokens.mjs",
+     10164
+    ],
+    [
+     "scripts/lib/tokens.test.mjs",
+     2289
+    ],
+    [
+     "scripts/lib/transition-registry.mjs",
+     1588
+    ],
+    [
+     "scripts/lib/transitions.json",
+     3941
+    ],
+    [
+     "scripts/media-contract.test.mjs",
+     10663
+    ],
+    [
+     "scripts/stage-assets.mjs",
+     1672
+    ],
+    [
+     "scripts/stage-assets.test.mjs",
+     2347
+    ],
+    [
+     "scripts/transitions.mjs",
+     15826
+    ],
+    [
+     "scripts/transitions.test.mjs",
+     2890
+    ],
+    [
+     "sub-agents/frame-worker.md",
+     3541
+    ]
+   ]
+  },
+  {
+   "id": "hyperframes_pr-to-video",
+   "name": "pr-to-video",
+   "vendor": "HeyGen",
+   "repo": "heygen-com/hyperframes",
+   "sha": "daa44fcd753d9055aa3c954ad74f09a4e4389780",
+   "path": "skills/pr-to-video",
+   "category": "video",
+   "description": "Turn a GitHub pull request (a PR URL, owner/repo#N, or 'this PR' in a checked-out repo) into a code-change explainer video — changelog, feature reveal, fix, or refactor walkthrough built from the diff, commits, and files: the input is a code change, not a website. Not a product promo (/product-launch-video) or a no-PR topic explainer (/faceless-explainer). Unclear → /hyperframes.",
+   "license": "Apache-2.0",
+   "icon": "heygen.png",
+   "scripts": true,
+   "bytes": 362532,
+   "bodyChars": 32444,
+   "files": [
+    [
+     "SKILL.md",
+     33053
+    ],
+    [
+     "references/code-vocabulary.md",
+     15493
+    ],
+    [
+     "references/cut-catalog.md",
+     12761
+    ],
+    [
+     "references/motion-language.md",
+     15818
+    ],
+    [
+     "references/story-design.md",
+     28731
+    ],
+    [
+     "references/visual-design.md",
+     19977
+    ],
+    [
+     "scripts/assemble-index.mjs",
+     26975
+    ],
+    [
+     "scripts/assemble-index.test.mjs",
+     5485
+    ],
+    [
+     "scripts/audio.mjs",
+     13176
+    ],
+    [
+     "scripts/build-frame.mjs",
+     28603
+    ],
+    [
+     "scripts/captions.mjs",
+     25341
+    ],
+    [
+     "scripts/captions.test.mjs",
+     11336
+    ],
+    [
+     "scripts/fetch-people-avatars.mjs",
+     6183
+    ],
+    [
+     "scripts/fetch-pr.mjs",
+     9239
+    ],
+    [
+     "scripts/frame-contract.test.mjs",
+     7456
+    ],
+    [
+     "scripts/frame-packets.mjs",
+     2473
+    ],
+    [
+     "scripts/ingest.mjs",
+     22412
+    ],
+    [
+     "scripts/lib/assets.mjs",
+     2214
+    ],
+    [
+     "scripts/lib/bgm-volume.mjs",
+     236
+    ],
+    [
+     "scripts/lib/captured-fonts.mjs",
+     2628
+    ],
+    [
+     "scripts/lib/dimensions.mjs",
+     2279
+    ],
+    [
+     "scripts/lib/frame-contract.mjs",
+     2427
+    ],
+    [
+     "scripts/lib/frame-packets-core.mjs",
+     7408
+    ],
+    [
+     "scripts/lib/pad-frame-duration.mjs",
+     1628
+    ],
+    [
+     "scripts/lib/storyboard.mjs",
+     8244
+    ],
+    [
+     "scripts/lib/tokens.mjs",
+     9883
+    ],
+    [
+     "scripts/lib/transition-registry.mjs",
+     1588
+    ],
+    [
+     "scripts/lib/transitions.json",
+     3941
+    ],
+    [
+     "scripts/preflight.mjs",
+     1719
+    ],
+    [
+     "scripts/project-dir.mjs",
+     2754
+    ],
+    [
+     "scripts/transitions.mjs",
+     15826
+    ],
+    [
+     "scripts/workflow-guardrails.test.mjs",
+     8291
+    ],
+    [
+     "sub-agents/frame-worker.md",
+     6954
+    ]
+   ]
+  },
+  {
+   "id": "hyperframes_faceless-explainer",
+   "name": "faceless-explainer",
+   "vendor": "HeyGen",
+   "repo": "heygen-com/hyperframes",
+   "sha": "daa44fcd753d9055aa3c954ad74f09a4e4389780",
+   "path": "skills/faceless-explainer",
+   "category": "video",
+   "description": "Turn arbitrary text — an article, notes, a topic, a brief — into a faceless explainer video: there is no site or footage to capture, so the visuals are invented per scene (typography, abstract graphics, diagrams, data-viz). Use for topic explainers, concept breakdowns, how-tos, listicles. Not a video built from a website (/product-launch-video — promo or tour). Unclear → /hyperframes.",
+   "license": "Apache-2.0",
+   "icon": "heygen.png",
+   "scripts": true,
+   "bytes": 279455,
+   "bodyChars": 29308,
+   "files": [
+    [
+     "SKILL.md",
+     29899
+    ],
+    [
+     "references/cut-catalog.md",
+     12761
+    ],
+    [
+     "references/motion-language.md",
+     15760
+    ],
+    [
+     "references/story-design.md",
+     20924
+    ],
+    [
+     "references/visual-design.md",
+     20692
+    ],
+    [
+     "scripts/assemble-index.mjs",
+     26752
+    ],
+    [
+     "scripts/assemble-index.test.mjs",
+     5283
+    ],
+    [
+     "scripts/audio.mjs",
+     13176
+    ],
+    [
+     "scripts/audio.test.mjs",
+     8002
+    ],
+    [
+     "scripts/build-frame.mjs",
+     26911
+    ],
+    [
+     "scripts/captions.mjs",
+     25341
+    ],
+    [
+     "scripts/captions.test.mjs",
+     9335
+    ],
+    [
+     "scripts/frame-packets.mjs",
+     1070
+    ],
+    [
+     "scripts/frame-packets.test.mjs",
+     3029
+    ],
+    [
+     "scripts/lib/assets.mjs",
+     2214
+    ],
+    [
+     "scripts/lib/bgm-volume.mjs",
+     236
+    ],
+    [
+     "scripts/lib/captured-fonts.mjs",
+     2628
+    ],
+    [
+     "scripts/lib/dimensions.mjs",
+     2279
+    ],
+    [
+     "scripts/lib/frame-packets-core.mjs",
+     7408
+    ],
+    [
+     "scripts/lib/pad-frame-duration.mjs",
+     1628
+    ],
+    [
+     "scripts/lib/storyboard.mjs",
+     8244
+    ],
+    [
+     "scripts/lib/tokens.mjs",
+     9883
+    ],
+    [
+     "scripts/lib/transition-registry.mjs",
+     1588
+    ],
+    [
+     "scripts/lib/transitions.json",
+     3941
+    ],
+    [
+     "scripts/transitions.mjs",
+     15927
+    ],
+    [
+     "scripts/transitions.test.mjs",
+     2519
+    ],
+    [
+     "sub-agents/frame-worker.md",
+     2025
+    ]
+   ]
+  },
+  {
+   "id": "hyperframes_talking-head-recut",
+   "name": "talking-head-recut",
+   "vendor": "HeyGen",
+   "repo": "heygen-com/hyperframes",
+   "sha": "daa44fcd753d9055aa3c954ad74f09a4e4389780",
+   "path": "skills/talking-head-recut",
+   "category": "video",
+   "description": "Package an existing talking-head / interview / podcast video with timed, designed GRAPHIC OVERLAY cards — kinetic titles, lower-thirds, data callouts, quotes, side panels, picture-in-picture — synced to the transcript, on a 16:9 / 9:16 / 4:5 canvas of your choice; the clip plays untouched underneath. Trigger on \"graphic overlays\", \"on-screen graphics\", \"package / dress up my video\". Not plain subtitles (/embedded-captions). Unclear → /hyperframes.",
+   "license": "Apache-2.0",
+   "icon": "heygen.png",
+   "scripts": true,
+   "bytes": 521853,
+   "bodyChars": 65107,
+   "files": [
+    [
+     "NOTICE.md",
+     1826
+    ],
+    [
+     "SKILL.md",
+     66091
+    ],
+    [
+     "assets/fonts/Caveat-400-latin.woff2",
+     74932
+    ],
+    [
+     "assets/fonts/Caveat-700-latin.woff2",
+     74932
+    ],
+    [
+     "assets/fonts/Inter-400-latin.woff2",
+     23692
+    ],
+    [
+     "assets/fonts/Inter-700-latin.woff2",
+     24352
+    ],
+    [
+     "assets/fonts/LXGWWenKaiTC-400-latin.woff2",
+     19380
+    ],
+    [
+     "assets/fonts/Virgil.woff2",
+     61248
+    ],
+    [
+     "assets/vendor/gsap.min.js",
+     72925
+    ],
+    [
+     "media-contract.test.mjs",
+     1350
+    ],
+    [
+     "references/DESIGN_INDEX.md",
+     10171
+    ],
+    [
+     "references/frames/clean.html",
+     2626
+    ],
+    [
+     "references/frames/hairline.html",
+     5884
+    ],
+    [
+     "references/frames/polaroid.html",
+     5349
+    ],
+    [
+     "references/layouts/overlay.html",
+     5463
+    ],
+    [
+     "references/layouts/pip.html",
+     4650
+    ],
+    [
+     "references/layouts/split.html",
+     3805
+    ],
+    [
+     "references/layouts/stack.html",
+     3458
+    ],
+    [
+     "references/styles/academic.html",
+     6043
+    ],
+    [
+     "references/styles/audit.html",
+     6182
+    ],
+    [
+     "references/styles/editorial.html",
+     6586
+    ],
+    [
+     "references/styles/geom.html",
+     5776
+    ],
+    [
+     "references/styles/minimal.html",
+     4142
+    ],
+    [
+     "references/styles/spotlight.html",
+     4941
+    ],
+    [
+     "references/styles/swiss.html",
+     6053
+    ],
+    [
+     "references/styles/terminal.html",
+     6957
+    ],
+    [
+     "references/styles/whiteboard.html",
+     5829
+    ],
+    [
+     "references/styles/xhs.html",
+     7210
+    ]
+   ]
+  },
+  {
+   "id": "hyperframes_embedded-captions",
+   "name": "embedded-captions",
+   "vendor": "HeyGen",
+   "repo": "heygen-com/hyperframes",
+   "sha": "daa44fcd753d9055aa3c954ad74f09a4e4389780",
+   "path": "skills/embedded-captions",
+   "category": "video",
+   "description": "Add captions or subtitles to an existing single-subject talking-head video without editing the footage. Use for plain verbatim captions, cinematic captions embedded behind the subject, VFX captions, “炸/特效/酷炫字幕,” or a named identity from the 35-style catalog. Route by visual identity, not by backend engine. The quiet `anchor` rail is the default; embed every word only when the user explicitly wants a fully cinematic treatment. The workflow runs locally end to end, including transcription and subject matting; split multi-shot footage before applying it.",
+   "license": "Apache-2.0",
+   "icon": "heygen.png",
+   "scripts": true,
+   "bytes": 3495708,
+   "bodyChars": 33604,
+   "files": [
+    [
+     ".gitignore",
+     516
+    ],
+    [
+     "CATALOG.md",
+     54574
+    ],
+    [
+     "SKILL.md",
+     34639
+    ],
+    [
+     "assets/fonts/char-widths.json",
+     39965
+    ],
+    [
+     "assets/strokefonts/HersheyScript1.svg",
+     60060
+    ],
+    [
+     "assets/strokefonts/HersheyScriptMed.svg",
+     71046
+    ],
+    [
+     "dna/README.md",
+     12207
+    ],
+    [
+     "dna/chrome.json",
+     1769
+    ],
+    [
+     "dna/cream.json",
+     1537
+    ],
+    [
+     "dna/documentary.json",
+     1441
+    ],
+    [
+     "dna/editorial.json",
+     1674
+    ],
+    [
+     "dna/glitch.json",
+     1805
+    ],
+    [
+     "dna/ink.json",
+     1529
+    ],
+    [
+     "dna/keynote.json",
+     1400
+    ],
+    [
+     "dna/loud.json",
+     1912
+    ],
+    [
+     "dna/neon.json",
+     1567
+    ],
+    [
+     "dna/velocity.json",
+     1968
+    ],
+    [
+     "modes/cinematic/README.md",
+     2677
+    ],
+    [
+     "modes/cinematic/_archive/champion/spec.md",
+     4718
+    ],
+    [
+     "modes/cinematic/_archive/champion/template.html",
+     5784
+    ],
+    [
+     "modes/cinematic/_archive/memory-wall/spec.md",
+     5875
+    ],
+    [
+     "modes/cinematic/_archive/memory-wall/template.html",
+     5624
+    ],
+    [
+     "modes/cinematic/_archive/portrait-header/spec.md",
+     3621
+    ],
+    [
+     "modes/cinematic/_archive/portrait-header/template.html",
+     5312
+    ],
+    [
+     "modes/cinematic/cinematic-cream/spec.md",
+     1139
+    ],
+    [
+     "modes/cinematic/cinematic-cream/template.html",
+     10444
+    ],
+    [
+     "modes/cinematic/engine.html",
+     17288
+    ],
+    [
+     "modes/standard/_anatomy.md",
+     11132
+    ],
+    [
+     "modes/standard/_motion.md",
+     18518
+    ],
+    [
+     "modes/standard/fonts/build-fonts-css.cjs",
+     3597
+    ],
+    [
+     "modes/standard/fonts/files/anton-latin-400-normal.woff2",
+     18612
+    ],
+    [
+     "modes/standard/fonts/files/audiowide-latin-400-normal.woff2",
+     14132
+    ],
+    [
+     "modes/standard/fonts/files/baloo-2-latin-400-normal.woff2",
+     18920
+    ],
+    [
+     "modes/standard/fonts/files/baloo-2-latin-700-normal.woff2",
+     19436
+    ],
+    [
+     "modes/standard/fonts/files/bangers-latin-400-normal.woff2",
+     23528
+    ],
+    [
+     "modes/standard/fonts/files/bodoni-moda-latin-400-normal.woff2",
+     14528
+    ],
+    [
+     "modes/standard/fonts/files/bodoni-moda-latin-700-normal.woff2",
+     14988
+    ],
+    [
+     "modes/standard/fonts/files/caveat-latin-400-normal.woff2",
+     48836
+    ],
+    [
+     "modes/standard/fonts/files/caveat-latin-700-normal.woff2",
+     51020
+    ],
+    [
+     "modes/standard/fonts/files/chakra-petch-latin-500-normal.woff2",
+     9956
+    ],
+    [
+     "modes/standard/fonts/files/chakra-petch-latin-700-normal.woff2",
+     9900
+    ],
+    [
+     "modes/standard/fonts/files/cinzel-latin-400-normal.woff2",
+     14128
+    ],
+    [
+     "modes/standard/fonts/files/cinzel-latin-700-normal.woff2",
+     15184
+    ],
+    [
+     "modes/standard/fonts/files/cormorant-garamond-latin-400-normal.woff2",
+     22876
+    ],
+    [
+     "modes/standard/fonts/files/cormorant-garamond-latin-700-normal.woff2",
+     22340
+    ],
+    [
+     "modes/standard/fonts/files/creepster-latin-400-normal.woff2",
+     28120
+    ],
+    [
+     "modes/standard/fonts/files/fredoka-latin-400-normal.woff2",
+     16076
+    ],
+    [
+     "modes/standard/fonts/files/fredoka-latin-700-normal.woff2",
+     15900
+    ],
+    [
+     "modes/standard/fonts/files/inter-latin-400-normal.woff2",
+     23664
+    ],
+    [
+     "modes/standard/fonts/files/inter-latin-500-italic.woff2",
+     25636
+    ],
+    [
+     "modes/standard/fonts/files/inter-latin-500-normal.woff2",
+     24272
+    ],
+    [
+     "modes/standard/fonts/files/inter-latin-600-italic.woff2",
+     25812
+    ],
+    [
+     "modes/standard/fonts/files/inter-latin-600-normal.woff2",
+     24452
+    ],
+    [
+     "modes/standard/fonts/files/inter-latin-700-normal.woff2",
+     24356
+    ],
+    [
+     "modes/standard/fonts/files/inter-latin-800-normal.woff2",
+     24400
+    ],
+    [
+     "modes/standard/fonts/files/inter-latin-900-normal.woff2",
+     23900
+    ],
+    [
+     "modes/standard/fonts/files/monoton-latin-400-normal.woff2",
+     16492
+    ],
+    [
+     "modes/standard/fonts/files/orbitron-latin-400-normal.woff2",
+     6396
+    ],
+    [
+     "modes/standard/fonts/files/orbitron-latin-700-normal.woff2",
+     6528
+    ],
+    [
+     "modes/standard/fonts/files/permanent-marker-latin-400-normal.woff2",
+     29564
+    ],
+    [
+     "modes/standard/fonts/files/press-start-2p-latin-400-normal.woff2",
+     12512
+    ],
+    [
+     "modes/standard/fonts/files/rajdhani-latin-500-normal.woff2",
+     15084
+    ],
+    [
+     "modes/standard/fonts/files/rajdhani-latin-700-normal.woff2",
+     15688
+    ],
+    [
+     "modes/standard/fonts/files/saira-stencil-one-latin-400-normal.woff2",
+     20896
+    ],
+    [
+     "modes/standard/fonts/files/shippori-mincho-latin-400-normal.woff2",
+     27180
+    ],
+    [
+     "modes/standard/fonts/files/shippori-mincho-latin-700-normal.woff2",
+     28720
+    ],
+    [
+     "modes/standard/fonts/files/sora-latin-400-normal.woff2",
+     14724
+    ],
+    [
+     "modes/standard/fonts/files/sora-latin-700-normal.woff2",
+     15128
+    ],
+    [
+     "modes/standard/fonts/files/space-grotesk-latin-400-normal.woff2",
+     13388
+    ],
+    [
+     "modes/standard/fonts/files/space-grotesk-latin-700-normal.woff2",
+     12840
+    ],
+    [
+     "modes/standard/fonts/files/special-elite-latin-400-normal.woff2",
+     53296
+    ],
+    [
+     "modes/standard/fonts/files/teko-latin-400-normal.woff2",
+     7744
+    ],
+    [
+     "modes/standard/fonts/files/teko-latin-700-normal.woff2",
+     7280
+    ],
+    [
+     "modes/standard/fonts/files/vt323-latin-400-normal.woff2",
+     17936
+    ],
+    [
+     "modes/standard/fonts/fonts.css",
+     1203094
+    ],
+    [
+     "references/aesthetic-principles.md",
+     7779
+    ],
+    [
+     "references/anti-patterns.md",
+     12023
+    ],
+    [
+     "references/bespoke-vs-presets.md",
+     9286
+    ],
+    [
+     "references/caption-grouping.md",
+     4283
+    ],
+    [
+     "references/composition-craft.md",
+     55818
+    ],
+    [
+     "references/direction-catalog.md",
+     7855
+    ],
+    [
+     "references/example-renders/champion.html",
+     11122
+    ],
+    [
+     "references/example-renders/memory-wall.html",
+     10707
+    ],
+    [
+     "references/failure-modes.md",
+     11303
+    ],
+    [
+     "references/layout-heuristics.md",
+     13202
+    ],
+    [
+     "references/motion-vocabulary.md",
+     5609
+    ],
+    [
+     "references/rail.md",
+     4576
+    ],
+    [
+     "references/reference-bar.md",
+     2689
+    ],
+    [
+     "references/scene-types.md",
+     6215
+    ],
+    [
+     "references/typographic-moves.md",
+     8655
+    ],
+    [
+     "references/typography-presets.md",
+     4714
+    ],
+    [
+     "scripts/audio-envelope.cjs",
+     3093
+    ],
+    [
+     "scripts/check-occlusion.cjs",
+     10490
+    ],
+    [
+     "scripts/check-overflow.cjs",
+     6817
+    ],
+    [
+     "scripts/check-rail-climax.cjs",
+     8577
+    ],
+    [
+     "scripts/check-timing.cjs",
+     6354
+    ],
+    [
+     "scripts/fill-timings.cjs",
+     4587
+    ],
+    [
+     "scripts/fit-fonts.cjs",
+     6326
+    ],
+    [
+     "scripts/fixtures/heroless/theme.json",
+     159
+    ],
+    [
+     "scripts/fixtures/heroless/transcript.json",
+     330
+    ],
+    [
+     "scripts/gen-stroke-path.py",
+     2503
+    ],
+    [
+     "scripts/hf-cli.cjs",
+     1258
+    ],
+    [
+     "scripts/inject-fonts.cjs",
+     5901
+    ],
+    [
+     "scripts/lib-dna.cjs",
+     7410
+    ],
+    [
+     "scripts/make-cinematic.cjs",
+     56867
+    ],
+    [
+     "scripts/make-composition.cjs",
+     16750
+    ],
+    [
+     "scripts/make-theme.cjs",
+     460288
+    ],
+    [
+     "scripts/make-theme.test.mjs",
+     4623
+    ],
+    [
+     "scripts/matte.cjs",
+     9125
+    ],
+    [
+     "scripts/measure-layout.cjs",
+     10839
+    ],
+    [
+     "scripts/prepare.sh",
+     1881
+    ],
+    [
+     "scripts/preview-frames.cjs",
+     11515
+    ],
+    [
+     "scripts/preview-frames.test.mjs",
+     1160
+    ],
+    [
+     "scripts/render-and-composite.sh",
+     23051
+    ],
+    [
+     "scripts/render-theme.sh",
+     1786
+    ],
+    [
+     "scripts/safe-zones.cjs",
+     30395
+    ],
+    [
+     "scripts/transcribe.cjs",
+     12268
+    ],
+    [
+     "scripts/transcribe.test.mjs",
+     1805
+    ],
+    [
+     "themes/README.md",
+     84288
+    ],
+    [
+     "themes/anchor.json",
+     1090
+    ],
+    [
+     "themes/arcade.json",
+     2031
+    ],
+    [
+     "themes/aurora.json",
+     1967
+    ],
+    [
+     "themes/biolume.json",
+     1924
+    ],
+    [
+     "themes/brush.json",
+     2668
+    ],
+    [
+     "themes/chalkboard.json",
+     2040
+    ],
+    [
+     "themes/dossier.json",
+     1905
+    ],
+    [
+     "themes/graffiti.json",
+     2222
+    ],
+    [
+     "themes/hologram.json",
+     1804
+    ],
+    [
+     "themes/inkwater.json",
+     2090
+    ],
+    [
+     "themes/laser.json",
+     1830
+    ],
+    [
+     "themes/lastpage.json",
+     876
+    ],
+    [
+     "themes/neonsign.json",
+     1399
+    ],
+    [
+     "themes/ordnance.json",
+     1595
+    ],
+    [
+     "themes/papercut.json",
+     1659
+    ],
+    [
+     "themes/popup.json",
+     2141
+    ],
+    [
+     "themes/ransom.json",
+     2106
+    ],
+    [
+     "themes/scoreboard.json",
+     2044
+    ],
+    [
+     "themes/spectrum.json",
+     1676
+    ],
+    [
+     "themes/stardust.json",
+     1038
+    ],
+    [
+     "themes/stomp.json",
+     1308
+    ],
+    [
+     "themes/terminal.json",
+     1467
+    ],
+    [
+     "themes/thunder.json",
+     1806
+    ],
+    [
+     "themes/transit.json",
+     1840
+    ],
+    [
+     "themes/vhs.json",
+     2100
+    ]
+   ]
+  },
+  {
+   "id": "hyperframes_music-to-video",
+   "name": "music-to-video",
+   "vendor": "HeyGen",
+   "repo": "heygen-com/hyperframes",
+   "sha": "daa44fcd753d9055aa3c954ad74f09a4e4389780",
+   "path": "skills/music-to-video",
+   "category": "video",
+   "description": "Turn a music track (an audio file, a video to pull audio from, or a track generated from a mood brief) into a beat-synced video — lyric video, slideshow, or kinetic promo. The music drives all pacing; any user-supplied images/videos are cut onto the same beat grid, and a complete video needs zero assets. Narrated pieces → the input-matched workflow (see /hyperframes). Unclear → /hyperframes.",
+   "license": "Apache-2.0",
+   "icon": "heygen.png",
+   "scripts": true,
+   "bytes": 6226416,
+   "bodyChars": 18255,
+   "files": [
+    [
+     "SKILL.md",
+     18824
+    ],
+    [
+     "references/frame-skeleton.md",
+     6584
+    ],
+    [
+     "references/montage.md",
+     3215
+    ],
+    [
+     "references/motion-primitive-catalog.md",
+     9885
+    ],
+    [
+     "references/motion-primitives/3d-card-flip/index.html",
+     1278
+    ],
+    [
+     "references/motion-primitives/3d-card-flip/scene.html",
+     3393
+    ],
+    [
+     "references/motion-primitives/assets/gsap.min.js",
+     72927
+    ],
+    [
+     "references/motion-primitives/bg-flow-field/index.html",
+     1274
+    ],
+    [
+     "references/motion-primitives/bg-flow-field/scene.html",
+     11328
+    ],
+    [
+     "references/motion-primitives/binary-decrypt/index.html",
+     1310
+    ],
+    [
+     "references/motion-primitives/binary-decrypt/scene.html",
+     2711
+    ],
+    [
+     "references/motion-primitives/blur-resolve/index.html",
+     1272
+    ],
+    [
+     "references/motion-primitives/blur-resolve/scene.html",
+     1688
+    ],
+    [
+     "references/motion-primitives/braam-punch/index.html",
+     1276
+    ],
+    [
+     "references/motion-primitives/braam-punch/scene.html",
+     2728
+    ],
+    [
+     "references/motion-primitives/chromatic-split/index.html",
+     1284
+    ],
+    [
+     "references/motion-primitives/chromatic-split/scene.html",
+     3481
+    ],
+    [
+     "references/motion-primitives/chrome-sweep/index.html",
+     1278
+    ],
+    [
+     "references/motion-primitives/chrome-sweep/scene.html",
+     1824
+    ],
+    [
+     "references/motion-primitives/counting-punch/index.html",
+     1310
+    ],
+    [
+     "references/motion-primitives/counting-punch/scene.html",
+     3214
+    ],
+    [
+     "references/motion-primitives/crash-zoom-in/index.html",
+     1280
+    ],
+    [
+     "references/motion-primitives/crash-zoom-in/scene.html",
+     3386
+    ],
+    [
+     "references/motion-primitives/datamosh-smear/index.html",
+     1341
+    ],
+    [
+     "references/motion-primitives/datamosh-smear/scene.html",
+     3503
+    ],
+    [
+     "references/motion-primitives/directional-fill/index.html",
+     1284
+    ],
+    [
+     "references/motion-primitives/directional-fill/scene.html",
+     2773
+    ],
+    [
+     "references/motion-primitives/dolly-zoom/index.html",
+     1274
+    ],
+    [
+     "references/motion-primitives/dolly-zoom/scene.html",
+     3278
+    ],
+    [
+     "references/motion-primitives/electric-arc/index.html",
+     1306
+    ],
+    [
+     "references/motion-primitives/electric-arc/scene.html",
+     3263
+    ],
+    [
+     "references/motion-primitives/flash-cut/index.html",
+     1270
+    ],
+    [
+     "references/motion-primitives/flash-cut/scene.html",
+     3146
+    ],
+    [
+     "references/motion-primitives/gooey-metaball/index.html",
+     1310
+    ],
+    [
+     "references/motion-primitives/gooey-metaball/scene.html",
+     4918
+    ],
+    [
+     "references/motion-primitives/hard-cut/index.html",
+     1264
+    ],
+    [
+     "references/motion-primitives/hard-cut/scene.html",
+     2708
+    ],
+    [
+     "references/motion-primitives/hypercut-whip/index.html",
+     1280
+    ],
+    [
+     "references/motion-primitives/hypercut-whip/scene.html",
+     1229
+    ],
+    [
+     "references/motion-primitives/iris-open/index.html",
+     1272
+    ],
+    [
+     "references/motion-primitives/iris-open/scene.html",
+     2015
+    ],
+    [
+     "references/motion-primitives/kinetic-letter-in/index.html",
+     1288
+    ],
+    [
+     "references/motion-primitives/kinetic-letter-in/scene.html",
+     1764
+    ],
+    [
+     "references/motion-primitives/liquid-morph/index.html",
+     1278
+    ],
+    [
+     "references/motion-primitives/liquid-morph/scene.html",
+     2992
+    ],
+    [
+     "references/motion-primitives/mask-reveal/index.html",
+     1276
+    ],
+    [
+     "references/motion-primitives/mask-reveal/scene.html",
+     2086
+    ],
+    [
+     "references/motion-primitives/mosaic-pack/index.html",
+     1274
+    ],
+    [
+     "references/motion-primitives/mosaic-pack/scene.html",
+     2829
+    ],
+    [
+     "references/motion-primitives/neon-flicker/index.html",
+     1278
+    ],
+    [
+     "references/motion-primitives/neon-flicker/scene.html",
+     1979
+    ],
+    [
+     "references/motion-primitives/outline-to-fill/index.html",
+     1284
+    ],
+    [
+     "references/motion-primitives/outline-to-fill/scene.html",
+     2282
+    ],
+    [
+     "references/motion-primitives/palette-flip/index.html",
+     1276
+    ],
+    [
+     "references/motion-primitives/palette-flip/scene.html",
+     2824
+    ],
+    [
+     "references/motion-primitives/particle-burst/index.html",
+     1282
+    ],
+    [
+     "references/motion-primitives/particle-burst/scene.html",
+     3185
+    ],
+    [
+     "references/motion-primitives/pixel-dissolve/index.html",
+     1282
+    ],
+    [
+     "references/motion-primitives/pixel-dissolve/scene.html",
+     2645
+    ],
+    [
+     "references/motion-primitives/radial-burst-lines/index.html",
+     1290
+    ],
+    [
+     "references/motion-primitives/radial-burst-lines/scene.html",
+     3742
+    ],
+    [
+     "references/motion-primitives/screen-shake/index.html",
+     1278
+    ],
+    [
+     "references/motion-primitives/screen-shake/scene.html",
+     2197
+    ],
+    [
+     "references/motion-primitives/slot-machine-reveal/index.html",
+     1292
+    ],
+    [
+     "references/motion-primitives/slot-machine-reveal/scene.html",
+     2820
+    ],
+    [
+     "references/motion-primitives/spotlight-sweep/index.html",
+     1284
+    ],
+    [
+     "references/motion-primitives/spotlight-sweep/scene.html",
+     3009
+    ],
+    [
+     "references/motion-primitives/staggered-exit/index.html",
+     1276
+    ],
+    [
+     "references/motion-primitives/staggered-exit/scene.html",
+     2413
+    ],
+    [
+     "references/motion-primitives/text-spectral-rays/USAGE.md",
+     2401
+    ],
+    [
+     "references/motion-primitives/text-spectral-rays/index.html",
+     1276
+    ],
+    [
+     "references/motion-primitives/text-spectral-rays/scene.html",
+     11504
+    ],
+    [
+     "references/motion-primitives/text-wave-distort/index.html",
+     1316
+    ],
+    [
+     "references/motion-primitives/text-wave-distort/scene.html",
+     2999
+    ],
+    [
+     "references/motion-primitives/tile-mosaic/index.html",
+     1274
+    ],
+    [
+     "references/motion-primitives/tile-mosaic/scene.html",
+     3063
+    ],
+    [
+     "references/motion-primitives/typewriter-reveal/index.html",
+     1286
+    ],
+    [
+     "references/motion-primitives/typewriter-reveal/scene.html",
+     2634
+    ],
+    [
+     "references/motion-primitives/word-grid-burst/index.html",
+     1282
+    ],
+    [
+     "references/motion-primitives/word-grid-burst/scene.html",
+     2707
+    ],
+    [
+     "references/planning.md",
+     6188
+    ],
+    [
+     "references/storyboard-format.md",
+     6208
+    ],
+    [
+     "references/template-catalog.md",
+     8517
+    ],
+    [
+     "references/templates/card-flyby/index.html",
+     20652
+    ],
+    [
+     "references/templates/card-flyby/program.json",
+     642
+    ],
+    [
+     "references/templates/held-message-living-field/index.html",
+     17334
+    ],
+    [
+     "references/templates/held-text-strobe-burst/assets/texture-mask-text/masks/asphalt-031.png",
+     115231
+    ],
+    [
+     "references/templates/held-text-strobe-burst/assets/texture-mask-text/masks/bark-014.png",
+     90664
+    ],
+    [
+     "references/templates/held-text-strobe-burst/assets/texture-mask-text/masks/brick.png",
+     40965
+    ],
+    [
+     "references/templates/held-text-strobe-burst/assets/texture-mask-text/masks/bricks-075-a.png",
+     49358
+    ],
+    [
+     "references/templates/held-text-strobe-burst/assets/texture-mask-text/masks/bricks-101.png",
+     48396
+    ],
+    [
+     "references/templates/held-text-strobe-burst/assets/texture-mask-text/masks/bricks-102.png",
+     36042
+    ],
+    [
+     "references/templates/held-text-strobe-burst/assets/texture-mask-text/masks/bricks-104.png",
+     20183
+    ],
+    [
+     "references/templates/held-text-strobe-burst/assets/texture-mask-text/masks/carpet.png",
+     162484
+    ],
+    [
+     "references/templates/held-text-strobe-burst/assets/texture-mask-text/masks/concrete-034.png",
+     47015
+    ],
+    [
+     "references/templates/held-text-strobe-burst/assets/texture-mask-text/masks/concrete-042-a.png",
+     86364
+    ],
+    [
+     "references/templates/held-text-strobe-burst/assets/texture-mask-text/masks/concrete-046.png",
+     99553
+    ],
+    [
+     "references/templates/held-text-strobe-burst/assets/texture-mask-text/masks/concrete-047-a.png",
+     114192
+    ],
+    [
+     "references/templates/held-text-strobe-burst/assets/texture-mask-text/masks/concrete.png",
+     180224
+    ],
+    [
+     "references/templates/held-text-strobe-burst/assets/texture-mask-text/masks/diamond-plate-009.png",
+     92336
+    ],
+    [
+     "references/templates/held-text-strobe-burst/assets/texture-mask-text/masks/fabric-080.png",
+     30924
+    ],
+    [
+     "references/templates/held-text-strobe-burst/assets/texture-mask-text/masks/fabric-083.png",
+     88847
+    ],
+    [
+     "references/templates/held-text-strobe-burst/assets/texture-mask-text/masks/grass-001.png",
+     104393
+    ],
+    [
+     "references/templates/held-text-strobe-burst/assets/texture-mask-text/masks/grass-004.png",
+     101875
+    ],
+    [
+     "references/templates/held-text-strobe-burst/assets/texture-mask-text/masks/grass-005.png",
+     110747
+    ],
+    [
+     "references/templates/held-text-strobe-burst/assets/texture-mask-text/masks/ground-037.png",
+     119389
+    ],
+    [
+     "references/templates/held-text-strobe-burst/assets/texture-mask-text/masks/ground-054.png",
+     121186
+    ],
+    [
+     "references/templates/held-text-strobe-burst/assets/texture-mask-text/masks/ground-068.png",
+     103647
+    ],
+    [
+     "references/templates/held-text-strobe-burst/assets/texture-mask-text/masks/ground-080.png",
+     106262
+    ],
+    [
+     "references/templates/held-text-strobe-burst/assets/texture-mask-text/masks/ground-103.png",
+     106568
+    ],
+    [
+     "references/templates/held-text-strobe-burst/assets/texture-mask-text/masks/ground-104.png",
+     98762
+    ],
+    [
+     "references/templates/held-text-strobe-burst/assets/texture-mask-text/masks/lava.png",
+     74455
+    ],
+    [
+     "references/templates/held-text-strobe-burst/assets/texture-mask-text/masks/leather-037.png",
+     120972
+    ],
+    [
+     "references/templates/held-text-strobe-burst/assets/texture-mask-text/masks/marble-012.png",
+     95146
+    ],
+    [
+     "references/templates/held-text-strobe-burst/assets/texture-mask-text/masks/marble-016.png",
+     102645
+    ],
+    [
+     "references/templates/held-text-strobe-burst/assets/texture-mask-text/masks/metal-032.png",
+     88206
+    ],
+    [
+     "references/templates/held-text-strobe-burst/assets/texture-mask-text/masks/metal-038.png",
+     69371
+    ],
+    [
+     "references/templates/held-text-strobe-burst/assets/texture-mask-text/masks/metal-041-a.png",
+     97927
+    ],
+    [
+     "references/templates/held-text-strobe-burst/assets/texture-mask-text/masks/metal-046-b.png",
+     100739
+    ],
+    [
+     "references/templates/held-text-strobe-burst/assets/texture-mask-text/masks/metal-048-a.png",
+     108305
+    ],
+    [
+     "references/templates/held-text-strobe-burst/assets/texture-mask-text/masks/metal-049-a.png",
+     96020
+    ],
+    [
+     "references/templates/held-text-strobe-burst/assets/texture-mask-text/masks/metal-055-a.png",
+     52872
+    ],
+    [
+     "references/templates/held-text-strobe-burst/assets/texture-mask-text/masks/metal-061-b.png",
+     86632
+    ],
+    [
+     "references/templates/held-text-strobe-burst/assets/texture-mask-text/masks/metal.png",
+     199263
+    ],
+    [
+     "references/templates/held-text-strobe-burst/assets/texture-mask-text/masks/onyx.png",
+     87125
+    ],
+    [
+     "references/templates/held-text-strobe-burst/assets/texture-mask-text/masks/painted-plaster-017.png",
+     54682
+    ],
+    [
+     "references/templates/held-text-strobe-burst/assets/texture-mask-text/masks/paving-stones-138.png",
+     34993
+    ],
+    [
+     "references/templates/held-text-strobe-burst/assets/texture-mask-text/masks/paving-stones-150.png",
+     42826
+    ],
+    [
+     "references/templates/held-text-strobe-burst/assets/texture-mask-text/masks/plaster-001.png",
+     106563
+    ],
+    [
+     "references/templates/held-text-strobe-burst/assets/texture-mask-text/masks/road-007.png",
+     86128
+    ],
+    [
+     "references/templates/held-text-strobe-burst/assets/texture-mask-text/masks/road-008-a.png",
+     118000
+    ],
+    [
+     "references/templates/held-text-strobe-burst/assets/texture-mask-text/masks/road-009-c.png",
+     74223
+    ],
+    [
+     "references/templates/held-text-strobe-burst/assets/texture-mask-text/masks/road-012-a.png",
+     112772
+    ],
+    [
+     "references/templates/held-text-strobe-burst/assets/texture-mask-text/masks/road-012-b.png",
+     111834
+    ],
+    [
+     "references/templates/held-text-strobe-burst/assets/texture-mask-text/masks/road-013-a.png",
+     104988
+    ],
+    [
+     "references/templates/held-text-strobe-burst/assets/texture-mask-text/masks/rock-058.png",
+     80268
+    ],
+    [
+     "references/templates/held-text-strobe-burst/assets/texture-mask-text/masks/rock-063.png",
+     40295
+    ],
+    [
+     "references/templates/held-text-strobe-burst/assets/texture-mask-text/masks/rock.png",
+     134167
+    ],
+    [
+     "references/templates/held-text-strobe-burst/assets/texture-mask-text/masks/snow-015.png",
+     65181
+    ],
+    [
+     "references/templates/held-text-strobe-burst/assets/texture-mask-text/masks/snow.png",
+     98158
+    ],
+    [
+     "references/templates/held-text-strobe-burst/assets/texture-mask-text/masks/tiles-138.png",
+     112193
+    ],
+    [
+     "references/templates/held-text-strobe-burst/assets/texture-mask-text/masks/travertine-009.png",
+     68950
+    ],
+    [
+     "references/templates/held-text-strobe-burst/assets/texture-mask-text/masks/wood-049.png",
+     41108
+    ],
+    [
+     "references/templates/held-text-strobe-burst/assets/texture-mask-text/masks/wood-051.png",
+     45459
+    ],
+    [
+     "references/templates/held-text-strobe-burst/assets/texture-mask-text/masks/wood-058.png",
+     83714
+    ],
+    [
+     "references/templates/held-text-strobe-burst/assets/texture-mask-text/masks/wood-066.png",
+     83931
+    ],
+    [
+     "references/templates/held-text-strobe-burst/assets/texture-mask-text/masks/wood-092.png",
+     73659
+    ],
+    [
+     "references/templates/held-text-strobe-burst/assets/texture-mask-text/masks/wood-094.png",
+     72703
+    ],
+    [
+     "references/templates/held-text-strobe-burst/assets/texture-mask-text/masks/wood-floor-051.png",
+     42619
+    ],
+    [
+     "references/templates/held-text-strobe-burst/assets/texture-mask-text/masks/wood-floor-064.png",
+     40719
+    ],
+    [
+     "references/templates/held-text-strobe-burst/assets/texture-mask-text/masks/wood-floor-070.png",
+     53026
+    ],
+    [
+     "references/templates/held-text-strobe-burst/assets/texture-mask-text/masks/wood.png",
+     42206
+    ],
+    [
+     "references/templates/held-text-strobe-burst/index.html",
+     11430
+    ],
+    [
+     "references/templates/intro-kinetic-cascade/index.html",
+     22224
+    ],
+    [
+     "references/templates/intro-kinetic-cascade/program.json",
+     1522
+    ],
+    [
+     "references/templates/logo-split-lockup-pulse/assets/fredoka-700.woff2",
+     15900
+    ],
+    [
+     "references/templates/logo-split-lockup-pulse/index.html",
+     26531
+    ],
+    [
+     "references/templates/poster-tile-mosaic/index.html",
+     24320
+    ],
+    [
+     "references/templates/poster-tile-mosaic/program.json",
+     558
+    ],
+    [
+     "references/templates/roll-flipbook-word-cycle/index.html",
+     11154
+    ],
+    [
+     "references/templates/split-anchor-word-slot/index.html",
+     25085
+    ],
+    [
+     "references/templates/split-anchor-word-slot/program.json",
+     707
+    ],
+    [
+     "references/templates/typewriter-phrase-keyword-shuffle/index.html",
+     10046
+    ],
+    [
+     "scripts/analyze-beatgrid.py",
+     24210
+    ],
+    [
+     "scripts/assemble-index.mjs",
+     8687
+    ],
+    [
+     "scripts/lib/storyboard.mjs",
+     8244
+    ],
+    [
+     "scripts/stage-assets.mjs",
+     2154
+    ],
+    [
+     "scripts/validate-plan.mjs",
+     6698
+    ],
+    [
+     "sub-agents/frame-worker.md",
+     5124
+    ]
+   ]
+  },
+  {
+   "id": "hyperframes_slideshow",
+   "name": "slideshow",
+   "vendor": "HeyGen",
+   "repo": "heygen-com/hyperframes",
+   "sha": "daa44fcd753d9055aa3c954ad74f09a4e4389780",
+   "path": "skills/slideshow",
+   "category": "video",
+   "description": "Author a HyperFrames slideshow — a presentation, pitch deck, or interactive deck with discrete slides, fragment reveals, branching, hotspot navigation, and built-in presenter mode with speaker notes; also converts an existing page into a deck. Output is a navigable deck, not a rendered MP4. If the user didn't explicitly ask for a slideshow, confirm before authoring. Unclear → /hyperframes.",
+   "license": "Apache-2.0",
+   "icon": "heygen.png",
+   "scripts": false,
+   "bytes": 78153,
+   "bodyChars": 33432,
+   "files": [
+    [
+     "SKILL.md",
+     33983
+    ],
+    [
+     "references/standalone-harness.md",
+     44170
+    ]
+   ]
+  },
+  {
+   "id": "hyperframes_motion-graphics",
+   "name": "motion-graphics",
+   "vendor": "HeyGen",
+   "repo": "heygen-com/hyperframes",
+   "sha": "daa44fcd753d9055aa3c954ad74f09a4e4389780",
+   "path": "skills/motion-graphics",
+   "category": "video",
+   "description": "A short, design-led motion graphic where motion is the message — kinetic typography, stat count-up, chart/data-viz hit, logo sting / brand lockup, lower-third / callout / social overlay, animated map (highlight regions, connect places, zoom to a location), animated tweet / news-article / headline, webpage / UI animation (scroll, cursor, callouts), or fusing a real image's geometry into a chart. Usually under 10s (up to ~30s), no narration or live-action subject; renders to MP4 or transparent overlay. Longer / narrated / multi-scene → /general-video. Unclear → /hyperframes.",
+   "license": "Apache-2.0",
+   "icon": "heygen.png",
+   "scripts": true,
+   "bytes": 115320,
+   "bodyChars": 15170,
+   "files": [
+    [
+     "SKILL.md",
+     15915
+    ],
+    [
+     "agents/builder.md",
+     3764
+    ],
+    [
+     "agents/director.md",
+     6078
+    ],
+    [
+     "agents/finalize.md",
+     1071
+    ],
+    [
+     "catalog-map.md",
+     10641
+    ],
+    [
+     "categories/asset-fusion/module.md",
+     3968
+    ],
+    [
+     "categories/charts/module.md",
+     1769
+    ],
+    [
+     "categories/kinetic-type/module.md",
+     1607
+    ],
+    [
+     "categories/logo-reveal/module.md",
+     1131
+    ],
+    [
+     "categories/lower-thirds/module.md",
+     1493
+    ],
+    [
+     "categories/maps/bake-basemap.mjs",
+     14726
+    ],
+    [
+     "categories/maps/module.md",
+     9587
+    ],
+    [
+     "categories/news/module.md",
+     5425
+    ],
+    [
+     "categories/stat/module.md",
+     1200
+    ],
+    [
+     "categories/tweet/module.md",
+     1015
+    ],
+    [
+     "categories/webpage/module.md",
+     2538
+    ],
+    [
+     "grounding/PROTOCOL.md",
+     3108
+    ],
+    [
+     "grounding/locate.mjs",
+     8236
+    ],
+    [
+     "phases/source/guide.md",
+     1962
+    ],
+    [
+     "references/builder-contract.md",
+     2818
+    ],
+    [
+     "references/motion-vocabulary.md",
+     3978
+    ],
+    [
+     "references/shot-plan-ir.md",
+     2616
+    ],
+    [
+     "samples/asset-fusion/_ref-circle-highlight.html",
+     10674
+    ]
+   ]
+  },
+  {
+   "id": "hyperframes_general-video",
+   "name": "general-video",
+   "vendor": "HeyGen",
+   "repo": "heygen-com/hyperframes",
+   "sha": "daa44fcd753d9055aa3c954ad74f09a4e4389780",
+   "path": "skills/general-video",
+   "category": "video",
+   "description": "Author or edit a custom HyperFrames composition when no specialized workflow fits, or when BRIEF.md sets flow: companion. Use for longer or multi-scene pieces, brand and sizzle reels, montages, static loops, static title cards, footage remixes, and freeform builds. Use motion-graphics instead for a short unnarrated motion-first unit, including an animated title. Route fresh creation through hyperframes before using this skill.",
+   "license": "Apache-2.0",
+   "icon": "heygen.png",
+   "scripts": true,
+   "bytes": 35866,
+   "bodyChars": 20543,
+   "files": [
+    [
+     "SKILL.md",
+     21108
+    ],
+    [
+     "scripts/frame-packets.mjs",
+     1462
+    ],
+    [
+     "scripts/frame-packets.test.mjs",
+     3584
+    ],
+    [
+     "scripts/lib/frame-packets-core.mjs",
+     7408
+    ],
+    [
+     "sub-agents/frame-worker.md",
+     2304
+    ]
+   ]
+  },
+  {
+   "id": "hyperframes_media-use",
+   "name": "media-use",
+   "vendor": "HeyGen",
+   "repo": "heygen-com/hyperframes",
+   "sha": "daa44fcd753d9055aa3c954ad74f09a4e4389780",
+   "path": "skills/media-use",
+   "category": "video",
+   "description": "Agent Media OS, the single skill for every media need in a HyperFrames project. Resolve BGM, SFX, image, icon, brand logo, voice, color grade, or LUT into a frozen local file or paste-ready block + ledger record (one verb, `resolve`); generate via TTS / music / image models when the catalog misses; produce voiceover, transcription, captions, and background removal through one shared audio engine; operate on media (cut / reframe / transform); and reuse assets across projects. Also use for vague feedback that real footage looks dark, flat, boring, should feel retro/camcorder/print/ASCII, needs privacy, or needs a media reveal.",
+   "license": "Apache-2.0",
+   "icon": "heygen.png",
+   "scripts": true,
+   "bytes": 1775986,
+   "bodyChars": 7490,
+   "files": [
+    [
+     ".gitignore",
+     17
+    ],
+    [
+     "SKILL.md",
+     8188
+    ],
+    [
+     "audio/assets/sfx/CREDITS.md",
+     1183
+    ],
+    [
+     "audio/assets/sfx/chime.mp3",
+     27309
+    ],
+    [
+     "audio/assets/sfx/click-soft.mp3",
+     11702
+    ],
+    [
+     "audio/assets/sfx/click.mp3",
+     11702
+    ],
+    [
+     "audio/assets/sfx/error.mp3",
+     51827
+    ],
+    [
+     "audio/assets/sfx/glitch-1.mp3",
+     84427
+    ],
+    [
+     "audio/assets/sfx/glitch-2.mp3",
+     112128
+    ],
+    [
+     "audio/assets/sfx/glitch-3.mp3",
+     99072
+    ],
+    [
+     "audio/assets/sfx/impact-bass-1.mp3",
+     67709
+    ],
+    [
+     "audio/assets/sfx/impact-bass-2.mp3",
+     82944
+    ],
+    [
+     "audio/assets/sfx/key-press.mp3",
+     3909
+    ],
+    [
+     "audio/assets/sfx/manifest.json",
+     3721
+    ],
+    [
+     "audio/assets/sfx/notification.mp3",
+     78576
+    ],
+    [
+     "audio/assets/sfx/ping.mp3",
+     26400
+    ],
+    [
+     "audio/assets/sfx/pop.mp3",
+     23040
+    ],
+    [
+     "audio/assets/sfx/riser.mp3",
+     321024
+    ],
+    [
+     "audio/assets/sfx/sparkle.mp3",
+     57678
+    ],
+    [
+     "audio/assets/sfx/typing.mp3",
+     26852
+    ],
+    [
+     "audio/assets/sfx/whoosh-cinematic.mp3",
+     177408
+    ],
+    [
+     "audio/assets/sfx/whoosh-short.mp3",
+     18390
+    ],
+    [
+     "audio/assets/sfx/whoosh.mp3",
+     18390
+    ],
+    [
+     "audio/references/bgm.md",
+     8138
+    ],
+    [
+     "audio/references/captions/authoring.md",
+     9545
+    ],
+    [
+     "audio/references/captions/motion.md",
+     5656
+    ],
+    [
+     "audio/references/captions/transcript-handling.md",
+     5439
+    ],
+    [
+     "audio/references/remove-background.md",
+     8472
+    ],
+    [
+     "audio/references/requirements.md",
+     4347
+    ],
+    [
+     "audio/references/sfx.md",
+     3678
+    ],
+    [
+     "audio/references/transcribe.md",
+     2783
+    ],
+    [
+     "audio/references/tts-to-captions.md",
+     1755
+    ],
+    [
+     "audio/references/tts.md",
+     12838
+    ],
+    [
+     "audio/scripts/audio.mjs",
+     13339
+    ],
+    [
+     "audio/scripts/audio.test.mjs",
+     4585
+    ],
+    [
+     "audio/scripts/gemini-pipeline.test.mjs",
+     4932
+    ],
+    [
+     "audio/scripts/heygen-tts.mjs",
+     4277
+    ],
+    [
+     "audio/scripts/lib/audio-meta.mjs",
+     1166
+    ],
+    [
+     "audio/scripts/lib/audio-meta.test.mjs",
+     4586
+    ],
+    [
+     "audio/scripts/lib/bgm-volume.mjs",
+     236
+    ],
+    [
+     "audio/scripts/lib/bgm.mjs",
+     11558
+    ],
+    [
+     "audio/scripts/lib/bgm.test.mjs",
+     2639
+    ],
+    [
+     "audio/scripts/lib/concurrency.mjs",
+     527
+    ],
+    [
+     "audio/scripts/lib/concurrency.test.mjs",
+     1654
+    ],
+    [
+     "audio/scripts/lib/gemini-auth.mjs",
+     1610
+    ],
+    [
+     "audio/scripts/lib/gemini-auth.py",
+     1981
+    ],
+    [
+     "audio/scripts/lib/gemini-auth.test.mjs",
+     3097
+    ],
+    [
+     "audio/scripts/lib/gemini-auth_test.py",
+     4430
+    ],
+    [
+     "audio/scripts/lib/gemini-tts.mjs",
+     4711
+    ],
+    [
+     "audio/scripts/lib/gemini-tts.test.mjs",
+     9018
+    ],
+    [
+     "audio/scripts/lib/heygen.mjs",
+     7148
+    ],
+    [
+     "audio/scripts/lib/heygen.test.mjs",
+     3559
+    ],
+    [
+     "audio/scripts/lib/media-record.mjs",
+     4028
+    ],
+    [
+     "audio/scripts/lib/media-record.test.mjs",
+     7057
+    ],
+    [
+     "audio/scripts/lib/python.mjs",
+     2574
+    ],
+    [
+     "audio/scripts/lib/python.test.mjs",
+     2642
+    ],
+    [
+     "audio/scripts/lib/sfx.mjs",
+     6577
+    ],
+    [
+     "audio/scripts/lib/sfx.test.mjs",
+     4698
+    ],
+    [
+     "audio/scripts/lib/tts.mjs",
+     17127
+    ],
+    [
+     "audio/scripts/lib/tts.spawn.test.mjs",
+     5249
+    ],
+    [
+     "audio/scripts/lib/tts.test.mjs",
+     6115
+    ],
+    [
+     "audio/scripts/lyria-recipe.py",
+     5023
+    ],
+    [
+     "audio/scripts/wait-bgm.mjs",
+     5813
+    ],
+    [
+     "audio/scripts/wait-bgm.test.mjs",
+     3336
+    ],
+    [
+     "luts/README.md",
+     1087
+    ],
+    [
+     "luts/index.json",
+     1997
+    ],
+    [
+     "references/audio.md",
+     2234
+    ],
+    [
+     "references/grading.md",
+     6722
+    ],
+    [
+     "references/media-treatment-recipes.md",
+     35868
+    ],
+    [
+     "references/media-treatments.md",
+     13920
+    ],
+    [
+     "references/memory.md",
+     3498
+    ],
+    [
+     "references/meta.md",
+     6780
+    ],
+    [
+     "references/operations.md",
+     14823
+    ],
+    [
+     "references/resolve.md",
+     9605
+    ],
+    [
+     "references/setup-providers.md",
+     7689
+    ],
+    [
+     "references/telemetry-dashboard.md",
+     4200
+    ],
+    [
+     "scripts/audio-duck.mjs",
+     4069
+    ],
+    [
+     "scripts/compatibility.test.mjs",
+     3804
+    ],
+    [
+     "scripts/dither.mjs",
+     9969
+    ],
+    [
+     "scripts/dither.test.mjs",
+     4723
+    ],
+    [
+     "scripts/eval.mjs",
+     14891
+    ],
+    [
+     "scripts/lib/config-lock.mjs",
+     1520
+    ],
+    [
+     "scripts/lib/cutlist.mjs",
+     6095
+    ],
+    [
+     "scripts/lib/duck.mjs",
+     3266
+    ],
+    [
+     "scripts/lib/error-diffusion.mjs",
+     6631
+    ],
+    [
+     "scripts/lib/index-gen.mjs",
+     1924
+    ],
+    [
+     "scripts/lib/manifest.mjs",
+     8967
+    ],
+    [
+     "scripts/lib/media-fetch.mjs",
+     2838
+    ],
+    [
+     "scripts/lib/media-home.mjs",
+     730
+    ],
+    [
+     "scripts/lib/npx-sync.mjs",
+     2328
+    ],
+    [
+     "scripts/lib/parakeet-words.mjs",
+     1149
+    ],
+    [
+     "scripts/lib/prefs-store.mjs",
+     6617
+    ],
+    [
+     "scripts/lib/recipe-store.mjs",
+     13033
+    ],
+    [
+     "scripts/lib/telemetry.mjs",
+     7107
+    ],
+    [
+     "scripts/lib/transcriptCutFade.mjs",
+     911
+    ],
+    [
+     "scripts/lib/words.mjs",
+     764
+    ],
+    [
+     "scripts/prefs.mjs",
+     2407
+    ],
+    [
+     "scripts/recipe.mjs",
+     4040
+    ],
+    [
+     "scripts/resolve-plugin.test.mjs",
+     2512
+    ],
+    [
+     "scripts/resolve.mjs",
+     1305
+    ],
+    [
+     "scripts/transcribe.mjs",
+     7510
+    ],
+    [
+     "scripts/transcribe.test.mjs",
+     4074
+    ],
+    [
+     "scripts/transcript-cut.mjs",
+     9137
+    ],
+    [
+     "scripts/transcript-cut.test.mjs",
+     3703
+    ]
+   ]
+  },
+  {
+   "id": "vercel-labs_react-best-practices",
+   "name": "react-best-practices",
+   "vendor": "Vercel",
+   "repo": "vercel-labs/agent-skills",
+   "sha": "063bee94c3f4df8453406c830b0a7df0f2860278",
+   "path": "skills/react-best-practices",
+   "category": "code",
+   "description": "React and Next.js performance optimization guidelines from Vercel Engineering. This skill should be used when writing, reviewing, or refactoring React/Next.js code to ensure optimal performance patterns. Triggers on tasks involving React components, Next.js pages, data fetching, bundle optimization, or performance improvements.",
+   "license": "MIT",
+   "icon": "vercel",
+   "brand": "#e8e6df",
+   "scripts": false,
+   "bytes": 230383,
+   "bodyChars": 6808,
+   "files": [
+    [
+     "AGENTS.md",
+     108261
+    ],
+    [
+     "README.md",
+     3360
+    ],
+    [
+     "SKILL.md",
+     7251
+    ],
+    [
+     "metadata.json",
+     921
+    ],
+    [
+     "rules/_sections.md",
+     1554
+    ],
+    [
+     "rules/_template.md",
+     631
+    ],
+    [
+     "rules/advanced-effect-event-deps.md",
+     1802
+    ],
+    [
+     "rules/advanced-event-handler-refs.md",
+     1483
+    ],
+    [
+     "rules/advanced-init-once.md",
+     958
+    ],
+    [
+     "rules/advanced-use-latest.md",
+     1072
+    ],
+    [
+     "rules/async-api-routes.md",
+     1125
+    ],
+    [
+     "rules/async-cheap-condition-before-await.md",
+     1220
+    ],
+    [
+     "rules/async-defer-await.md",
+     2208
+    ],
+    [
+     "rules/async-dependencies.md",
+     1293
+    ],
+    [
+     "rules/async-parallel.md",
+     654
+    ],
+    [
+     "rules/async-suspense-boundaries.md",
+     2510
+    ],
+    [
+     "rules/bundle-analyzable-paths.md",
+     2382
+    ],
+    [
+     "rules/bundle-barrel-imports.md",
+     2795
+    ],
+    [
+     "rules/bundle-conditional.md",
+     949
+    ],
+    [
+     "rules/bundle-defer-third-party.md",
+     920
+    ],
+    [
+     "rules/bundle-dynamic-imports.md",
+     791
+    ],
+    [
+     "rules/bundle-preload.md",
+     1149
+    ],
+    [
+     "rules/client-event-listeners.md",
+     1969
+    ],
+    [
+     "rules/client-localstorage-schema.md",
+     1950
+    ],
+    [
+     "rules/client-passive-event-listeners.md",
+     1644
+    ],
+    [
+     "rules/client-swr-dedup.md",
+     1159
+    ],
+    [
+     "rules/js-batch-dom-css.md",
+     3266
+    ],
+    [
+     "rules/js-cache-function-results.md",
+     1949
+    ],
+    [
+     "rules/js-cache-property-access.md",
+     532
+    ],
+    [
+     "rules/js-cache-storage.md",
+     1651
+    ],
+    [
+     "rules/js-combine-iterations.md",
+     753
+    ],
+    [
+     "rules/js-early-exit.md",
+     1133
+    ],
+    [
+     "rules/js-flatmap-filter.md",
+     1411
+    ],
+    [
+     "rules/js-hoist-regexp.md",
+     1028
+    ],
+    [
+     "rules/js-index-maps.md",
+     837
+    ],
+    [
+     "rules/js-length-check-first.md",
+     1747
+    ],
+    [
+     "rules/js-min-max-loop.md",
+     2290
+    ],
+    [
+     "rules/js-request-idle-callback.md",
+     2647
+    ],
+    [
+     "rules/js-set-map-lookups.md",
+     532
+    ],
+    [
+     "rules/js-tosorted-immutable.md",
+     1782
+    ],
+    [
+     "rules/rendering-activity.md",
+     564
+    ],
+    [
+     "rules/rendering-animate-svg-wrapper.md",
+     1185
+    ],
+    [
+     "rules/rendering-conditional-render.md",
+     980
+    ],
+    [
+     "rules/rendering-content-visibility.md",
+     815
+    ],
+    [
+     "rules/rendering-hoist-jsx.md",
+     1039
+    ],
+    [
+     "rules/rendering-hydration-no-flicker.md",
+     2308
+    ],
+    [
+     "rules/rendering-hydration-suppress-warning.md",
+     872
+    ],
+    [
+     "rules/rendering-resource-hints.md",
+     2549
+    ],
+    [
+     "rules/rendering-script-defer-async.md",
+     1868
+    ],
+    [
+     "rules/rendering-svg-precision.md",
+     588
+    ],
+    [
+     "rules/rendering-usetransition-loading.md",
+     2074
+    ],
+    [
+     "rules/rerender-defer-reads.md",
+     973
+    ],
+    [
+     "rules/rerender-dependencies.md",
+     824
+    ],
+    [
+     "rules/rerender-derived-state-no-effect.md",
+     1201
+    ],
+    [
+     "rules/rerender-derived-state.md",
+     728
+    ],
+    [
+     "rules/rerender-functional-setstate.md",
+     2968
+    ],
+    [
+     "rules/rerender-lazy-state-init.md",
+     2016
+    ],
+    [
+     "rules/rerender-memo-with-default-value.md",
+     1173
+    ],
+    [
+     "rules/rerender-memo.md",
+     1148
+    ],
+    [
+     "rules/rerender-move-effect-to-event.md",
+     1268
+    ],
+    [
+     "rules/rerender-no-inline-components.md",
+     2135
+    ],
+    [
+     "rules/rerender-simple-expression-in-memo.md",
+     1018
+    ],
+    [
+     "rules/rerender-split-combined-hooks.md",
+     1844
+    ],
+    [
+     "rules/rerender-transitions.md",
+     1055
+    ],
+    [
+     "rules/rerender-use-deferred-value.md",
+     1846
+    ],
+    [
+     "rules/rerender-use-ref-transient-values.md",
+     1742
+    ],
+    [
+     "rules/server-after-nonblocking.md",
+     2012
+    ],
+    [
+     "rules/server-auth-actions.md",
+     2649
+    ],
+    [
+     "rules/server-cache-lru.md",
+     1353
+    ],
+    [
+     "rules/server-cache-react.md",
+     2228
+    ],
+    [
+     "rules/server-dedup-props.md",
+     2060
+    ],
+    [
+     "rules/server-hoist-static-io.md",
+     4423
+    ],
+    [
+     "rules/server-no-shared-module-state.md",
+     1766
+    ],
+    [
+     "rules/server-parallel-fetching.md",
+     1554
+    ],
+    [
+     "rules/server-parallel-nested-fetching.md",
+     992
+    ],
+    [
+     "rules/server-serialization.md",
+     996
+    ]
+   ]
+  },
+  {
+   "id": "vercel-labs_composition-patterns",
+   "name": "composition-patterns",
+   "vendor": "Vercel",
+   "repo": "vercel-labs/agent-skills",
+   "sha": "063bee94c3f4df8453406c830b0a7df0f2860278",
+   "path": "skills/composition-patterns",
+   "category": "code",
+   "description": "React composition patterns that scale. Use when refactoring components with boolean prop proliferation, building flexible component libraries, or designing reusable APIs. Triggers on tasks involving compound components, render props, context providers, or component architecture. Includes React 19 API changes.",
+   "license": "MIT",
+   "icon": "vercel",
+   "brand": "#e8e6df",
+   "scripts": false,
+   "bytes": 50339,
+   "bodyChars": 2448,
+   "files": [
+    [
+     "AGENTS.md",
+     22627
+    ],
+    [
+     "README.md",
+     2140
+    ],
+    [
+     "SKILL.md",
+     2886
+    ],
+    [
+     "metadata.json",
+     530
+    ],
+    [
+     "rules/_sections.md",
+     829
+    ],
+    [
+     "rules/_template.md",
+     329
+    ],
+    [
+     "rules/architecture-avoid-boolean-props.md",
+     2267
+    ],
+    [
+     "rules/architecture-compound-components.md",
+     2600
+    ],
+    [
+     "rules/patterns-children-over-render-props.md",
+     1886
+    ],
+    [
+     "rules/patterns-explicit-variants.md",
+     2395
+    ],
+    [
+     "rules/react19-no-forwardref.md",
+     953
+    ],
+    [
+     "rules/state-context-interface.md",
+     4974
+    ],
+    [
+     "rules/state-decouple-implementation.md",
+     2699
+    ],
+    [
+     "rules/state-lift-state.md",
+     3224
+    ]
+   ]
+  },
+  {
+   "id": "vercel-labs_web-design-guidelines",
+   "name": "web-design-guidelines",
+   "vendor": "Vercel",
+   "repo": "vercel-labs/agent-skills",
+   "sha": "063bee94c3f4df8453406c830b0a7df0f2860278",
+   "path": "skills/web-design-guidelines",
+   "category": "design",
+   "description": "Review UI code for Web Interface Guidelines compliance. Use when asked to \"review my UI\", \"check accessibility\", \"audit design\", \"review UX\", or \"check my site against best practices\".",
+   "license": "see the repository",
+   "icon": "vercel",
+   "brand": "#e8e6df",
+   "scripts": false,
+   "bytes": 1231,
+   "bodyChars": 917,
+   "files": [
+    [
+     "SKILL.md",
+     1231
+    ]
+   ]
+  },
+  {
+   "id": "vercel-labs_deploy-to-vercel",
+   "name": "deploy-to-vercel",
+   "vendor": "Vercel",
+   "repo": "vercel-labs/agent-skills",
+   "sha": "063bee94c3f4df8453406c830b0a7df0f2860278",
+   "path": "skills/deploy-to-vercel",
+   "category": "cloud",
+   "description": "Deploy applications and websites to Vercel. Use when the user requests deployment actions like \"deploy my app\", \"deploy and give me the link\", \"push this live\", or \"create a preview deployment\".",
+   "license": "see the repository",
+   "icon": "vercel",
+   "brand": "#e8e6df",
+   "scripts": true,
+   "bytes": 40796,
+   "bodyChars": 11460,
+   "files": [
+    [
+     "Archive.zip",
+     11314
+    ],
+    [
+     "SKILL.md",
+     11786
+    ],
+    [
+     "resources/deploy-codex.sh",
+     8855
+    ],
+    [
+     "resources/deploy.sh",
+     8841
+    ]
+   ]
+  },
+  {
+   "id": "supabase_supabase",
+   "name": "supabase",
+   "vendor": "Supabase",
+   "repo": "supabase/agent-skills",
+   "sha": "544bfc56c89afe2b87b20017a59b2c6e9502a1fb",
+   "path": "skills/supabase",
+   "category": "data",
+   "description": "Use when doing ANY task involving Supabase. Triggers: Supabase products (Database, Auth, Edge Functions, Realtime, Storage, Vectors, Cron, Queues); client libraries and SSR integrations (supabase-js, @supabase/ssr) in Next.js, React, SvelteKit, Astro, Remix; auth issues (login, logout, sessions, JWT, cookies, getSession, getUser, getClaims, RLS); Supabase CLI or MCP server; schema changes, migrations, declarative schemas, security audits, Postgres extensions (pg_graphql, pg_cron, pg_vector); debugging and troubleshooting errors or unexpected behavior on Supabase projects (HTTP errors, Postgres errors, RLS surprises, permission denied, schema cache issues, timeouts, Edge Function crashes, Realtime drops, Storage failures) and reading or querying logs (Logs Explorer, ClickHouse).",
+   "license": "MIT",
+   "icon": "supabase",
+   "brand": "#3ecf8e",
+   "scripts": false,
+   "bytes": 23772,
+   "bodyChars": 13397,
+   "files": [
+    [
+     "CHANGELOG.md",
+     7971
+    ],
+    [
+     "SKILL.md",
+     14307
+    ],
+    [
+     "assets/feedback-issue-template.md",
+     459
+    ],
+    [
+     "references/skill-feedback.md",
+     1035
+    ]
+   ]
+  },
+  {
+   "id": "supabase_supabase-postgres-best-practices",
+   "name": "supabase-postgres-best-practices",
+   "vendor": "Supabase",
+   "repo": "supabase/agent-skills",
+   "sha": "544bfc56c89afe2b87b20017a59b2c6e9502a1fb",
+   "path": "skills/supabase-postgres-best-practices",
+   "category": "data",
+   "description": "Postgres best practices maintained by Supabase, for Postgres running anywhere. Load this skill BEFORE writing or changing anything that lives in a Postgres database: creating or altering tables and columns (including choosing column types), schema design, migrations and declarative schema files, RLS policies and the tests that verify them, indexes, triggers, database functions, queues and scheduled jobs (pg_cron, pgmq), vector/semantic search (pgvector), and restoring dumps (pg_restore) or importing data. Also load it when diagnosing slow queries, high CPU, timeouts, EXPLAIN plans, connection exhaustion, locking, bloat, or rows visible to the wrong user or tenant. This is not just a performance guide — schema, migration, security, and SQL authoring tasks need these rules too, even for a one-column change or a single query.",
+   "license": "MIT",
+   "icon": "supabase",
+   "brand": "#3ecf8e",
+   "scripts": false,
+   "bytes": 62007,
+   "bodyChars": 1768,
+   "files": [
+    [
+     "CHANGELOG.md",
+     5684
+    ],
+    [
+     "SKILL.md",
+     3231
+    ],
+    [
+     "references/_contributing.md",
+     4113
+    ],
+    [
+     "references/_sections.md",
+     1682
+    ],
+    [
+     "references/_template.md",
+     1040
+    ],
+    [
+     "references/advanced-full-text-search.md",
+     1468
+    ],
+    [
+     "references/advanced-jsonb-indexing.md",
+     1444
+    ],
+    [
+     "references/conn-idle-timeout.md",
+     1282
+    ],
+    [
+     "references/conn-limits.md",
+     1325
+    ],
+    [
+     "references/conn-pooling.md",
+     1382
+    ],
+    [
+     "references/conn-prepared-statements.md",
+     1529
+    ],
+    [
+     "references/data-batch-inserts.md",
+     1287
+    ],
+    [
+     "references/data-n-plus-one.md",
+     1361
+    ],
+    [
+     "references/data-pagination.md",
+     1358
+    ],
+    [
+     "references/data-upsert.md",
+     1390
+    ],
+    [
+     "references/lock-advisory.md",
+     1531
+    ],
+    [
+     "references/lock-deadlock-prevention.md",
+     1855
+    ],
+    [
+     "references/lock-short-transactions.md",
+     1350
+    ],
+    [
+     "references/lock-skip-locked.md",
+     1353
+    ],
+    [
+     "references/monitor-explain-analyze.md",
+     1441
+    ],
+    [
+     "references/monitor-pg-stat-statements.md",
+     1418
+    ],
+    [
+     "references/monitor-vacuum-analyze.md",
+     1506
+    ],
+    [
+     "references/query-composite-indexes.md",
+     1454
+    ],
+    [
+     "references/query-covering-indexes.md",
+     1287
+    ],
+    [
+     "references/query-index-types.md",
+     1521
+    ],
+    [
+     "references/query-missing-indexes.md",
+     1218
+    ],
+    [
+     "references/query-partial-indexes.md",
+     1347
+    ],
+    [
+     "references/schema-constraints.md",
+     1880
+    ],
+    [
+     "references/schema-data-types.md",
+     1453
+    ],
+    [
+     "references/schema-foreign-key-indexes.md",
+     1679
+    ],
+    [
+     "references/schema-lowercase-identifiers.md",
+     1728
+    ],
+    [
+     "references/schema-partitioning.md",
+     1548
+    ],
+    [
+     "references/schema-primary-keys.md",
+     1821
+    ],
+    [
+     "references/security-privileges.md",
+     1566
+    ],
+    [
+     "references/security-rls-basics.md",
+     1372
+    ],
+    [
+     "references/security-rls-performance.md",
+     2103
+    ]
+   ]
+  },
+  {
+   "id": "cloudflare_cloudflare",
+   "name": "cloudflare",
+   "vendor": "Cloudflare",
+   "repo": "cloudflare/skills",
+   "sha": "626547c06881a20b3322bdc2ed6e6451b33a4fb6",
+   "path": "skills/cloudflare",
+   "category": "cloud",
+   "description": "Discover and choose Cloudflare products for apps, APIs, AI agents, storage, networking, and security. Use for architecture and product selection, including when the user describes a need without naming a Cloudflare product; then find the relevant skill or documentation.",
+   "license": "Apache-2.0",
+   "icon": "cloudflare",
+   "brand": "#f6821f",
+   "scripts": false,
+   "bytes": 937881,
+   "bodyChars": 23604,
+   "files": [
+    [
+     "SKILL.md",
+     23912
+    ],
+    [
+     "references/ai-gateway/README.md",
+     1949
+    ],
+    [
+     "references/ai-gateway/configuration.md",
+     2194
+    ],
+    [
+     "references/ai-gateway/dynamic-routing.md",
+     1829
+    ],
+    [
+     "references/ai-gateway/features.md",
+     2513
+    ],
+    [
+     "references/ai-gateway/sdk-integration.md",
+     2213
+    ],
+    [
+     "references/ai-gateway/troubleshooting.md",
+     2393
+    ],
+    [
+     "references/ai-search/README.md",
+     1829
+    ],
+    [
+     "references/ai-search/api.md",
+     1247
+    ],
+    [
+     "references/ai-search/configuration.md",
+     1767
+    ],
+    [
+     "references/ai-search/gotchas.md",
+     1592
+    ],
+    [
+     "references/ai-search/patterns.md",
+     1684
+    ],
+    [
+     "references/analytics-engine/README.md",
+     3418
+    ],
+    [
+     "references/analytics-engine/api.md",
+     3143
+    ],
+    [
+     "references/analytics-engine/configuration.md",
+     2361
+    ],
+    [
+     "references/analytics-engine/gotchas.md",
+     2018
+    ],
+    [
+     "references/analytics-engine/patterns.md",
+     2312
+    ],
+    [
+     "references/api-shield/README.md",
+     1796
+    ],
+    [
+     "references/api-shield/api.md",
+     3900
+    ],
+    [
+     "references/api-shield/configuration.md",
+     5020
+    ],
+    [
+     "references/api-shield/gotchas.md",
+     4946
+    ],
+    [
+     "references/api-shield/patterns.md",
+     5844
+    ],
+    [
+     "references/api/README.md",
+     2583
+    ],
+    [
+     "references/api/api.md",
+     4308
+    ],
+    [
+     "references/api/configuration.md",
+     3787
+    ],
+    [
+     "references/api/gotchas.md",
+     5390
+    ],
+    [
+     "references/api/patterns.md",
+     4639
+    ],
+    [
+     "references/argo-smart-routing/README.md",
+     4060
+    ],
+    [
+     "references/argo-smart-routing/api.md",
+     6579
+    ],
+    [
+     "references/argo-smart-routing/configuration.md",
+     4457
+    ],
+    [
+     "references/argo-smart-routing/gotchas.md",
+     4327
+    ],
+    [
+     "references/argo-smart-routing/patterns.md",
+     3053
+    ],
+    [
+     "references/artifacts/README.md",
+     3776
+    ],
+    [
+     "references/artifacts/api.md",
+     5096
+    ],
+    [
+     "references/artifacts/configuration.md",
+     3154
+    ],
+    [
+     "references/bindings/README.md",
+     1336
+    ],
+    [
+     "references/bindings/api.md",
+     2327
+    ],
+    [
+     "references/bindings/configuration.md",
+     2458
+    ],
+    [
+     "references/bindings/gotchas.md",
+     2919
+    ],
+    [
+     "references/bindings/patterns.md",
+     2362
+    ],
+    [
+     "references/bot-management/README.md",
+     3793
+    ],
+    [
+     "references/bot-management/api.md",
+     5803
+    ],
+    [
+     "references/bot-management/configuration.md",
+     5744
+    ],
+    [
+     "references/bot-management/gotchas.md",
+     5657
+    ],
+    [
+     "references/bot-management/patterns.md",
+     4970
+    ],
+    [
+     "references/browser-rendering/README.md",
+     1270
+    ],
+    [
+     "references/browser-rendering/api.md",
+     1176
+    ],
+    [
+     "references/browser-rendering/configuration.md",
+     1285
+    ],
+    [
+     "references/browser-rendering/gotchas.md",
+     1886
+    ],
+    [
+     "references/browser-rendering/patterns.md",
+     1488
+    ],
+    [
+     "references/c3/README.md",
+     3672
+    ],
+    [
+     "references/c3/api.md",
+     2239
+    ],
+    [
+     "references/c3/configuration.md",
+     1637
+    ],
+    [
+     "references/c3/gotchas.md",
+     2307
+    ],
+    [
+     "references/c3/patterns.md",
+     2117
+    ],
+    [
+     "references/cache-reserve/README.md",
+     5640
+    ],
+    [
+     "references/cache-reserve/api.md",
+     6018
+    ],
+    [
+     "references/cache-reserve/configuration.md",
+     3660
+    ],
+    [
+     "references/cache-reserve/gotchas.md",
+     5797
+    ],
+    [
+     "references/cache-reserve/patterns.md",
+     6265
+    ],
+    [
+     "references/containers/README.md",
+     1883
+    ],
+    [
+     "references/containers/api.md",
+     1538
+    ],
+    [
+     "references/containers/configuration.md",
+     1782
+    ],
+    [
+     "references/containers/gotchas.md",
+     2366
+    ],
+    [
+     "references/containers/patterns.md",
+     2505
+    ],
+    [
+     "references/cron-triggers/README.md",
+     1514
+    ],
+    [
+     "references/cron-triggers/api.md",
+     1670
+    ],
+    [
+     "references/cron-triggers/configuration.md",
+     1657
+    ],
+    [
+     "references/cron-triggers/gotchas.md",
+     2327
+    ],
+    [
+     "references/cron-triggers/patterns.md",
+     1946
+    ],
+    [
+     "references/d1/README.md",
+     1393
+    ],
+    [
+     "references/d1/api.md",
+     1914
+    ],
+    [
+     "references/d1/configuration.md",
+     1906
+    ],
+    [
+     "references/d1/gotchas.md",
+     2168
+    ],
+    [
+     "references/d1/patterns.md",
+     2169
+    ],
+    [
+     "references/ddos/README.md",
+     2054
+    ],
+    [
+     "references/ddos/api.md",
+     4170
+    ],
+    [
+     "references/ddos/configuration.md",
+     3005
+    ],
+    [
+     "references/ddos/gotchas.md",
+     3912
+    ],
+    [
+     "references/ddos/patterns.md",
+     5680
+    ],
+    [
+     "references/do-storage/README.md",
+     1121
+    ],
+    [
+     "references/do-storage/api.md",
+     1281
+    ],
+    [
+     "references/do-storage/configuration.md",
+     1571
+    ],
+    [
+     "references/do-storage/gotchas.md",
+     1811
+    ],
+    [
+     "references/do-storage/patterns.md",
+     1680
+    ],
+    [
+     "references/do-storage/testing.md",
+     1150
+    ],
+    [
+     "references/email-routing/README.md",
+     1336
+    ],
+    [
+     "references/email-routing/api.md",
+     1351
+    ],
+    [
+     "references/email-routing/configuration.md",
+     1360
+    ],
+    [
+     "references/email-routing/gotchas.md",
+     1397
+    ],
+    [
+     "references/email-routing/patterns.md",
+     1190
+    ],
+    [
+     "references/email-workers/README.md",
+     1395
+    ],
+    [
+     "references/email-workers/api.md",
+     1495
+    ],
+    [
+     "references/email-workers/configuration.md",
+     1570
+    ],
+    [
+     "references/email-workers/gotchas.md",
+     2193
+    ],
+    [
+     "references/email-workers/patterns.md",
+     1839
+    ],
+    [
+     "references/flagship/README.md",
+     3735
+    ],
+    [
+     "references/flagship/api.md",
+     11749
+    ],
+    [
+     "references/flagship/configuration.md",
+     4863
+    ],
+    [
+     "references/flagship/gotchas.md",
+     6353
+    ],
+    [
+     "references/flagship/patterns.md",
+     14059
+    ],
+    [
+     "references/graphql-api/README.md",
+     7769
+    ],
+    [
+     "references/graphql-api/api.md",
+     5782
+    ],
+    [
+     "references/graphql-api/configuration.md",
+     4675
+    ],
+    [
+     "references/graphql-api/gotchas.md",
+     4857
+    ],
+    [
+     "references/graphql-api/patterns.md",
+     6539
+    ],
+    [
+     "references/hyperdrive/README.md",
+     2125
+    ],
+    [
+     "references/hyperdrive/api.md",
+     3099
+    ],
+    [
+     "references/hyperdrive/configuration.md",
+     3205
+    ],
+    [
+     "references/hyperdrive/gotchas.md",
+     3346
+    ],
+    [
+     "references/hyperdrive/patterns.md",
+     2690
+    ],
+    [
+     "references/images/README.md",
+     983
+    ],
+    [
+     "references/images/api.md",
+     1571
+    ],
+    [
+     "references/images/configuration.md",
+     2071
+    ],
+    [
+     "references/images/gotchas.md",
+     2208
+    ],
+    [
+     "references/images/patterns.md",
+     1821
+    ],
+    [
+     "references/kv/README.md",
+     1504
+    ],
+    [
+     "references/kv/api.md",
+     1736
+    ],
+    [
+     "references/kv/configuration.md",
+     1668
+    ],
+    [
+     "references/kv/gotchas.md",
+     2409
+    ],
+    [
+     "references/kv/patterns.md",
+     2852
+    ],
+    [
+     "references/miniflare/README.md",
+     1575
+    ],
+    [
+     "references/miniflare/api.md",
+     1776
+    ],
+    [
+     "references/miniflare/configuration.md",
+     2085
+    ],
+    [
+     "references/miniflare/gotchas.md",
+     2305
+    ],
+    [
+     "references/miniflare/patterns.md",
+     2217
+    ],
+    [
+     "references/network-interconnect/README.md",
+     3234
+    ],
+    [
+     "references/network-interconnect/api.md",
+     5626
+    ],
+    [
+     "references/network-interconnect/configuration.md",
+     4257
+    ],
+    [
+     "references/network-interconnect/gotchas.md",
+     5558
+    ],
+    [
+     "references/network-interconnect/patterns.md",
+     4055
+    ],
+    [
+     "references/observability/README.md",
+     2417
+    ],
+    [
+     "references/observability/api.md",
+     2200
+    ],
+    [
+     "references/observability/configuration.md",
+     2271
+    ],
+    [
+     "references/observability/gotchas.md",
+     3552
+    ],
+    [
+     "references/observability/patterns.md",
+     3020
+    ],
+    [
+     "references/pages-functions/README.md",
+     1287
+    ],
+    [
+     "references/pages-functions/api.md",
+     1114
+    ],
+    [
+     "references/pages-functions/configuration.md",
+     1238
+    ],
+    [
+     "references/pages-functions/gotchas.md",
+     1605
+    ],
+    [
+     "references/pages-functions/patterns.md",
+     1372
+    ],
+    [
+     "references/pages/README.md",
+     1486
+    ],
+    [
+     "references/pages/api.md",
+     1064
+    ],
+    [
+     "references/pages/configuration.md",
+     1506
+    ],
+    [
+     "references/pages/gotchas.md",
+     1650
+    ],
+    [
+     "references/pages/patterns.md",
+     1207
+    ],
+    [
+     "references/pipelines/README.md",
+     4281
+    ],
+    [
+     "references/pipelines/api.md",
+     5058
+    ],
+    [
+     "references/pipelines/configuration.md",
+     6099
+    ],
+    [
+     "references/pipelines/gotchas.md",
+     3029
+    ],
+    [
+     "references/pipelines/patterns.md",
+     4674
+    ],
+    [
+     "references/pulumi/README.md",
+     3301
+    ],
+    [
+     "references/pulumi/api.md",
+     5761
+    ],
+    [
+     "references/pulumi/configuration.md",
+     5657
+    ],
+    [
+     "references/pulumi/gotchas.md",
+     6555
+    ],
+    [
+     "references/pulumi/patterns.md",
+     6974
+    ],
+    [
+     "references/queues/README.md",
+     1822
+    ],
+    [
+     "references/queues/api.md",
+     1769
+    ],
+    [
+     "references/queues/configuration.md",
+     2308
+    ],
+    [
+     "references/queues/gotchas.md",
+     2736
+    ],
+    [
+     "references/queues/patterns.md",
+     2599
+    ],
+    [
+     "references/r2-data-catalog/README.md",
+     1192
+    ],
+    [
+     "references/r2-data-catalog/api.md",
+     3337
+    ],
+    [
+     "references/r2-data-catalog/configuration.md",
+     2124
+    ],
+    [
+     "references/r2-data-catalog/gotchas.md",
+     2175
+    ],
+    [
+     "references/r2-data-catalog/patterns.md",
+     1724
+    ],
+    [
+     "references/r2-sql/README.md",
+     3253
+    ],
+    [
+     "references/r2-sql/api.md",
+     4898
+    ],
+    [
+     "references/r2-sql/configuration.md",
+     1679
+    ],
+    [
+     "references/r2-sql/gotchas.md",
+     1969
+    ],
+    [
+     "references/r2-sql/patterns.md",
+     4357
+    ],
+    [
+     "references/r2/README.md",
+     1673
+    ],
+    [
+     "references/r2/api.md",
+     1676
+    ],
+    [
+     "references/r2/configuration.md",
+     2143
+    ],
+    [
+     "references/r2/gotchas.md",
+     3238
+    ],
+    [
+     "references/r2/patterns.md",
+     2198
+    ],
+    [
+     "references/realtime-sfu/README.md",
+     3076
+    ],
+    [
+     "references/realtime-sfu/api.md",
+     3768
+    ],
+    [
+     "references/realtime-sfu/configuration.md",
+     3509
+    ],
+    [
+     "references/realtime-sfu/gotchas.md",
+     4902
+    ],
+    [
+     "references/realtime-sfu/patterns.md",
+     5403
+    ],
+    [
+     "references/realtimekit/README.md",
+     4078
+    ],
+    [
+     "references/realtimekit/api.md",
+     8352
+    ],
+    [
+     "references/realtimekit/configuration.md",
+     5192
+    ],
+    [
+     "references/realtimekit/gotchas.md",
+     6883
+    ],
+    [
+     "references/realtimekit/patterns.md",
+     7660
+    ],
+    [
+     "references/secrets-store/README.md",
+     1819
+    ],
+    [
+     "references/secrets-store/api.md",
+     1867
+    ],
+    [
+     "references/secrets-store/configuration.md",
+     2396
+    ],
+    [
+     "references/secrets-store/gotchas.md",
+     2762
+    ],
+    [
+     "references/secrets-store/patterns.md",
+     3005
+    ],
+    [
+     "references/smart-placement/README.md",
+     5086
+    ],
+    [
+     "references/smart-placement/api.md",
+     5559
+    ],
+    [
+     "references/smart-placement/configuration.md",
+     6119
+    ],
+    [
+     "references/smart-placement/gotchas.md",
+     5637
+    ],
+    [
+     "references/smart-placement/patterns.md",
+     5784
+    ],
+    [
+     "references/snippets/README.md",
+     3132
+    ],
+    [
+     "references/snippets/api.md",
+     5133
+    ],
+    [
+     "references/snippets/configuration.md",
+     6311
+    ],
+    [
+     "references/snippets/gotchas.md",
+     2220
+    ],
+    [
+     "references/snippets/patterns.md",
+     3346
+    ],
+    [
+     "references/spectrum/README.md",
+     2355
+    ],
+    [
+     "references/spectrum/api.md",
+     4924
+    ],
+    [
+     "references/spectrum/configuration.md",
+     4332
+    ],
+    [
+     "references/spectrum/gotchas.md",
+     3739
+    ],
+    [
+     "references/spectrum/patterns.md",
+     4778
+    ],
+    [
+     "references/static-assets/README.md",
+     1681
+    ],
+    [
+     "references/static-assets/api.md",
+     1685
+    ],
+    [
+     "references/static-assets/configuration.md",
+     2112
+    ],
+    [
+     "references/static-assets/gotchas.md",
+     2669
+    ],
+    [
+     "references/static-assets/patterns.md",
+     2179
+    ],
+    [
+     "references/stream/README.md",
+     1754
+    ],
+    [
+     "references/stream/api-live.md",
+     2078
+    ],
+    [
+     "references/stream/api.md",
+     2369
+    ],
+    [
+     "references/stream/configuration.md",
+     1968
+    ],
+    [
+     "references/stream/gotchas.md",
+     2250
+    ],
+    [
+     "references/stream/patterns.md",
+     2259
+    ],
+    [
+     "references/tail-workers/README.md",
+     1458
+    ],
+    [
+     "references/tail-workers/api.md",
+     1348
+    ],
+    [
+     "references/tail-workers/configuration.md",
+     1437
+    ],
+    [
+     "references/tail-workers/gotchas.md",
+     1577
+    ],
+    [
+     "references/tail-workers/patterns.md",
+     1548
+    ],
+    [
+     "references/terraform/README.md",
+     3750
+    ],
+    [
+     "references/terraform/api.md",
+     4020
+    ],
+    [
+     "references/terraform/configuration.md",
+     7577
+    ],
+    [
+     "references/terraform/gotchas.md",
+     5268
+    ],
+    [
+     "references/terraform/patterns.md",
+     6640
+    ],
+    [
+     "references/tunnel/README.md",
+     1493
+    ],
+    [
+     "references/tunnel/api.md",
+     1289
+    ],
+    [
+     "references/tunnel/configuration.md",
+     1296
+    ],
+    [
+     "references/tunnel/gotchas.md",
+     1508
+    ],
+    [
+     "references/tunnel/networking.md",
+     1443
+    ],
+    [
+     "references/tunnel/patterns.md",
+     1467
+    ],
+    [
+     "references/turn/README.md",
+     3693
+    ],
+    [
+     "references/turn/api.md",
+     5220
+    ],
+    [
+     "references/turn/configuration.md",
+     4178
+    ],
+    [
+     "references/turn/gotchas.md",
+     7020
+    ],
+    [
+     "references/turn/patterns.md",
+     6189
+    ],
+    [
+     "references/vectorize/README.md",
+     2069
+    ],
+    [
+     "references/vectorize/api.md",
+     2091
+    ],
+    [
+     "references/vectorize/configuration.md",
+     2034
+    ],
+    [
+     "references/vectorize/gotchas.md",
+     2374
+    ],
+    [
+     "references/vectorize/patterns.md",
+     2619
+    ],
+    [
+     "references/waf/README.md",
+     1577
+    ],
+    [
+     "references/waf/api.md",
+     1942
+    ],
+    [
+     "references/waf/configuration.md",
+     1902
+    ],
+    [
+     "references/waf/gotchas.md",
+     2299
+    ],
+    [
+     "references/waf/patterns.md",
+     1872
+    ],
+    [
+     "references/web-analytics/README.md",
+     5368
+    ],
+    [
+     "references/web-analytics/configuration.md",
+     2003
+    ],
+    [
+     "references/web-analytics/gotchas.md",
+     1999
+    ],
+    [
+     "references/web-analytics/integration.md",
+     1772
+    ],
+    [
+     "references/web-analytics/patterns.md",
+     2237
+    ],
+    [
+     "references/workerd/README.md",
+     2859
+    ],
+    [
+     "references/workerd/api.md",
+     4959
+    ],
+    [
+     "references/workerd/configuration.md",
+     5263
+    ],
+    [
+     "references/workerd/gotchas.md",
+     4781
+    ],
+    [
+     "references/workerd/patterns.md",
+     4938
+    ],
+    [
+     "references/workers-ai/README.md",
+     1859
+    ],
+    [
+     "references/workers-ai/api.md",
+     1260
+    ],
+    [
+     "references/workers-ai/configuration.md",
+     1576
+    ],
+    [
+     "references/workers-ai/gotchas.md",
+     1869
+    ],
+    [
+     "references/workers-ai/patterns.md",
+     1676
+    ],
+    [
+     "references/workers-for-platforms/README.md",
+     4006
+    ],
+    [
+     "references/workers-for-platforms/api.md",
+     5515
+    ],
+    [
+     "references/workers-for-platforms/configuration.md",
+     3892
+    ],
+    [
+     "references/workers-for-platforms/gotchas.md",
+     5440
+    ],
+    [
+     "references/workers-for-platforms/patterns.md",
+     5587
+    ],
+    [
+     "references/workers-playground/README.md",
+     4033
+    ],
+    [
+     "references/workers-playground/api.md",
+     2265
+    ],
+    [
+     "references/workers-playground/configuration.md",
+     4479
+    ],
+    [
+     "references/workers-playground/gotchas.md",
+     2060
+    ],
+    [
+     "references/workers-playground/patterns.md",
+     3303
+    ],
+    [
+     "references/workers-vpc/README.md",
+     5473
+    ],
+    [
+     "references/workers-vpc/api.md",
+     5321
+    ],
+    [
+     "references/workers-vpc/configuration.md",
+     3898
+    ],
+    [
+     "references/workers-vpc/gotchas.md",
+     4477
+    ],
+    [
+     "references/workers-vpc/patterns.md",
+     6011
+    ],
+    [
+     "references/workflows/README.md",
+     1817
+    ],
+    [
+     "references/workflows/api.md",
+     1793
+    ],
+    [
+     "references/workflows/configuration.md",
+     1961
+    ],
+    [
+     "references/workflows/gotchas.md",
+     2790
+    ],
+    [
+     "references/workflows/patterns.md",
+     2648
+    ],
+    [
+     "references/zaraz/IMPLEMENTATION_SUMMARY.md",
+     3494
+    ],
+    [
+     "references/zaraz/README.md",
+     3909
+    ],
+    [
+     "references/zaraz/api.md",
+     3197
+    ],
+    [
+     "references/zaraz/configuration.md",
+     1811
+    ],
+    [
+     "references/zaraz/gotchas.md",
+     2001
+    ],
+    [
+     "references/zaraz/patterns.md",
+     2133
+    ]
+   ]
+  },
+  {
+   "id": "cloudflare_wrangler",
+   "name": "wrangler",
+   "vendor": "Cloudflare",
+   "repo": "cloudflare/skills",
+   "sha": "626547c06881a20b3322bdc2ed6e6451b33a4fb6",
+   "path": "skills/wrangler",
+   "category": "cloud",
+   "description": "Run or troubleshoot Wrangler CLI commands and configure Worker projects for local development, Previews, deployment, and Cloudflare resource management.",
+   "license": "Apache-2.0",
+   "icon": "cloudflare",
+   "brand": "#f6821f",
+   "scripts": false,
+   "bytes": 10693,
+   "bodyChars": 10505,
+   "files": [
+    [
+     "SKILL.md",
+     10693
+    ]
+   ]
+  },
+  {
+   "id": "cloudflare_workers-best-practices",
+   "name": "workers-best-practices",
+   "vendor": "Cloudflare",
+   "repo": "cloudflare/skills",
+   "sha": "626547c06881a20b3322bdc2ed6e6451b33a4fb6",
+   "path": "skills/workers-best-practices",
+   "category": "cloud",
+   "description": "Cloudflare Workers best practices for production applications. Use when writing, reviewing, or configuring Workers.",
+   "license": "Apache-2.0",
+   "icon": "cloudflare",
+   "brand": "#f6821f",
+   "scripts": false,
+   "bytes": 28610,
+   "bodyChars": 5342,
+   "files": [
+    [
+     "SKILL.md",
+     5507
+    ],
+    [
+     "references/configuration.md",
+     5641
+    ],
+    [
+     "references/platform-apis.md",
+     3826
+    ],
+    [
+     "references/runtime-patterns.md",
+     13636
+    ]
+   ]
+  },
+  {
+   "id": "cloudflare_durable-objects",
+   "name": "durable-objects",
+   "vendor": "Cloudflare",
+   "repo": "cloudflare/skills",
+   "sha": "626547c06881a20b3322bdc2ed6e6451b33a4fb6",
+   "path": "skills/durable-objects",
+   "category": "cloud",
+   "description": "Build, debug, or review Cloudflare Durable Objects code for persistent state and coordination.",
+   "license": "Apache-2.0",
+   "icon": "cloudflare",
+   "brand": "#f6821f",
+   "scripts": false,
+   "bytes": 18739,
+   "bodyChars": 5853,
+   "files": [
+    [
+     "SKILL.md",
+     5992
+    ],
+    [
+     "references/rules.md",
+     2731
+    ],
+    [
+     "references/testing.md",
+     2473
+    ],
+    [
+     "references/workers.md",
+     7543
+    ]
+   ]
+  },
+  {
+   "id": "stripe_stripe-best-practices",
+   "name": "stripe-best-practices",
+   "vendor": "Stripe",
+   "repo": "stripe/ai",
+   "sha": "a188b0d644166d57b93dc6fb338a0e2e8c37b5fc",
+   "path": "skills/stripe-best-practices",
+   "category": "business",
+   "description": "Guides Stripe integration decisions across development and test environment planning (separate sandboxes vs the shared test mode sandbox), API selection (Checkout Sessions vs PaymentIntents), Connect platform setup (Accounts v2, controller properties), billing/subscriptions, tax and registrations (Stripe Tax, automatic_tax, product tax codes), Treasury financial accounts, integration options (Checkout, Payment Element), migrating from deprecated Stripe APIs, and security best practices (API key management, API key permissions, webhooks, OAuth). Use when planning, building, modifying, testing, or reviewing any Stripe integration, including choosing a development environment, accepting payments, building marketplaces, integrating Stripe, processing payments, setting up subscriptions, collecting sales tax, VAT, or GST, creating connected accounts, or implementing secure key handling.",
+   "license": "MIT",
+   "icon": "stripe",
+   "brand": "#7a73ff",
+   "scripts": false,
+   "bytes": 68887,
+   "bodyChars": 5744,
+   "files": [
+    [
+     "SKILL.md",
+     6742
+    ],
+    [
+     "references/billing.md",
+     8654
+    ],
+    [
+     "references/connect.md",
+     11016
+    ],
+    [
+     "references/payments.md",
+     8979
+    ],
+    [
+     "references/security.md",
+     10047
+    ],
+    [
+     "references/tax.md",
+     22656
+    ],
+    [
+     "references/treasury.md",
+     793
+    ]
+   ]
+  },
+  {
+   "id": "stripe_stripe-docs",
+   "name": "stripe-docs",
+   "vendor": "Stripe",
+   "repo": "stripe/ai",
+   "sha": "a188b0d644166d57b93dc6fb338a0e2e8c37b5fc",
+   "path": "skills/stripe-docs",
+   "category": "business",
+   "description": "Use when the user or agent needs to read, search, or look up Stripe documentation or API reference. Prefer this over curl or WebFetch for any docs.stripe.com content. Use to fetch gated documentation.",
+   "license": "MIT",
+   "icon": "stripe",
+   "brand": "#7a73ff",
+   "scripts": false,
+   "bytes": 1356,
+   "bodyChars": 932,
+   "files": [
+    [
+     "SKILL.md",
+     1356
+    ]
+   ]
+  },
+  {
+   "id": "stripe_upgrade-stripe",
+   "name": "upgrade-stripe",
+   "vendor": "Stripe",
+   "repo": "stripe/ai",
+   "sha": "a188b0d644166d57b93dc6fb338a0e2e8c37b5fc",
+   "path": "skills/upgrade-stripe",
+   "category": "business",
+   "description": "Guide for upgrading Stripe API versions, webhook endpoints, server-side SDKs, Stripe.js, and mobile SDKs",
+   "license": "MIT",
+   "icon": "stripe",
+   "brand": "#7a73ff",
+   "scripts": false,
+   "bytes": 9349,
+   "bodyChars": 9163,
+   "files": [
+    [
+     "SKILL.md",
+     9349
+    ]
+   ]
+  },
+  {
+   "id": "getsentry_code-review",
+   "name": "code-review",
+   "vendor": "Sentry",
+   "repo": "getsentry/skills",
+   "sha": "d18b7aa8ba878354e5c348310230e652f7690f9c",
+   "path": "skills/code-review",
+   "category": "code",
+   "description": "Perform code reviews following Sentry engineering practices. Use when reviewing pull requests, examining code changes, or providing feedback on code quality. Covers security, performance, testing, and design review.",
+   "license": "Apache-2.0",
+   "icon": "sentry",
+   "brand": "#b58cf5",
+   "scripts": false,
+   "bytes": 2768,
+   "bodyChars": 2513,
+   "files": [
+    [
+     "SKILL.md",
+     2768
+    ]
+   ]
+  },
+  {
+   "id": "getsentry_find-bugs",
+   "name": "find-bugs",
+   "vendor": "Sentry",
+   "repo": "getsentry/skills",
+   "sha": "d18b7aa8ba878354e5c348310230e652f7690f9c",
+   "path": "skills/find-bugs",
+   "category": "security",
+   "description": "Find bugs, security vulnerabilities, and code quality issues in local branch changes. Use when asked to review changes, find bugs, security review, or audit code on the current branch.",
+   "license": "Apache-2.0",
+   "icon": "sentry",
+   "brand": "#b58cf5",
+   "scripts": false,
+   "bytes": 2830,
+   "bodyChars": 2609,
+   "files": [
+    [
+     "SKILL.md",
+     2830
+    ]
+   ]
+  },
+  {
+   "id": "getsentry_security-review",
+   "name": "security-review",
+   "vendor": "Sentry",
+   "repo": "getsentry/skills",
+   "sha": "d18b7aa8ba878354e5c348310230e652f7690f9c",
+   "path": "skills/security-review",
+   "category": "security",
+   "description": "Security code review for vulnerabilities. Use when asked to \"security review\", \"find vulnerabilities\", \"check for security issues\", \"audit security\", \"OWASP review\", or review code for injection, XSS, authentication, authorization, cryptography issues. Provides systematic review with confidence-based reporting.",
+   "license": "Apache-2.0",
+   "icon": "sentry",
+   "brand": "#b58cf5",
+   "scripts": false,
+   "bytes": 218356,
+   "bodyChars": 11357,
+   "files": [
+    [
+     "LICENSE",
+     884
+    ],
+    [
+     "SKILL.md",
+     11771
+    ],
+    [
+     "infrastructure/docker.md",
+     9400
+    ],
+    [
+     "languages/javascript.md",
+     10028
+    ],
+    [
+     "languages/python.md",
+     9492
+    ],
+    [
+     "references/api-security.md",
+     12741
+    ],
+    [
+     "references/authentication.md",
+     9071
+    ],
+    [
+     "references/authorization.md",
+     10007
+    ],
+    [
+     "references/business-logic.md",
+     12660
+    ],
+    [
+     "references/cryptography.md",
+     8703
+    ],
+    [
+     "references/csrf.md",
+     9943
+    ],
+    [
+     "references/data-protection.md",
+     9565
+    ],
+    [
+     "references/deserialization.md",
+     10234
+    ],
+    [
+     "references/error-handling.md",
+     11632
+    ],
+    [
+     "references/file-security.md",
+     12344
+    ],
+    [
+     "references/injection.md",
+     6813
+    ],
+    [
+     "references/logging.md",
+     12012
+    ],
+    [
+     "references/misconfiguration.md",
+     10305
+    ],
+    [
+     "references/modern-threats.md",
+     13269
+    ],
+    [
+     "references/ssrf.md",
+     10734
+    ],
+    [
+     "references/supply-chain.md",
+     9149
+    ],
+    [
+     "references/xss.md",
+     7599
+    ]
+   ]
+  },
+  {
+   "id": "getsentry_gha-security-review",
+   "name": "gha-security-review",
+   "vendor": "Sentry",
+   "repo": "getsentry/skills",
+   "sha": "d18b7aa8ba878354e5c348310230e652f7690f9c",
+   "path": "skills/gha-security-review",
+   "category": "security",
+   "description": "GitHub Actions security review for workflow exploitation vulnerabilities. Use when asked to \"review GitHub Actions\", \"audit workflows\", \"check CI security\", \"GHA security\", \"workflow security review\", or review .github/workflows/ for pwn requests, expression injection, credential theft, and supply chain attacks. Exploitation-focused with concrete PoC scenarios.",
+   "license": "Apache-2.0",
+   "icon": "sentry",
+   "brand": "#b58cf5",
+   "scripts": false,
+   "bytes": 76272,
+   "bodyChars": 8466,
+   "files": [
+    [
+     "SKILL.md",
+     8966
+    ],
+    [
+     "references/ai-prompt-injection-via-ci.md",
+     5452
+    ],
+    [
+     "references/comment-triggered-commands.md",
+     5608
+    ],
+    [
+     "references/credential-escalation.md",
+     6659
+    ],
+    [
+     "references/expression-injection.md",
+     8644
+    ],
+    [
+     "references/permissions-and-secrets.md",
+     7917
+    ],
+    [
+     "references/pwn-request.md",
+     5902
+    ],
+    [
+     "references/real-world-attacks.md",
+     9468
+    ],
+    [
+     "references/runner-infrastructure.md",
+     8040
+    ],
+    [
+     "references/supply-chain.md",
+     9616
+    ]
+   ]
+  },
+  {
+   "id": "getsentry_iterate-pr",
+   "name": "iterate-pr",
+   "vendor": "Sentry",
+   "repo": "getsentry/skills",
+   "sha": "d18b7aa8ba878354e5c348310230e652f7690f9c",
+   "path": "skills/iterate-pr",
+   "category": "code",
+   "description": "Iterate on a PR until actionable CI passes and high/medium review feedback is addressed. Use for PR CI failures, review feedback, or green-check loops; do not wait for human approval, draft status, or merge gates.",
+   "license": "Apache-2.0",
+   "icon": "sentry",
+   "brand": "#b58cf5",
+   "scripts": true,
+   "bytes": 46635,
+   "bodyChars": 4753,
+   "files": [
+    [
+     "SKILL.md",
+     5036
+    ],
+    [
+     "SPEC.md",
+     5355
+    ],
+    [
+     "agents/openai.yaml",
+     292
+    ],
+    [
+     "scripts/fetch_pr_checks.py",
+     9901
+    ],
+    [
+     "scripts/fetch_pr_feedback.py",
+     14742
+    ],
+    [
+     "scripts/monitor_pr_checks.py",
+     6699
+    ],
+    [
+     "scripts/reply_to_thread.py",
+     4610
+    ]
+   ]
+  },
+  {
+   "id": "getsentry_skill-scanner",
+   "name": "skill-scanner",
+   "vendor": "Sentry",
+   "repo": "getsentry/skills",
+   "sha": "d18b7aa8ba878354e5c348310230e652f7690f9c",
+   "path": "skills/skill-scanner",
+   "category": "security",
+   "description": "Scan agent skills for security issues. Use when asked to \"scan a skill\", \"audit a skill\", \"review skill security\", \"check skill for injection\", \"validate SKILL.md\", or assess whether an agent skill is safe to install. Checks for prompt injection, malicious scripts, excessive permissions, secret exposure, and supply chain risks.",
+   "license": "Apache-2.0",
+   "icon": "sentry",
+   "brand": "#b58cf5",
+   "scripts": true,
+   "bytes": 56844,
+   "bodyChars": 9484,
+   "files": [
+    [
+     "SKILL.md",
+     9927
+    ],
+    [
+     "references/dangerous-code-patterns.md",
+     6487
+    ],
+    [
+     "references/permission-analysis.md",
+     4281
+    ],
+    [
+     "references/prompt-injection-patterns.md",
+     6525
+    ],
+    [
+     "scripts/scan_skill.py",
+     29624
+    ]
+   ]
+  },
+  {
+   "id": "getsentry_skill-writer",
+   "name": "skill-writer",
+   "vendor": "Sentry",
+   "repo": "getsentry/skills",
+   "sha": "d18b7aa8ba878354e5c348310230e652f7690f9c",
+   "path": "skills/skill-writer",
+   "category": "work",
+   "description": "Create, synthesize, and iteratively improve agent skills following the Agent Skills specification. Use when asked to \"create a skill\", \"write a skill\", \"synthesize sources into a skill\", \"improve a skill from positive/negative examples\", \"update a skill\", or \"maintain skill docs and registration\". Handles source capture, precision passes, authoring, registration, and validation.",
+   "license": "Apache-2.0",
+   "icon": "sentry",
+   "brand": "#b58cf5",
+   "scripts": true,
+   "bytes": 129480,
+   "bodyChars": 9596,
+   "files": [
+    [
+     "EVAL.md",
+     6545
+    ],
+    [
+     "SKILL.md",
+     10017
+    ],
+    [
+     "SOURCES.md",
+     19540
+    ],
+    [
+     "SPEC.md",
+     9960
+    ],
+    [
+     "evals/axis.config.json",
+     318
+    ],
+    [
+     "evals/scenarios/iteration-from-bad-output.json",
+     2911
+    ],
+    [
+     "evals/scenarios/reference-backed-integration.json",
+     1981
+    ],
+    [
+     "evals/scenarios/small-inline-workflow.json",
+     1956
+    ],
+    [
+     "references/authoring-path.md",
+     4772
+    ],
+    [
+     "references/claude-argument-substitutions.md",
+     624
+    ],
+    [
+     "references/claude-dynamic-context.md",
+     579
+    ],
+    [
+     "references/claude-frontmatter-invocation.md",
+     1962
+    ],
+    [
+     "references/claude-hook-backed.md",
+     913
+    ],
+    [
+     "references/claude-subagent-fork.md",
+     718
+    ],
+    [
+     "references/description-optimization.md",
+     1034
+    ],
+    [
+     "references/design-principles.md",
+     3736
+    ],
+    [
+     "references/example-documentation-skill.md",
+     2819
+    ],
+    [
+     "references/example-hook-backed-skill.md",
+     989
+    ],
+    [
+     "references/example-router-skill.md",
+     1039
+    ],
+    [
+     "references/example-subagent-fork-skill.md",
+     1079
+    ],
+    [
+     "references/example-workflow-process-skill.md",
+     2503
+    ],
+    [
+     "references/execution-shapes.md",
+     4695
+    ],
+    [
+     "references/iteration-evidence.md",
+     2676
+    ],
+    [
+     "references/iteration-path.md",
+     1505
+    ],
+    [
+     "references/layout-argument-driven-skill.md",
+     1056
+    ],
+    [
+     "references/layout-asset-template-skill.md",
+     809
+    ],
+    [
+     "references/layout-inline-skill.md",
+     731
+    ],
+    [
+     "references/layout-reference-backed-skill.md",
+     1256
+    ],
+    [
+     "references/layout-script-backed-workflow.md",
+     846
+    ],
+    [
+     "references/mode-selection.md",
+     3310
+    ],
+    [
+     "references/output-contracts.md",
+     1097
+    ],
+    [
+     "references/reference-architecture.md",
+     2537
+    ],
+    [
+     "references/registration-validation.md",
+     3600
+    ],
+    [
+     "references/skill-evals.md",
+     5771
+    ],
+    [
+     "references/source-adaptation.md",
+     2194
+    ],
+    [
+     "references/source-discovery.md",
+     2631
+    ],
+    [
+     "references/spec-template.md",
+     2213
+    ],
+    [
+     "references/structure-troubleshooting.md",
+     4073
+    ],
+    [
+     "references/synthesis-path.md",
+     3822
+    ],
+    [
+     "references/workflow-orchestrator-workers.md",
+     652
+    ],
+    [
+     "references/workflow-parallel.md",
+     540
+    ],
+    [
+     "references/workflow-plan-validate-execute.md",
+     678
+    ],
+    [
+     "references/workflow-prompt-chaining.md",
+     548
+    ],
+    [
+     "references/workflow-routing.md",
+     828
+    ],
+    [
+     "references/workflow-validation-loops.md",
+     658
+    ],
+    [
+     "scripts/quick_validate.py",
+     4759
+    ]
+   ]
+  },
+  {
+   "id": "getsentry_pr-writer",
+   "name": "pr-writer",
+   "vendor": "Sentry",
+   "repo": "getsentry/skills",
+   "sha": "d18b7aa8ba878354e5c348310230e652f7690f9c",
+   "path": "skills/pr-writer",
+   "category": "code",
+   "description": "Create or refresh reviewer-facing PR titles and descriptions. Use when opening a PR, updating its title or body, or preparing branch changes for review.",
+   "license": "Apache-2.0",
+   "icon": "sentry",
+   "brand": "#b58cf5",
+   "scripts": false,
+   "bytes": 21546,
+   "bodyChars": 5113,
+   "files": [
+    [
+     "EVAL.md",
+     1589
+    ],
+    [
+     "SKILL.md",
+     5302
+    ],
+    [
+     "SPEC.md",
+     12584
+    ],
+    [
+     "evals/axis.config.json",
+     318
+    ],
+    [
+     "evals/scenarios/concise-docs-pr.json",
+     1753
+    ]
+   ]
+  },
+  {
+   "id": "firecrawl_firecrawl",
+   "name": "firecrawl",
+   "vendor": "Firecrawl",
+   "repo": "firecrawl/skills",
+   "sha": "3a410054eb2a4bbb1545d0fd88d4cb282f64624f",
+   "path": "skills/core/firecrawl",
+   "category": "research",
+   "description": "Any live-web task via the Firecrawl CLI — including ordinary web research: searching the web, reading or extracting pages, gathering sources, discovering site URLs, bulk extraction, downloading a site, change alerts, or pages needing clicks/login — web only; local files route to firecrawl-parse. For papers use firecrawl-research-index; for library, API, error, or bug questions use firecrawl-developer-index.",
+   "license": "ISC",
+   "icon": "firecrawl",
+   "brand": "#ff6a3d",
+   "scripts": false,
+   "bytes": 15049,
+   "bodyChars": 10227,
+   "files": [
+    [
+     "SKILL.md",
+     10765
+    ],
+    [
+     "rules/install.md",
+     2889
+    ],
+    [
+     "rules/security.md",
+     1395
+    ]
+   ]
+  },
+  {
+   "id": "firecrawl_firecrawl-deep-research",
+   "name": "firecrawl-deep-research",
+   "vendor": "Firecrawl",
+   "repo": "firecrawl/skills",
+   "sha": "3a410054eb2a4bbb1545d0fd88d4cb282f64624f",
+   "path": "skills/workflows/firecrawl-deep-research",
+   "category": "research",
+   "description": "Produce an intensive, cited analytical report: executive summary, multi-angle findings, contrarian views, open questions, and full sources. Use only when the user needs rigorous synthesis of a complex topic (scientific, technical, policy, or market-analytical) that cannot be answered with a short search, and wants a formal written report, not a recommendation list. Do not use for product picks, top-N lists, quick lookups, or routine \"find out about X\" tasks. If the request does not clearly need this kind of report, do not use this skill. Do not use for a literature review over published papers. This skill collects evidence from the open web. A request for the literature on a biomedical, clinical, life-science, or other scientific topic — papers, studies, trials, preprints — belongs to firecrawl-research-papers, which queries Firecrawl's paper index (PubMed, bioRxiv, medRxiv, arXiv) instead of searching websites.",
+   "license": "ISC",
+   "icon": "firecrawl",
+   "brand": "#ff6a3d",
+   "scripts": false,
+   "bytes": 5595,
+   "bodyChars": 4281,
+   "files": [
+    [
+     "SKILL.md",
+     5595
+    ]
+   ]
+  },
+  {
+   "id": "firecrawl_firecrawl-competitive-intel",
+   "name": "firecrawl-competitive-intel",
+   "vendor": "Firecrawl",
+   "repo": "firecrawl/skills",
+   "sha": "3a410054eb2a4bbb1545d0fd88d4cb282f64624f",
+   "path": "skills/workflows/firecrawl-competitive-intel",
+   "category": "research",
+   "description": "Monitor competitor pricing, features, changelogs, dashboards, and product changes with Firecrawl. Use for recurring competitive intelligence, pricing tier extraction, feature change tracking, or structured competitor alerts.",
+   "license": "ISC",
+   "icon": "firecrawl",
+   "brand": "#ff6a3d",
+   "scripts": false,
+   "bytes": 2413,
+   "bodyChars": 1854,
+   "files": [
+    [
+     "SKILL.md",
+     2413
+    ]
+   ]
+  },
+  {
+   "id": "firecrawl_firecrawl-market-research",
+   "name": "firecrawl-market-research",
+   "vendor": "Firecrawl",
+   "repo": "firecrawl/skills",
+   "sha": "3a410054eb2a4bbb1545d0fd88d4cb282f64624f",
+   "path": "skills/workflows/firecrawl-market-research",
+   "category": "research",
+   "description": "Extract market, financial, earnings, industry, and company metrics with Firecrawl. Use when the user asks for market research, industry trends, public company data, financial comparisons, earnings research, or structured market reports.",
+   "license": "ISC",
+   "icon": "firecrawl",
+   "brand": "#ff6a3d",
+   "scripts": false,
+   "bytes": 2235,
+   "bodyChars": 1666,
+   "files": [
+    [
+     "SKILL.md",
+     2235
+    ]
+   ]
+  },
+  {
+   "id": "firecrawl_firecrawl-seo-audit",
+   "name": "firecrawl-seo-audit",
+   "vendor": "Firecrawl",
+   "repo": "firecrawl/skills",
+   "sha": "3a410054eb2a4bbb1545d0fd88d4cb282f64624f",
+   "path": "skills/workflows/firecrawl-seo-audit",
+   "category": "research",
+   "description": "Audit a website's SEO with Firecrawl. Use when the user asks for an SEO audit, metadata and heading review, sitemap/site-structure analysis, keyword opportunities, competitor SERP comparison, or prioritized search optimization recommendations.",
+   "license": "ISC",
+   "icon": "firecrawl",
+   "brand": "#ff6a3d",
+   "scripts": false,
+   "bytes": 2591,
+   "bodyChars": 2021,
+   "files": [
+    [
+     "SKILL.md",
+     2591
+    ]
+   ]
+  },
+  {
+   "id": "firecrawl_firecrawl-lead-research",
+   "name": "firecrawl-lead-research",
+   "vendor": "Firecrawl",
+   "repo": "firecrawl/skills",
+   "sha": "3a410054eb2a4bbb1545d0fd88d4cb282f64624f",
+   "path": "skills/workflows/firecrawl-lead-research",
+   "category": "research",
+   "description": "Produce pre-meeting lead intelligence briefs with Firecrawl. Use when the user needs company research, person research, recent news, talking points, pain points, or outreach preparation before a sales call, partnership meeting, investor conversation, or customer interview.",
+   "license": "ISC",
+   "icon": "firecrawl",
+   "brand": "#ff6a3d",
+   "scripts": false,
+   "bytes": 2317,
+   "bodyChars": 1713,
+   "files": [
+    [
+     "SKILL.md",
+     2317
+    ]
+   ]
+  },
+  {
+   "id": "resend-skills_email-best-practices",
+   "name": "email-best-practices",
+   "vendor": "Resend",
+   "repo": "resend/resend-skills",
+   "sha": "edbfece3f4029ff8258ac74e000ec8282377f317",
+   "path": "skills/email-best-practices",
+   "category": "business",
+   "description": "Use when building email features, emails going to spam, high bounce rates, setting up SPF/DKIM/DMARC authentication, implementing email capture, ensuring compliance (CAN-SPAM, GDPR, CASL), handling webhooks, retry logic, making emails accessible (alt text, headings, contrast, screen readers), or deciding transactional vs marketing.",
+   "license": "MIT",
+   "icon": "resend",
+   "brand": "#e8e6df",
+   "scripts": false,
+   "bytes": 60373,
+   "bodyChars": 3174,
+   "files": [
+    [
+     "SKILL.md",
+     4025
+    ],
+    [
+     "references/accessibility.md",
+     9546
+    ],
+    [
+     "references/compliance.md",
+     4236
+    ],
+    [
+     "references/deliverability.md",
+     3420
+    ],
+    [
+     "references/email-capture.md",
+     3468
+    ],
+    [
+     "references/email-types.md",
+     5815
+    ],
+    [
+     "references/list-management.md",
+     4608
+    ],
+    [
+     "references/marketing-emails.md",
+     3313
+    ],
+    [
+     "references/sending-reliability.md",
+     4764
+    ],
+    [
+     "references/transactional-email-catalog.md",
+     10338
+    ],
+    [
+     "references/transactional-emails.md",
+     2489
+    ],
+    [
+     "references/webhooks-events.md",
+     4351
+    ]
+   ]
+  },
+  {
+   "id": "resend-skills_react-email",
+   "name": "react-email",
+   "vendor": "Resend",
+   "repo": "resend/resend-skills",
+   "sha": "edbfece3f4029ff8258ac74e000ec8282377f317",
+   "path": "skills/react-email",
+   "category": "design",
+   "description": "Use when building HTML email templates with React components, adding a visual email editor to an application using the React Email visual editor, rendering emails to HTML, or sending emails with Resend. Covers welcome emails, password resets, notifications, order confirmations, newsletters, transactional emails, and the embeddable email editor component.",
+   "license": "MIT",
+   "icon": "resend",
+   "brand": "#e8e6df",
+   "scripts": false,
+   "bytes": 86976,
+   "bodyChars": 13602,
+   "files": [
+    [
+     "SKILL.md",
+     14424
+    ],
+    [
+     "references/COMPONENTS.md",
+     11992
+    ],
+    [
+     "references/EDITOR.md",
+     11612
+    ],
+    [
+     "references/I18N.md",
+     14698
+    ],
+    [
+     "references/PATTERNS.md",
+     22633
+    ],
+    [
+     "references/SENDING.md",
+     3798
+    ],
+    [
+     "references/STYLING.md",
+     7819
+    ]
+   ]
+  },
+  {
+   "id": "makenotion_notion-cli",
+   "name": "notion-cli",
+   "vendor": "Notion",
+   "repo": "makenotion/skills",
+   "sha": "10e976aa591995fd60c75ef13beba1a8aa827fcc",
+   "path": "skills/notion-cli",
+   "category": "work",
+   "description": "Use the Notion CLI (`ntn`) to interact with the Notion API, manage workers, and upload files. Use when the user asks to \"call the Notion API\", \"deploy a worker\", \"upload a file to Notion\", \"create a page\", \"query a database\", or any task involving the `ntn` command.",
+   "license": "MIT",
+   "icon": "notion",
+   "brand": "#e8e6df",
+   "scripts": false,
+   "bytes": 4103,
+   "bodyChars": 2700,
+   "files": [
+    [
+     "LICENSE.md",
+     1074
+    ],
+    [
+     "SKILL.md",
+     3029
+    ]
+   ]
+  },
+  {
+   "id": "makenotion_notion-apps",
+   "name": "notion-apps",
+   "vendor": "Notion",
+   "repo": "makenotion/skills",
+   "sha": "10e976aa591995fd60c75ef13beba1a8aa827fcc",
+   "path": "skills/notion-apps",
+   "category": "work",
+   "description": "Set up and scaffold Notion Apps with the Notion Apps SDK and `ntn`; use when starting a Notion App project.",
+   "license": "MIT",
+   "icon": "notion",
+   "brand": "#e8e6df",
+   "scripts": false,
+   "bytes": 1821,
+   "bodyChars": 1575,
+   "files": [
+    [
+     "SKILL.md",
+     1721
+    ],
+    [
+     "agents/openai.yaml",
+     100
+    ]
+   ]
+  },
+  {
+   "id": "huggingface_hf-cli",
+   "name": "hf-cli",
+   "vendor": "Hugging Face",
+   "repo": "huggingface/skills",
+   "sha": "80f9fa530e46f4ae642fcb9e1725bad0e1979395",
+   "path": "skills/hf-cli",
+   "category": "data",
+   "description": "Hugging Face Hub CLI (`hf`) for downloading, uploading, and managing models, datasets, spaces, buckets, repos, papers, jobs, and more on the Hugging Face Hub. Use when: handling authentication; managing local cache; managing Hugging Face Buckets; running or scheduling jobs on Hugging Face infrastructure; managing Hugging Face repos; discussions and pull requests; browsing models, datasets and spaces; reading, searching, or browsing academic papers; managing collections; querying datasets; configuring spaces; setting up webhooks; or deploying and managing HF Inference Endpoints. Make sure to use this skill whenever the user mentions 'hf', 'huggingface', 'Hugging Face', 'huggingface-cli', or 'hugging face cli', or wants to do anything related to the Hugging Face ecosystem and to AI and ML in general. Also use for cloud storage needs like training checkpoints, data pipelines, or agent traces. Use even if the user doesn't explicitly ask for a CLI command. Replaces the deprecated `huggingface-cli`.",
+   "license": "Apache-2.0",
+   "icon": "huggingface",
+   "brand": "#ffcc4d",
+   "scripts": false,
+   "bytes": 32933,
+   "bodyChars": 31535,
+   "files": [
+    [
+     "SKILL.md",
+     32933
+    ]
+   ]
+  },
+  {
+   "id": "huggingface_huggingface-datasets",
+   "name": "huggingface-datasets",
+   "vendor": "Hugging Face",
+   "repo": "huggingface/skills",
+   "sha": "80f9fa530e46f4ae642fcb9e1725bad0e1979395",
+   "path": "skills/huggingface-datasets",
+   "category": "data",
+   "description": "Use this skill for Hugging Face Dataset Viewer API workflows that fetch subset/split metadata, paginate rows, search text, apply filters, download parquet URLs, and read size or statistics.",
+   "license": "Apache-2.0",
+   "icon": "huggingface",
+   "brand": "#ffcc4d",
+   "scripts": false,
+   "bytes": 4671,
+   "bodyChars": 4431,
+   "files": [
+    [
+     "SKILL.md",
+     4671
+    ]
+   ]
+  },
+  {
+   "id": "huggingface_huggingface-papers",
+   "name": "huggingface-papers",
+   "vendor": "Hugging Face",
+   "repo": "huggingface/skills",
+   "sha": "80f9fa530e46f4ae642fcb9e1725bad0e1979395",
+   "path": "skills/huggingface-papers",
+   "category": "research",
+   "description": "Look up and read Hugging Face paper pages in markdown, and use the papers API for structured metadata such as authors, linked models/datasets/spaces, Github repo and project page. Use when the user shares a Hugging Face paper page URL, an arXiv URL or ID, or asks to summarize, explain, or analyze an AI research paper.",
+   "license": "Apache-2.0",
+   "icon": "huggingface",
+   "brand": "#ffcc4d",
+   "scripts": false,
+   "bytes": 9348,
+   "bodyChars": 8983,
+   "files": [
+    [
+     "SKILL.md",
+     9348
+    ]
+   ]
+  },
+  {
+   "id": "huggingface_huggingface-spaces",
+   "name": "huggingface-spaces",
+   "vendor": "Hugging Face",
+   "repo": "huggingface/skills",
+   "sha": "80f9fa530e46f4ae642fcb9e1725bad0e1979395",
+   "path": "skills/huggingface-spaces",
+   "category": "code",
+   "description": "Build, deploy, and maintain applications on Hugging Face Spaces — Gradio / Docker / Static SDKs, ZeroGPU and dedicated hardware, model loading, debugging, buckets, inference providers, community grants. Use whenever the user asks to create or host an app on Hugging Face, port code onto ZeroGPU, fix a Space that won't build or run, or otherwise work with `hf spaces …`, `@spaces.GPU`, Space README frontmatter, or the `spaces` Python package.",
+   "license": "Apache-2.0",
+   "icon": "huggingface",
+   "brand": "#ffcc4d",
+   "scripts": false,
+   "bytes": 152457,
+   "bodyChars": 17299,
+   "files": [
+    [
+     "README.md",
+     412
+    ],
+    [
+     "SKILL.md",
+     17903
+    ],
+    [
+     "references/3d-cuda-extensions.md",
+     9342
+    ],
+    [
+     "references/3d-generation.md",
+     8760
+    ],
+    [
+     "references/3d-gsplat.md",
+     7376
+    ],
+    [
+     "references/3d-models.md",
+     20120
+    ],
+    [
+     "references/3d-outputs.md",
+     9553
+    ],
+    [
+     "references/buckets.md",
+     4384
+    ],
+    [
+     "references/debugging.md",
+     11562
+    ],
+    [
+     "references/gradio.md",
+     9423
+    ],
+    [
+     "references/grants.md",
+     3203
+    ],
+    [
+     "references/inference-providers.md",
+     3873
+    ],
+    [
+     "references/known-errors.md",
+     13625
+    ],
+    [
+     "references/requirements.md",
+     11520
+    ],
+    [
+     "references/zerogpu.md",
+     21401
+    ]
+   ]
+  },
+  {
+   "id": "huggingface_huggingface-llm-trainer",
+   "name": "huggingface-llm-trainer",
+   "vendor": "Hugging Face",
+   "repo": "huggingface/skills",
+   "sha": "80f9fa530e46f4ae642fcb9e1725bad0e1979395",
+   "path": "skills/huggingface-llm-trainer",
+   "category": "data",
+   "description": "Train or fine-tune language and vision models using TRL (Transformer Reinforcement Learning) or Unsloth with Hugging Face Jobs infrastructure. Covers SFT, DPO, GRPO and reward modeling training methods, plus GGUF conversion for local deployment. Includes guidance on the TRL Jobs package, UV scripts with PEP 723 format, dataset preparation and validation, hardware selection, cost estimation, Trackio monitoring, Hub authentication, model selection/leaderboards and model persistence. Use for tasks involving cloud GPU training, GGUF conversion, or when users mention training on Hugging Face Jobs without local GPU setup.",
+   "license": "Apache-2.0",
+   "icon": "huggingface",
+   "brand": "#ffcc4d",
+   "scripts": true,
+   "bytes": 186439,
+   "bodyChars": 27949,
+   "files": [
+    [
+     "SKILL.md",
+     28780
+    ],
+    [
+     "references/gguf_conversion.md",
+     9854
+    ],
+    [
+     "references/hardware_guide.md",
+     6778
+    ],
+    [
+     "references/hub_saving.md",
+     8501
+    ],
+    [
+     "references/local_training_macos.md",
+     8324
+    ],
+    [
+     "references/reliability_principles.md",
+     10867
+    ],
+    [
+     "references/trackio_guide.md",
+     6400
+    ],
+    [
+     "references/training_methods.md",
+     5011
+    ],
+    [
+     "references/training_patterns.md",
+     6127
+    ],
+    [
+     "references/troubleshooting.md",
+     8858
+    ],
+    [
+     "references/unsloth.md",
+     8005
+    ],
+    [
+     "scripts/convert_to_gguf.py",
+     12612
+    ],
+    [
+     "scripts/dataset_inspector.py",
+     15683
+    ],
+    [
+     "scripts/estimate_cost.py",
+     4854
+    ],
+    [
+     "scripts/hf_benchmarks.py",
+     20086
+    ],
+    [
+     "scripts/train_dpo_example.py",
+     3118
+    ],
+    [
+     "scripts/train_grpo_example.py",
+     2384
+    ],
+    [
+     "scripts/train_sft_example.py",
+     3343
+    ],
+    [
+     "scripts/unsloth_sft_example.py",
+     16854
+    ]
+   ]
+  },
+  {
+   "id": "huggingface_transformers-js",
+   "name": "transformers-js",
+   "vendor": "Hugging Face",
+   "repo": "huggingface/skills",
+   "sha": "80f9fa530e46f4ae642fcb9e1725bad0e1979395",
+   "path": "skills/transformers-js",
+   "category": "code",
+   "description": "Use Transformers.js to run state-of-the-art machine learning models directly in JavaScript/TypeScript. Supports NLP (text classification, translation, summarization), computer vision (image classification, object detection), audio (speech recognition, audio classification), and multimodal tasks. Works in browsers and server-side runtimes (Node.js, Bun, Deno) with WebGPU/WASM using pre-trained models from Hugging Face Hub.",
+   "license": "Apache-2.0",
+   "icon": "huggingface",
+   "brand": "#ffcc4d",
+   "scripts": false,
+   "bytes": 95308,
+   "bodyChars": 23981,
+   "files": [
+    [
+     "SKILL.md",
+     24911
+    ],
+    [
+     "references/CACHE.md",
+     9195
+    ],
+    [
+     "references/CONFIGURATION.md",
+     11043
+    ],
+    [
+     "references/EXAMPLES.md",
+     15691
+    ],
+    [
+     "references/MODEL_ARCHITECTURES.md",
+     5590
+    ],
+    [
+     "references/MODEL_REGISTRY.md",
+     6052
+    ],
+    [
+     "references/PIPELINE_OPTIONS.md",
+     14950
+    ],
+    [
+     "references/TEXT_GENERATION.md",
+     7876
+    ]
+   ]
+  },
+  {
+   "id": "prisma_prisma-client-api",
+   "name": "prisma-client-api",
+   "vendor": "Prisma",
+   "repo": "prisma/skills",
+   "sha": "82b88dd82801e958706f8265c29c910e6f0ebfa4",
+   "path": "prisma-client-api",
+   "category": "data",
+   "description": "Prisma Client API reference covering model queries, filters, operators, and client methods. Use when writing database queries, using CRUD operations, filtering data, or configuring Prisma Client. Triggers on \"prisma query\", \"findMany\", \"create\", \"update\", \"delete\", \"$transaction\".",
+   "license": "MIT",
+   "icon": "prisma",
+   "brand": "#e8e6df",
+   "scripts": false,
+   "bytes": 40178,
+   "bodyChars": 5961,
+   "files": [
+    [
+     "SKILL.md",
+     6346
+    ],
+    [
+     "references/client-methods.md",
+     4027
+    ],
+    [
+     "references/constructor.md",
+     4909
+    ],
+    [
+     "references/filters.md",
+     3458
+    ],
+    [
+     "references/model-queries.md",
+     4770
+    ],
+    [
+     "references/query-options.md",
+     4047
+    ],
+    [
+     "references/raw-queries.md",
+     4362
+    ],
+    [
+     "references/relations.md",
+     4435
+    ],
+    [
+     "references/transactions.md",
+     3824
+    ]
+   ]
+  },
+  {
+   "id": "prisma_prisma-database-setup",
+   "name": "prisma-database-setup",
+   "vendor": "Prisma",
+   "repo": "prisma/skills",
+   "sha": "82b88dd82801e958706f8265c29c910e6f0ebfa4",
+   "path": "prisma-database-setup",
+   "category": "data",
+   "description": "Deprecated compatibility name for prisma-orm-setup. Use only when a user or existing integration explicitly invokes prisma-database-setup; otherwise select prisma-orm-setup.",
+   "license": "MIT",
+   "icon": "prisma",
+   "brand": "#e8e6df",
+   "scripts": false,
+   "bytes": 704,
+   "bodyChars": 423,
+   "files": [
+    [
+     "SKILL.md",
+     704
+    ]
+   ]
+  },
+  {
+   "id": "prisma_prisma-cli",
+   "name": "prisma-cli",
+   "vendor": "Prisma",
+   "repo": "prisma/skills",
+   "sha": "82b88dd82801e958706f8265c29c910e6f0ebfa4",
+   "path": "prisma-cli",
+   "category": "data",
+   "description": "Prisma ORM 7 CLI reference for existing Prisma 7 applications or explicitly selected Prisma 7 workflows. Covers prisma init, generate, migrate, db, dev, studio, and mcp. For setup, connection repair, or Prisma 8, use prisma-orm-setup; not the Prisma Platform CLI.",
+   "license": "MIT",
+   "icon": "prisma",
+   "brand": "#e8e6df",
+   "scripts": false,
+   "bytes": 50075,
+   "bodyChars": 7148,
+   "files": [
+    [
+     "SKILL.md",
+     7508
+    ],
+    [
+     "references/agent-safety.md",
+     1084
+    ],
+    [
+     "references/complete.md",
+     652
+    ],
+    [
+     "references/db-execute.md",
+     1836
+    ],
+    [
+     "references/db-pull.md",
+     3574
+    ],
+    [
+     "references/db-push.md",
+     2990
+    ],
+    [
+     "references/db-seed.md",
+     3323
+    ],
+    [
+     "references/debug.md",
+     1062
+    ],
+    [
+     "references/dev.md",
+     2662
+    ],
+    [
+     "references/format.md",
+     1061
+    ],
+    [
+     "references/generate.md",
+     3508
+    ],
+    [
+     "references/init.md",
+     3245
+    ],
+    [
+     "references/mcp.md",
+     1236
+    ],
+    [
+     "references/migrate-deploy.md",
+     2636
+    ],
+    [
+     "references/migrate-dev.md",
+     3136
+    ],
+    [
+     "references/migrate-diff.md",
+     2088
+    ],
+    [
+     "references/migrate-reset.md",
+     1732
+    ],
+    [
+     "references/migrate-resolve.md",
+     1671
+    ],
+    [
+     "references/migrate-status.md",
+     1520
+    ],
+    [
+     "references/studio.md",
+     2668
+    ],
+    [
+     "references/validate.md",
+     883
+    ]
+   ]
+  },
+  {
+   "id": "neondatabase_neon-postgres",
+   "name": "neon-postgres",
+   "vendor": "Neon",
+   "repo": "neondatabase/agent-skills",
+   "sha": "80164a28443aca7c82ac1a70aed836950d6c29ea",
+   "path": "skills/neon-postgres",
+   "category": "data",
+   "description": "Guides and best practices for working with Lakebase Postgres on Neon: connections, pooled vs direct, schema migrations, branching, autoscaling, scale-to-zero, instant restore, read replicas, IP allow lists, logical replication, and Lakebase Search. Use when the work is an existing DATABASE_URL, SQL, schema, inspect, or search. New backends, Auth, files, Functions, and LLM calls go to the parent `neon` skill. Also use for \"@neondatabase/serverless\", \"@neondatabase/neon-js\", \"neon inspect db\", \"semantic search\", \"vector search\", \"full-text search\", \"BM25\", or \"hybrid search\".",
+   "license": "Apache-2.0",
+   "icon": "neon",
+   "brand": "#00e599",
+   "scripts": false,
+   "bytes": 37907,
+   "bodyChars": 15828,
+   "files": [
+    [
+     "SKILL.md",
+     16595
+    ],
+    [
+     "references/full-text-search.md",
+     3901
+    ],
+    [
+     "references/hybrid-search.md",
+     4451
+    ],
+    [
+     "references/lakebase-search-drizzle.md",
+     6716
+    ],
+    [
+     "references/vector-search.md",
+     6244
+    ]
+   ]
+  },
+  {
+   "id": "neondatabase_neon-postgres-branches",
+   "name": "neon-postgres-branches",
+   "vendor": "Neon",
+   "repo": "neondatabase/agent-skills",
+   "sha": "80164a28443aca7c82ac1a70aed836950d6c29ea",
+   "path": "skills/neon-postgres-branches",
+   "category": "data",
+   "description": "Choose and create the right Neon branch type for testing and development. Use when users ask about Neon branching, migration testing with real data, isolated test environments, schema-only branch workflows for sensitive data, resetting a branch from its parent, branch expiration and CI/CD branch lifecycles, or branch creation via Neon CLI or Neon MCP. Triggers include \"Neon branch\", \"test migrations safely\", \"branch production data\", \"schema-only branch\", \"reset branch\", \"branch per PR\" and \"sensitive data testing\".",
+   "license": "Apache-2.0",
+   "icon": "neon",
+   "brand": "#00e599",
+   "scripts": false,
+   "bytes": 13663,
+   "bodyChars": 12937,
+   "files": [
+    [
+     "SKILL.md",
+     13663
+    ]
+   ]
+  },
+  {
+   "id": "openai_playwright",
+   "name": "playwright",
+   "vendor": "OpenAI",
+   "repo": "openai/skills",
+   "sha": "49f948faa9258a0c61caceaf225e179651397431",
+   "path": "skills/.curated/playwright",
+   "category": "code",
+   "description": "Use when the task requires automating a real browser from the terminal (navigation, form filling, snapshots, screenshots, data extraction, UI-flow debugging) via `playwright-cli` or the bundled wrapper script.",
+   "license": "see the repository",
+   "icon": "openai",
+   "brand": "#e8e6df",
+   "scripts": true,
+   "bytes": 22850,
+   "bodyChars": 3520,
+   "files": [
+    [
+     "LICENSE.txt",
+     11552
+    ],
+    [
+     "NOTICE.txt",
+     403
+    ],
+    [
+     "SKILL.md",
+     3771
+    ],
+    [
+     "agents/openai.yaml",
+     313
+    ],
+    [
+     "assets/playwright-small.svg",
+     828
+    ],
+    [
+     "assets/playwright.png",
+     1730
+    ],
+    [
+     "references/cli.md",
+     1863
+    ],
+    [
+     "references/workflows.md",
+     1864
+    ],
+    [
+     "scripts/playwright_cli.sh",
+     526
+    ]
+   ]
+  },
+  {
+   "id": "openai_gh-fix-ci",
+   "name": "gh-fix-ci",
+   "vendor": "OpenAI",
+   "repo": "openai/skills",
+   "sha": "49f948faa9258a0c61caceaf225e179651397431",
+   "path": "skills/.curated/gh-fix-ci",
+   "category": "code",
+   "description": "Use when a user asks to debug or fix failing GitHub PR checks that run in GitHub Actions; use `gh` to inspect checks and logs, summarize failure context, draft a fix plan, and implement only after explicit approval. Treat external providers (for example Buildkite) as out of scope and report only the details URL.",
+   "license": "see the repository",
+   "icon": "openai",
+   "brand": "#e8e6df",
+   "scripts": true,
+   "bytes": 32642,
+   "bodyChars": 3297,
+   "files": [
+    [
+     "LICENSE.txt",
+     10776
+    ],
+    [
+     "SKILL.md",
+     3651
+    ],
+    [
+     "agents/openai.yaml",
+     302
+    ],
+    [
+     "assets/github-small.svg",
+     853
+    ],
+    [
+     "assets/github.png",
+     1838
+    ],
+    [
+     "scripts/inspect_pr_checks.py",
+     15222
+    ]
+   ]
+  },
+  {
+   "id": "openai_security-best-practices",
+   "name": "security-best-practices",
+   "vendor": "OpenAI",
+   "repo": "openai/skills",
+   "sha": "49f948faa9258a0c61caceaf225e179651397431",
+   "path": "skills/.curated/security-best-practices",
+   "category": "security",
+   "description": "Perform language and framework specific security best-practice reviews and suggest improvements. Trigger only when the user explicitly requests security best practices guidance, a security review/report, or secure-by-default coding help. Trigger only for supported languages (python, javascript/typescript, go). Do not trigger for general code review, debugging, or non-security tasks.",
+   "license": "see the repository",
+   "icon": "openai",
+   "brand": "#e8e6df",
+   "scripts": false,
+   "bytes": 411749,
+   "bodyChars": 8172,
+   "files": [
+    [
+     "LICENSE.txt",
+     10776
+    ],
+    [
+     "SKILL.md",
+     8612
+    ],
+    [
+     "agents/openai.yaml",
+     237
+    ],
+    [
+     "references/golang-general-backend-security.md",
+     38659
+    ],
+    [
+     "references/javascript-express-web-server-security.md",
+     49357
+    ],
+    [
+     "references/javascript-general-web-frontend-security.md",
+     38638
+    ],
+    [
+     "references/javascript-jquery-web-frontend-security.md",
+     33581
+    ],
+    [
+     "references/javascript-typescript-nextjs-web-server-security.md",
+     43423
+    ],
+    [
+     "references/javascript-typescript-react-web-frontend-security.md",
+     41686
+    ],
+    [
+     "references/javascript-typescript-vue-web-frontend-security.md",
+     31445
+    ],
+    [
+     "references/python-django-web-server-security.md",
+     38661
+    ],
+    [
+     "references/python-fastapi-web-server-security.md",
+     44926
+    ],
+    [
+     "references/python-flask-web-server-security.md",
+     31748
+    ]
+   ]
+  },
+  {
+   "id": "openai_security-threat-model",
+   "name": "security-threat-model",
+   "vendor": "OpenAI",
+   "repo": "openai/skills",
+   "sha": "49f948faa9258a0c61caceaf225e179651397431",
+   "path": "skills/.curated/security-threat-model",
+   "category": "security",
+   "description": "Repository-grounded threat modeling that enumerates trust boundaries, assets, attacker capabilities, abuse paths, and mitigations, and writes a concise Markdown threat model. Trigger only when the user explicitly asks to threat model a codebase or path, enumerate threats/abuse paths, or perform AppSec threat modeling. Do not trigger for general architecture summaries, code review, or non-security design work.",
+   "license": "see the repository",
+   "icon": "openai",
+   "brand": "#e8e6df",
+   "scripts": false,
+   "bytes": 30913,
+   "bodyChars": 5092,
+   "files": [
+    [
+     "LICENSE.txt",
+     10776
+    ],
+    [
+     "SKILL.md",
+     5561
+    ],
+    [
+     "agents/openai.yaml",
+     254
+    ],
+    [
+     "references/prompt-template.md",
+     12642
+    ],
+    [
+     "references/security-controls-and-assets.md",
+     1680
+    ]
+   ]
+  },
+  {
+   "id": "openai_transcribe",
+   "name": "transcribe",
+   "vendor": "OpenAI",
+   "repo": "openai/skills",
+   "sha": "49f948faa9258a0c61caceaf225e179651397431",
+   "path": "skills/.curated/transcribe",
+   "category": "video",
+   "description": "Transcribe audio files to text with optional diarization and known-speaker hints. Use when a user asks to transcribe speech from audio/video, extract text from recordings, or label speakers in interviews or meetings.",
+   "license": "see the repository",
+   "icon": "openai",
+   "brand": "#e8e6df",
+   "scripts": true,
+   "bytes": 25203,
+   "bodyChars": 2576,
+   "files": [
+    [
+     "LICENSE.txt",
+     10776
+    ],
+    [
+     "SKILL.md",
+     2834
+    ],
+    [
+     "agents/openai.yaml",
+     414
+    ],
+    [
+     "assets/transcribe-small.svg",
+     750
+    ],
+    [
+     "assets/transcribe.png",
+     1288
+    ],
+    [
+     "references/api.md",
+     457
+    ],
+    [
+     "scripts/transcribe_diarize.py",
+     8684
+    ]
+   ]
+  },
+  {
+   "id": "openai_pdf",
+   "name": "pdf",
+   "vendor": "OpenAI",
+   "repo": "openai/skills",
+   "sha": "49f948faa9258a0c61caceaf225e179651397431",
+   "path": "skills/.curated/pdf",
+   "category": "work",
+   "description": "Use when tasks involve reading, creating, or reviewing PDF files where rendering and layout matter; prefer visual checks by rendering pages (Poppler) and use Python tools such as `reportlab`, `pdfplumber`, and `pypdf` for generation and extraction.",
+   "license": "Apache-2.0",
+   "icon": "openai",
+   "brand": "#e8e6df",
+   "scripts": false,
+   "bytes": 14824,
+   "bodyChars": 2234,
+   "files": [
+    [
+     "LICENSE.txt",
+     10776
+    ],
+    [
+     "SKILL.md",
+     2517
+    ],
+    [
+     "agents/openai.yaml",
+     219
+    ],
+    [
+     "assets/pdf.png",
+     1312
+    ]
+   ]
+  },
+  {
+   "id": "openai_jupyter-notebook",
+   "name": "jupyter-notebook",
+   "vendor": "OpenAI",
+   "repo": "openai/skills",
+   "sha": "49f948faa9258a0c61caceaf225e179651397431",
+   "path": "skills/.curated/jupyter-notebook",
+   "category": "data",
+   "description": "Use when the user asks to create, scaffold, or edit Jupyter notebooks (`.ipynb`) for experiments, explorations, or tutorials; prefer the bundled templates and run the helper script `new_notebook.py` to generate a clean starting notebook.",
+   "license": "see the repository",
+   "icon": "openai",
+   "brand": "#e8e6df",
+   "scripts": true,
+   "bytes": 30864,
+   "bodyChars": 3869,
+   "files": [
+    [
+     "LICENSE.txt",
+     10776
+    ],
+    [
+     "SKILL.md",
+     4154
+    ],
+    [
+     "agents/openai.yaml",
+     325
+    ],
+    [
+     "assets/experiment-template.ipynb",
+     2570
+    ],
+    [
+     "assets/jupyter-small.svg",
+     1043
+    ],
+    [
+     "assets/jupyter.png",
+     2713
+    ],
+    [
+     "assets/tutorial-template.ipynb",
+     2490
+    ],
+    [
+     "references/experiment-patterns.md",
+     699
+    ],
+    [
+     "references/notebook-structure.md",
+     751
+    ],
+    [
+     "references/quality-checklist.md",
+     572
+    ],
+    [
+     "references/tutorial-patterns.md",
+     685
+    ],
+    [
+     "scripts/new_notebook.py",
+     4086
+    ]
+   ]
+  }
+ ]
+}

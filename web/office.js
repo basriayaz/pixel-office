@@ -1264,15 +1264,16 @@ function skyColors() {
   return { top: "#3d4a8a", bot: "#f0834d", stars: false, sun };
 }
 
-// How dark the office is, 0 (daylight) .. 0.32 (deep night); ramps over dawn and dusk.
+// How dark the office is, 0 (daylight) .. NIGHT_MAX (deep night); ramps over dawn and dusk. (A lighter night than before: the office stays readable.)
+const NIGHT_MAX = 0.18;
 function nightDarkness() {
   const h = poHour();
-  if (h >= 21 || h < 5) return 0.32;
-  if (h < 7) return 0.32 * (7 - h) / 2;
-  if (h >= 19) return 0.32 * (h - 19) / 2;
+  if (h >= 21 || h < 5) return NIGHT_MAX;
+  if (h < 7) return NIGHT_MAX * (7 - h) / 2;
+  if (h >= 19) return NIGHT_MAX * (h - 19) / 2;
   return 0;
 }
-const isNight = () => nightDarkness() >= 0.25;
+const isNight = () => nightDarkness() >= NIGHT_MAX * 0.78;
 
 function drawWalls(b, blocked, doors, t, theme = "default", wall = POLayout.defaultWall(theme), dim = null) {
   const T = THEMES[theme] || THEMES.default;

@@ -65,6 +65,12 @@ async function load() {
   $("skillsPath").textContent = detail.skillsDir || "";
   $("refreshInfo").textContent = detail.lastRefresh ? t("ui.profile.lastRefresh", { date: fmtDate(detail.lastRefresh) }) : t("ui.profile.neverRefreshed");
   renderSkills();
+  $("chromeOn").checked = !!detail.chrome;
+  $("chromeOn").onchange = async (ev) => {
+    const r = await api("PUT", `${API}/employees/${encodeURIComponent(id)}/chrome`, { on: ev.target.checked });
+    detail.chrome = r.on;
+    toast(t(r.applies === "next" ? "ui.profile.connectorsNext" : "ui.profile.connectorsSaved"));
+  };
   renderConnectors();
   renderIntegrations();
   renderRecent();

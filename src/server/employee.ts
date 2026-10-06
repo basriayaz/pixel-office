@@ -54,6 +54,7 @@ export interface EmployeeConfig {
   baseCwd?: string;   // the configured working folder; `cwd` is the worktree inside it when `worktree` is on
   connectorsOff?: string[]; // claude.ai connectors (by server name) this employee does not get; all others come along by default
   integrations?: string[];  // integrations (Settings → Integrations: catalogue MCP servers) this employee was given; none by default
+  chrome?: boolean;         // may drive the boss's own Chrome through the Claude in Chrome extension (the same tools /chrome gives in the terminal)
   autoRefresh?: boolean;    // the timed knowledge refresh runs for this employee (off unless switched on: it spends tokens nobody asked for)
 }
 
@@ -975,6 +976,7 @@ export class Employee extends EventEmitter {
         // effort is a Claude setting; other models behind OpenRouter may reject it
         effort: viaOpenRouter ? undefined : this.cfg.effort,
         settingSources: this.cfg.settingSources ?? ["project"],
+        extraArgs: this.cfg.chrome ? { chrome: null } : undefined,
         canUseTool: (toolName, input, opts) => this.canUseTool(toolName, input, opts),
       },
     });

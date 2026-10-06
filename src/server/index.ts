@@ -1121,6 +1121,7 @@ r.get("/employees/:id/detail", (req: OReq, res) => {
     skills: listSkills(e.cfg.pluginDir),
     projectSkills: listProjectSkills(e.cfg.cwd).map((s) => ({ ...s, dir: displayPath(s.dir) })),
     connectorsOff: e.cfg.connectorsOff ?? [],
+    chrome: !!e.cfg.chrome,
     integrations: e.cfg.integrations ?? [],
     skillsDir: e.cfg.pluginDir ? path.join(e.cfg.pluginDir, "skills") : null,
     refreshHours: e.cfg.refreshHours ?? 0,
@@ -1146,6 +1147,16 @@ r.put("/employees/:id/connectors", (req: OReq, res) => {
   writeAgentFile(cfg);
   e.setConfigQuietly(cfg);
   res.json({ ok: true, off, applies: e.busy ? "next" : "now" });
+});
+
+r.put("/employees/:id/chrome", (req: OReq, res) => {
+  const e = empOf(req);
+  if (!e) return res.status(404).json({ error: t("server.notFound") });
+  const on = req.body?.on === true;
+  const cfg: EmployeeConfig = { ...e.cfg, chrome: on || undefined };
+  writeAgentFile(cfg);
+  e.setConfigQuietly(cfg);
+  res.json({ ok: true, on, applies: e.busy ? "next" : "now" });
 });
 
 // Integrations market: the catalogue with what the boss has connected (never any credential), OAuth sign-in, servers of their own,

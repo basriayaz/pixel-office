@@ -128,6 +128,7 @@ export function loadEmployee(dir: string, index: number, office: OfficeDef): Emp
     connectorsOff: meta.connectorsOff ? meta.connectorsOff.split(",").map((x) => x.trim()).filter(Boolean) : undefined,
     integrations: meta.integrations ? meta.integrations.split(",").map((x) => x.trim()).filter(Boolean) : undefined,
     autoRefresh: meta.autoRefresh === "true" || undefined,
+    chrome: meta.chrome === "true" || undefined,
   };
   ensureDirs(cfg);
   return cfg;
@@ -171,6 +172,7 @@ export function writeAgentFile(cfg: EmployeeConfig) {
   if (cfg.integrations?.length) lines.push(`integrations: ${cfg.integrations.join(", ")}`);
   if (cfg.refreshHours !== undefined && cfg.refreshHours !== getSettings().refreshHours) lines.push(`refreshHours: ${cfg.refreshHours}`);
   if (cfg.autoRefresh) lines.push(`autoRefresh: true`);
+  if (cfg.chrome) lines.push(`chrome: true`);
   if ((cfg.baseCwd ?? cfg.cwd) !== getOffice(cfg.officeId).cwd) lines.push(`cwd: ${cfg.baseCwd ?? cfg.cwd}`);
   lines.push(`look: ${JSON.stringify(cfg.look)}`, "---", cfg.systemPrompt.trim(), "");
   writeWhole(cfg.agentFile, lines.join("\n"));

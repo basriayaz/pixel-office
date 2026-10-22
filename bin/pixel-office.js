@@ -3,7 +3,7 @@
 import { spawn } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 const pkgRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const args = process.argv.slice(2);
@@ -12,7 +12,7 @@ const flag = (name, def) => { const i = args.indexOf(name); return i >= 0 ? args
 const has = (name) => args.includes(name);
 const dist = path.join(pkgRoot, "dist", "server");
 const useDist = existsSync(path.join(dist, "index.js"));
-const cfgMod = useDist ? await import(path.join(dist, "config.js")) : await import(path.join(pkgRoot, "src", "server", "config.ts")).catch(() => null);
+const cfgMod = useDist ? await import(pathToFileURL(path.join(dist, "config.js")).href) : await import(path.join(pkgRoot, "src", "server", "config.ts")).catch(() => null);
 if (!cfgMod) { console.error("Build first: npm run build"); process.exit(1); }
 // Where files live: --dir <project> or an `init`ed current folder → project mode; otherwise ~/.pixel-office (global).
 const R = cfgMod.resolveRoot({ dir: flag("--dir"), global: has("--global") || cmd === "start" && has("-g") });
@@ -43,7 +43,7 @@ if (cmd === "init") {
 if (cmd === "stop") {
   const settings = cfgMod.loadSettings(R);
   const pidFile = path.join(settings.dataDir, "server.pid");
-  const lockMod = useDist ? await import(path.join(dist, "lock.js")) : await import(path.join(pkgRoot, "src", "server", "lock.ts"));
+  const lockMod = useDist ? await import(pathToFileURL(path.join(dist, "lock.js")).href) : await import(path.join(pkgRoot, "src", "server", "lock.ts"));
   const held = lockMod.readLock(pidFile);
   const heldIsServer = !!held && lockMod.isLockHolder(held);
   // the port asked for; without --port the configured one, then the one this folder's server wrote into its lock (only if

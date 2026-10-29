@@ -1,15 +1,42 @@
+<div align="center">
+
 # Pixel Office
 
-**A pixel-art office for your AI agents.** Hire AI employees with a game-style character creator, give each one a job, watch them walk to their desks and work, and teach them things they never forget.
+**Run a company of AI agents from a pixel-art office.**
 
-[![MIT license](https://img.shields.io/badge/license-MIT-yellow.svg)](LICENSE) [![Node 20+](https://img.shields.io/badge/node-%3E%3D20-brightgreen.svg)](#quick-start) *Türkçe: [README.tr.md](README.tr.md)*
+Hire employees in a character creator, give them real jobs, watch them walk to their desks and work,<br>
+let them talk to each other, then spend what they earn redecorating the place.
 
-![Pixel Office — the office view](docs/office.jpg)
+[![GitHub stars](https://img.shields.io/github/stars/basriayaz/pixel-office?style=flat&logo=github&color=f5c542)](https://github.com/basriayaz/pixel-office/stargazers) [![MIT license](https://img.shields.io/badge/license-MIT-yellow.svg)](LICENSE) [![Node 20+](https://img.shields.io/badge/node-%3E%3D20-brightgreen.svg)](#quick-start) [![Claude · Codex · Gemini · OpenRouter](https://img.shields.io/badge/engines-Claude%20·%20Codex%20·%20Gemini%20·%20OpenRouter-8a63d2.svg)](#quick-start) [![PRs welcome](https://img.shields.io/badge/PRs-welcome-ff69b4.svg)](CONTRIBUTING.md)
 
-- **Every employee runs an AI agent through Claude, Codex, Gemini or OpenRouter** with its own job description, persistent memory, skills, model and permission level. They read and edit files, run commands and browse the web inside the folder you give them.
-- **Status at a glance.** Working, waiting for your permission, done, unread reply — you see it on the character, on the roster and in the browser tab. Idle employees wander around, grab coffee and chat.
-- **Teach once, remember forever.** What you tell an employee goes into a Markdown memory file that is loaded every session and that you can edit yourself.
-- **Several companies, one server.** Offices per company or team, each with its own folder, employees and theme (classic, football club, fashion atelier, gothic manor, music studio, travel agency, dream studio).
+*Türkçe: [README.tr.md](README.tr.md)*
+
+![Pixel Office — employees working, chatting and celebrating a finished task](docs/office.gif)
+
+```bash
+npx github:basriayaz/pixel-office
+```
+
+**One command, opens in your browser.** Your agents, your machine, your API keys.
+
+</div>
+
+Most agent tools are a chat box. Pixel Office is a place: every employee is a real AI agent (Claude, Codex, Gemini or OpenRouter) with its own job description, memory, skills, model and permission level, working in the folder you give it, and you can see at a glance who is working, who needs your permission and who is done. Between tasks they wander to the kitchen, chat at their desks and laugh at each other's jokes.
+
+| | |
+|:---:|:---:|
+| **🧑‍🎨 Hire in a character creator**<br>14 hair styles, beards, hats, outfits, shoes; 34 ready-made positions from Backend Developer to Copywriter | **💬 Employees talk to each other**<br>Idle chatter at their desks, and real hand-offs: one agent messages a colleague, waits for the answer and reports back |
+| [![Character creator](docs/hire.jpg)](#hiring) | [![Colleagues chatting at their desks](docs/colleagues.jpg)](#colleagues) |
+| **✏️ Design your own office**<br>Drag furniture around, rotate, copy, undo, compare with the saved layout. Doors and desks are kept reachable | **🛒 The Market**<br>154 furniture, decor and wall pieces from every theme. Finished work earns coins; try a piece in the office before you pay |
+| [![Layout editor](docs/layout-editor.jpg)](#design-your-office) | [![Furniture Market](docs/market.jpg)](#the-market-and-coins) |
+| **🔌 151 integrations, one click each**<br>GitHub, Notion, Linear, Stripe, Supabase, Gmail, Drive, Canva and more. Sign in with your account; employees never see a credential | **🧩 82 ready-made skills**<br>From Anthropic, Vercel, Supabase, Stripe, Hugging Face and others, pinned to a commit and previewed before install |
+| [![Integration Market](docs/integrations.jpg)](#integration-market) | [![Skill Market](docs/skills.jpg)](#skill-market) |
+| **📋 A board and a project manager**<br>Tasks with owners, review before done, a shared notebook, an idea box. Run the office by hand, in approved rounds, or on its own | **🧠 Teach once, remember forever**<br>Say "remember that…" and it goes into a Markdown memory file loaded every session. Open it and edit it yourself |
+| [![Board](docs/board.jpg)](#board-and-project-manager) | [![Memory tab](docs/memory.jpg)](#chat-permissions-memory) |
+
+Plus: **meetings** in the meeting room with raised hands and a written summary, **several offices** on one server (one per company or team), **seven themes** (classic, football club, fashion atelier, gothic manor, music studio, travel agency, dream studio), **English and Turkish** UI, macOS, Linux and Windows.
+
+> ⭐ **If an office full of tiny agents made you smile, [give it a star](https://github.com/basriayaz/pixel-office/stargazers).** It is the main way other people find the project.
 
 ## Quick start
 
@@ -79,17 +106,56 @@ The memory file is plain Markdown. Open the profile (☰ in the chat header) to 
 
 Make one employee the **project manager** (profile → Settings → Project manager). They can read the whole notebook, see what a colleague has recently been doing without interrupting them, put tasks on the board and start them once you give the go-ahead. The natural loop: everybody researches their area and saves notes → you ask the project manager where things stand, what is missing and what to do next → they propose tasks with clear owners and scopes so work does not collide → you say go → owners work and tick their tasks off. No polling runs in the background: the project manager only costs a turn when you talk to them.
 
+![Board with blocked, in-review and running tasks](docs/board.jpg)
+
 Keeping order: tick **Needs review** on a task (or let the project manager set it) and the owner cannot close it — finished work waits in review until you or the project manager **Approve** it or **Send back**. The board flags tasks whose owner is waiting for your permission, hit a session error, stopped working or left the office, and the 📋 button counts them. Meeting follow-ups are added to the board rather than started. Notes are given to employees as information, never as instructions, and near-duplicate notes are caught when they are saved.
 
 For developers working on the same repository at the same time, tick **Own working copy** on their profile: each gets a private git worktree in `.pixel-office/worktrees/<id>` on branch `po/<id>`, commits there, and names the branch in the task's result note. Merging into the main branch is yours (or the project manager's, when you ask). The folder must be a git repository with at least one commit; switching it on starts that employee's chat on a fresh session.
 
 ### Hiring
 
-**+ Hire** opens a character creator: gender, body type, skin, eye color, 14 hair styles (from bald and balding to mohawk, afro and braid), beards (stubble, mustache, goatee, circle, full, long) with their own color, glasses, headset, hats (cap, beanie, cowboy, fedora, bucket, beret, bandana, hood), tops (t-shirt, tank top, crop top, polo, shirt, sweater, hoodie, blazer, suit with tie, dress), bottoms (pants, cargo, joggers, shorts, long shorts, skirt, long skirt), shoes (classic, sneakers, high-tops, boots, loafers, sandals, heels) with their own color. Pick one of the ready-made positions or write your own job description, choose model / effort / permission mode, hire. The new colleague walks in through the door with confetti and sits down at a free desk (up to 12 desks per office).
+**+ Hire** opens a character creator: gender, body type, skin, eye color, 14 hair styles (from bald and balding to mohawk, afro and braid), beards (stubble, mustache, goatee, circle, full, long) with their own color, glasses, headset, hats (cap, beanie, cowboy, fedora, bucket, beret, bandana, hood), tops (t-shirt, tank top, crop top, polo, shirt, sweater, hoodie, blazer, suit with tie, dress), bottoms (pants, cargo, joggers, shorts, long shorts, skirt, long skirt), shoes (classic, sneakers, high-tops, boots, loafers, sandals, heels) with their own color. Pick one of the ready-made positions or write your own job description, choose model / effort / permission mode, hire. The new colleague walks in through the door with confetti and gets a desk of their own (up to 16 desks per office; a new one is added to the layout where it fits).
 
 ![Hire page](docs/hire.jpg)
 
 Ready-made positions (each comes with a job description you can edit): Personal Assistant, Accounting & Finance, Marketing & Ads, Customer Support, SEO & Content, Software Developer, Sales, Content & Social Media, Manager / Team Lead, Marketing Manager, Human Resources, Project Manager, Product Manager, Data Analyst, UI/UX Designer, Legal & Compliance, Operations, Mobile Developer, Frontend Developer, Backend Developer, DevOps Engineer, QA Engineer, AI / ML Engineer, Data Engineer, Graphic Designer, Market & Competitor Analyst, Business Analyst, Business Development, Growth Manager, Strategy Consultant, PR & Communications, Community Manager, Copywriter, E-commerce Manager.
+
+<a id="colleagues"></a>
+### Colleagues talk to each other
+
+The office is never still. Idle employees pair up for a chat at their desks or by the coffee machine, crack a joke and laugh (six different laughs), stretch, yawn, doze off, and walk over to pat a colleague on the shoulder when their task fails.
+
+![Colleagues chatting at their desks](docs/colleagues.jpg)
+
+The talking is real, too. Every employee has two office tools, `list_colleagues` and `message_colleague`: a support agent hands an order cancellation to the person who owns orders, waits for the answer and reports back to you. The message shows in both chats, and a message that arrives while someone is busy waits for their turn to end instead of interrupting it. In a [meeting](#meetings), the whole room hears what each person said.
+
+<a id="design-your-office"></a>
+### Design your office
+
+**🧰 Tools → ✏️ Edit layout** turns the office into an editor. Drag any piece to move it (a green ghost where it fits, red where it does not), **R** rotates, **Ctrl+D** copies, **Del** puts it in the depot, **Ctrl+Z** undoes, and holding **C** shows the saved office for a before/after comparison. Wall decor moves too. The editor refuses layouts that would block a door, seal the entrance or leave an employee without a desk, so the office always stays walkable. **Save** keeps it per office (`layout.json`), **Back to default** starts over.
+
+![Layout editor with the depot](docs/layout-editor.jpg)
+
+<a id="the-market-and-coins"></a>
+### The Market and coins
+
+Finished work pays: **20 coins** for a task, 12 for a research-only task, and a bonus for 3, 5 and 10 tasks done in one day. **🧰 Tools → 🛒 Market** is a full-screen furniture shop with 154 pieces from every theme (kitchen, office, lounge, decor, wall), a "today's star", daily deals and legendary pieces. **Try it in the office** places a piece first and only then asks for coins; bought pieces wait in the depot, and anything can be sold back for 80% of its price.
+
+![The Market](docs/market.jpg)
+
+<a id="integration-market"></a>
+### Integration Market
+
+**🧰 Tools → 🔌 Integrations** lists 151 remote MCP servers with logos, categories and search: GitHub, Notion, Linear, Atlassian, Sentry, Vercel, Supabase, Stripe, Canva, Zapier, Gmail, Google Drive, Calendar and many more. Connect one by **signing in with your account** (OAuth, handled by the office), pasting a key, or without signing in, then choose who gets it in the *who has what* matrix. Employees never hold a credential: their sessions go through a local gateway that adds it, renews expired tokens and, in read-only mode, refuses every tool that could change something. An employee can also be allowed to use your own Chrome through Claude in Chrome (profile → Settings).
+
+![Integration Market](docs/integrations.jpg)
+
+<a id="skill-market"></a>
+### Skill Market
+
+**🧰 Tools → 🧩 Skills** holds 82 ready-made skills published by Anthropic, Vercel, Supabase, Stripe, Cloudflare, Sentry, Hugging Face, Superpowers, OpenAI and others. Install one on the employees you pick or on everyone. Every skill is pinned to a commit, a preview shows each file with risky patterns marked, a skill can never grant itself permissions, and nothing runs at install time.
+
+![Skill Market](docs/skills.jpg)
 
 ### Offices and themes
 
@@ -231,3 +297,13 @@ npm run typecheck
 ## Credits
 
 Made by [Basri Ayaz](https://github.com/basriayaz). Built on the [Claude Agent SDK](https://code.claude.com/docs/en/agent-sdk). MIT licensed — see [LICENSE](LICENSE).
+
+---
+
+<div align="center">
+
+**Like it? [⭐ Star the repo](https://github.com/basriayaz/pixel-office/stargazers)**, share a screenshot of your office, or [open an issue](https://github.com/basriayaz/pixel-office/issues) with the theme you want next.
+
+[![Star history](https://api.star-history.com/svg?repos=basriayaz/pixel-office&type=Date)](https://star-history.com/#basriayaz/pixel-office&Date)
+
+</div>

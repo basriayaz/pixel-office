@@ -1,15 +1,42 @@
+<div align="center">
+
 # Pixel Office
 
-**AI agent'ların için pixel-art bir ofis.** Oyun tarzı karakter oluşturucuyla AI çalışanlar işe al, her birine bir iş ver, masalarına yürüyüp çalışmalarını izle ve onlara asla unutmayacakları şeyler öğret.
+**AI agent'lardan oluşan bir şirketi pixel-art bir ofisten yönet.**
 
-[![MIT lisans](https://img.shields.io/badge/license-MIT-yellow.svg)](LICENSE) [![Node 20+](https://img.shields.io/badge/node-%3E%3D20-brightgreen.svg)](#hızlı-başlangıç) *English: [README.md](README.md)*
+Karakter oluşturucuyla çalışan işe al, onlara gerçek işler ver, masalarına yürüyüp çalışmalarını izle,<br>
+birbirleriyle konuşsunlar, kazandıkları coinlerle ofisi yeniden döşe.
 
-![Pixel Office — ofis görünümü](docs/office.jpg)
+[![GitHub yıldızları](https://img.shields.io/github/stars/basriayaz/pixel-office?style=flat&logo=github&color=f5c542)](https://github.com/basriayaz/pixel-office/stargazers) [![MIT lisans](https://img.shields.io/badge/license-MIT-yellow.svg)](LICENSE) [![Node 20+](https://img.shields.io/badge/node-%3E%3D20-brightgreen.svg)](#hızlı-başlangıç) [![Claude · Codex · Gemini · OpenRouter](https://img.shields.io/badge/engines-Claude%20·%20Codex%20·%20Gemini%20·%20OpenRouter-8a63d2.svg)](#hızlı-başlangıç) [![PR'lar açık](https://img.shields.io/badge/PRs-welcome-ff69b4.svg)](CONTRIBUTING.md)
 
-- **Her çalışan Claude, Codex, Gemini veya OpenRouter üzerinden çalışan bir AI agent**: kendi görev tanımı, kalıcı hafızası, yetenekleri, modeli ve izin seviyesi var. Verdiğin klasörde dosya okur ve düzenler, komut çalıştırır, web'e bakar.
-- **Durum bir bakışta**: çalışıyor, iznini bekliyor, bitti, okunmamış cevap — karakterin üstünde, listede ve tarayıcı sekmesinde görürsün. Boştakiler dolaşır, kahve alır, sohbet eder.
-- **Bir kez öğret, hep hatırlasın.** Çalışana söylediğin şey her oturumda yüklenen bir Markdown hafıza dosyasına yazılır; sen de düzenleyebilirsin.
-- **Birden fazla şirket, tek sunucu.** Şirket ya da ekip başına ofis; her birinin kendi klasörü, çalışanları ve teması (klasik, futbol kulübü, moda atölyesi, gotik malikâne, müzik stüdyosu, seyahat acentesi, rüya atölyesi).
+*English: [README.md](README.md)*
+
+![Pixel Office — çalışanlar çalışıyor, sohbet ediyor, biten işi kutluyor](docs/office.gif)
+
+```bash
+npx github:basriayaz/pixel-office
+```
+
+**Tek komut, tarayıcında açılır.** Senin agent'ların, senin bilgisayarın, senin API anahtarların.
+
+</div>
+
+Çoğu agent aracı bir sohbet kutusudur. Pixel Office ise bir mekân: her çalışan gerçek bir AI agent (Claude, Codex, Gemini veya OpenRouter); kendi görev tanımı, hafızası, skilleri, modeli ve izin seviyesiyle verdiğin klasörde çalışır. Kimin çalıştığını, kimin iznini beklediğini, kimin işi bitirdiğini bir bakışta görürsün. İş aralarında mutfağa giderler, masalarında sohbet eder, birbirlerinin esprilerine gülerler.
+
+| | |
+|:---:|:---:|
+| **🧑‍🎨 Karakter oluşturucuyla işe al**<br>14 saç stili, sakal, şapka, kıyafet, ayakkabı; Backend Geliştiriciden Metin Yazarına 34 hazır pozisyon | **💬 Çalışanlar birbiriyle konuşur**<br>Masada boş muhabbet ve gerçek iş devri: bir agent meslektaşına yazar, cevabı bekler, sana geri döner |
+| [![Karakter oluşturucu](docs/hire.jpg)](#işe-alma) | [![Masada sohbet eden meslektaşlar](docs/colleagues.jpg)](#colleagues) |
+| **✏️ Ofisini kendin tasarla**<br>Eşyaları sürükle, döndür, kopyala, geri al, kayıtlı düzenle karşılaştır. Kapılar ve masalar hep ulaşılabilir kalır | **🛒 Eşya mağazası**<br>Bütün temalardan 154 mobilya, süs ve duvar eşyası. Biten iş coin kazandırır; parayı ödemeden önce eşyayı ofiste dene |
+| [![Ofis düzenleyici](docs/layout-editor.jpg)](#design-your-office) | [![Eşya mağazası](docs/market.jpg)](#the-market-and-coins) |
+| **🔌 151 entegrasyon, her biri tek tık**<br>GitHub, Notion, Linear, Stripe, Supabase, Gmail, Drive, Canva ve daha fazlası. Kendi hesabınla giriş yap; çalışanlar hiçbir anahtarı görmez | **🧩 82 hazır skill**<br>Anthropic, Vercel, Supabase, Stripe, Hugging Face ve diğerlerinden; bir commit'e sabitli, kurmadan önce önizlenir |
+| [![Entegrasyon mağazası](docs/integrations.jpg)](#integration-market) | [![Skill mağazası](docs/skills.jpg)](#skill-market) |
+| **📋 Pano ve proje yöneticisi**<br>Sahipli görevler, bitmeden önce inceleme, ortak defter, fikir kutusu. Ofisi elle, onaylı turlarla ya da kendi kendine yürüt | **🧠 Bir kez öğret, hep hatırlasın**<br>"Şunu unutma…" de, her oturumda yüklenen Markdown hafıza dosyasına yazılsın. Açıp kendin de düzenleyebilirsin |
+| [![Pano](docs/board.jpg)](#pano-ve-proje-yöneticisi) | [![Hafıza sekmesi](docs/memory.jpg)](#sohbet-izinler-hafıza) |
+
+Ayrıca: toplantı odasında el kaldırmalı ve yazılı özetli **toplantılar**, tek sunucuda **birden fazla ofis** (şirket ya da ekip başına bir tane), **yedi tema** (klasik, futbol kulübü, moda atölyesi, gotik malikâne, müzik stüdyosu, seyahat acentesi, rüya atölyesi), **Türkçe ve İngilizce** arayüz, macOS, Linux ve Windows.
+
+> ⭐ **Minik agent'larla dolu bir ofis yüzünü güldürdüyse [bir yıldız ver](https://github.com/basriayaz/pixel-office/stargazers).** Projeyi başkalarının bulmasının en önemli yolu bu.
 
 ## Hızlı başlangıç
 
@@ -79,17 +106,56 @@ Hafıza dosyası düz Markdown. Profili aç (sohbet başlığında ☰): oku, d�
 
 Bir çalışanı **proje yöneticisi** yap (profil → Ayarlar → Proje yöneticisi). Defterin tamamını okur, bir arkadaşının son zamanlarda ne yaptığını onu rahatsız etmeden görür, panoya görev koyar ve sen onay verince başlatır. Doğal döngü: herkes kendi alanını araştırıp not alır → proje yöneticisine durumu, eksikleri ve sıradaki adımı sorarsın → işler çakışmasın diye net sahipli ve kapsamlı görevler önerir → başla dersin → sahipler çalışır ve görevlerini işaretler. Arka planda sürekli kontrol eden bir şey yoktur: proje yöneticisi sadece onunla konuştuğunda tur harcar.
 
+![Engellenen, incelemede ve süren görevlerle pano](docs/board.jpg)
+
 Düzeni korumak için: bir görevde **İnceleme gerekli** kutusunu işaretle (ya da proje yöneticisi işaretlesin), sahibi görevi kapatamaz — biten iş, sen ya da proje yöneticisi **Onayla** ya da **Geri gönder** diyene kadar incelemede bekler. Pano, sahibi senden izin bekleyen, oturumu hata veren, çalışmayı bırakan ya da ofisten ayrılan görevleri işaretler ve 📋 düğmesinde sayar. Toplantı sonrası görevler başlatılmaz, panoya eklenir. Notlar çalışanlara talimat olarak değil bilgi olarak verilir, neredeyse aynı başlıklı notlar kaydedilirken yakalanır.
 
 Aynı depoda aynı anda çalışan geliştiriciler için profillerinde **Ayrı çalışma kopyası** kutusunu işaretle: her biri `.pixel-office/worktrees/<id>` altında, `po/<id>` dalında özel bir git çalışma kopyası alır, oraya commit eder ve görevin sonuç notunda dalı belirtir. Ana dala birleştirme senin işindir (ya da istediğinde proje yöneticisinin). Klasör en az bir commit'i olan bir git deposu olmalıdır; açıldığında o çalışanın sohbeti yeni bir oturumla devam eder.
 
 ### İşe alma
 
-**+ İşe al** karakter oluşturucuyu açar: cinsiyet, vücut tipi, ten, göz rengi, 14 saç stili (kel ve dökülmüşten mohawk, afro ve örgüye), kendi rengiyle sakal (kirli, bıyık, keçi, top, tam, uzun), gözlük, kulaklık, şapka (kep, bere, kovboy, fötr, balıkçı, Fransız beresi, bandana, kukuleta), üst (tişört, atlet, crop, polo, gömlek, kazak, hoodie, blazer, kravatlı takım elbise, elbise), alt (pantolon, kargo, eşofman, şort, uzun şort, etek, uzun etek), kendi rengiyle ayakkabı (klasik, spor, bilekli spor, bot, makosen, sandalet, topuklu). Hazır pozisyonlardan birini seç ya da görev tanımını kendin yaz, model / effort / izin modunu belirle, işe al. Yeni çalışan kapıdan konfetiyle girer ve boş bir masaya oturur (ofis başına 12 masa).
+**+ İşe al** karakter oluşturucuyu açar: cinsiyet, vücut tipi, ten, göz rengi, 14 saç stili (kel ve dökülmüşten mohawk, afro ve örgüye), kendi rengiyle sakal (kirli, bıyık, keçi, top, tam, uzun), gözlük, kulaklık, şapka (kep, bere, kovboy, fötr, balıkçı, Fransız beresi, bandana, kukuleta), üst (tişört, atlet, crop, polo, gömlek, kazak, hoodie, blazer, kravatlı takım elbise, elbise), alt (pantolon, kargo, eşofman, şort, uzun şort, etek, uzun etek), kendi rengiyle ayakkabı (klasik, spor, bilekli spor, bot, makosen, sandalet, topuklu). Hazır pozisyonlardan birini seç ya da görev tanımını kendin yaz, model / effort / izin modunu belirle, işe al. Yeni çalışan kapıdan konfetiyle girer ve kendine ait bir masaya oturur (ofis başına en çok 16 masa; yenisi düzende yer bulunan bir yere eklenir).
 
 ![İşe alma sayfası](docs/hire.jpg)
 
 Hazır pozisyonlar (her birinin düzenlenebilir görev tanımı var): Kişisel Asistan, Muhasebe & Finans, Reklam & Pazarlama, Müşteri Destek, SEO & İçerik, Yazılım Geliştirme, Satış, İçerik & Sosyal Medya, Müdür / Ekip Lideri, Pazarlama Müdürü, İnsan Kaynakları, Proje Yöneticisi, Ürün Yöneticisi, Veri Analisti, UI/UX Tasarımcı, Hukuk & Uyum, Operasyon, Mobil Geliştirici, Frontend Geliştirici, Backend Geliştirici, DevOps Mühendisi, Test Mühendisi (QA), Yapay Zekâ / ML Mühendisi, Veri Mühendisi, Grafik Tasarımcı, Pazar & Rakip Analisti, İş Analisti, İş Geliştirme, Büyüme Yöneticisi, Strateji Danışmanı, PR & İletişim, Topluluk Yöneticisi, Metin Yazarı, E-ticaret Yöneticisi.
+
+<a id="colleagues"></a>
+### Meslektaşlar birbiriyle konuşur
+
+Ofis hiç durmaz. Boştaki çalışanlar masalarında ya da kahve makinesinin başında ikili sohbet eder, espri yapıp güler (altı farklı gülme), gerinir, esner, uyuklar; bir arkadaşının görevi hata verince yanına gidip omzuna dokunur.
+
+![Masada sohbet eden meslektaşlar](docs/colleagues.jpg)
+
+Konuşma gerçek de. Her çalışanın iki ofis aracı var, `list_colleagues` ve `message_colleague`: destek çalışanı bir sipariş iptalini siparişlerden sorumlu kişiye devreder, cevabı bekler ve sana geri döner. Mesaj iki sohbette de görünür; meşgul birine gelen mesaj işini bölmez, sırası gelince ulaşır. [Toplantıda](#toplantı) ise herkes diğerlerinin söylediğini duyar.
+
+<a id="design-your-office"></a>
+### Ofisini tasarla
+
+**🧰 Araçlar → ✏️ Ofisi düzenle** ofisi bir düzenleyiciye çevirir. Herhangi bir eşyayı sürükleyip taşı (sığdığı yerde yeşil, sığmadığı yerde kırmızı gölge), **R** döndürür, **Ctrl+D** kopyalar, **Del** depoya kaldırır, **Ctrl+Z** geri alır, **C**'yi basılı tutunca kayıtlı ofisi gösterir (önce/sonra karşılaştırması). Duvar süsleri de taşınır. Bir kapıyı kapatan, girişi mühürleyen ya da bir çalışanı masasız bırakan düzenleri kabul etmez; ofis hep yürünebilir kalır. **Kaydet** her ofis için ayrı saklar (`layout.json`), **Varsayılana dön** baştan başlatır.
+
+![Depoyla birlikte ofis düzenleyici](docs/layout-editor.jpg)
+
+<a id="the-market-and-coins"></a>
+### Eşya mağazası ve coinler
+
+Biten iş kazandırır: görev başına **20 coin**, yalnızca araştırma görevi için 12, bir günde 3, 5 ve 10 görev bitince de bonus. **🧰 Araçlar → 🛒 Eşya mağazası** bütün temalardan 154 parça (mutfak, ofis, dinlenme, süs, duvar) içeren tam ekran bir mağaza; "günün yıldızı", günlük indirimler ve efsanevi parçalarla. **Ofiste dene** eşyayı önce yerleştirir, coin'i ancak sonra ister; alınan eşyalar depoda bekler, her şey fiyatının %80'ine geri satılabilir.
+
+![Eşya mağazası](docs/market.jpg)
+
+<a id="integration-market"></a>
+### Entegrasyon mağazası
+
+**🧰 Araçlar → 🔌 Entegrasyonlar** logolu, kategorili ve aramalı 151 uzak MCP sunucusu listeler: GitHub, Notion, Linear, Atlassian, Sentry, Vercel, Supabase, Stripe, Canva, Zapier, Gmail, Google Drive, Takvim ve çok daha fazlası. **Kendi hesabınla giriş yaparak** (OAuth'u ofis yürütür), anahtar yapıştırarak ya da girişsiz bağla, sonra *kimde ne var* tablosundan kimin kullanacağını seç. Çalışanlar hiçbir kimlik bilgisi tutmaz: oturumları, bilgiyi ekleyen, süresi dolan token'ı yenileyen ve salt okuma modunda bir şeyi değiştirebilecek her aracı reddeden yerel bir ağ geçidinden geçer. Bir çalışana Claude in Chrome üzerinden senin Chrome'unu kullanma izni de verilebilir (profil → Ayarlar).
+
+![Entegrasyon mağazası](docs/integrations.jpg)
+
+<a id="skill-market"></a>
+### Skill mağazası
+
+**🧰 Araçlar → 🧩 Skiller** Anthropic, Vercel, Supabase, Stripe, Cloudflare, Sentry, Hugging Face, Superpowers, OpenAI ve diğerlerinin yayımladığı 82 hazır skill içerir. Seçtiğin çalışanlara ya da herkese kur. Her skill bir commit'e sabitlidir, önizleme her dosyayı riskli kalıpları işaretleyerek gösterir, bir skill kendine asla izin veremez ve kurulumda hiçbir şey çalıştırılmaz.
+
+![Skill mağazası](docs/skills.jpg)
 
 ### Ofisler ve temalar
 
@@ -232,3 +298,13 @@ npm run typecheck
 ## Emeği geçen
 
 [Basri Ayaz](https://github.com/basriayaz) yaptı. [Claude Agent SDK](https://code.claude.com/docs/en/agent-sdk) üzerine kurulu. MIT lisanslı — bkz. [LICENSE](LICENSE).
+
+---
+
+<div align="center">
+
+**Beğendin mi? [⭐ Repoya yıldız ver](https://github.com/basriayaz/pixel-office/stargazers)**, ofisinin ekran görüntüsünü paylaş ya da sıradaki temayı [bir issue'da](https://github.com/basriayaz/pixel-office/issues) iste.
+
+[![Yıldız geçmişi](https://api.star-history.com/svg?repos=basriayaz/pixel-office&type=Date)](https://star-history.com/#basriayaz/pixel-office&Date)
+
+</div>

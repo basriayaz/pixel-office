@@ -412,6 +412,13 @@
       "meeting": "INTERPRETATION ROOM",
       "lounge": "SLEEP LOUNGE",
       "archive": "DREAM ARCHIVE"
+    },
+    "cheese": {
+      "kitchen": "TASTING BAR",
+      "office": "DAIRY OFFICE",
+      "meeting": "AFFINAGE ROOM",
+      "lounge": "PASTURE LOUNGE",
+      "archive": "CHEESE CELLAR"
     }
   },
   "status": {
@@ -775,6 +782,23 @@
           "coffeeStation": "Dreamcatcher",
           "rug": "Moon rug"
         },
+        "cheese": {
+          "counter": "Tasting bar",
+          "fridge": "Milk churn",
+          "roundTable": "Cheese wheel table",
+          "stool": "Milking stool",
+          "meetingTable": "Curing table",
+          "sofa": "Hay-bale sofa",
+          "coffeeTable": "Cheese board table",
+          "bookshelf": "Aging rack",
+          "lamp": "Copper lamp",
+          "cabinets": "Dairy cupboard",
+          "boxes": "Cheese crates",
+          "printer": "Cheese press",
+          "cooler": "Whey barrel",
+          "coffeeStation": "Copper vat",
+          "rug": "Cheese wheel rug"
+        },
         "default": {
           "rug": "Lounge rug"
         }
@@ -894,7 +918,7 @@
         "music_awards": "Award plaques",
         "music_counter": "Subscriber counter",
         "travel_bunting": "Bunting & clocks",
-        "travel_poster": "Footyprint poster",
+        "travel_poster": "Footprint poster",
         "travel_map": "World map",
         "travel_clock": "Clock",
         "travel_departures": "Departures board",
@@ -909,6 +933,13 @@
         "gothic_glass": "Stained glass",
         "gothic_cobwebs": "Cobwebs",
         "dream_sky": "Night sky windows",
+        "cheese_wheels": "Wheel shelf",
+        "cheese_menu": "Tasting menu",
+        "cheese_rack": "Cheese cloth line",
+        "cheese_clock": "Wall clock",
+        "cheese_pots": "Copper pots",
+        "cheese_ribbons": "Prize ribbons",
+        "cheese_pasture": "Pasture view",
         "progress_poster": "Framed poster",
         "progress_plant": "Hanging plant",
         "progress_espresso": "Golden espresso machine",
@@ -4764,7 +4795,8 @@
       "gothic": "Gothic manor",
       "music": "Music studio",
       "travel": "Travel agency",
-      "dream": "Dream studio"
+      "dream": "Dream studio",
+      "cheese": "Cheese dairy"
     },
     "closedBanner": "Office closed — start it again with <code>pixel-office</code>",
     "settings": {
@@ -5541,7 +5573,7 @@
         },
         "O4": {
           "t": "Themes",
-          "b": "There are seven themes: classic, football, fashion, gothic, music, travel, dream. A theme only changes the look."
+          "b": "There are eight themes: classic, football, fashion, gothic, music, travel, dream, cheese. A theme only changes the look."
         },
         "O5": {
           "t": "Work mode",

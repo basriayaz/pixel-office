@@ -616,3 +616,7 @@ body.offline .chat-foot button { background: var(--line); color: var(--muted); c
 .idea-tag { display: inline-block; margin: 0 6px 4px 0; padding: 1px 8px; border-radius: 999px; border: 1px solid var(--line); background: var(--card); color: var(--accent); font: inherit; font-size: 11px; cursor: pointer; }
 .idea-tag:hover { border-color: var(--accent); }
 .idea-tag:focus-visible, .idea-ctx .queue-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.labels.cheese .room-label { color: #4a2c14; text-shadow: 0 1px 0 rgba(255, 244, 214, .85), 0 0 3px rgba(255, 244, 214, .7); }
+.labels.cheese .label { color: #3b2410; text-shadow: 0 1px 0 rgba(255, 244, 214, .9), 0 0 4px rgba(255, 244, 214, .8); }
+.labels.cheese .label small { color: #5a3a1c; opacity: 1; }
+.labels.cheese .label.selected { color: #a8421a; }

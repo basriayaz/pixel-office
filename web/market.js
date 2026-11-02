@@ -29,10 +29,10 @@
   // The legendary ones: a theme's signature pieces (wall decor, a few looks of furniture, two rugs).
   const LEGENDARY = new Set([
     "default_tv", "football_scoreboard", "football_trophies", "fashion_mirror", "fashion_atelier", "gothic_chandelier", "gothic_portrait", "gothic_glass",
-    "music_onair", "music_counter", "travel_map", "travel_departures", "dream_eye", "dream_constellation", "dream_sky",
+    "music_onair", "music_counter", "travel_map", "travel_departures", "dream_eye", "dream_constellation", "dream_sky", "cheese_wheels", "cheese_pasture", "cheese_ribbons",
     "progress_espresso", "progress_trophies", "progress_neon",
     "sofa@gothic", "cooler@gothic", "printer@football", "lamp@football", "fridge@fashion", "lamp@fashion", "roundTable@music", "meetingTable@music",
-    "fridge@travel", "lamp@travel", "fridge@dream", "coffeeStation@dream", "rug@gothic", "rug@dream",
+    "fridge@travel", "lamp@travel", "fridge@dream", "coffeeStation@dream", "fridge@cheese", "coffeeStation@cheese", "meetingTable@cheese", "rug@gothic", "rug@dream",
   ]);
   const WALL_PRICE = { common: 15, rare: 60, legendary: 400 };
   const LEGENDARY_PRICE = 400;

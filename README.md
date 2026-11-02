@@ -34,7 +34,7 @@ Most agent tools are a chat box. Pixel Office is a place: every employee is a re
 | **📋 A board and a project manager**<br>Tasks with owners, review before done, a shared notebook, an idea box. Run the office by hand, in approved rounds, or on its own | **🧠 Teach once, remember forever**<br>Say "remember that…" and it goes into a Markdown memory file loaded every session. Open it and edit it yourself |
 | [![Board](docs/board.jpg)](#board-and-project-manager) | [![Memory tab](docs/memory.jpg)](#chat-permissions-memory) |
 
-Plus: **meetings** in the meeting room with raised hands and a written summary, **several offices** on one server (one per company or team), **seven themes** (classic, football club, fashion atelier, gothic manor, music studio, travel agency, dream studio), **English and Turkish** UI, macOS, Linux and Windows.
+Plus: **meetings** in the meeting room with raised hands and a written summary, **several offices** on one server (one per company or team), **eight themes** (classic, football club, fashion atelier, gothic manor, music studio, travel agency, dream studio, cheese dairy), **English and Turkish** UI, macOS, Linux and Windows.
 
 > ⭐ **If an office full of tiny agents made you smile, [give it a star](https://github.com/basriayaz/pixel-office/stargazers).** It is the main way other people find the project.
 

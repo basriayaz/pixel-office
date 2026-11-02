@@ -38,7 +38,7 @@
   // The top wall band (rows 0-1) carries the wall decor. The windows are part of the wall: nothing hangs over them.
   const WINDOW_TILES = new Set([9, 10, 11, 17, 18, 19]);
   // The looks an office can have (the themes). Floor pieces and rugs are drawn in the office's theme unless a piece names a `skin`.
-  const THEMES = ["default", "football", "fashion", "gothic", "music", "travel", "dream"];
+  const THEMES = ["default", "football", "fashion", "gothic", "music", "travel", "dream", "cheese"];
   // Wall pieces: group -> piece -> [default tiles (one piece per tile), width in tiles, layer]. A piece's type is "<group>_<piece>".
   // Width 0 = ambient decor that spans the wall and takes no tiles (string lights, stained glass ...): each one at most once, drawn under
   // the other pieces ("under", the default) or over them ("over"). The groups are the themes plus "progress": the pieces finished work
@@ -51,6 +51,7 @@
     music: { foam: [[0], 5], clock: [[6], 1], speaker: [[8, 20], 1], plaque: [[13], 2], onair: [[15], 2], awards: [[23], 3], counter: [[26], 4] },
     travel: { bunting: [[0], 7], poster: [[7], 2], map: [[12], 5], clock: [[21], 1], departures: [[23], 7] },
     dream: { moons: [[0], 6], eye: [[14], 2], clock: [[21], 1], constellation: [[23], 5], painting: [[28], 2], sky: [[0], 0] },
+    cheese: { wheels: [[0], 5], menu: [[5], 3], rack: [[12], 3], clock: [[15], 1], pots: [[20], 3], ribbons: [[24], 2], pasture: [[0], 0] },
     progress: { poster: [[], 1], plant: [[], 1], espresso: [[], 2], trophies: [[], 2], neon: [[], 3] }, // (unlocked in this order; placed where they fit)
   };
   const PROGRESS_ORDER = ["poster", "plant", "espresso", "trophies", "neon"];

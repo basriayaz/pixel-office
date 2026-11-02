@@ -109,6 +109,7 @@ class Office {
     this.buildStatic();
     for (const { r, el } of this.roomEls) el.textContent = roomName(this.theme, r.key);
     this.labelsEl.classList.toggle("dark", !!(THEMES[this.theme] || {}).dark);
+    this.labelsEl.classList.toggle("cheese", this.theme === "cheese");
   }
 
   // ---------- layout ----------
@@ -1163,6 +1164,8 @@ function drawRug(b, look, tx, ty) {
     drawVinylRug(b, 8, 11 * TILE + 8);
   } else if (T.rug === "moon") {
     drawMoonRug(b, 8, 11 * TILE + 8);
+  } else if (T.rug === "cheese") {
+    drawWheelRug(b, 8, 11 * TILE + 8);
   } else if (T.rug === "round") {
     b.fillStyle = "#e9c4d3"; b.fillRect(30, 11 * TILE + 30, 100, 100); b.fillRect(20, 11 * TILE + 46, 120, 68); b.fillRect(46, 11 * TILE + 20, 68, 120);
     b.fillStyle = "#f4dbe5"; b.fillRect(40, 11 * TILE + 40, 80, 80); b.fillRect(32, 11 * TILE + 52, 96, 56); b.fillRect(52, 11 * TILE + 32, 56, 96);
@@ -1194,6 +1197,11 @@ function drawFloors(b, theme = "default", rugs = [POLayout.defaultRug()], dim = 
     else if (floor === "dreamwood") drawDreamWood(b, x, y, w, h);
     else if (floor === "starCarpet") drawStarCarpet(b, x, y, w, h);
     else if (floor === "nightTiles") drawNightTiles(b, x, y, w, h);
+    else if (floor === "terracottaTiles") drawTerracottaTiles(b, x, y, w, h);
+    else if (floor === "dairyPlanks") drawDairyPlanks(b, x, y, w, h);
+    else if (floor === "strawMatting") drawStrawMatting(b, x, y, w, h);
+    else if (floor === "pastureGrass") drawPastureGrass(b, x, y, w, h);
+    else if (floor === "cellarFlagstone") drawCellarFlagstone(b, x, y, w, h);
     else drawConcrete(b, x, y, w, h);
   }
   // door thresholds
@@ -2494,7 +2502,7 @@ WALL_ART.music_clock = wallClock;
 PROPS.music = { counter: drawStudioBar, fridge: drawSpeakerStack, roundTable: drawDrumKit, meetingTable: drawMixingConsole, sofa: drawStudioCouch, coffeeTable: drawSynth, bookshelf: drawVinylShelf, lamp: drawMicStand, cabinets: drawGuitarRack, boxes: drawAmpStack, printer: drawCameraRig, cooler: drawRingLight, coffeeStation: drawHeadphoneStand };
 THEME_NAMES.push("music");
 
-// --- travel theme (travel agency / Footyprint) ---
+// --- travel theme (travel agency) ---
 THEMES.travel = { wall: { face: "#5f9fb0", top: "#74b3c3", base: "#4f8797", base2: "#3c6874", edge: "#2f525c", inner: "#7fb3c1", innerLight: "#9cc7d3", innerDark: "#3a5f69" }, floors: { kitchen: "tiles", office: "wood", meeting: "carpet", lounge: "sand", archive: "concrete" }, rug: "compass" };
 
 function drawSand(b, x, y, w, h) {
@@ -2657,7 +2665,7 @@ WALL_ART.travel_bunting = wallAt(0, (b) => { // bunting flags + world clocks
   for (let i = 0; i < 8; i++) { const px = 12 + i * 25; b.fillStyle = flags[i][0]; b.fillRect(px, 9, 14, 8); b.fillStyle = flags[i][1]; b.fillRect(px, 13, 14, 2); b.fillStyle = flags[i][0]; b.fillRect(px + 4, 17, 6, 3); }
   drawClockOffset(b, 40, 36, 3, "#d9534f"); drawClockOffset(b, 100, 36, 1, "#3b8bc9"); drawClockOffset(b, 160, 36, -4, "#ffd166");
 });
-WALL_ART.travel_poster = wallAt(7, (b) => { // Footyprint poster (footprint icon)
+WALL_ART.travel_poster = wallAt(7, (b) => { // footprint poster
   outlineRect(b, 8 * TILE - 2, 10, 26, 36, "#2f6f8f"); b.fillStyle = "#3f8fb0"; b.fillRect(8 * TILE, 12, 22, 32);
   const fx = 8 * TILE + 6, fy = 16; b.fillStyle = "#f4efe1"; b.fillRect(fx + 2, fy + 8, 8, 12); b.fillRect(fx + 3, fy + 20, 6, 4); b.fillRect(fx + 1, fy + 3, 3, 4); b.fillRect(fx + 5, fy + 2, 2, 3); b.fillRect(fx + 8, fy + 3, 2, 3); b.fillRect(fx + 11, fy + 5, 2, 3);
   b.fillStyle = "#ffd166"; b.fillRect(fx + 2, fy + 26, 10, 1); b.fillRect(fx + 4, fy + 28, 6, 1);
@@ -3851,6 +3859,434 @@ WALL_ART.dream_painting = wallAt(28, (b) => { // a framed dream painting
 WALL_ART.dream_clock = wallClock;
 PROPS.dream = { counter: drawTeaBar, fridge: drawGrandfatherClock, roundTable: drawMoonTable, stool: drawCloudStool, meetingTable: drawDreamTable, sofa: drawChaise, coffeeTable: drawCrystalStand, bookshelf: drawDreamShelf, lamp: drawMoonLamp, cabinets: drawApothecary, boxes: drawPillowPile, printer: drawEasel, cooler: drawHourglass, coffeeStation: drawDreamcatcher };
 THEME_NAMES.push("dream");
+// --- cheese theme (cheese dairy: tasting bar, copper-vat workshop, aging cellar, pasture view) ---
+const CHEESE = { cheese: "#f2c94c", cheeseLight: "#fbe38a", cheeseDark: "#d9a62e", hole: "#b8841f", rind: "#d98a3a", rindDark: "#a8611f", wax: "#b8322a", waxDark: "#7e1f1a", cloth: "#f6efdc", clothDark: "#dccfae", copper: "#c8743c", copperDark: "#8f4a22", copperLight: "#eba070", wood: "#a9743f", woodDark: "#6f4624", woodLight: "#c99660", plaster: "#efe0bd", milk: "#fbf8ee", herb: "#6f9a45", herbDark: "#486b2c", terracotta: "#c9754a", slate: "#8d8a82", sky: "#a9d6ee", brass: "#d8b04a", brassDark: "#9c7420", board: "#2f3a32", straw: "#dcc58a", strawDark: "#b99b5a", blue: "#4a78b8" };
+
+function drawTerracottaTiles(b, x, y, w, h) { // warm terracotta tiles, cream grout, a few chipped corners
+  b.save(); b.beginPath(); b.rect(x, y, w, h); b.clip();
+  b.fillStyle = "#e3cfa9"; b.fillRect(x, y, w, h);
+  const tones = ["#d29c77", "#cb9370", "#d6a37f", "#c98e69"];
+  for (let py = y, r = 0; py < y + h; py += 32, r++) for (let px = x, c = 0; px < x + w; px += 32, c++) {
+    const i = c * 5 + r * 3, s = (i * 1103515245 + 12345) & 0x7fffffff;
+    b.fillStyle = tones[(i * 7) % 4]; b.fillRect(px + 1, py + 1, 30, 30);
+    b.fillStyle = "rgba(255,240,210,.2)"; b.fillRect(px + 1, py + 1, 30, 1); b.fillRect(px + 1, py + 1, 1, 30);
+    b.fillStyle = "rgba(110,50,25,.14)"; b.fillRect(px + 1, py + 30, 30, 1); b.fillRect(px + 30, py + 1, 1, 30);
+    b.fillRect(px + 4 + (s % 20), py + 6 + ((s >> 8) % 18), 2, 1); b.fillRect(px + 6 + ((s >> 12) % 18), py + 10 + ((s >> 16) % 16), 1, 1);
+    if (i % 5 === 2) { b.fillStyle = "#e3cfa9"; b.fillRect(px + 28, py + 29, 3, 2); b.fillRect(px + 30, py + 27, 1, 3); }
+  }
+  b.restore();
+}
+function drawDairyPlanks(b, x, y, w, h) { // wax-yellow boards running top to bottom, ochre grain, pale whey stains
+  b.save(); b.beginPath(); b.rect(x, y, w, h); b.clip();
+  b.fillStyle = "#e0b648"; b.fillRect(x, y, w, h);
+  for (let px = x, col = 0; px < x + w; px += 24, col++) {
+    b.fillStyle = ["#e3ba4c", "#dcb040", "#e7c05a"][col % 3]; b.fillRect(px, y, 24, h);
+    b.fillStyle = "#a87a1c"; b.fillRect(px, y, 1, h); b.fillStyle = "rgba(255,240,170,.25)"; b.fillRect(px + 1, y, 1, h);
+    for (let py = y + 20 + ((col * 71) % 96) - 96; py < y + h; py += 96) if (py >= y) { b.fillStyle = "#a87a1c"; b.fillRect(px, py, 24, 1); }
+    const s = (col * 2654435761 + 977) & 0x7fffffff;
+    b.fillStyle = "rgba(140,92,18,.2)"; for (let k = 0; k < Math.floor(h / 40); k++) b.fillRect(px + 4 + (k * 7 + col) % 14, y + ((s >> (k % 8)) + k * 47) % (h - 12), 1, 6 + k % 3 * 3);
+    if (col % 4 === 2) { b.fillStyle = "rgba(255,246,200,.32)"; const sy = y + (s % Math.max(1, h - 40)); b.fillRect(px + 6, sy, 1, 22); b.fillRect(px + 7, sy + 4, 1, 14); }
+  }
+  b.restore();
+}
+function drawStrawMatting(b, x, y, w, h) { // woven rush matting: basket-weave cells in two straw tones
+  b.save(); b.beginPath(); b.rect(x, y, w, h); b.clip();
+  b.fillStyle = "#d4bb7c"; b.fillRect(x, y, w, h);
+  for (let py = y, r = 0; py < y + h; py += 8, r++) for (let px = x, c = 0; px < x + w; px += 8, c++) {
+    const odd = (r + c) % 2;
+    b.fillStyle = odd ? "#dcc58a" : "#d0b774"; b.fillRect(px, py, 8, 8);
+    b.fillStyle = "rgba(150,112,50,.38)";
+    if (odd) { b.fillRect(px, py + 2, 8, 1); b.fillRect(px, py + 5, 8, 1); } else { b.fillRect(px + 2, py, 1, 8); b.fillRect(px + 5, py, 1, 8); }
+    b.fillStyle = "#bfa266"; b.fillRect(px + 7, py, 1, 8); b.fillRect(px, py + 7, 8, 1);
+    b.fillStyle = "rgba(255,245,200,.2)"; b.fillRect(px, py, 8, 1);
+  }
+  b.restore();
+}
+function drawPastureGrass(b, x, y, w, h) { // soft meadow with grass tufts and buttercups
+  b.save(); b.beginPath(); b.rect(x, y, w, h); b.clip();
+  b.fillStyle = "#abc97c"; b.fillRect(x, y, w, h);
+  b.fillStyle = "#a4c473"; for (let py = y, r = 0; py < y + h; py += 32, r++) for (let px = x + (r % 2) * 32, c = 0; px < x + w; px += 64, c++) b.fillRect(px, py, 32, 32);
+  let s = 11;
+  for (let i = 0; i < Math.floor((w * h) / 420); i++) {
+    s = (s * 1103515245 + 12345) & 0x7fffffff;
+    const px = x + (s % w), py = y + ((s >> 8) % h);
+    b.fillStyle = "#8fb560"; b.fillRect(px, py, 1, 3); b.fillRect(px + 2, py + 1, 1, 2); b.fillRect(px - 2, py + 1, 1, 2);
+    b.fillStyle = "#789f4c"; b.fillRect(px, py + 3, 1, 1); b.fillRect(px + 2, py + 3, 1, 1);
+  }
+  for (let i = 0; i < Math.floor((w * h) / 2400) + 1; i++) {
+    s = (s * 1103515245 + 12345) & 0x7fffffff;
+    const px = x + (s % w), py = y + ((s >> 8) % h);
+    b.fillStyle = "#f2d34a"; b.fillRect(px, py, 2, 2); b.fillStyle = "#fff6b8"; b.fillRect(px, py, 1, 1);
+  }
+  b.restore();
+}
+function drawCellarFlagstone(b, x, y, w, h) { // irregular grey-brown flagstones, mortar, damp patches
+  b.save(); b.beginPath(); b.rect(x, y, w, h); b.clip();
+  b.fillStyle = "#7c776e"; b.fillRect(x, y, w, h);
+  const hs = [20, 28, 24, 32, 22], ws = [30, 42, 36, 48, 26], tones = ["#a39d92", "#9a9489", "#aaa498", "#958f85"];
+  let py = y;
+  for (let r = 0; py < y + h; r++) {
+    const hh = hs[r % 5];
+    let px = x - ((r * 19) % 32) - 8;
+    for (let k = 0; px < x + w; k++) {
+      const sw = ws[(r * 3 + k) % 5];
+      b.fillStyle = tones[(r * 5 + k * 3) % 4]; b.fillRect(px, py, sw - 1, hh - 1);
+      b.fillStyle = "rgba(255,255,255,.09)"; b.fillRect(px, py, sw - 1, 1); b.fillRect(px, py, 1, hh - 1);
+      b.fillStyle = "rgba(40,35,30,.14)"; b.fillRect(px + 1, py + hh - 2, sw - 2, 1);
+      if ((r + k) % 3 === 0) { b.fillStyle = "rgba(60,55,48,.22)"; b.fillRect(px + 5 + (k * 7) % 9, py + 5 + (r * 3) % 8, 4, 1); b.fillRect(px + 8 + (k * 7) % 9, py + 6 + (r * 3) % 8, 2, 1); }
+      px += sw;
+    }
+    py += hh;
+  }
+  let s = 5;
+  for (let i = 0; i < Math.floor((w * h) / 3200) + 1; i++) {
+    s = (s * 1103515245 + 12345) & 0x7fffffff;
+    const px = x + (s % w), py2 = y + ((s >> 8) % h);
+    b.fillStyle = "rgba(45,65,75,.12)"; b.fillRect(px, py2, 18, 8); b.fillRect(px + 4, py2 - 2, 10, 2); b.fillRect(px + 3, py2 + 8, 12, 2);
+  }
+  b.restore();
+}
+
+let wheelRug = null;
+function drawWheelRug(b, x, y) { // a cheese wheel seen from above: rind ring, yellow face, a cut wedge, holes, a wax seal
+  if (!wheelRug) {
+    wheelRug = document.createElement("canvas"); wheelRug.width = 144; wheelRug.height = 144;
+    const g = wheelRug.getContext("2d");
+    disc(g, 72, 72, 71, OUTLINE); disc(g, 72, 72, 70, CHEESE.rindDark); disc(g, 72, 72, 68, CHEESE.rind); disc(g, 72, 72, 62, CHEESE.rindDark);
+    g.fillStyle = CHEESE.cloth; for (let a = 0; a < 28; a++) g.fillRect(72 + Math.round(Math.cos(a / 28 * Math.PI * 2) * 65) - 1, 72 + Math.round(Math.sin(a / 28 * Math.PI * 2) * 65) - 1, 2, 2);
+    g.fillStyle = CHEESE.rindDark; for (let a = 0; a < 28; a++) g.fillRect(72 + Math.round(Math.cos(a / 28 * Math.PI * 2) * 65), 72 + Math.round(Math.sin(a / 28 * Math.PI * 2) * 65) + 1, 1, 1);
+    disc(g, 72, 72, 58, CHEESE.cheeseDark); disc(g, 72, 72, 56, CHEESE.cheese); disc(g, 69, 69, 46, "#f5d35e"); disc(g, 66, 66, 30, CHEESE.cheeseLight);
+    disc(g, 66, 66, 20, "#f5d35e");
+    for (let py = 0; py < 144; py++) for (let px = 0; px < 144; px++) {
+      const dx = px - 72, dy = py - 72, d = Math.sqrt(dx * dx + dy * dy);
+      if (d > 58) continue;
+      const a = Math.atan2(dy, dx);
+      if (a > 0.17 && a < 0.87) {
+        g.fillStyle = d > 54 ? CHEESE.rind : (a < 0.22 || a > 0.82 ? CHEESE.cheeseDark : (d > 48 ? CHEESE.clothDark : CHEESE.cloth));
+        g.fillRect(px, py, 1, 1);
+      }
+    }
+    g.fillStyle = CHEESE.cheeseLight; for (const [hx, hy] of [[96, 84], [104, 92], [98, 96]]) g.fillRect(hx, hy, 2, 1);
+    for (const [hx, hy, hr] of [[40, 50, 5], [58, 36, 4], [44, 82, 6], [70, 96, 4], [34, 66, 3], [88, 48, 5], [100, 66, 3], [60, 108, 3]]) { disc(g, hx, hy, hr, CHEESE.hole); disc(g, hx - 1, hy - 1, Math.max(1, hr - 2), CHEESE.cheeseDark); g.fillStyle = CHEESE.cheeseLight; g.fillRect(hx - hr + 1, hy + hr, hr * 2 - 1, 1); }
+    disc(g, 72, 72, 10, OUTLINE); disc(g, 72, 72, 9, CHEESE.waxDark); disc(g, 72, 72, 7, CHEESE.wax); g.fillStyle = "#d9584a"; g.fillRect(69, 68, 4, 2); g.fillRect(68, 70, 2, 2);
+    g.fillStyle = CHEESE.waxDark; g.fillRect(70, 72, 4, 1); g.fillRect(72, 74, 1, 2);
+  }
+  b.drawImage(wheelRug, x, y);
+}
+
+function cheeseWallWheel(b, x, y, w, h, col) { // a wheel seen from the side: rounded block, light top, dark underside
+  outlineRect(b, x, y, w, h, col);
+  b.fillStyle = shade(col, 34); b.fillRect(x + 1, y, w - 2, 2); b.fillStyle = shade(col, -38); b.fillRect(x + 1, y + h - 2, w - 2, 2);
+  b.fillStyle = OUTLINE; b.fillRect(x, y, 1, 1); b.fillRect(x + w - 1, y, 1, 1); b.fillRect(x, y + h - 1, 1, 1); b.fillRect(x + w - 1, y + h - 1, 1, 1);
+}
+WALL_ART.cheese_wheels = wallAt(0, (b) => { // long shelf stacked with wheels, wooden labels, a hanging cheese wire
+  const stacks = [[6, [[28, 9, CHEESE.rind], [24, 9, CHEESE.rindDark]]], [38, [[30, 10, CHEESE.cheese], [26, 8, CHEESE.wax]]], [72, [[26, 9, "#9a948a"], [28, 9, CHEESE.rind], [22, 8, CHEESE.cheeseDark]]], [104, [[30, 10, CHEESE.wax], [26, 9, CHEESE.rind]]]];
+  for (const [sx, ws] of stacks) { let yy = 40; for (const [w, h, col] of ws) { yy -= h; cheeseWallWheel(b, sx + Math.round((30 - w) / 2), yy, w, h, col); } }
+  outlineRect(b, 2, 40, 128, 5, CHEESE.wood); b.fillStyle = CHEESE.woodLight; b.fillRect(3, 40, 126, 1); b.fillStyle = CHEESE.woodDark; b.fillRect(3, 44, 126, 1);
+  b.fillStyle = OUTLINE; b.fillRect(10, 45, 3, 3); b.fillRect(116, 45, 3, 3);
+  for (const [lx, c] of [[14, CHEESE.rind], [46, CHEESE.cheese], [80, CHEESE.cloth], [112, CHEESE.wax]]) { outlineRect(b, lx, 46, 9, 5, CHEESE.cloth); b.fillStyle = CHEESE.clothDark; b.fillRect(lx, 50, 9, 1); b.fillStyle = c; b.fillRect(lx + 2, 47, 5, 1); b.fillStyle = CHEESE.woodDark; b.fillRect(lx + 2, 49, 3, 1); }
+  b.fillStyle = OUTLINE; b.fillRect(142, 8, 2, 2); b.fillRect(142, 10, 1, 24); b.fillRect(148, 8, 2, 2); b.fillRect(143, 34, 7, 1);
+  b.fillStyle = CHEESE.clothDark; b.fillRect(143, 11, 1, 22); b.fillStyle = CHEESE.brass; b.fillRect(143, 33, 1, 1); b.fillRect(149, 33, 1, 1); b.fillStyle = "#c9c2b0"; b.fillRect(144, 33, 5, 1);
+  outlineRect(b, 140, 35, 4, 8, CHEESE.wood); outlineRect(b, 148, 35, 4, 8, CHEESE.wood); b.fillStyle = CHEESE.woodLight; b.fillRect(140, 35, 1, 8); b.fillRect(148, 35, 1, 8);
+});
+WALL_ART.cheese_menu = wallAt(5, (b, t) => { // green-framed chalkboard with cheeses, wedge icons and prices
+  const mx = 5 * TILE - 10;
+  outlineRect(b, mx, 6, 88, 44, CHEESE.herbDark); b.fillStyle = CHEESE.herb; b.fillRect(mx, 6, 88, 1); b.fillRect(mx, 6, 1, 44); b.fillStyle = CHEESE.board; b.fillRect(mx + 3, 9, 82, 38); b.fillStyle = "rgba(255,255,255,.05)"; b.fillRect(mx + 3, 9, 82, 2);
+  b.fillStyle = CHEESE.cloth; b.fillRect(mx + 22, 12, 44, 2); b.fillRect(mx + 26, 15, 36, 1);
+  for (let i = 0; i < 4; i++) {
+    const ry = 20 + i * 7, on = i === Math.floor(t / 900) % 4;
+    b.fillStyle = on ? CHEESE.cheese : CHEESE.cheeseDark; b.fillRect(mx + 7, ry + 1, 6, 1); b.fillRect(mx + 8, ry + 2, 4, 1); b.fillRect(mx + 9, ry + 3, 2, 1); b.fillStyle = CHEESE.board; b.fillRect(mx + 9, ry + 2, 1, 1);
+    b.fillStyle = CHEESE.cloth; b.fillRect(mx + 17, ry + 1, 14 + (i * 5) % 9, 1); b.fillRect(mx + 17, ry + 3, 6 + (i * 3) % 5, 1);
+    b.fillStyle = CHEESE.clothDark; for (let d = mx + 52; d < mx + 70; d += 3) b.fillRect(d, ry + 3, 1, 1); b.fillStyle = CHEESE.cloth; b.fillRect(mx + 72, ry + 1, 6, 1); b.fillRect(mx + 72, ry + 3, 4, 1);
+  }
+  if (Math.floor(t / 500) % 2) { b.fillStyle = CHEESE.cheeseLight; b.fillRect(mx + 72, 11, 7, 1); b.fillRect(mx + 73, 12, 5, 1); b.fillRect(mx + 74, 13, 3, 1); b.fillRect(mx + 75, 14, 1, 1); }
+});
+WALL_ART.cheese_rack = wallAt(12, (b, t) => { // cloth squares pegged on a line, swaying, with a brass cheese harp
+  const rx = 12 * TILE;
+  b.fillStyle = OUTLINE; b.fillRect(rx + 2, 6, 3, 4); b.fillRect(rx + 66, 6, 3, 4); b.fillRect(rx + 3, 9, 64, 1);
+  b.fillStyle = CHEESE.clothDark; b.fillRect(rx + 3, 8, 64, 1);
+  for (let i = 0; i < 3; i++) {
+    const cx = rx + 8 + i * 20, cw = 15, ch = 26 - (i === 1 ? 6 : 0), ph = t / 700 + i * 1.7;
+    for (let r = 0; r < ch; r += 2) {
+      const sx = Math.round(Math.sin(ph) * 2 * (r / ch)), yy = 10 + r;
+      b.fillStyle = OUTLINE; b.fillRect(cx + sx - 1, yy, 1, 2); b.fillRect(cx + sx + cw, yy, 1, 2);
+      b.fillStyle = i === 1 ? CHEESE.cloth : (r % 8 < 4 ? CHEESE.cloth : CHEESE.clothDark); b.fillRect(cx + sx, yy, cw, 2);
+      if (i !== 1 && r % 8 < 4) { b.fillStyle = CHEESE.clothDark; for (let c = 0; c < cw; c += 4) b.fillRect(cx + sx + c, yy, 2, 2); }
+    }
+    b.fillStyle = OUTLINE; b.fillRect(cx - 1, 9 + ch + 1, cw + 2, 1);
+    b.fillStyle = CHEESE.wood; b.fillRect(cx + 1, 7, 3, 6); b.fillRect(cx + cw - 4, 7, 3, 6); b.fillStyle = CHEESE.woodDark; b.fillRect(cx + 1, 11, 3, 2); b.fillRect(cx + cw - 4, 11, 3, 2);
+  }
+  const hx = rx + 76; b.fillStyle = OUTLINE; b.fillRect(hx + 7, 8, 2, 6); b.fillRect(hx + 4, 13, 8, 1);
+  outlineRect(b, hx, 14, 16, 2, CHEESE.brass); outlineRect(b, hx, 36, 16, 2, CHEESE.brass); b.fillStyle = CHEESE.brassDark; b.fillRect(hx, 37, 16, 1);
+  outlineRect(b, hx - 1, 14, 2, 24, CHEESE.brass); outlineRect(b, hx + 15, 14, 2, 24, CHEESE.brassDark);
+  b.fillStyle = "#e6e0c8"; for (let k = 3; k < 15; k += 2) b.fillRect(hx + k, 16, 1, 20);
+  outlineRect(b, hx + 5, 38, 6, 8, CHEESE.wood); b.fillStyle = CHEESE.woodLight; b.fillRect(hx + 5, 38, 1, 8);
+});
+WALL_ART.cheese_clock = wallClock;
+WALL_ART.cheese_pots = wallAt(20, (b, t) => { // rail of copper pots, ladles and a skimmer, with twinkling glints
+  const px0 = 20 * TILE;
+  outlineRect(b, px0 + 4, 7, 88, 3, CHEESE.brass); b.fillStyle = CHEESE.brassDark; b.fillRect(px0 + 4, 9, 88, 1); b.fillStyle = OUTLINE; b.fillRect(px0 + 2, 6, 3, 5); b.fillRect(px0 + 91, 6, 3, 5);
+  const glints = [];
+  const pot = (cx, w, h) => { b.fillStyle = OUTLINE; b.fillRect(cx, 10, 1, 4); b.fillRect(cx - 1, 13, 3, 2); outlineRect(b, cx - w / 2, 15, w, h, CHEESE.copper); b.fillStyle = CHEESE.copperLight; b.fillRect(cx - w / 2, 15, 2, h); b.fillRect(cx - w / 2, 15, w, 1); b.fillStyle = CHEESE.copperDark; b.fillRect(cx - w / 2, 15 + h - 2, w, 2); b.fillRect(cx + w / 2 - 2, 15, 2, h); b.fillStyle = OUTLINE; b.fillRect(cx - w / 2 - 3, 18, 3, 2); b.fillRect(cx + w / 2, 18, 3, 2); glints.push([cx - w / 2 + 3, 18]); };
+  pot(px0 + 16, 20, 16); pot(px0 + 80, 12, 10);
+  b.fillStyle = OUTLINE; b.fillRect(px0 + 37, 10, 1, 4); outlineRect(b, px0 + 37, 14, 2, 22, CHEESE.brassDark); outlineRect(b, px0 + 34, 36, 8, 6, CHEESE.copper); b.fillStyle = CHEESE.copperLight; b.fillRect(px0 + 34, 36, 8, 1); b.fillStyle = CHEESE.copperDark; b.fillRect(px0 + 35, 41, 6, 1); glints.push([px0 + 35, 38]);
+  b.fillStyle = OUTLINE; b.fillRect(px0 + 49, 10, 1, 4); outlineRect(b, px0 + 49, 14, 2, 18, CHEESE.brassDark); disc(b, px0 + 50, 38, 6, OUTLINE); disc(b, px0 + 50, 38, 5, CHEESE.copper); b.fillStyle = CHEESE.copperDark; for (const [ox, oy] of [[-2, -2], [1, -2], [-3, 1], [0, 1], [3, 1], [-1, 3], [2, 3]]) b.fillRect(px0 + 50 + ox, 38 + oy, 1, 1); glints.push([px0 + 47, 35]);
+  b.fillStyle = OUTLINE; b.fillRect(px0 + 62, 10, 1, 4); outlineRect(b, px0 + 62, 14, 2, 16, CHEESE.brassDark); outlineRect(b, px0 + 58, 30, 10, 5, CHEESE.copperLight); b.fillStyle = CHEESE.copper; b.fillRect(px0 + 59, 33, 8, 2); glints.push([px0 + 60, 31]);
+  glints.forEach(([gx, gy], i) => { if (Math.floor(t / 260 + i * 2.3) % 7 === 0) { b.fillStyle = "#fffbe0"; b.fillRect(gx, gy, 1, 3); b.fillRect(gx - 1, gy + 1, 3, 1); } });
+});
+WALL_ART.cheese_ribbons = wallAt(24, (b) => { // award certificate, three rosettes and a cheese medal
+  const cx = 24 * TILE;
+  outlineRect(b, cx + 2, 6, 24, 30, CHEESE.woodDark); b.fillStyle = CHEESE.wood; b.fillRect(cx + 2, 6, 24, 1); b.fillStyle = CHEESE.cloth; b.fillRect(cx + 5, 9, 18, 24); b.fillStyle = CHEESE.clothDark; b.fillRect(cx + 5, 32, 18, 1);
+  b.fillStyle = CHEESE.waxDark; b.fillRect(cx + 9, 12, 10, 2); b.fillStyle = CHEESE.woodDark; for (let r = 0; r < 3; r++) b.fillRect(cx + 8, 17 + r * 3, 12 - (r === 2 ? 4 : 0), 1);
+  disc(b, cx + 14, 28, 3, CHEESE.wax); b.fillStyle = "#d9584a"; b.fillRect(cx + 13, 27, 1, 1);
+  const ros = [[cx + 36, CHEESE.wax, CHEESE.waxDark], [cx + 48, CHEESE.brass, CHEESE.brassDark], [cx + 60, CHEESE.blue, "#2c4a7c"]];
+  for (const [rx, c, d] of ros) {
+    b.fillStyle = OUTLINE; b.fillRect(rx - 4, 24, 4, 14); b.fillRect(rx + 1, 24, 4, 14); b.fillRect(rx - 4, 38, 2, 1); b.fillRect(rx + 3, 38, 2, 1);
+    b.fillStyle = c; b.fillRect(rx - 3, 24, 2, 13); b.fillRect(rx + 2, 24, 2, 13); b.fillStyle = d; b.fillRect(rx - 2, 24, 1, 13); b.fillRect(rx + 3, 24, 1, 13);
+    disc(b, rx, 17, 7, OUTLINE); disc(b, rx, 17, 6, d); disc(b, rx, 17, 5, c); disc(b, rx, 17, 2, d); b.fillStyle = "#ffffff"; b.fillRect(rx - 3, 14, 2, 1); b.fillRect(rx, 17, 1, 1);
+  }
+  b.fillStyle = OUTLINE; b.fillRect(cx + 7, 38, 1, 3); b.fillRect(cx + 14, 38, 1, 3); b.fillStyle = CHEESE.wax; b.fillRect(cx + 8, 38, 2, 2); b.fillRect(cx + 12, 38, 2, 2);
+  disc(b, cx + 10, 44, 4, OUTLINE); disc(b, cx + 10, 44, 3, CHEESE.cheese); b.fillStyle = CHEESE.cheeseLight; b.fillRect(cx + 8, 42, 2, 1); b.fillStyle = CHEESE.hole; b.fillRect(cx + 11, 44, 1, 1); b.fillRect(cx + 9, 46, 1, 1);
+});
+WALL_ART.cheese_pasture = (b, t) => { // sunny pasture in the windows, whatever the time of day
+  for (const wx of [9 * TILE, 17 * TILE]) {
+    b.fillStyle = CHEESE.woodDark; b.fillRect(wx - 4, 4, 104, 48); b.fillStyle = CHEESE.wood; b.fillRect(wx - 4, 4, 104, 1); b.fillStyle = "#4e3018"; b.fillRect(wx - 4, 50, 104, 3);
+    b.save(); b.beginPath(); b.rect(wx, 8, 96, 40); b.clip();
+    const g = b.createLinearGradient(0, 8, 0, 40); g.addColorStop(0, "#8ec9ea"); g.addColorStop(1, "#d6eef4"); b.fillStyle = g; b.fillRect(wx, 8, 96, 40);
+    disc(b, wx + 80, 17, 5, "#fff1a8"); disc(b, wx + 80, 17, 3, "#fffbe0");
+    b.fillStyle = "#ffffff"; for (const [k, cy, sc] of [[0, 14, 1], [1, 24, 0.8], [2, 10, 0.7]]) { const cxp = wx + ((t / (150 + k * 60) + k * 50) % 150) - 30; b.fillRect(cxp, cy, 22 * sc, 4); b.fillRect(cxp + 5 * sc, cy - 3, 12 * sc, 3); b.fillStyle = "#e6f3f8"; b.fillRect(cxp, cy + 3, 22 * sc, 1); b.fillStyle = "#ffffff"; }
+    for (let x = 0; x < 96; x += 2) { const hy = 29 + Math.round(Math.sin(x / 15 + 1) * 3 + Math.sin(x / 7) * 1); b.fillStyle = "#8fb560"; b.fillRect(wx + x, hy, 2, 14); b.fillStyle = "#a3c876"; b.fillRect(wx + x, hy, 2, 1); }
+    const bx = wx + 62; b.fillStyle = OUTLINE; b.fillRect(bx - 1, 22, 20, 13); b.fillStyle = CHEESE.wax; b.fillRect(bx, 26, 18, 9); b.fillStyle = CHEESE.waxDark; b.fillRect(bx, 34, 18, 1);
+    for (let r = 0; r < 4; r++) { b.fillStyle = OUTLINE; b.fillRect(bx + r * 2 - 1, 22 + 3 - r, 20 - r * 4 - 2 + 2, 1); b.fillStyle = CHEESE.waxDark; b.fillRect(bx + r * 2, 25 - r, 18 - r * 4, 1); }
+    b.fillStyle = CHEESE.cloth; b.fillRect(bx + 6, 28, 6, 7); b.fillStyle = CHEESE.wax; b.fillRect(bx + 8, 28, 2, 7); b.fillRect(bx + 6, 31, 6, 1);
+    for (let x = 0; x < 96; x += 2) { const hy = 35 + Math.round(Math.sin(x / 11 + 3) * 2); b.fillStyle = "#7fae52"; b.fillRect(wx + x, hy, 2, 14); b.fillStyle = "#98c466"; b.fillRect(wx + x, hy, 2, 1); }
+    b.fillStyle = "#6a9a45"; for (let i = 0; i < 12; i++) b.fillRect(wx + 4 + i * 8 + (i % 3), 41 + (i * 3) % 6, 1, 2);
+    b.fillStyle = CHEESE.wood; b.fillRect(wx, 38, 96, 1); b.fillRect(wx, 41, 96, 1); b.fillStyle = CHEESE.woodDark; b.fillRect(wx, 39, 96, 1); b.fillRect(wx, 42, 96, 1);
+    for (let x = 4; x < 96; x += 14) { b.fillStyle = CHEESE.woodLight; b.fillRect(wx + x, 36, 2, 9); b.fillStyle = CHEESE.woodDark; b.fillRect(wx + x + 1, 36, 1, 9); }
+    const cow = wx + 24 + Math.round(Math.sin(t / 9000) * 8), graze = Math.sin(t / 1800) > 0.1, hy = graze ? 5 : 0, sw = Math.round(Math.sin(t / 260) * 1.5);
+    b.fillStyle = OUTLINE; b.fillRect(cow + 1, 37, 15, 9); b.fillRect(cow - 5, 36 + hy, 8, 7); b.fillRect(cow + 2, 44, 2, 4); b.fillRect(cow + 12, 44, 2, 4);
+    b.fillStyle = CHEESE.milk; b.fillRect(cow + 2, 38, 13, 6); b.fillRect(cow - 4, 37 + hy, 6, 5); b.fillStyle = "#e0dccc"; b.fillRect(cow + 2, 43, 13, 1);
+    b.fillStyle = "#3b3636"; b.fillRect(cow + 4, 38, 4, 3); b.fillRect(cow + 11, 40, 3, 3); b.fillRect(cow - 4, 37 + hy, 2, 2); b.fillRect(cow + 3, 41, 2, 1);
+    b.fillStyle = "#f0a8a0"; b.fillRect(cow - 4, 40 + hy, 3, 2); b.fillStyle = OUTLINE; b.fillRect(cow - 2, 38 + hy, 1, 1); b.fillRect(cow - 5, 36 + hy, 2, 2);
+    b.fillStyle = "#e0dccc"; b.fillRect(cow + 3, 44, 1, 3); b.fillRect(cow + 12, 44, 1, 3); b.fillStyle = CHEESE.milk; b.fillRect(cow + 2, 44, 1, 3); b.fillRect(cow + 13, 44, 1, 3);
+    b.fillStyle = OUTLINE; b.fillRect(cow + 16 + sw, 38, 1, 5); b.fillRect(cow + 16 + sw * 2, 43, 2, 2);
+    b.restore();
+    b.fillStyle = CHEESE.woodDark; b.fillRect(wx + 47, 8, 2, 40); b.fillRect(wx, 27, 96, 2); b.fillStyle = CHEESE.wood; b.fillRect(wx + 47, 8, 1, 40); b.fillRect(wx, 27, 96, 1);
+  }
+};
+function drawTastingBar(b, x, y, t = 0) { // kitchen counter: wooden tasting bar with cloth-checked front
+  outlineRect(b, x, y + 6, 160, 26, CHEESE.wood); b.fillStyle = CHEESE.woodLight; b.fillRect(x, y + 6, 160, 4); b.fillStyle = CHEESE.woodDark; b.fillRect(x, y + 30, 160, 2);
+  for (let i = 0; i < 5; i++) for (let j = 0; j < 4; j++) for (let k = 0; k < 7; k++) { b.fillStyle = (j + k) % 2 ? CHEESE.cloth : CHEESE.wax; b.fillRect(x + i * 32 + 2 + k * 4, y + 12 + j * 4, 4, 4); }
+  for (let i = 0; i < 5; i++) { b.fillStyle = CHEESE.waxDark; b.fillRect(x + i * 32 + 2, y + 28, 28, 1); b.fillStyle = CHEESE.woodDark; b.fillRect(x + i * 32 + 31, y + 12, 1, 18); }
+  // cheese dome with a wedge
+  outlineRect(b, x + 6, y + 2, 26, 4, CHEESE.woodDark);
+  b.fillStyle = OUTLINE; b.fillRect(x + 10, y - 12, 18, 2); b.fillRect(x + 8, y - 10, 22, 2); b.fillRect(x + 7, y - 8, 24, 10);
+  b.fillStyle = "#dcefff"; b.fillRect(x + 10, y - 11, 18, 1); b.fillRect(x + 8, y - 9, 22, 1); b.fillRect(x + 8, y - 8, 22, 9);
+  b.fillStyle = "rgba(255,255,255,.55)"; b.fillRect(x + 10, y - 8, 2, 5); b.fillRect(x + 12, y - 9, 3, 1);
+  b.fillStyle = OUTLINE; b.fillRect(x + 16, y - 15, 6, 4); b.fillStyle = CHEESE.copper; b.fillRect(x + 17, y - 14, 4, 2);
+  b.fillStyle = OUTLINE; b.fillRect(x + 12, y - 3, 16, 5); b.fillStyle = CHEESE.cheese; b.fillRect(x + 13, y - 2, 14, 4); b.fillStyle = CHEESE.cheeseLight; b.fillRect(x + 13, y - 2, 14, 1); b.fillStyle = CHEESE.hole; b.fillRect(x + 16, y, 2, 2); b.fillRect(x + 22, y - 1, 2, 2);
+  // cutting board with knife, sample cubes on toothpicks
+  outlineRect(b, x + 42, y - 4, 34, 10, CHEESE.woodLight); b.fillStyle = CHEESE.wood; b.fillRect(x + 42, y + 4, 34, 2); outlineRect(b, x + 72, y - 2, 4, 3, CHEESE.woodDark);
+  b.fillStyle = OUTLINE; b.fillRect(x + 44, y - 1, 14, 3); b.fillStyle = "#d8dce4"; b.fillRect(x + 45, y - 1, 12, 2); b.fillStyle = "#fff"; b.fillRect(x + 45, y - 1, 12, 1); b.fillStyle = CHEESE.woodDark; b.fillRect(x + 58, y - 1, 5, 3);
+  for (let i = 0; i < 4; i++) { const cx = x + 48 + i * 6, cy = y - 8 - (i % 2); b.fillStyle = OUTLINE; b.fillRect(cx + 1, cy - 5, 1, 5); b.fillStyle = CHEESE.wax; b.fillRect(cx, cy - 7, 3, 2); outlineRect(b, cx - 1, cy, 5, 5, i % 2 ? CHEESE.cheeseLight : CHEESE.cheese); b.fillStyle = CHEESE.cheeseDark; b.fillRect(cx - 1, cy + 4, 5, 1); }
+  // chalk sign
+  b.fillStyle = OUTLINE; b.fillRect(x + 92, y - 4, 2, 10); b.fillRect(x + 108, y - 4, 2, 10); outlineRect(b, x + 90, y - 12, 22, 14, CHEESE.herbDark); b.fillStyle = "#2f3b2c"; b.fillRect(x + 92, y - 10, 18, 10);
+  b.fillStyle = "#f1f1e6"; b.fillRect(x + 94, y - 8, 10, 1); b.fillRect(x + 94, y - 5, 13, 1); b.fillStyle = CHEESE.cheeseLight; b.fillRect(x + 106, y - 8, 2, 2); b.fillRect(x + 94, y - 3, 6, 1);
+  // pot of melted cheese with a faint steam wisp
+  outlineRect(b, x + 122, y - 6, 22, 12, CHEESE.copper); b.fillStyle = CHEESE.copperLight; b.fillRect(x + 122, y - 6, 22, 2); b.fillStyle = CHEESE.copperDark; b.fillRect(x + 122, y + 4, 22, 2);
+  b.fillStyle = CHEESE.cheese; b.fillRect(x + 124, y - 5, 18, 3); b.fillStyle = CHEESE.cheeseLight; b.fillRect(x + 126, y - 5, 5, 1);
+  b.fillStyle = OUTLINE; b.fillRect(x + 144, y - 3, 6, 2); b.fillRect(x + 148, y - 6, 2, 4); b.fillRect(x + 118, y - 2, 4, 2);
+  b.fillStyle = "rgba(255,255,255,.45)"; for (let i = 0; i < 3; i++) { const ph = (Math.floor(t / 280) + i * 2) % 6; b.fillRect(x + 128 + i * 4 + (ph % 2), y - 9 - ph * 2, 2, 2); }
+  // wooden spoon in the pot
+  b.fillStyle = OUTLINE; b.fillRect(x + 140, y - 15, 3, 11); b.fillStyle = CHEESE.woodLight; b.fillRect(x + 141, y - 14, 1, 9);
+}
+function drawMilkChurn(b, x, y, t = 0) { // fridge slot: tall milk churn with a dripping lid
+  outlineRect(b, x + 5, y - 6, 22, 36, CHEESE.milk); b.fillStyle = CHEESE.clothDark; b.fillRect(x + 21, y - 6, 6, 36); b.fillStyle = "#c8cbd2"; b.fillRect(x + 5, y + 26, 22, 4);
+  b.fillStyle = "#fff"; b.fillRect(x + 8, y - 4, 2, 28);
+  outlineRect(b, x + 4, y + 10, 24, 6, CHEESE.wax); b.fillStyle = CHEESE.waxDark; b.fillRect(x + 4, y + 15, 24, 1); b.fillStyle = "#d9534a"; b.fillRect(x + 4, y + 10, 24, 1);
+  outlineRect(b, x + 11, y + 18, 10, 8, CHEESE.cloth); b.fillStyle = CHEESE.wax; b.fillRect(x + 13, y + 20, 6, 1); b.fillStyle = CHEESE.woodDark; b.fillRect(x + 13, y + 22, 5, 1);
+  // neck, rounded lid, knob
+  outlineRect(b, x + 8, y - 12, 16, 7, "#c8cbd2"); b.fillStyle = CHEESE.milk; b.fillRect(x + 9, y - 11, 4, 5);
+  b.fillStyle = OUTLINE; b.fillRect(x + 11, y - 22, 10, 2); b.fillRect(x + 9, y - 20, 14, 2); b.fillRect(x + 7, y - 18, 18, 7);
+  b.fillStyle = "#e1e4ea"; b.fillRect(x + 12, y - 21, 8, 1); b.fillRect(x + 10, y - 19, 12, 1); b.fillRect(x + 8, y - 17, 16, 5); b.fillStyle = "#fff"; b.fillRect(x + 10, y - 17, 3, 2); b.fillStyle = "#a8acb6"; b.fillRect(x + 8, y - 13, 16, 1);
+  outlineRect(b, x + 14, y - 26, 4, 4, CHEESE.woodDark);
+  // side handles
+  b.fillStyle = OUTLINE; b.fillRect(x + 1, y - 2, 4, 2); b.fillRect(x + 1, y - 2, 2, 10); b.fillRect(x + 1, y + 6, 4, 2); b.fillRect(x + 27, y - 2, 4, 2); b.fillRect(x + 29, y - 2, 2, 10); b.fillRect(x + 27, y + 6, 4, 2);
+  b.fillStyle = "#a8acb6"; b.fillRect(x + 2, y - 1, 2, 8); b.fillRect(x + 28, y - 1, 2, 8);
+  // slow whey drip from the lid rim
+  const ph = Math.floor(t / 150) % 14; b.fillStyle = CHEESE.milk; b.fillRect(x + 23, y - 12, 1, 3);
+  if (ph < 9) { b.fillStyle = OUTLINE; b.fillRect(x + 22, y - 9 + ph * 3, 3, 3); b.fillStyle = CHEESE.milk; b.fillRect(x + 23, y - 9 + ph * 3, 1, 2); }
+}
+function drawWheelTable(b, x, y, t = 0) { // roundTable slot: table topped by a giant cheese wheel and a candle
+  b.fillStyle = OUTLINE; b.fillRect(x + 6, y + 2, 52, 26); b.fillRect(x + 2, y + 6, 60, 18); b.fillRect(x + 28, y + 27, 8, 5);
+  b.fillStyle = CHEESE.rind; b.fillRect(x + 7, y + 3, 50, 24); b.fillRect(x + 3, y + 7, 58, 16);
+  b.fillStyle = CHEESE.rindDark; b.fillRect(x + 7, y + 23, 50, 4); b.fillRect(x + 3, y + 21, 58, 2); b.fillRect(x + 28, y + 28, 8, 3);
+  b.fillStyle = CHEESE.cheese; b.fillRect(x + 9, y + 4, 46, 20); b.fillRect(x + 5, y + 8, 54, 12); b.fillStyle = CHEESE.cheeseLight; b.fillRect(x + 10, y + 5, 40, 2); b.fillRect(x + 6, y + 9, 3, 4);
+  b.fillStyle = CHEESE.cheeseDark; b.fillRect(x + 10, y + 21, 44, 2);
+  // cut wedge showing the cream interior
+  b.fillStyle = OUTLINE; b.fillRect(x + 36, y + 6, 18, 14); b.fillStyle = CHEESE.cloth; b.fillRect(x + 37, y + 7, 16, 12); b.fillStyle = CHEESE.cheeseLight; b.fillRect(x + 37, y + 7, 16, 2); b.fillStyle = CHEESE.clothDark; b.fillRect(x + 37, y + 17, 16, 2);
+  b.fillStyle = CHEESE.hole; b.fillRect(x + 40, y + 11, 3, 3); b.fillRect(x + 47, y + 13, 2, 2); b.fillRect(x + 45, y + 9, 2, 2);
+  b.fillStyle = CHEESE.hole; for (const [hx, hy, hw] of [[14, 10, 4], [22, 15, 3], [27, 8, 3], [16, 17, 2], [30, 18, 2]]) { b.fillRect(x + hx, y + hy, hw, hw - 1); b.fillStyle = CHEESE.cheeseDark; b.fillRect(x + hx, y + hy + hw - 1, hw, 1); b.fillStyle = CHEESE.hole; }
+  // candle in a copper holder
+  outlineRect(b, x + 17, y + 20, 8, 3, CHEESE.copper); b.fillStyle = CHEESE.copperLight; b.fillRect(x + 18, y + 20, 5, 1); b.fillStyle = CHEESE.cloth; b.fillRect(x + 20, y + 13, 3, 7); b.fillStyle = CHEESE.clothDark; b.fillRect(x + 22, y + 13, 1, 7);
+  drawCandleFlame(b, x + 20, y + 13, t, 5);
+}
+function drawMilkingStool(b, x, y) { // stool slot: three-legged milking stool with a folded cloth and a tiny bucket
+  b.fillStyle = OUTLINE; b.fillRect(x + 9, y + 18, 3, 8); b.fillRect(x + 20, y + 18, 3, 8); b.fillRect(x + 15, y + 19, 3, 7);
+  b.fillStyle = CHEESE.woodDark; b.fillRect(x + 10, y + 19, 1, 6); b.fillRect(x + 21, y + 19, 1, 6); b.fillRect(x + 16, y + 20, 1, 5);
+  outlineRect(b, x + 7, y + 12, 18, 6, CHEESE.wood); b.fillStyle = CHEESE.woodLight; b.fillRect(x + 8, y + 12, 16, 2); b.fillStyle = CHEESE.woodDark; b.fillRect(x + 8, y + 17, 16, 1);
+  outlineRect(b, x + 10, y + 9, 12, 4, CHEESE.cloth); b.fillStyle = CHEESE.wax; b.fillRect(x + 12, y + 9, 2, 4); b.fillRect(x + 18, y + 9, 2, 4); b.fillStyle = CHEESE.clothDark; b.fillRect(x + 10, y + 12, 12, 1);
+  // bucket beside it
+  outlineRect(b, x + 25, y + 20, 7, 6, CHEESE.woodLight); b.fillStyle = CHEESE.woodDark; b.fillRect(x + 25, y + 22, 7, 1); b.fillRect(x + 25, y + 25, 7, 1); b.fillStyle = CHEESE.milk; b.fillRect(x + 26, y + 20, 5, 1);
+  b.fillStyle = OUTLINE; b.fillRect(x + 25, y + 17, 1, 3); b.fillRect(x + 31, y + 17, 1, 3); b.fillRect(x + 25, y + 16, 7, 1);
+}
+function drawCuringTable(b, x, y, t = 0) { // meeting table slot 128x48: curing table with rounds, scale, ledger and a wedge
+  outlineRect(b, x + 4, y + 4, 120, 48, CHEESE.woodLight); b.fillStyle = CHEESE.wood; b.fillRect(x + 4, y + 4, 120, 4); b.fillStyle = CHEESE.woodDark; b.fillRect(x + 4, y + 46, 120, 6);
+  b.fillStyle = CHEESE.wood; for (let i = 1; i < 4; i++) b.fillRect(x + 4, y + 10 + i * 9, 120, 1);
+  b.fillStyle = CHEESE.woodDark; b.fillRect(x + 30, y + 14, 8, 1); b.fillRect(x + 84, y + 31, 10, 1);
+  // cream cloth runner
+  b.fillStyle = CHEESE.cloth; b.fillRect(x + 8, y + 10, 112, 34); b.fillStyle = CHEESE.clothDark; b.fillRect(x + 8, y + 42, 112, 2); b.fillRect(x + 8, y + 10, 112, 1);
+  b.fillStyle = CHEESE.wax; for (let i = 0; i < 14; i++) { b.fillRect(x + 8 + i * 8, y + 43, 4, 1); b.fillRect(x + 8, y + 12 + i * 2, 1, 1); b.fillRect(x + 119, y + 12 + i * 2, 1, 1); }
+  // rows of cheese rounds with different rinds
+  const rinds = [[CHEESE.rind, CHEESE.rindDark], ["#9b9588", "#6f6a60"], [CHEESE.wax, CHEESE.waxDark], [CHEESE.cheese, CHEESE.cheeseDark]];
+  for (let r = 0; r < 2; r++) for (let i = 0; i < 4; i++) { const cx = x + 18 + i * 12, cy = y + 18 + r * 12, [c, d] = rinds[(i + r * 2) % 4]; b.fillStyle = OUTLINE; b.fillRect(cx - 5, cy - 3, 10, 8); b.fillRect(cx - 4, cy - 4, 8, 10); b.fillStyle = c; b.fillRect(cx - 4, cy - 3, 8, 7); b.fillRect(cx - 3, cy - 3, 6, 8); b.fillStyle = d; b.fillRect(cx - 4, cy + 3, 8, 2); b.fillStyle = CHEESE.cheeseLight; b.fillRect(cx - 2, cy - 2, 3, 1); }
+  // brass scale with a swinging needle
+  outlineRect(b, x + 68, y + 32, 20, 8, "#c9a23a"); b.fillStyle = "#e8cd6a"; b.fillRect(x + 68, y + 32, 20, 2); b.fillStyle = "#8f7420"; b.fillRect(x + 68, y + 38, 20, 2);
+  b.fillStyle = OUTLINE; b.fillRect(x + 77, y + 20, 2, 12); outlineRect(b, x + 69, y + 14, 18, 14, CHEESE.cloth); disc(b, x + 78, y + 22, 6, OUTLINE); disc(b, x + 78, y + 22, 5, "#fff");
+  b.fillStyle = CHEESE.slate; for (let a = 0; a < 7; a++) { const an = Math.PI * (1.15 + a / 6 * 0.7); b.fillRect(Math.round(x + 78 + Math.cos(an) * 4), Math.round(y + 22 + Math.sin(an) * 4), 1, 1); }
+  const sw = Math.sin(t / 420) * 0.55 - Math.PI / 2; line(b, x + 78, y + 23, x + 78 + Math.cos(sw) * 4, y + 23 + Math.sin(sw) * 4, CHEESE.wax); b.fillStyle = OUTLINE; b.fillRect(x + 77, y + 22, 2, 2);
+  outlineRect(b, x + 62, y + 12, 5, 3, "#c9a23a");
+  // ledger
+  outlineRect(b, x + 94, y + 14, 22, 16, CHEESE.woodDark); outlineRect(b, x + 96, y + 15, 18, 14, "#fffaf0"); b.fillStyle = CHEESE.clothDark; b.fillRect(x + 105, y + 15, 1, 14);
+  b.fillStyle = CHEESE.slate; for (let i = 0; i < 4; i++) { b.fillRect(x + 97, y + 18 + i * 3, 7 - (i % 2) * 2, 1); b.fillRect(x + 107, y + 18 + i * 3, 6 - ((i + 1) % 2) * 2, 1); }
+  b.fillStyle = CHEESE.wax; b.fillRect(x + 109, y + 17, 3, 1); b.fillStyle = OUTLINE; b.fillRect(x + 114, y + 12, 1, 8);
+  // wedge on a board
+  outlineRect(b, x + 92, y + 32, 26, 9, CHEESE.woodLight); b.fillStyle = CHEESE.wood; b.fillRect(x + 92, y + 40, 26, 1);
+  b.fillStyle = OUTLINE; b.fillRect(x + 96, y + 27, 18, 2); b.fillRect(x + 94, y + 29, 22, 8); b.fillStyle = CHEESE.cheese; b.fillRect(x + 97, y + 28, 16, 2); b.fillRect(x + 95, y + 30, 20, 6); b.fillStyle = CHEESE.cheeseLight; b.fillRect(x + 97, y + 28, 16, 1);
+  b.fillStyle = CHEESE.rind; b.fillRect(x + 95, y + 35, 20, 1); b.fillStyle = CHEESE.hole; b.fillRect(x + 99, y + 31, 3, 2); b.fillRect(x + 107, y + 32, 2, 2);
+  b.fillStyle = "rgba(255,230,160,.07)"; b.fillRect(x + 8, y + 10, 112, 34);
+}
+function drawWheyBarrel(b, x, y, t = 0) { // cooler slot: oak whey barrel on a stand with a brass tap and a tin cup
+  b.fillStyle = OUTLINE; b.fillRect(x + 5, y + 20, 5, 7); b.fillRect(x + 22, y + 20, 5, 7); b.fillRect(x + 5, y + 14, 22, 8); b.fillStyle = CHEESE.woodDark; b.fillRect(x + 6, y + 15, 20, 6);
+  outlineRect(b, x + 4, y - 24, 24, 40, CHEESE.wood); b.fillStyle = CHEESE.woodLight; b.fillRect(x + 6, y - 23, 5, 38); b.fillStyle = CHEESE.woodDark; b.fillRect(x + 23, y - 23, 5, 38); b.fillRect(x + 4, y - 24, 24, 2);
+  b.fillStyle = OUTLINE; b.fillRect(x + 14, y - 23, 1, 38); b.fillRect(x + 20, y - 23, 1, 38);
+  b.fillStyle = CHEESE.woodDark; b.fillRect(x + 9, y - 23, 1, 38);
+  for (const hy of [-18, -4, 10]) { b.fillStyle = OUTLINE; b.fillRect(x + 3, y + hy, 26, 4); b.fillStyle = "#6c6c74"; b.fillRect(x + 4, y + hy + 1, 24, 2); b.fillStyle = "#9a9aa6"; b.fillRect(x + 6, y + hy + 1, 8, 1); }
+  b.fillStyle = CHEESE.woodDark; b.fillRect(x + 11, y - 12, 10, 1); b.fillRect(x + 11, y - 14, 10, 1);
+  // brass tap
+  b.fillStyle = OUTLINE; b.fillRect(x + 12, y + 2, 8, 5); b.fillRect(x + 14, y + 6, 4, 4); b.fillStyle = "#c9a23a"; b.fillRect(x + 13, y + 3, 6, 3); b.fillRect(x + 15, y + 6, 2, 3); b.fillStyle = "#e8cd6a"; b.fillRect(x + 13, y + 3, 6, 1);
+  b.fillStyle = OUTLINE; b.fillRect(x + 14, y - 2, 4, 2); b.fillStyle = CHEESE.wax; b.fillRect(x + 15, y - 1, 2, 1);
+  // drip falling into a tin cup that fills slowly
+  const ph = Math.floor(t / 130) % 10, fill = Math.floor(t / 1600) % 5;
+  outlineRect(b, x + 12, y + 17, 8, 7, "#c8cbd2"); b.fillStyle = "#e6e9ef"; b.fillRect(x + 13, y + 17, 2, 6); b.fillStyle = "#8d909a"; b.fillRect(x + 12, y + 23, 8, 1);
+  b.fillStyle = CHEESE.milk; b.fillRect(x + 14, y + 22 - fill, 5, fill + 1);
+  if (ph < 6) { b.fillStyle = CHEESE.milk; b.fillRect(x + 15, y + 10 + ph * 2, 2, 3); b.fillStyle = OUTLINE; b.fillRect(x + 14, y + 10 + ph * 2, 1, 2); }
+}
+function drawCopperVat(b, x, y, t = 0) { // coffeeStation slot: copper cheese vat on a brick hearth, fire and steam
+  // brick hearth with glowing fire
+  outlineRect(b, x + 4, y + 8, 24, 20, "#a8462f"); b.fillStyle = "#c9644a"; b.fillRect(x + 4, y + 8, 24, 2); b.fillStyle = "#7e3222"; b.fillRect(x + 4, y + 26, 24, 2);
+  for (let r = 0; r < 5; r++) { b.fillStyle = "#7e3222"; b.fillRect(x + 4, y + 13 + r * 4, 24, 1); for (let c = 0; c < 3; c++) b.fillRect(x + 8 + c * 8 + (r % 2) * 4, y + 9 + r * 4, 1, 4); }
+  b.fillStyle = OUTLINE; b.fillRect(x + 9, y + 15, 14, 11); b.fillRect(x + 10, y + 14, 12, 1);
+  b.fillStyle = "#4a1a0e"; b.fillRect(x + 10, y + 15, 12, 10);
+  const f = Math.floor(t / 150) % 3;
+  b.fillStyle = "#e0521e"; b.fillRect(x + 11, y + 20 - (f === 1 ? 1 : 0), 10, 5); b.fillRect(x + 13, y + 17 - f % 2, 6, 4);
+  b.fillStyle = "#ffb347"; b.fillRect(x + 13, y + 21, 6, 4); b.fillRect(x + 15 + (f === 2 ? 1 : 0), y + 18, 2, 4); b.fillStyle = "#fff0a0"; b.fillRect(x + 14, y + 23, 4, 2);
+  b.fillStyle = "rgba(255,150,60,.10)"; b.fillRect(x + 4, y + 26, 24, 5);
+  // round copper vat
+  b.fillStyle = OUTLINE; b.fillRect(x + 6, y - 14, 20, 24); b.fillRect(x + 4, y - 10, 24, 16); b.fillRect(x + 8, y - 16, 16, 2);
+  b.fillStyle = CHEESE.copper; b.fillRect(x + 7, y - 13, 18, 22); b.fillRect(x + 5, y - 9, 22, 14); b.fillStyle = CHEESE.copperLight; b.fillRect(x + 8, y - 12, 4, 20); b.fillRect(x + 6, y - 8, 2, 10); b.fillStyle = CHEESE.copperDark; b.fillRect(x + 21, y - 12, 4, 20); b.fillRect(x + 7, y + 7, 18, 2);
+  b.fillStyle = CHEESE.copperDark; b.fillRect(x + 6, y - 2, 20, 1); b.fillStyle = CHEESE.copperLight; b.fillRect(x + 6, y - 3, 20, 1);
+  b.fillStyle = OUTLINE; for (let i = 0; i < 4; i++) b.fillRect(x + 9 + i * 5, y - 4 + (i % 2), 1, 1);
+  // rim with milk surface
+  outlineRect(b, x + 7, y - 17, 18, 4, CHEESE.copperLight); b.fillStyle = CHEESE.milk; b.fillRect(x + 9, y - 16, 14, 2); b.fillStyle = CHEESE.cloth; b.fillRect(x + 11 + (Math.floor(t / 400) % 3), y - 16, 3, 1);
+  // wooden paddle
+  b.fillStyle = OUTLINE; b.fillRect(x + 21, y - 30, 3, 15); b.fillRect(x + 18, y - 31, 9, 2); b.fillStyle = CHEESE.woodLight; b.fillRect(x + 22, y - 29, 1, 12); b.fillStyle = CHEESE.wood; b.fillRect(x + 19, y - 30, 7, 1);
+  // rising steam puffs
+  for (let i = 0; i < 3; i++) { const ph = (Math.floor(t / 220) + i * 3) % 9, a = ph < 6 ? 0.45 : 0.2; b.fillStyle = `rgba(255,255,255,${a})`; b.fillRect(x + 10 + i * 5 + (ph % 2) - 1, y - 20 - ph * 2, 3, 2); b.fillRect(x + 11 + i * 5, y - 21 - ph * 2, 2, 1); }
+}
+function drawHaybaleSofa(b, x, y) { // sofa slot: a straw bale with straps, checked cushions and a folded cloth
+  outlineRect(b, x + 2, y - 12, 92, 20, CHEESE.cheeseDark); b.fillStyle = CHEESE.cheese; b.fillRect(x + 2, y - 12, 92, 3); b.fillStyle = CHEESE.rind; for (let i = 0; i < 14; i++) b.fillRect(x + 5 + i * 6 + (i % 3), y - 8 + (i % 2) * 3, 3, 1); // bale back
+  outlineRect(b, x, y + 6, 96, 22, CHEESE.cheese); b.fillStyle = CHEESE.cheeseLight; b.fillRect(x + 2, y + 8, 92, 2); b.fillStyle = CHEESE.cheeseDark; b.fillRect(x, y + 22, 96, 6);
+  b.fillStyle = CHEESE.rindDark; for (let i = 0; i < 18; i++) { b.fillRect(x + 4 + i * 5 + (i % 3), y + 12 + (i % 4) * 2, 3, 1); } // straw flecks
+  b.fillStyle = OUTLINE; b.fillRect(x + 22, y - 12, 2, 40); b.fillRect(x + 72, y - 12, 2, 40); b.fillStyle = CHEESE.woodDark; b.fillRect(x + 23, y - 11, 1, 38); b.fillRect(x + 73, y - 11, 1, 38); // dark straps
+  outlineRect(b, x + 6, y + 2, 26, 10, CHEESE.wax); b.fillStyle = CHEESE.cloth; for (let i = 0; i < 4; i++) for (let j = 0; j < 2; j++) if ((i + j) % 2 === 0) b.fillRect(x + 8 + i * 6, y + 4 + j * 4, 6, 4); b.fillStyle = CHEESE.waxDark; b.fillRect(x + 6, y + 11, 26, 1); // checked cushion
+  outlineRect(b, x + 34, y + 4, 20, 8, CHEESE.wax); b.fillStyle = CHEESE.cloth; for (let i = 0; i < 3; i++) for (let j = 0; j < 2; j++) if ((i + j) % 2 === 0) b.fillRect(x + 36 + i * 6, y + 5 + j * 3, 6, 3); b.fillStyle = CHEESE.waxDark; b.fillRect(x + 34, y + 11, 20, 1);
+  outlineRect(b, x + 58, y + 4, 34, 8, CHEESE.cloth); b.fillStyle = CHEESE.clothDark; b.fillRect(x + 58, y + 10, 34, 2); b.fillStyle = CHEESE.wax; for (let i = 0; i < 4; i++) b.fillRect(x + 62 + i * 8, y + 6, 4, 1); b.fillStyle = CHEESE.clothDark; b.fillRect(x + 76, y + 5, 1, 5); // folded blanket
+  b.fillStyle = OUTLINE; b.fillRect(x + 4, y + 28, 5, 4); b.fillRect(x + 87, y + 28, 5, 4); b.fillStyle = CHEESE.woodLight; b.fillRect(x + 5, y + 28, 2, 3); b.fillRect(x + 88, y + 28, 2, 3);
+}
+function drawCheeseBoard(b, x, y) { // coffee table slot: low round-ended table with a loaded cheese board
+  b.fillStyle = OUTLINE; b.fillRect(x + 14, y + 24, 4, 6); b.fillRect(x + 78, y + 24, 4, 6); b.fillStyle = CHEESE.woodDark; b.fillRect(x + 15, y + 24, 2, 5); b.fillRect(x + 79, y + 24, 2, 5);
+  outlineRect(b, x + 16, y + 8, 64, 16, CHEESE.wood); disc(b, x + 16, y + 16, 8, OUTLINE); disc(b, x + 80, y + 16, 8, OUTLINE); disc(b, x + 16, y + 16, 7, CHEESE.wood); disc(b, x + 80, y + 16, 7, CHEESE.wood);
+  b.fillStyle = CHEESE.woodLight; b.fillRect(x + 14, y + 10, 68, 2); b.fillStyle = CHEESE.woodDark; b.fillRect(x + 12, y + 21, 72, 3); b.fillRect(x + 20, y + 23, 56, 1);
+  outlineRect(b, x + 20, y + 4, 56, 6, CHEESE.woodLight); b.fillStyle = CHEESE.wood; b.fillRect(x + 20, y + 9, 56, 1); b.fillStyle = CHEESE.woodDark; b.fillRect(x + 22, y + 6, 4, 1); // serving board
+  outlineRect(b, x + 22, y - 1, 12, 6, CHEESE.cheese); b.fillStyle = CHEESE.cheeseLight; b.fillRect(x + 22, y - 1, 12, 1); b.fillStyle = CHEESE.hole; b.fillRect(x + 25, y + 1, 2, 2); b.fillRect(x + 30, y + 2, 2, 2); b.fillStyle = CHEESE.rind; b.fillRect(x + 22, y + 4, 12, 1); // holey wedge
+  outlineRect(b, x + 36, y, 10, 5, CHEESE.cloth); b.fillStyle = "#6f8fb0"; b.fillRect(x + 38, y + 1, 1, 3); b.fillRect(x + 41, y + 1, 2, 1); b.fillRect(x + 42, y + 3, 2, 1); b.fillStyle = CHEESE.clothDark; b.fillRect(x + 36, y + 4, 10, 1); // blue-veined piece
+  outlineRect(b, x + 48, y + 1, 8, 4, CHEESE.cheeseLight); b.fillStyle = CHEESE.cheeseDark; b.fillRect(x + 48, y + 4, 8, 1); b.fillRect(x + 52, y + 2, 1, 1);
+  for (const [gx, gy] of [[59, 2], [62, 1], [65, 2], [61, 4], [64, 4]]) { disc(b, x + gx, y + gy, 1, "#6d3a7a"); b.fillStyle = "#a070b0"; b.fillRect(x + gx - 1, y + gy - 1, 1, 1); } // grapes
+  b.fillStyle = CHEESE.herbDark; b.fillRect(x + 63, y - 3, 1, 3); b.fillStyle = CHEESE.herb; b.fillRect(x + 64, y - 3, 3, 1);
+  disc(b, x + 69, y + 4, 2, OUTLINE); disc(b, x + 69, y + 4, 1, CHEESE.woodLight); disc(b, x + 73, y + 5, 2, OUTLINE); disc(b, x + 73, y + 5, 1, CHEESE.woodLight); // walnuts
+  outlineRect(b, x + 42, y + 11, 8, 8, CHEESE.cheeseDark); b.fillStyle = CHEESE.cheese; b.fillRect(x + 43, y + 12, 6, 2); b.fillStyle = CHEESE.woodDark; b.fillRect(x + 42, y + 10, 8, 2); b.fillStyle = OUTLINE; b.fillRect(x + 50, y + 12, 6, 1); b.fillStyle = CHEESE.woodLight; b.fillRect(x + 54, y + 11, 3, 3); // honey pot + dipper
+  b.fillStyle = OUTLINE; b.fillRect(x + 28, y + 13, 14, 2); b.fillStyle = "#d8dce0"; b.fillRect(x + 29, y + 13, 9, 1); b.fillStyle = CHEESE.woodDark; b.fillRect(x + 38, y + 13, 5, 2); // little knife
+}
+function drawAgingRack(b, x, y) { // bookshelf slot: wooden rack with three shelves of wheels and a tag
+  outlineRect(b, x + 2, y - 30, 28, 60, CHEESE.wood); b.fillStyle = CHEESE.woodDark; b.fillRect(x + 4, y - 28, 24, 56); b.fillStyle = CHEESE.woodLight; b.fillRect(x + 2, y - 30, 28, 2);
+  const rinds = [[CHEESE.rind, CHEESE.rindDark], [CHEESE.slate, "#6a675f"], [CHEESE.wax, CHEESE.waxDark]];
+  for (let s = 0; s < 3; s++) {
+    const sy = y - 12 + s * 18;
+    b.fillStyle = CHEESE.woodLight; b.fillRect(x + 4, sy - 2, 24, 3); b.fillStyle = OUTLINE; b.fillRect(x + 4, sy + 1, 24, 1);
+    for (let i = 0; i < 3; i++) { const [c, d] = rinds[(s + i) % 3]; const wx = x + 5 + i * 8; outlineRect(b, wx, sy - 11, 7, 9, c); b.fillStyle = d; b.fillRect(wx, sy - 4, 7, 2); b.fillStyle = CHEESE.cheeseLight; b.fillRect(wx + 1, sy - 10, 3, 1); }
+  }
+  outlineRect(b, x + 14, y - 3, 7, 4, CHEESE.cloth); b.fillStyle = CHEESE.waxDark; b.fillRect(x + 15, y - 2, 4, 1); b.fillStyle = OUTLINE; b.fillRect(x + 17, y + 1, 1, 2); // handwritten tag
+}
+function drawCopperLamp(b, x, y, t = 0) { // lamp slot: floor lamp, copper bell shade, flickering glow
+  const glow = 0.10 + (Math.floor(t / 260) % 3) * 0.03;
+  b.fillStyle = `rgba(255,214,120,${glow})`; b.fillRect(x - 2, y - 30, 36, 34); b.fillStyle = `rgba(255,214,120,${glow})`; b.fillRect(x + 2, y - 16, 28, 18);
+  outlineRect(b, x + 8, y + 22, 16, 6, CHEESE.wood); b.fillStyle = CHEESE.woodLight; b.fillRect(x + 9, y + 22, 14, 1); b.fillStyle = CHEESE.woodDark; b.fillRect(x + 8, y + 27, 16, 1);
+  b.fillStyle = OUTLINE; b.fillRect(x + 14, y - 8, 4, 30); b.fillStyle = CHEESE.cheeseDark; b.fillRect(x + 15, y - 7, 2, 29); b.fillStyle = CHEESE.cheeseLight; b.fillRect(x + 15, y - 7, 1, 29);
+  b.fillStyle = OUTLINE; b.fillRect(x + 12, y - 30, 8, 2); b.fillRect(x + 8, y - 28, 16, 2); b.fillRect(x + 5, y - 26, 22, 2); b.fillRect(x + 3, y - 24, 26, 2); b.fillRect(x + 2, y - 22, 28, 2); b.fillRect(x + 1, y - 20, 30, 12);
+  b.fillStyle = CHEESE.copper; b.fillRect(x + 13, y - 29, 6, 2); b.fillRect(x + 9, y - 27, 14, 2); b.fillRect(x + 6, y - 25, 20, 2); b.fillRect(x + 4, y - 23, 24, 2); b.fillRect(x + 3, y - 21, 26, 2); b.fillRect(x + 2, y - 19, 28, 10);
+  b.fillStyle = CHEESE.copperLight; b.fillRect(x + 13, y - 29, 2, 2); b.fillRect(x + 10, y - 27, 3, 6); b.fillRect(x + 6, y - 21, 3, 8);
+  b.fillStyle = CHEESE.copperDark; b.fillRect(x + 2, y - 12, 28, 3); b.fillRect(x + 24, y - 25, 3, 12);
+  b.fillStyle = `rgba(255,236,160,${0.55 + (Math.floor(t / 260) % 3) * 0.12})`; b.fillRect(x + 8, y - 8, 16, 2); b.fillRect(x + 11, y - 6, 10, 1); // lit rim under the shade
+}
+function drawDairyCupboard(b, x, y) { // cabinets slot: curtain doors below, open shelves of wheels and curd jars above, copper pot on top
+  outlineRect(b, x + 2, y - 20, 92, 46, CHEESE.wood); b.fillStyle = CHEESE.woodLight; b.fillRect(x + 2, y - 20, 92, 3); b.fillStyle = CHEESE.woodDark; b.fillRect(x + 2, y + 24, 92, 2);
+  b.fillStyle = CHEESE.woodDark; b.fillRect(x + 4, y - 17, 88, 20); // open upper shelves
+  b.fillStyle = CHEESE.woodLight; b.fillRect(x + 4, y + 3, 88, 2);
+  for (let i = 0; i < 3; i++) { outlineRect(b, x + 7 + i * 12, y - 10, 11, 5, CHEESE.cheese); b.fillStyle = CHEESE.rind; b.fillRect(x + 7 + i * 12, y - 6, 11, 1); b.fillStyle = CHEESE.hole; b.fillRect(x + 10 + i * 12, y - 9, 2, 2); outlineRect(b, x + 9 + i * 12, y - 15, 9, 5, i % 2 ? CHEESE.rind : CHEESE.cheeseLight); b.fillStyle = CHEESE.rindDark; b.fillRect(x + 9 + i * 12, y - 11, 9, 1); } // stacked wheels
+  for (let i = 0; i < 4; i++) { outlineRect(b, x + 46 + i * 11, y - 11, 8, 12, CHEESE.milk); b.fillStyle = i % 2 ? CHEESE.cheeseLight : CHEESE.cloth; b.fillRect(x + 47 + i * 11, y - 6, 6, 6); b.fillStyle = CHEESE.wax; b.fillRect(x + 46 + i * 11, y - 13, 8, 2); b.fillStyle = CHEESE.clothDark; b.fillRect(x + 47 + i * 11, y - 1, 6, 1); } // curd jars
+  for (let d = 0; d < 2; d++) { const dx = x + 5 + d * 44; outlineRect(b, dx, y + 5, 42, 19, CHEESE.cloth); b.fillStyle = CHEESE.clothDark; for (let i = 0; i < 7; i++) b.fillRect(dx + 3 + i * 6, y + 6, 1, 17); b.fillStyle = CHEESE.wax; for (let i = 0; i < 6; i++) { b.fillRect(dx + 1 + i * 8, y + 8, 4, 1); b.fillRect(dx + 3 + i * 8, y + 16, 4, 1); } b.fillStyle = CHEESE.clothDark; b.fillRect(dx, y + 22, 42, 2); }
+  outlineRect(b, x + 44, y + 12, 3, 3, CHEESE.cheeseDark); outlineRect(b, x + 49, y + 12, 3, 3, CHEESE.cheeseDark); // knobs
+  outlineRect(b, x + 60, y - 30, 20, 10, CHEESE.copper); b.fillStyle = CHEESE.copperLight; b.fillRect(x + 62, y - 29, 3, 6); b.fillStyle = CHEESE.copperDark; b.fillRect(x + 60, y - 23, 20, 3); b.fillStyle = OUTLINE; b.fillRect(x + 57, y - 28, 3, 2); b.fillRect(x + 80, y - 28, 3, 2); b.fillRect(x + 62, y - 32, 16, 2); // copper pot
+  outlineRect(b, x + 10, y - 26, 12, 6, CHEESE.cloth); b.fillStyle = CHEESE.clothDark; b.fillRect(x + 10, y - 22, 12, 2); b.fillStyle = CHEESE.wax; b.fillRect(x + 12, y - 24, 8, 1); // folded cloth
+}
+function drawCheeseCrates(b, x, y) { // boxes slot: stacked crates with straw, cloth bundles, a wax-red stamp and a rolled sack
+  outlineRect(b, x + 4, y + 8, 40, 18, CHEESE.wood); b.fillStyle = CHEESE.woodLight; b.fillRect(x + 4, y + 8, 40, 2); b.fillStyle = CHEESE.woodDark; for (let i = 0; i < 3; i++) b.fillRect(x + 4, y + 13 + i * 5, 40, 1); b.fillRect(x + 8, y + 8, 2, 18); b.fillRect(x + 38, y + 8, 2, 18); b.fillRect(x + 4, y + 24, 40, 2);
+  outlineRect(b, x + 12, y - 8, 36, 17, CHEESE.woodLight); b.fillStyle = CHEESE.wood; for (let i = 0; i < 3; i++) b.fillRect(x + 12, y - 2 + i * 5, 36, 1); b.fillStyle = CHEESE.woodDark; b.fillRect(x + 16, y - 8, 2, 17); b.fillRect(x + 42, y - 8, 2, 17); b.fillRect(x + 12, y + 7, 36, 2);
+  b.fillStyle = CHEESE.wax; b.fillRect(x + 24, y - 3, 12, 8); b.fillStyle = CHEESE.cloth; b.fillRect(x + 26, y - 1, 3, 2); b.fillRect(x + 31, y + 1, 3, 2); b.fillRect(x + 27, y + 3, 5, 1); // stencilled stamp
+  b.fillStyle = CHEESE.cheese; for (let i = 0; i < 7; i++) b.fillRect(x + 13 + i * 5, y - 12 - (i % 3), 2, 5 + (i % 3)); b.fillStyle = CHEESE.cheeseLight; for (let i = 0; i < 4; i++) b.fillRect(x + 15 + i * 7, y - 11, 1, 3); // straw
+  disc(b, x + 24, y - 12, 6, OUTLINE); disc(b, x + 24, y - 12, 5, CHEESE.cloth); b.fillStyle = CHEESE.clothDark; b.fillRect(x + 20, y - 10, 9, 2); b.fillStyle = CHEESE.cheese; b.fillRect(x + 22, y - 15, 4, 2); b.fillStyle = CHEESE.rindDark; b.fillRect(x + 23, y - 13, 2, 3); // cloth-wrapped wheel
+  disc(b, x + 38, y - 11, 5, OUTLINE); disc(b, x + 38, y - 11, 4, CHEESE.rind); b.fillStyle = CHEESE.cheeseLight; b.fillRect(x + 36, y - 14, 3, 1); b.fillStyle = CHEESE.rindDark; b.fillRect(x + 35, y - 9, 7, 1);
+  outlineRect(b, x + 46, y + 4, 16, 22, CHEESE.clothDark); disc(b, x + 54, y + 4, 8, OUTLINE); b.fillStyle = CHEESE.clothDark; b.fillRect(x + 47, y + 5, 14, 20); b.fillStyle = CHEESE.cloth; b.fillRect(x + 48, y + 5, 3, 19); b.fillStyle = CHEESE.woodDark; b.fillRect(x + 46, y + 10, 16, 2); b.fillRect(x + 46, y + 19, 16, 2); b.fillStyle = CHEESE.wax; b.fillRect(x + 52, y + 13, 5, 4); // rolled sack
+  b.fillStyle = CHEESE.cheese; b.fillRect(x + 8, y + 26, 6, 1); b.fillRect(x + 28, y + 26, 8, 1); b.fillRect(x + 42, y + 27, 5, 1);
+}
+function drawCheesePress(b, x, y, t = 0) { // printer slot: wooden screw press, the screw sinks slowly, whey drips into a pan
+  const sink = Math.floor((t / 400) % 12) / 2; // 0..5.5 px, loops
+  b.fillStyle = OUTLINE; b.fillRect(x + 15, y - 24, 6, 54); b.fillRect(x + 47, y - 24, 6, 54); b.fillStyle = CHEESE.wood; b.fillRect(x + 16, y - 23, 4, 52); b.fillRect(x + 48, y - 23, 4, 52); b.fillStyle = CHEESE.woodLight; b.fillRect(x + 16, y - 23, 1, 52); b.fillRect(x + 48, y - 23, 1, 52); b.fillStyle = CHEESE.woodDark; b.fillRect(x + 19, y - 23, 1, 52); b.fillRect(x + 51, y - 23, 1, 52); // posts
+  outlineRect(b, x + 12, y - 24, 44, 7, CHEESE.wood); b.fillStyle = CHEESE.woodLight; b.fillRect(x + 12, y - 24, 44, 2); b.fillStyle = CHEESE.woodDark; b.fillRect(x + 12, y - 19, 44, 2); // cross beam
+  b.fillStyle = OUTLINE; b.fillRect(x + 31, y - 18, 6, 20 + Math.floor(sink)); b.fillStyle = CHEESE.woodLight; b.fillRect(x + 32, y - 18, 4, 19 + Math.floor(sink)); b.fillStyle = CHEESE.woodDark; for (let i = 0; i < 9; i++) b.fillRect(x + 32, y - 16 + i * 2 + Math.floor(sink) % 2, 4, 1); // threaded screw
+  outlineRect(b, x + 22, y - 23 + Math.floor(sink / 2), 24, 4, CHEESE.woodDark); b.fillStyle = CHEESE.wood; b.fillRect(x + 22, y - 23 + Math.floor(sink / 2), 24, 1); b.fillStyle = OUTLINE; b.fillRect(x + 20, y - 22 + Math.floor(sink / 2), 2, 2); b.fillRect(x + 46, y - 22 + Math.floor(sink / 2), 2, 2); // turning bar
+  outlineRect(b, x + 26, y + 2 + Math.floor(sink), 16, 5, CHEESE.woodLight); // follower plate
+  outlineRect(b, x + 25, y + 8, 18, 14, CHEESE.cloth); b.fillStyle = CHEESE.clothDark; b.fillRect(x + 25, y + 18, 18, 4); b.fillRect(x + 29, y + 9, 1, 8); b.fillRect(x + 36, y + 9, 1, 8); b.fillStyle = CHEESE.cheese; b.fillRect(x + 27, y + 13, 14, 1); // mould with cloth
+  outlineRect(b, x + 20, y + 24, 28, 3, CHEESE.woodDark); // base board
+  outlineRect(b, x + 14, y + 27, 40, 3, CHEESE.wood);
+  const dp = Math.floor(t / 180) % 6; b.fillStyle = CHEESE.milk; b.fillRect(x + 33, y + 22 + Math.min(dp, 3), 2, 2); // whey drip
+  outlineRect(b, x + 28, y + 28, 14, 3, "#a9adb2"); b.fillStyle = CHEESE.milk; b.fillRect(x + 30, y + 28, 10, 1);
+  disc(b, x + 8, y + 22, 7, OUTLINE); disc(b, x + 8, y + 22, 6, CHEESE.cloth); disc(b, x + 8, y + 22, 3, CHEESE.cheese); b.fillStyle = CHEESE.hole; b.fillRect(x + 7, y + 21, 2, 2); b.fillStyle = CHEESE.rind; b.fillRect(x + 4, y + 26, 8, 1); // finished wheel
+}
+THEMES.cheese = { wall: { face: "#e8d4a6", top: "#f2e2bc", base: "#b9854d", base2: "#8f6234", edge: "#5e3f1f", inner: "#f0dfb6", innerLight: "#fbefcf", innerDark: "#a07a48" }, floors: { kitchen: "terracottaTiles", office: "dairyPlanks", meeting: "strawMatting", lounge: "pastureGrass", archive: "cellarFlagstone" }, rug: "cheese" };
+PROPS.cheese = { counter: drawTastingBar, fridge: drawMilkChurn, roundTable: drawWheelTable, stool: drawMilkingStool, meetingTable: drawCuringTable, sofa: drawHaybaleSofa, coffeeTable: drawCheeseBoard, bookshelf: drawAgingRack, lamp: drawCopperLamp, cabinets: drawDairyCupboard, boxes: drawCheeseCrates, printer: drawCheesePress, cooler: drawWheyBarrel, coffeeStation: drawCopperVat };
+THEME_NAMES.push("cheese");
 
 // ---------- what finished work unlocks (web/progress.js): wall pieces, in this order; see POLayout.progressWall ----------
 WALL_ART.progress_poster = wallAt(5, (b) => { // framed poster

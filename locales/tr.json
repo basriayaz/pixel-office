@@ -412,6 +412,13 @@
       "meeting": "TABİR ODASI",
       "lounge": "UYKU KÖŞESİ",
       "archive": "RÜYA ARŞİVİ"
+    },
+    "cheese": {
+      "kitchen": "TADIM BARI",
+      "office": "MANDIRA OFİSİ",
+      "meeting": "OLGUNLAŞTIRMA ODASI",
+      "lounge": "ÇAYIR KÖŞESİ",
+      "archive": "PEYNİR KİLERİ"
     }
   },
   "status": {
@@ -775,6 +782,23 @@
           "coffeeStation": "Düş kapanı",
           "rug": "Ay halısı"
         },
+        "cheese": {
+          "counter": "Tadım tezgâhı",
+          "fridge": "Süt güğümü",
+          "roundTable": "Peynir tekerleği masası",
+          "stool": "Sağım taburesi",
+          "meetingTable": "Olgunlaştırma masası",
+          "sofa": "Saman balyası kanepe",
+          "coffeeTable": "Peynir tabağı sehpası",
+          "bookshelf": "Olgunlaştırma rafı",
+          "lamp": "Bakır lamba",
+          "cabinets": "Mandıra dolabı",
+          "boxes": "Peynir sandıkları",
+          "printer": "Peynir presi",
+          "cooler": "Peynir suyu fıçısı",
+          "coffeeStation": "Bakır kazan",
+          "rug": "Peynir tekerleği halısı"
+        },
         "default": {
           "rug": "Salon halısı"
         }
@@ -894,7 +918,7 @@
         "music_awards": "Ödül plaketleri",
         "music_counter": "Abone sayacı",
         "travel_bunting": "Bayrak süsü ve saatler",
-        "travel_poster": "Footyprint posteri",
+        "travel_poster": "Ayak izi posteri",
         "travel_map": "Dünya haritası",
         "travel_clock": "Saat",
         "travel_departures": "Kalkış panosu",
@@ -909,6 +933,13 @@
         "gothic_glass": "Vitray",
         "gothic_cobwebs": "Örümcek ağları",
         "dream_sky": "Gece gökyüzü pencereleri",
+        "cheese_wheels": "Tekerlek rafı",
+        "cheese_menu": "Tadım menüsü",
+        "cheese_rack": "Tülbent ipi",
+        "cheese_clock": "Duvar saati",
+        "cheese_pots": "Bakır tencereler",
+        "cheese_ribbons": "Ödül kurdeleleri",
+        "cheese_pasture": "Çayır manzarası",
         "progress_poster": "Çerçeveli poster",
         "progress_plant": "Asma bitki",
         "progress_espresso": "Altın espresso makinesi",
@@ -4685,7 +4716,7 @@
       "manage": "Ofisleri yönet",
       "add": "Ofis ekle",
       "name": "Şirket / ofis adı",
-      "namePh": "örn. Zaya Sound",
+      "namePh": "örn. Acme Dükkanı",
       "cwd": "Çalışma klasörü (isteğe bağlı)",
       "cwdPh": "örn. ~/Projects/uygulama — boş = {project}",
       "cwdHint": "Bu ofiste işe alınan çalışanlar varsayılan olarak bu klasörde çalışır.",
@@ -4709,7 +4740,8 @@
       "gothic": "Gotik malikâne",
       "music": "Müzik stüdyosu",
       "travel": "Seyahat acentesi",
-      "dream": "Rüya atölyesi"
+      "dream": "Rüya atölyesi",
+      "cheese": "Peynir mandırası"
     },
     "closedBanner": "Ofis kapatıldı — tekrar açmak için <code>pixel-office</code> ya da Ofis.command",
     "settings": {
@@ -5486,7 +5518,7 @@
         },
         "O4": {
           "t": "Temalar",
-          "b": "Yedi tema var: klasik, futbol, moda, gotik, müzik, seyahat, rüya. Tema sadece görünümdür."
+          "b": "Sekiz tema var: klasik, futbol, moda, gotik, müzik, seyahat, rüya, peynir. Tema sadece görünümdür."
         },
         "O5": {
           "t": "Çalışma modu",

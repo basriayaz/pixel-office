@@ -34,7 +34,7 @@ npx github:basriayaz/pixel-office
 | **📋 Pano ve proje yöneticisi**<br>Sahipli görevler, bitmeden önce inceleme, ortak defter, fikir kutusu. Ofisi elle, onaylı turlarla ya da kendi kendine yürüt | **🧠 Bir kez öğret, hep hatırlasın**<br>"Şunu unutma…" de, her oturumda yüklenen Markdown hafıza dosyasına yazılsın. Açıp kendin de düzenleyebilirsin |
 | [![Pano](docs/board.jpg)](#pano-ve-proje-yöneticisi) | [![Hafıza sekmesi](docs/memory.jpg)](#sohbet-izinler-hafıza) |
 
-Ayrıca: toplantı odasında el kaldırmalı ve yazılı özetli **toplantılar**, tek sunucuda **birden fazla ofis** (şirket ya da ekip başına bir tane), **yedi tema** (klasik, futbol kulübü, moda atölyesi, gotik malikâne, müzik stüdyosu, seyahat acentesi, rüya atölyesi), **Türkçe ve İngilizce** arayüz, macOS, Linux ve Windows.
+Ayrıca: toplantı odasında el kaldırmalı ve yazılı özetli **toplantılar**, tek sunucuda **birden fazla ofis** (şirket ya da ekip başına bir tane), **sekiz tema** (klasik, futbol kulübü, moda atölyesi, gotik malikâne, müzik stüdyosu, seyahat acentesi, rüya atölyesi, peynir mandırası), **Türkçe ve İngilizce** arayüz, macOS, Linux ve Windows.
 
 > ⭐ **Minik agent'larla dolu bir ofis yüzünü güldürdüyse [bir yıldız ver](https://github.com/basriayaz/pixel-office/stargazers).** Projeyi başkalarının bulmasının en önemli yolu bu.
 

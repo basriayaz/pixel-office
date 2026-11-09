@@ -212,3 +212,13 @@ function fmtDur(ms) {
   const m = Math.max(0, Math.round((Number(ms) || 0) / 60e3));
   return m < 1 ? "<1m" : m < 60 ? `${m}m` : `${Math.floor(m / 60)}h${m % 60 ? ` ${m % 60}m` : ""}`;
 }
+
+// The browser tab names the office it shows, e.g. "(2) Web Shop — Pixel Office", so offices open side by side
+// (several servers, or several tabs of one server) can be told apart. Pages set what they know; the rest is kept.
+const tabTitleParts = { prefix: "", office: "", count: 0 };
+function setTabTitle(parts = {}) {
+  Object.assign(tabTitleParts, parts);
+  const { prefix, count } = tabTitleParts;
+  const office = PO.multiOffice ? tabTitleParts.office : ""; // a single, unnamed office keeps the plain title
+  document.title = `${count ? `(${count}) ` : ""}${prefix ? `${prefix} — ` : ""}${office ? `${office} — ` : ""}${t("ui.title")}`;
+}

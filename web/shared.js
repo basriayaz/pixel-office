@@ -215,10 +215,13 @@ function fmtDur(ms) {
 
 // The browser tab names the office it shows, e.g. "(2) Web Shop — Pixel Office", so offices open side by side
 // (several servers, or several tabs of one server) can be told apart. Pages set what they know; the rest is kept.
+// A single office has no name: in project mode the project folder stands in for it (one server per repository is
+// exactly the side-by-side case), in global mode the plain title stays.
 const tabTitleParts = { prefix: "", office: "", count: 0 };
+const projectFolderName = () => (PO.mode === "project" ? String(PO.project || "").split(/[\\/]/).filter(Boolean).pop() || "" : "");
 function setTabTitle(parts = {}) {
   Object.assign(tabTitleParts, parts);
   const { prefix, count } = tabTitleParts;
-  const office = PO.multiOffice ? tabTitleParts.office : ""; // a single, unnamed office keeps the plain title
+  const office = PO.multiOffice ? tabTitleParts.office : projectFolderName();
   document.title = `${count ? `(${count}) ` : ""}${prefix ? `${prefix} — ` : ""}${office ? `${office} — ` : ""}${t("ui.title")}`;
 }

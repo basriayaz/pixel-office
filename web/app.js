@@ -1,6 +1,6 @@
 const office = new Office($("office"), $("labels"));
 office.start();
-document.title = t("ui.title");
+setTabTitle();
 
 const params = new URLSearchParams(location.search);
 const state = {
@@ -83,6 +83,7 @@ function showOffice(officeId, keepChat = false) {
   if (changed && !keepChat) closeChat();
   if (changed && typeof layoutEditor !== "undefined" && layoutEditor.active) layoutEditor.cancel(true); // another office: leave the editor
   const o = cur();
+  setTabTitle({ office: o.info.name });
   office.setTheme(o.info.theme || "default");
   if (typeof layoutEditor === "undefined" || !layoutEditor.active) office.setLayoutDoc(o.layout); // furniture; while editing, the office keeps the draft
   office.setEmployees([...o.employees.values()], state.entering);

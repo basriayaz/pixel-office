@@ -1,7 +1,7 @@
 const officeId = new URLSearchParams(location.search).get("office") || PO.defaultOffice;
 const officeInfo = (PO.offices || []).find((o) => o.id === officeId) || { id: officeId, name: officeId };
 const API = `/api/offices/${encodeURIComponent(officeId)}`;
-document.title = `${t("ui.hire.crumb")} — ${t("ui.title")}`;
+setTabTitle({ prefix: t("ui.hire.crumb"), office: officeInfo.name });
 if (PO.multiOffice) { document.querySelector(".crumb").textContent = `${t("ui.hire.crumb")} · ${officeInfo.name}`; document.querySelector("a.btn.ghost").href = `/?office=${encodeURIComponent(officeId)}`; }
 let look = null;
 // balanced defaults: the strongest model at high effort is a choice for the hard jobs, not the starting point

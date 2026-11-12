@@ -77,7 +77,7 @@ async function load() {
 }
 
 function renderHead() {
-  document.title = `${detail.name} — ${t("ui.title")}`;
+  setTabTitle({ prefix: detail.name, office: detail.officeName });
   $("crumb").textContent = PO.multiOffice ? `${detail.officeName} · ${detail.name}` : detail.name;
   $("chatLink").href = `/?office=${encodeURIComponent(officeId)}&open=${encodeURIComponent(id)}`;
   $("bigPortrait").src = portraitOf(detail, 5, true);

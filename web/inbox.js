@@ -28,7 +28,7 @@ const inboxUI = (() => {
     $("inboxBadge").hidden = !n;
     popBadge($("inboxBadge"), n);
     $("btnInbox").classList.toggle("has", n > 0);
-    document.title = n ? `(${n}) ${t("ui.title")}` : t("ui.title");
+    setTabTitle({ count: n });
   }
 
   // background updates wait while something is being typed or picked in the list
